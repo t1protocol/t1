@@ -42,12 +42,6 @@ install: ## Build and install the reth binary under `~/.cargo/bin`.
 		--profile "$(PROFILE)" \
 		$(CARGO_INSTALL_EXTRA_FLAGS)
 
-.PHONY: install-op
-install-op: ## Build and install the op-reth binary under `~/.cargo/bin`.
-	cargo install --path crates/optimism/bin --bin op-reth --force --locked \
-		--profile "$(PROFILE)" \
-		$(CARGO_INSTALL_EXTRA_FLAGS)
-
 .PHONY: build
 build: ## Build the reth binary into `target` directory.
 	cargo build --bin reth --profile "$(PROFILE)"
@@ -56,16 +50,9 @@ build: ## Build the reth binary into `target` directory.
 build-debug: ## Build the reth binary into `target/debug` directory.
 	cargo build --bin reth
 
-.PHONY: build-op
-build-op: ## Build the op-reth binary into `target` directory.
-	cargo build --bin op-reth --profile "$(PROFILE)" --manifest-path crates/optimism/bin/Cargo.toml
-
 # Builds the reth binary natively.
 build-native-%:
 	cargo build --bin reth --target $* --profile "$(PROFILE)"
-
-op-build-native-%:
-	cargo build --bin op-reth --target $* --profile "$(PROFILE)" --manifest-path crates/optimism/bin/Cargo.toml
 
 # The following commands use `cross` to build a cross-compile.
 #
@@ -83,7 +70,6 @@ op-build-native-%:
 # on other systems. JEMALLOC_SYS_WITH_LG_PAGE=16 tells jemalloc to use 64-KiB
 # pages. See: https://github.com/paradigmxyz/reth/issues/6742
 build-aarch64-unknown-linux-gnu: export JEMALLOC_SYS_WITH_LG_PAGE=16
-op-build-aarch64-unknown-linux-gnu: export JEMALLOC_SYS_WITH_LG_PAGE=16
 
 
 # Note: The additional rustc compiler flags are for intrinsics needed by MDBX.
@@ -91,10 +77,6 @@ op-build-aarch64-unknown-linux-gnu: export JEMALLOC_SYS_WITH_LG_PAGE=16
 build-%:
 	RUSTFLAGS="-C link-arg=-lgcc -Clink-arg=-static-libgcc" \
 		cross build --bin reth --target $* --profile "$(PROFILE)"
-
-op-build-%:
-	RUSTFLAGS="-C link-arg=-lgcc -Clink-arg=-static-libgcc" \
-		cross build --bin op-reth --target $* --profile "$(PROFILE)" --manifest-path crates/optimism/bin/Cargo.toml
 
 # Unfortunately we can't easily use cross to build for Darwin because of licensing issues.
 # If we wanted to, we would need to build a custom Docker image with the SDK available.
@@ -106,10 +88,6 @@ build-x86_64-apple-darwin:
 	$(MAKE) build-native-x86_64-apple-darwin
 build-aarch64-apple-darwin:
 	$(MAKE) build-native-aarch64-apple-darwin
-op-build-x86_64-apple-darwin:
-	$(MAKE) op-build-native-x86_64-apple-darwin
-op-build-aarch64-apple-darwin:
-	$(MAKE) op-build-native-aarch64-apple-darwin
 
 # Create a `.tar.gz` containing a binary for a specific target.
 define tarball_release_binary
@@ -136,7 +114,6 @@ build-release-tarballs: ## Create a series of `.tar.gz` files in the BIN_DIR dir
 ##@ Test
 
 UNIT_TEST_ARGS := --locked --workspace -E 'kind(lib)' -E 'kind(bin)' -E 'kind(proc-macro)'
-UNIT_TEST_ARGS_OP := --locked --workspace -E 'kind(lib)' -E 'kind(bin)' -E 'kind(proc-macro)'
 COV_FILE := lcov.info
 
 .PHONY: test-unit
@@ -144,20 +121,10 @@ test-unit: ## Run unit tests.
 	cargo install cargo-nextest --locked
 	cargo nextest run $(UNIT_TEST_ARGS)
 
-.PHONY: test-unit-op
-test-unit-op: ## Run unit tests (with optimism feature flag enabled).
-	cargo install cargo-nextest --locked
-	cargo nextest run $(UNIT_TEST_ARGS_OP)
-
 .PHONY: cov-unit
 cov-unit: ## Run unit tests with coverage.
 	rm -f $(COV_FILE)
 	cargo llvm-cov nextest --lcov --output-path $(COV_FILE) $(UNIT_TEST_ARGS)
-
-.PHONY: cov-unit-op
-cov-unit-op: ## Run unit tests with coverage (with optimism feature flag enabled).
-	rm -f $(COV_FILE)
-	cargo llvm-cov nextest --lcov --output-path $(COV_FILE) $(UNIT_TEST_ARGS_OP)
 
 .PHONY: cov-report-html
 cov-report-html: cov-unit ## Generate a HTML coverage report and open it in the browser.
@@ -221,49 +188,6 @@ define docker_build_push
 		--output type=docker
 endef
 
-##@ Optimism docker
-
-# Note: This requires a buildx builder with emulation support. For example:
-#
-# `docker run --privileged --rm tonistiigi/binfmt --install amd64,arm64`
-# `docker buildx create --use --driver docker-container --name cross-builder`
-.PHONY: op-docker-build-push
-op-docker-build-push: ## Build and push a cross-arch Docker image tagged with the latest git tag.
-	$(call op_docker_build_push,$(GIT_TAG),$(GIT_TAG))
-
-# Note: This requires a buildx builder with emulation support. For example:
-#
-# `docker run --privileged --rm tonistiigi/binfmt --install amd64,arm64`
-# `docker buildx create --use --driver docker-container --name cross-builder`
-.PHONY: op-docker-build-push-latest
-op-docker-build-push-latest: ## Build and push a cross-arch Docker image tagged with the latest git tag and `latest`.
-	$(call op_docker_build_push,$(GIT_TAG),latest)
-
-# Note: This requires a buildx builder with emulation support. For example:
-#
-# `docker run --privileged --rm tonistiigi/binfmt --install amd64,arm64`
-# `docker buildx create --use --name cross-builder`
-.PHONY: op-docker-build-push-nightly
-op-docker-build-push-nightly: ## Build and push cross-arch Docker image tagged with the latest git tag with a `-nightly` suffix, and `latest-nightly`.
-	$(call op_docker_build_push,$(GIT_TAG)-nightly,latest-nightly)
-
-# Create a cross-arch Docker image with the given tags and push it
-define op_docker_build_push
-	$(MAKE) op-build-x86_64-unknown-linux-gnu
-	mkdir -p $(BIN_DIR)/amd64
-	cp $(CARGO_TARGET_DIR)/x86_64-unknown-linux-gnu/$(PROFILE)/op-reth $(BIN_DIR)/amd64/op-reth
-
-	$(MAKE) op-build-aarch64-unknown-linux-gnu
-	mkdir -p $(BIN_DIR)/arm64
-	cp $(CARGO_TARGET_DIR)/aarch64-unknown-linux-gnu/$(PROFILE)/op-reth $(BIN_DIR)/arm64/op-reth
-
-	docker buildx build --file ./DockerfileOp.cross . \
-		--platform linux/amd64 \
-		--tag $(DOCKER_IMAGE_NAME):$(1) \
-		--tag $(DOCKER_IMAGE_NAME):$(2) \
-		--provenance=false \
-		--push
-endef
 
 ##@ Other
 
@@ -300,10 +224,6 @@ update-book-cli: build-debug ## Update book cli documentation.
 maxperf: ## Builds `reth` with the most aggressive optimisations.
 	RUSTFLAGS="-C target-cpu=native" cargo build --profile maxperf
 
-.PHONY: maxperf-op
-maxperf-op: ## Builds `op-reth` with the most aggressive optimisations.
-	RUSTFLAGS="-C target-cpu=native" cargo build --profile maxperf --bin op-reth --manifest-path crates/optimism/bin/Cargo.toml
-
 .PHONY: maxperf-no-asm
 maxperf-no-asm: ## Builds `reth` with the most aggressive optimisations, minus the "asm-keccak" feature.
 	RUSTFLAGS="-C target-cpu=native" cargo build --profile maxperf
@@ -321,17 +241,6 @@ lint-reth:
 	--tests \
 	--benches \
 	--features "ethereum $(BIN_OTHER_FEATURES)" \
-	-- -D warnings
-
-lint-op-reth:
-	cargo +nightly clippy \
-	--workspace \
-	--bin "op-reth" \
-	--lib \
-	--examples \
-	--tests \
-	--benches \
-	--features "optimism $(BIN_OTHER_FEATURES)" \
 	-- -D warnings
 
 lint-other-targets:
@@ -356,7 +265,6 @@ ensure-codespell:
 lint:
 	make fmt && \
 	make lint-reth && \
-	make lint-op-reth && \
 	make lint-other-targets && \
 	make lint-codespell
 
@@ -369,20 +277,6 @@ fix-lint-reth:
 	--tests \
 	--benches \
 	--features "ethereum $(BIN_OTHER_FEATURES)" \
-	--fix \
-	--allow-staged \
-	--allow-dirty \
-	-- -D warnings
-
-fix-lint-op-reth:
-	cargo +nightly clippy \
-	--workspace \
-	--bin "op-reth" \
-	--lib \
-	--examples \
-	--tests \
-	--benches \
-	--features "optimism $(BIN_OTHER_FEATURES)" \
 	--fix \
 	--allow-staged \
 	--allow-dirty \
@@ -403,7 +297,6 @@ fix-lint-other-targets:
 
 fix-lint:
 	make fix-lint-reth && \
-	make fix-lint-op-reth && \
 	make fix-lint-other-targets && \
 	make fmt
 
@@ -427,15 +320,6 @@ test-reth:
 	--benches \
 	--features "ethereum $(BIN_OTHER_FEATURES)"
 
-test-op-reth:
-	cargo test \
-	--workspace \
-	--bin "op-reth" \
-	--lib --examples \
-	--tests \
-	--benches \
-	--features "optimism $(BIN_OTHER_FEATURES)"
-
 test-other-targets:
 	cargo test \
 	--workspace \
@@ -447,11 +331,9 @@ test-other-targets:
 
 test-doc:
 	cargo test --doc --workspace --features "ethereum"
-	cargo test --doc --workspace --features "optimism"
 
 test:
 	make test-reth && \
-	make test-op-reth && \
 	make test-doc && \
 	make test-other-targets
 
