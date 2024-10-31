@@ -5,16 +5,36 @@ edition = "2021"
 
 [dependencies]
 
+#reth
 reth = { git = "https://github.com/paradigmxyz/reth" }
-reth-exex = { git = "https://github.com/paradigmxyz/reth" }
+reth-exex = { git = "https://github.com/paradigmxyz/reth", features = ["serde"]  }
 reth-node-api = { git = "https://github.com/paradigmxyz/reth" }
 reth-node-ethereum = { git = "https://github.com/paradigmxyz/reth" }
 reth-tracing = { git = "https://github.com/paradigmxyz/reth" }
 reth-execution-types = { git = "https://github.com/paradigmxyz/reth" }
+reth-primitives = { git = "https://github.com/paradigmxyz/reth", default-features = false, features = [
+    "std",
+] }
 
+#alloy
+alloy-sol-types = { version = "0.8", features = ["json"] }
+alloy-primitives = { version = "0.8.4", default-features = false, features = ["rand", "rlp"] }
+
+#async
 eyre = "0.6"
 futures = "0.3"
-tokio = "1.41.0"
+tokio = {  version = "1.39", features = [
+    "sync", "macros", "time", "rt-multi-thread",
+], default-features = false }
+
+#smart contracts
+secp256k1 = { version = "0.21.3" }
+web3 = { version = "0.18.0", features = [
+    "signing", "ipc-tokio", "http-rustls-tls"
+], default-features = false }
+
+#misc
+tracing = "0.1.0"
 
 [dev-dependencies]
 reth-exex-test-utils = { git = "https://github.com/paradigmxyz/reth" }
