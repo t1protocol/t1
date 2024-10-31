@@ -10,9 +10,6 @@ FULL_DB_TOOLS_DIR := $(shell pwd)/$(DB_TOOLS_DIR)/
 
 CARGO_TARGET_DIR ?= target
 
-# List of features to use when building. Can be overridden via the environment.
-FEATURES ?=
-
 # Cargo profile for builds. Default is for local builds, CI uses an override.
 PROFILE ?= release
 
@@ -48,28 +45,27 @@ install: ## Build and install the reth binary under `~/.cargo/bin`.
 .PHONY: install-op
 install-op: ## Build and install the op-reth binary under `~/.cargo/bin`.
 	cargo install --path crates/optimism/bin --bin op-reth --force --locked \
-		--features "optimism,$(FEATURES)" \
 		--profile "$(PROFILE)" \
 		$(CARGO_INSTALL_EXTRA_FLAGS)
 
 .PHONY: build
 build: ## Build the reth binary into `target` directory.
-	cargo build --bin reth --features "$(FEATURES)" --profile "$(PROFILE)"
+	cargo build --bin reth --profile "$(PROFILE)"
 
 .PHONY: build-debug
 build-debug: ## Build the reth binary into `target/debug` directory.
-	cargo build --bin reth --features "$(FEATURES)"
+	cargo build --bin reth
 
 .PHONY: build-op
 build-op: ## Build the op-reth binary into `target` directory.
-	cargo build --bin op-reth --features "optimism,$(FEATURES)" --profile "$(PROFILE)" --manifest-path crates/optimism/bin/Cargo.toml
+	cargo build --bin op-reth --profile "$(PROFILE)" --manifest-path crates/optimism/bin/Cargo.toml
 
 # Builds the reth binary natively.
 build-native-%:
-	cargo build --bin reth --target $* --features "$(FEATURES)" --profile "$(PROFILE)"
+	cargo build --bin reth --target $* --profile "$(PROFILE)"
 
 op-build-native-%:
-	cargo build --bin op-reth --target $* --features "optimism,$(FEATURES)" --profile "$(PROFILE)" --manifest-path crates/optimism/bin/Cargo.toml
+	cargo build --bin op-reth --target $* --profile "$(PROFILE)" --manifest-path crates/optimism/bin/Cargo.toml
 
 # The following commands use `cross` to build a cross-compile.
 #
@@ -89,19 +85,16 @@ op-build-native-%:
 build-aarch64-unknown-linux-gnu: export JEMALLOC_SYS_WITH_LG_PAGE=16
 op-build-aarch64-unknown-linux-gnu: export JEMALLOC_SYS_WITH_LG_PAGE=16
 
-# No jemalloc on Windows
-build-x86_64-pc-windows-gnu: FEATURES := $(filter-out jemalloc jemalloc-prof,$(FEATURES))
-op-build-x86_64-pc-windows-gnu: FEATURES := $(filter-out jemalloc jemalloc-prof,$(FEATURES))
 
 # Note: The additional rustc compiler flags are for intrinsics needed by MDBX.
 # See: https://github.com/cross-rs/cross/wiki/FAQ#undefined-reference-with-build-std
 build-%:
 	RUSTFLAGS="-C link-arg=-lgcc -Clink-arg=-static-libgcc" \
-		cross build --bin reth --target $* --features "$(FEATURES)" --profile "$(PROFILE)"
+		cross build --bin reth --target $* --profile "$(PROFILE)"
 
 op-build-%:
 	RUSTFLAGS="-C link-arg=-lgcc -Clink-arg=-static-libgcc" \
-		cross build --bin op-reth --target $* --features "optimism,$(FEATURES)" --profile "$(PROFILE)" --manifest-path crates/optimism/bin/Cargo.toml
+		cross build --bin op-reth --target $* --profile "$(PROFILE)" --manifest-path crates/optimism/bin/Cargo.toml
 
 # Unfortunately we can't easily use cross to build for Darwin because of licensing issues.
 # If we wanted to, we would need to build a custom Docker image with the SDK available.
@@ -142,8 +135,8 @@ build-release-tarballs: ## Create a series of `.tar.gz` files in the BIN_DIR dir
 
 ##@ Test
 
-UNIT_TEST_ARGS := --locked --workspace --features 'jemalloc-prof' -E 'kind(lib)' -E 'kind(bin)' -E 'kind(proc-macro)'
-UNIT_TEST_ARGS_OP := --locked --workspace --features 'jemalloc-prof,optimism' -E 'kind(lib)' -E 'kind(bin)' -E 'kind(proc-macro)'
+UNIT_TEST_ARGS := --locked --workspace -E 'kind(lib)' -E 'kind(bin)' -E 'kind(proc-macro)'
+UNIT_TEST_ARGS_OP := --locked --workspace -E 'kind(lib)' -E 'kind(bin)' -E 'kind(proc-macro)'
 COV_FILE := lcov.info
 
 .PHONY: test-unit
@@ -305,15 +298,15 @@ update-book-cli: build-debug ## Update book cli documentation.
 
 .PHONY: maxperf
 maxperf: ## Builds `reth` with the most aggressive optimisations.
-	RUSTFLAGS="-C target-cpu=native" cargo build --profile maxperf --features jemalloc,asm-keccak
+	RUSTFLAGS="-C target-cpu=native" cargo build --profile maxperf
 
 .PHONY: maxperf-op
 maxperf-op: ## Builds `op-reth` with the most aggressive optimisations.
-	RUSTFLAGS="-C target-cpu=native" cargo build --profile maxperf --features jemalloc,asm-keccak,optimism --bin op-reth --manifest-path crates/optimism/bin/Cargo.toml
+	RUSTFLAGS="-C target-cpu=native" cargo build --profile maxperf --bin op-reth --manifest-path crates/optimism/bin/Cargo.toml
 
 .PHONY: maxperf-no-asm
 maxperf-no-asm: ## Builds `reth` with the most aggressive optimisations, minus the "asm-keccak" feature.
-	RUSTFLAGS="-C target-cpu=native" cargo build --profile maxperf --features jemalloc
+	RUSTFLAGS="-C target-cpu=native" cargo build --profile maxperf
 
 
 fmt:
