@@ -5176,6 +5176,22 @@ dependencies = [
 
 [[package]]
 name = "reth"
+version = "0.1.0"
+dependencies = [
+ "eyre",
+ "futures",
+ "reth 1.1.0",
+ "reth-execution-types",
+ "reth-exex",
+ "reth-exex-test-utils",
+ "reth-node-api",
+ "reth-node-ethereum",
+ "reth-tracing",
+ "tokio",
+]
+
+[[package]]
+name = "reth"
 version = "1.1.0"
 source = "git+https://github.com/paradigmxyz/reth#82784183e74deb78556eb01da5b015904eb8d194"
 dependencies = [
@@ -8626,22 +8642,6 @@ dependencies = [
  "memchr",
  "ntapi",
  "windows 0.57.0",
-]
-
-[[package]]
-name = "t1-reth"
-version = "0.1.0"
-dependencies = [
- "eyre",
- "futures",
- "reth",
- "reth-execution-types",
- "reth-exex",
- "reth-exex-test-utils",
- "reth-node-api",
- "reth-node-ethereum",
- "reth-tracing",
- "tokio",
 ]
 
 [[package]]

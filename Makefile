@@ -40,7 +40,7 @@ help: ## Display this help.
 
 .PHONY: install
 install: ## Build and install the reth binary under `~/.cargo/bin`.
-	cargo install --path bin/t1-reth --bin t1-reth --force --locked \
+	cargo install --path bin/reth --bin reth --force --locked \
 		--features "$(FEATURES)" \
 		--profile "$(PROFILE)" \
 		$(CARGO_INSTALL_EXTRA_FLAGS)
@@ -54,11 +54,11 @@ install-op: ## Build and install the op-reth binary under `~/.cargo/bin`.
 
 .PHONY: build
 build: ## Build the reth binary into `target` directory.
-	cargo build --bin t1-reth --features "$(FEATURES)" --profile "$(PROFILE)"
+	cargo build --bin reth --features "$(FEATURES)" --profile "$(PROFILE)"
 
 .PHONY: build-debug
 build-debug: ## Build the reth binary into `target/debug` directory.
-	cargo build --bin t1-reth --features "$(FEATURES)"
+	cargo build --bin reth --features "$(FEATURES)"
 
 .PHONY: build-op
 build-op: ## Build the op-reth binary into `target` directory.
@@ -66,7 +66,7 @@ build-op: ## Build the op-reth binary into `target` directory.
 
 # Builds the reth binary natively.
 build-native-%:
-	cargo build --bin t1-reth --target $* --features "$(FEATURES)" --profile "$(PROFILE)"
+	cargo build --bin reth --target $* --features "$(FEATURES)" --profile "$(PROFILE)"
 
 op-build-native-%:
 	cargo build --bin op-reth --target $* --features "optimism,$(FEATURES)" --profile "$(PROFILE)" --manifest-path crates/optimism/bin/Cargo.toml
@@ -97,7 +97,7 @@ op-build-x86_64-pc-windows-gnu: FEATURES := $(filter-out jemalloc jemalloc-prof,
 # See: https://github.com/cross-rs/cross/wiki/FAQ#undefined-reference-with-build-std
 build-%:
 	RUSTFLAGS="-C link-arg=-lgcc -Clink-arg=-static-libgcc" \
-		cross build --bin t1-reth --target $* --features "$(FEATURES)" --profile "$(PROFILE)"
+		cross build --bin reth --target $* --features "$(FEATURES)" --profile "$(PROFILE)"
 
 op-build-%:
 	RUSTFLAGS="-C link-arg=-lgcc -Clink-arg=-static-libgcc" \
@@ -122,7 +122,7 @@ op-build-aarch64-apple-darwin:
 define tarball_release_binary
 	cp $(CARGO_TARGET_DIR)/$(1)/$(PROFILE)/$(2) $(BIN_DIR)/$(2)
 	cd $(BIN_DIR) && \
-		tar -czf t1-reth-$(GIT_TAG)-$(1)$(3).tar.gz $(2) && \
+		tar -czf reth-$(GIT_TAG)-$(1)$(3).tar.gz $(2) && \
 		rm $(2)
 endef
 
@@ -134,11 +134,11 @@ endef
 build-release-tarballs: ## Create a series of `.tar.gz` files in the BIN_DIR directory, each containing a `reth` binary for a different target.
 	[ -d $(BIN_DIR) ] || mkdir -p $(BIN_DIR)
 	$(MAKE) build-x86_64-unknown-linux-gnu
-	$(call tarball_release_binary,"x86_64-unknown-linux-gnu","t1-reth","")
+	$(call tarball_release_binary,"x86_64-unknown-linux-gnu","reth","")
 	$(MAKE) build-aarch64-unknown-linux-gnu
-	$(call tarball_release_binary,"aarch64-unknown-linux-gnu","t1-reth","")
+	$(call tarball_release_binary,"aarch64-unknown-linux-gnu","reth","")
 	$(MAKE) build-x86_64-pc-windows-gnu
-	$(call tarball_release_binary,"x86_64-pc-windows-gnu","t1-reth.exe","")
+	$(call tarball_release_binary,"x86_64-pc-windows-gnu","reth.exe","")
 
 ##@ Test
 
@@ -214,11 +214,11 @@ docker-build-push-nightly: ## Build and push cross-arch Docker image tagged with
 define docker_build_push
 	$(MAKE) build-x86_64-unknown-linux-gnu
 	mkdir -p $(BIN_DIR)/amd64
-	cp $(CARGO_TARGET_DIR)/x86_64-unknown-linux-gnu/$(PROFILE)/t1-reth $(BIN_DIR)/amd64/t1-reth
+	cp $(CARGO_TARGET_DIR)/x86_64-unknown-linux-gnu/$(PROFILE)/reth $(BIN_DIR)/amd64/reth
 
 	$(MAKE) build-aarch64-unknown-linux-gnu
 	mkdir -p $(BIN_DIR)/arm64
-	cp $(CARGO_TARGET_DIR)/aarch64-unknown-linux-gnu/$(PROFILE)/t1-reth $(BIN_DIR)/arm64/t1-reth
+	cp $(CARGO_TARGET_DIR)/aarch64-unknown-linux-gnu/$(PROFILE)/reth $(BIN_DIR)/arm64/reth
 
 	docker buildx build --file ./Dockerfile.cross . \
 		--platform linux/amd64 \
@@ -301,7 +301,7 @@ db-tools: ## Compile MDBX debugging tools.
 .PHONY: update-book-cli
 update-book-cli: build-debug ## Update book cli documentation.
 	@echo "Updating book cli doc..."
-	@./book/cli/update.sh $(CARGO_TARGET_DIR)/debug/t1-reth
+	@./book/cli/update.sh $(CARGO_TARGET_DIR)/debug/reth
 
 .PHONY: maxperf
 maxperf: ## Builds `reth` with the most aggressive optimisations.
@@ -322,7 +322,7 @@ fmt:
 lint-reth:
 	cargo +nightly clippy \
 	--workspace \
-	--bin "t1-reth" \
+	--bin "reth" \
 	--lib \
 	--examples \
 	--tests \
@@ -370,7 +370,7 @@ lint:
 fix-lint-reth:
 	cargo +nightly clippy \
 	--workspace \
-	--bin "t1-reth" \
+	--bin "reth" \
 	--lib \
 	--examples \
 	--tests \
@@ -427,7 +427,7 @@ rustdocs: ## Runs `cargo docs` to generate the Rust documents in the `target/doc
 test-reth:
 	cargo test \
 	--workspace \
-	--bin "t1-reth" \
+	--bin "reth" \
 	--lib \
 	--examples \
 	--tests \

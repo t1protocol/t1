@@ -1,5 +1,5 @@
 [package]
-name = "t1-reth"
+name = "reth"
 version = "0.1.0"
 edition = "2021"
 
