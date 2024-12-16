@@ -80,8 +80,7 @@ jobs:
       - name: "Generate a fuzz seed that changes weekly to avoid burning through RPC allowance"
         run: >
           echo "FOUNDRY_FUZZ_SEED=$(
-            echo $(($EPOCHSECONDS - $EPOCHSECONDS % 604800))
-          )" >> $GITHUB_ENV
+            echo $(($EPOCHSECONDS - $EPOCHSECONDS % 604800)) )" >> $GITHUB_ENV
 
       - name: "Run the tests"
         run: "forge test"

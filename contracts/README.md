@@ -1,52 +1,51 @@
-# Foundry Template [![Open in Gitpod][gitpod-badge]][gitpod] [![Github Actions][gha-badge]][gha] [![Foundry][foundry-badge]][foundry] [![License: MIT][license-badge]][license]
+# t1 Contracts [![Github Actions][gha-badge]][gha] [![Foundry][foundry-badge]][foundry] [![License: MIT][license-badge]][license]
 
-[gitpod]: https://gitpod.io/#https://github.com/PaulRBerg/foundry-template
-[gitpod-badge]: https://img.shields.io/badge/Gitpod-Open%20in%20Gitpod-FFB45B?logo=gitpod
-[gha]: https://github.com/PaulRBerg/foundry-template/actions
-[gha-badge]: https://github.com/PaulRBerg/foundry-template/actions/workflows/ci.yml/badge.svg
+[gha]: https://github.com/t1protocol/t1-contracts/actions
+[gha-badge]: https://github.com/t1protocol/t1-contracts/actions/workflows/ci.yml/badge.svg?branch=main
 [foundry]: https://getfoundry.sh/
 [foundry-badge]: https://img.shields.io/badge/Built%20with-Foundry-FFDB1C.svg
 [license]: https://opensource.org/licenses/MIT
 [license-badge]: https://img.shields.io/badge/License-MIT-blue.svg
 
-A Foundry-based template for developing Solidity smart contracts, with sensible defaults.
+This project contains the Solidity code for t1 L1 bridge and rollup contracts, plus L2 bridge and pre-deployed
+contracts.
 
-## What's Inside
+## Directory Structure
+
+<pre>
+├── <a href="./scripts">scripts</a>: Deployment scripts
+├── <a href="./src">src</a>
+│   ├── <a href="./src/L1/">L1</a>: Contracts deployed on the L1 (Ethereum)
+│   │   ├── <a href="./src/L1/gateways/">gateways</a>: Gateway router and token gateway contracts
+│   │   ├── <a href="./src/L1/rollup/">rollup</a>: Rollup contracts for data availability and finalization
+│   │   ├── <a href="./src/L1/IL1T1Messenger.sol">IL1T1Messenger.sol</a>: L1 T1 messenger interface
+│   │   └── <a href="./src/L1/L1T1Messenger.sol">L1T1Messenger.sol</a>: L1 T1 messenger contract
+│   ├── <a href="./src/L2/">L2</a>: Contracts deployed on the L2 (T1)
+│   │   ├── <a href="./src/L2/gateways/">gateways</a>: Gateway router and token gateway contracts
+│   │   ├── <a href="./src/L2/predeploys/">predeploys</a>: Pre-deployed contracts on L2
+│   │   ├── <a href="./src/L2/IL2T1Messenger.sol">IL2T1Messenger.sol</a>: L2 T1 messenger interface
+│   │   └── <a href="./src/L2/L2T1Messenger.sol">L2T1Messenger.sol</a>: L2 T1 messenger contract
+│   ├── <a href="./src/libraries/">libraries</a>: Shared contract libraries
+│   ├── <a href="./src/misc/">misc</a>: Miscellaneous contracts
+│   ├── <a href="./src/mocks/">mocks</a>: Mock contracts used in the testing
+│   └── <a href="./src/test/">test</a>: Unit tests in solidity
+├── <a href="./foundry.toml">foundry.toml</a>: Foundry configuration
+├── <a href="./remappings.txt">remappings.txt</a>: Foundry dependency mappings
+...
+</pre>
+
+## Dependencies
 
 - [Forge](https://github.com/foundry-rs/foundry/blob/master/forge): compile, test, fuzz, format, and deploy smart
   contracts
 - [Forge Std](https://github.com/foundry-rs/forge-std): collection of helpful contracts and utilities for testing
 - [Prettier](https://github.com/prettier/prettier): code formatter for non-Solidity files
 - [Solhint](https://github.com/protofire/solhint): linter for Solidity code
-
-## Getting Started
-
-Click the [`Use this template`](https://github.com/PaulRBerg/foundry-template/generate) button at the top of the page to
-create a new repository with this repo as the initial state.
-
-Or, if you prefer to install the template manually:
-
-```sh
-$ forge init --template PaulRBerg/foundry-template my-project
-$ cd my-project
-$ bun install # install Solhint, Prettier, and other Node.js deps
-```
-
-If this is your first time with Foundry, check out the
-[installation](https://github.com/foundry-rs/foundry#installation) instructions.
-
-## Features
-
-This template builds upon the frameworks and libraries mentioned above, so please consult their respective documentation
-for details about their specific features.
-
-For example, if you're interested in exploring Foundry in more detail, you should look at the
-[Foundry Book](https://book.getfoundry.sh/). In particular, you may be interested in reading the
-[Writing Tests](https://book.getfoundry.sh/forge/writing-tests.html) tutorial.
+- [Solmate](https://github.com/transmissions11/solmate): gas optimized building blocks
 
 ### Sensible Defaults
 
-This template comes with a set of sensible default configurations for you to use. These defaults can be found in the
+This project comes with a set of sensible default configurations for you to use. These defaults can be found in the
 following files:
 
 ```text
@@ -59,24 +58,16 @@ following files:
 └── remappings.txt
 ```
 
-### VSCode Integration
-
-This template is IDE agnostic, but for the best user experience, you may want to use it in VSCode alongside Nomic
-Foundation's [Solidity extension](https://marketplace.visualstudio.com/items?itemName=NomicFoundation.hardhat-solidity).
-
-For guidance on how to integrate a Foundry project in VSCode, please refer to this
-[guide](https://book.getfoundry.sh/config/vscode).
-
 ### GitHub Actions
 
-This template comes with GitHub Actions pre-configured. Your contracts will be linted and tested on every push and pull
+This project comes with GitHub Actions pre-configured. Your contracts will be linted and tested on every push and pull
 request made to the `main` branch.
 
 You can edit the CI script in [.github/workflows/ci.yml](./.github/workflows/ci.yml).
 
 ## Installing Dependencies
 
-Foundry typically uses git submodules to manage dependencies, but this template uses Node.js packages because
+Foundry typically uses git submodules to manage dependencies, but this project uses Node.js packages because
 [submodules don't scale](https://twitter.com/PaulRBerg/status/1736695487057531328).
 
 This is how to install dependencies:
@@ -86,16 +77,12 @@ This is how to install dependencies:
 2. Add a remapping for the dependency in [remappings.txt](./remappings.txt), e.g.
    `dependency-name=node_modules/dependency-name`
 
-Note that OpenZeppelin Contracts is pre-installed, so you can follow that as an example.
-
 ## Writing Tests
 
 To write a new test contract, you start by importing `Test` from `forge-std`, and then you inherit it in your test
 contract. Forge Std comes with a pre-instantiated [cheatcodes](https://book.getfoundry.sh/cheatcodes/) environment
 accessible via the `vm` property. If you would like to view the logs in the terminal output, you can add the `-vvv` flag
 and use [console.log](https://book.getfoundry.sh/faq?highlight=console.log#how-do-i-use-consolelog).
-
-This template comes with an example test contract [Foo.t.sol](./test/Foo.t.sol)
 
 ## Usage
 
@@ -191,13 +178,6 @@ simply copy paste the path):
 ```sh
 $ bun run test:coverage:report
 ```
-
-## Related Efforts
-
-- [abigger87/femplate](https://github.com/abigger87/femplate)
-- [cleanunicorn/ethereum-smartcontract-template](https://github.com/cleanunicorn/ethereum-smartcontract-template)
-- [foundry-rs/forge-template](https://github.com/foundry-rs/forge-template)
-- [FrankieIsLost/forge-template](https://github.com/FrankieIsLost/forge-template)
 
 ## License
 

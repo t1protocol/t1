@@ -1,31 +1,37 @@
 {
-  "name": "@prb/foundry-template",
-  "description": "Foundry-based template for developing Solidity smart contracts",
+  "name": "@t1protocol/t1-contracts",
+  "description": "Solidity code for T1's L1 bridge and rollup contracts, plus L2 bridge and pre-deployed contracts.",
   "version": "1.0.0",
   "author": {
-    "name": "Paul Razvan Berg",
-    "url": "https://github.com/PaulRBerg"
+    "name": "t1 Labs",
+    "url": "https://github.com/t1protocol"
   },
   "dependencies": {
-    "@openzeppelin/contracts": "^5.0.1"
+    "@openzeppelin/contracts": "^v4.9.3",
+    "@openzeppelin/contracts-upgradeable": "^v4.9.3"
   },
   "devDependencies": {
-    "forge-std": "github:foundry-rs/forge-std#v1.8.1",
+    "ds-test": "github:dapphub/ds-test",
+    "forge-std": "github:foundry-rs/forge-std#v1.9.4",
+    "husky": "^9.1.7",
     "prettier": "^3.0.0",
-    "solhint": "^3.6.2"
+    "solhint": "^3.6.2",
+    "solmate": "^6.8.0"
   },
   "keywords": [
     "blockchain",
     "ethereum",
-    "forge",
     "foundry",
     "smart-contracts",
     "solidity",
-    "template"
+    "rollup",
+    "rtp",
+    "zkp",
+    "tee"
   ],
   "private": true,
   "scripts": {
-    "clean": "rm -rf cache out",
+    "clean": "rm -rf cache out artifacts coverage lcov.info",
     "build": "forge build",
     "lint": "bun run lint:sol && bun run prettier:check",
     "lint:sol": "forge fmt --check && bun solhint \"{script,src,test}/**/*.sol\"",
@@ -33,6 +39,7 @@
     "prettier:write": "prettier --write \"**/*.{json,md,yml}\" --ignore-path \".prettierignore\"",
     "test": "forge test",
     "test:coverage": "forge coverage",
-    "test:coverage:report": "forge coverage --report lcov && genhtml lcov.info --branch-coverage --output-dir coverage"
+    "test:coverage:report": "forge coverage --report lcov && genhtml lcov.info --branch-coverage --output-dir coverage --ignore-errors inconsistent",
+    "prepare": "husky"
   }
 }
