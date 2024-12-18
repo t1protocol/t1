@@ -20,7 +20,6 @@
   fuzz_runs = 256                                               # the number of fuzz runs for tests
   ffi = false                                                   # whether to enable ffi or not
   sender = '0x00a329c0648769a73afac7f9381e08fb43dbea72'         # the address of `msg.sender` in tests
-  tx_origin = '0x00a329c0648769a73afac7f9381e08fb43dbea72'      # the address of `tx.origin` in tests
   initial_balance = '0xffffffffffffffffffffffff'                # the initial balance of the test contract
   block_number = 0                                              # the block number we are at in tests
   gas_limit = 9223372036854775807                               # the gas limit in tests
