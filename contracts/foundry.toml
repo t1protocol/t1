@@ -1,0 +1,68 @@
+# Full reference https://github.com/foundry-rs/foundry/tree/master/crates/config
+
+[profile.default]
+  auto_detect_solc = false
+  bytecode_hash = "none"
+  out = "artifacts/src"
+  script = "scripts"
+  solc = "0.8.28"
+  src = "src"
+  test = "src/test"
+  libs = ["node_modules", "lib"]
+  cache = true                                                  # whether to cache builds or not
+  # force = true                                                # whether to ignore the cache (clean build)
+  evm_version = 'cancun'                                        # the evm version (by hardfork name)
+  solc_version = '0.8.24'                                       # override for the solc version (setting this ignores `auto_detect_solc`)
+  optimizer = true                                              # enable or disable the solc optimizer
+  optimizer_runs = 200                                          # the number of optimizer runs
+  verbosity = 3                                                 # the verbosity of tests
+  ignored_error_codes = []                                      # a list of ignored solc error codes
+  fuzz_runs = 256                                               # the number of fuzz runs for tests
+  ffi = false                                                   # whether to enable ffi or not
+  sender = '0x00a329c0648769a73afac7f9381e08fb43dbea72'         # the address of `msg.sender` in tests
+  initial_balance = '0xffffffffffffffffffffffff'                # the initial balance of the test contract
+  block_number = 0                                              # the block number we are at in tests
+  gas_limit = 9223372036854775807                               # the gas limit in tests
+  gas_price = 0                                                 # the gas price (in wei) in tests
+  block_base_fee_per_gas = 0                                    # the base fee (in wei) in tests
+  block_coinbase = '0x0000000000000000000000000000000000000000' # the address of `block.coinbase` in tests
+  block_timestamp = 0                                           # the value of `block.timestamp` in tests
+  block_difficulty = 0                                          # the value of `block.difficulty` in tests
+
+[profile.ci]
+  fuzz_runs = 1000
+
+[etherscan]
+  arbitrum = { key = "${API_KEY_ARBISCAN}" }
+  avalanche = { key = "${API_KEY_SNOWTRACE}" }
+  base = { key = "${API_KEY_BASESCAN}" }
+  bnb_smart_chain = { key = "${API_KEY_BSCSCAN}" }
+  gnosis_chain = { key = "${API_KEY_GNOSISSCAN}" }
+  goerli = { key = "${API_KEY_ETHERSCAN}" }
+  mainnet = { key = "${API_KEY_ETHERSCAN}" }
+  optimism = { key = "${API_KEY_OPTIMISTIC_ETHERSCAN}" }
+  polygon = { key = "${API_KEY_POLYGONSCAN}" }
+  sepolia = { key = "${API_KEY_ETHERSCAN}" }
+
+[fmt]
+  bracket_spacing = true
+  int_types = "long"
+  line_length = 120
+  multiline_func_header = "all"
+  number_underscore = "thousands"
+  quote_style = "double"
+  tab_width = 4
+  wrap_comments = true
+
+[rpc_endpoints]
+  arbitrum = "https://arbitrum-mainnet.infura.io/v3/${API_KEY_INFURA}"
+  avalanche = "https://avalanche-mainnet.infura.io/v3/${API_KEY_INFURA}"
+  base = "https://mainnet.base.org"
+  bnb_smart_chain = "https://bsc-dataseed.binance.org"
+  gnosis_chain = "https://rpc.gnosischain.com"
+  goerli = "https://goerli.infura.io/v3/${API_KEY_INFURA}"
+  localhost = "http://localhost:8545"
+  mainnet = "https://eth-mainnet.g.alchemy.com/v2/${API_KEY_ALCHEMY}"
+  optimism = "https://optimism-mainnet.infura.io/v3/${API_KEY_INFURA}"
+  polygon = "https://polygon-mainnet.infura.io/v3/${API_KEY_INFURA}"
+  sepolia = "https://sepolia.infura.io/v3/${API_KEY_INFURA}"
