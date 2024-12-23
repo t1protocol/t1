@@ -13,7 +13,8 @@
     "commit": "./node_modules/cz-customizable/standalone.js"
   },
   "devDependencies": {
-    "commitizen": "4.3.1",
+    "@commitlint/cli": "19.6.1",
+    "@commitlint/config-conventional": "19.6.0",
     "cz-conventional-changelog": "3.3.0",
     "cz-customizable": "7.3.0",
     "husky": "9.1.7"
@@ -22,8 +23,5 @@
     "commitizen": {
       "path": "./node_modules/cz-conventional-changelog"
     }
-  },
-  "commitlint": {
-    "extends": ["@commitlint/config-conventional"]
   }
 }
