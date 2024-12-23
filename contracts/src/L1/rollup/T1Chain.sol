@@ -198,8 +198,6 @@ contract T1Chain is OwnableUpgradeable, PausableUpgradeable, IT1Chain {
 
     /// @notice Initialize the storage of T1Chain.
     ///
-    /// @dev The parameters `_messageQueue` are no longer used.
-    ///
     /// @param _maxNumTxInChunk The maximum number of transactions allowed in each chunk.
     function initialize(uint256 _maxNumTxInChunk) public initializer {
         OwnableUpgradeable.__Ownable_init();

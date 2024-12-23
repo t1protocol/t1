@@ -70,10 +70,8 @@ contract L1GatewayRouterTest is L1GatewayTestBase {
         );
 
         // Initialize L1 contracts
-        l1StandardERC20Gateway.initialize(
-            address(l2StandardERC20Gateway), address(router), address(l1Messenger), address(template), address(factory)
-        );
-        l1ETHGateway.initialize(address(l2ETHGateway), address(router), address(l1Messenger));
+        l1StandardERC20Gateway.initialize();
+        l1ETHGateway.initialize();
         router.initialize(address(l1ETHGateway), address(l1StandardERC20Gateway));
     }
 

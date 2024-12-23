@@ -63,8 +63,6 @@ contract L1MessageQueue is OwnableUpgradeable, IL1MessageQueue {
 
     /// @notice Initialize the storage of L1MessageQueue.
     ///
-    /// @dev The parameters `_messenger` and `_T1Chain` are no longer used.
-    ///
     /// @param _gasOracle The address of `GasOracle` contract.
     /// @param _maxGasLimit The maximum gas limit allowed in single transaction.
     function initialize(address _gasOracle, uint256 _maxGasLimit) external initializer {

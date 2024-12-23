@@ -8,8 +8,8 @@ import { BatchHeaderV3Codec } from "../libraries/codec/BatchHeaderV3Codec.sol";
 import { T1Chain } from "../L1/rollup/T1Chain.sol";
 
 contract T1ChainMockBlob is T1Chain {
-    bytes32 blobVersionedHash;
-    bool overrideBatchHashCheck;
+    bytes32 private blobVersionedHash;
+    bool private overrideBatchHashCheck;
 
     /**
      *

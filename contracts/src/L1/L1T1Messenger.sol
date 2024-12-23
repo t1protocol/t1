@@ -109,12 +109,9 @@ contract L1T1Messenger is T1MessengerBase, IL1T1Messenger {
 
     /// @notice Initialize the storage of L1T1Messenger.
     ///
-    /// @dev The parameters `_counterpart`, `_rollup` and `_messageQueue` are no longer used.
-    ///
-    /// @param _counterpart The address of L2T1Messenger contract in L2.
     /// @param _feeVault The address of fee vault, which will be used to collect relayer fee.
-    function initialize(address _counterpart, address _feeVault) public initializer {
-        T1MessengerBase.__T1MessengerBase_init(_counterpart, _feeVault);
+    function initialize(address _feeVault) public initializer {
+        T1MessengerBase.__T1MessengerBase_init(_feeVault);
 
         maxReplayTimes = 3;
         emit UpdateMaxReplayTimes(0, 3);

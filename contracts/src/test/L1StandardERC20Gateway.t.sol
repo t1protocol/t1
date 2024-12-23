@@ -72,9 +72,7 @@ contract L1StandardERC20GatewayTest is L1GatewayTestBase {
         gateway = _deployGateway(address(l1Messenger));
 
         // Initialize L1 contracts
-        gateway.initialize(
-            address(counterpartGateway), address(router), address(l1Messenger), address(template), address(factory)
-        );
+        gateway.initialize();
         router.initialize(address(0), address(gateway));
 
         // Prepare token balances
@@ -100,9 +98,7 @@ contract L1StandardERC20GatewayTest is L1GatewayTestBase {
         assertEq(address(factory), gateway.l2TokenFactory());
 
         hevm.expectRevert("Initializable: contract is already initialized");
-        gateway.initialize(
-            address(counterpartGateway), address(router), address(l1Messenger), address(template), address(factory)
-        );
+        gateway.initialize();
     }
 
     function testGetL2ERC20Address(address l1Address) public {
@@ -212,9 +208,7 @@ contract L1StandardERC20GatewayTest is L1GatewayTestBase {
     function testDropMessageMocking() public {
         MockT1Messenger mockMessenger = new MockT1Messenger();
         gateway = _deployGateway(address(mockMessenger));
-        gateway.initialize(
-            address(counterpartGateway), address(router), address(mockMessenger), address(template), address(factory)
-        );
+        gateway.initialize();
 
         // only messenger can call, revert
         hevm.expectRevert(ErrorCallerIsNotMessenger.selector);
@@ -294,9 +288,7 @@ contract L1StandardERC20GatewayTest is L1GatewayTestBase {
 
         MockT1Messenger mockMessenger = new MockT1Messenger();
         gateway = _deployGateway(address(mockMessenger));
-        gateway.initialize(
-            address(counterpartGateway), address(router), address(mockMessenger), address(template), address(factory)
-        );
+        gateway.initialize();
 
         // only call by counterpart
         hevm.expectRevert(ErrorCallerIsNotCounterpartGateway.selector);

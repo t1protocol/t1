@@ -37,7 +37,7 @@ contract L1ETHGatewayTest is L1GatewayTestBase {
         gateway = _deployGateway(address(l1Messenger));
 
         // Initialize L1 contracts
-        gateway.initialize(address(counterpartGateway), address(router), address(l1Messenger));
+        gateway.initialize();
         router.initialize(address(gateway), address(0));
     }
 
@@ -47,7 +47,7 @@ contract L1ETHGatewayTest is L1GatewayTestBase {
         assertEq(address(l1Messenger), gateway.messenger());
 
         hevm.expectRevert("Initializable: contract is already initialized");
-        gateway.initialize(address(counterpartGateway), address(router), address(l1Messenger));
+        gateway.initialize();
     }
 
     function testDepositETH(uint256 amount, uint256 gasLimit, uint256 feePerGas) public {
@@ -107,7 +107,7 @@ contract L1ETHGatewayTest is L1GatewayTestBase {
     function testDropMessageMocking() public {
         MockT1Messenger mockMessenger = new MockT1Messenger();
         gateway = _deployGateway(address(mockMessenger));
-        gateway.initialize(address(counterpartGateway), address(router), address(mockMessenger));
+        gateway.initialize();
 
         // only messenger can call, revert
         hevm.expectRevert(ErrorCallerIsNotMessenger.selector);
@@ -180,7 +180,7 @@ contract L1ETHGatewayTest is L1GatewayTestBase {
 
         MockT1Messenger mockMessenger = new MockT1Messenger();
         gateway = _deployGateway(address(mockMessenger));
-        gateway.initialize(address(counterpartGateway), address(router), address(mockMessenger));
+        gateway.initialize();
 
         // only call by counterpart
         hevm.expectRevert(ErrorCallerIsNotCounterpartGateway.selector);

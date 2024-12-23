@@ -38,8 +38,8 @@
     "prettier:check": "prettier --check \"**/*.{json,md,yml}\" --ignore-path \".prettierignore\"",
     "prettier:write": "prettier --write \"**/*.{json,md,yml}\" --ignore-path \".prettierignore\"",
     "test": "forge test",
-    "test:coverage": "forge coverage",
-    "test:coverage:report": "forge coverage --report lcov && genhtml lcov.info --branch-coverage --output-dir coverage --ignore-errors inconsistent",
+    "test:coverage": "forge coverage --no-match-coverage '(script|test|mocks|ZkEvmVerifierV1)'",
+    "test:coverage:report": "forge coverage --no-match-coverage '(script|test|mocks|ZkEvmVerifierV1)' --report lcov && genhtml lcov.info --branch-coverage --output-dir coverage --ignore-errors inconsistent",
     "prepare": "husky"
   }
 }

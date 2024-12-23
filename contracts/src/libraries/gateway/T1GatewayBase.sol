@@ -83,7 +83,7 @@ abstract contract T1GatewayBase is ReentrancyGuardUpgradeable, OwnableUpgradeabl
         messenger = _messenger;
     }
 
-    function _initialize(address, address, address) internal {
+    function _initialize() internal {
         ReentrancyGuardUpgradeable.__ReentrancyGuard_init();
         OwnableUpgradeable.__Ownable_init();
     }

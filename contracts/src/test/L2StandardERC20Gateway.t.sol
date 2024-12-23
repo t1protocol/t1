@@ -69,7 +69,7 @@ contract L2StandardERC20GatewayTest is L2GatewayTestBase {
 
         // Initialize L2 contracts
         factory.transferOwnership(address(gateway));
-        gateway.initialize(address(counterpartGateway), address(router), address(l2Messenger), address(factory));
+        gateway.initialize();
         router.initialize(address(0), address(gateway));
 
         // Prepare token balances
@@ -101,7 +101,7 @@ contract L2StandardERC20GatewayTest is L2GatewayTestBase {
         assertEq(address(l1Token), gateway.getL1ERC20Address(address(l2Token)));
 
         hevm.expectRevert("Initializable: contract is already initialized");
-        gateway.initialize(address(counterpartGateway), address(router), address(l1Messenger), address(factory));
+        gateway.initialize();
     }
 
     function testGetL2ERC20Address(address l1Address) public {
@@ -178,7 +178,7 @@ contract L2StandardERC20GatewayTest is L2GatewayTestBase {
 
         MockT1Messenger mockMessenger = new MockT1Messenger();
         gateway = _deployGateway(address(mockMessenger));
-        gateway.initialize(address(counterpartGateway), address(router), address(mockMessenger), address(factory));
+        gateway.initialize();
 
         // only call by counterpart
         hevm.expectRevert(ErrorCallerIsNotCounterpartGateway.selector);

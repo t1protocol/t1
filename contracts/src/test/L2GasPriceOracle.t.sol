@@ -16,7 +16,6 @@ contract L2GasPriceOracleTest is DSTestPlus {
 
     L2GasPriceOracle private oracle;
     Whitelist private whitelist;
-    uint256 fee;
 
     event Log(address addr);
 

@@ -4,9 +4,7 @@
   auto_detect_solc = false
   bytecode_hash = "none"
   out = "artifacts/src"
-  script = "scripts"
   solc = "0.8.28"
-  src = "src"
   test = "src/test"
   libs = ["node_modules", "lib"]
   cache = true                                                  # whether to cache builds or not
@@ -31,18 +29,6 @@
 
 [profile.ci]
   fuzz_runs = 1000
-
-[etherscan]
-  arbitrum = { key = "${API_KEY_ARBISCAN}" }
-  avalanche = { key = "${API_KEY_SNOWTRACE}" }
-  base = { key = "${API_KEY_BASESCAN}" }
-  bnb_smart_chain = { key = "${API_KEY_BSCSCAN}" }
-  gnosis_chain = { key = "${API_KEY_GNOSISSCAN}" }
-  goerli = { key = "${API_KEY_ETHERSCAN}" }
-  mainnet = { key = "${API_KEY_ETHERSCAN}" }
-  optimism = { key = "${API_KEY_OPTIMISTIC_ETHERSCAN}" }
-  polygon = { key = "${API_KEY_POLYGONSCAN}" }
-  sepolia = { key = "${API_KEY_ETHERSCAN}" }
 
 [fmt]
   bracket_spacing = true

@@ -93,7 +93,7 @@ abstract contract L1GatewayTestBase is T1TestBase {
             ITransparentUpgradeableProxy(address(l1Messenger)),
             address(new L1T1Messenger(address(l2Messenger), address(rollup), address(messageQueue)))
         );
-        l1Messenger.initialize(address(l2Messenger), feeVault);
+        l1Messenger.initialize(feeVault);
 
         // initialize L2GasPriceOracle
         gasOracle.initialize(1, 2, 1, 1);

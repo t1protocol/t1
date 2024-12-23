@@ -41,14 +41,8 @@ contract L1ETHGateway is T1GatewayBase, IL1ETHGateway, IMessageDropCallback {
     }
 
     /// @notice Initialize the storage of L1ETHGateway.
-    ///
-    /// @dev The parameters `_counterpart`, `_router` and `_messenger` are no longer used.
-    ///
-    /// @param _counterpart The address of L2ETHGateway in L2.
-    /// @param _router The address of L1GatewayRouter in L1.
-    /// @param _messenger The address of L1T1Messenger in L1.
-    function initialize(address _counterpart, address _router, address _messenger) external initializer {
-        T1GatewayBase._initialize(_counterpart, _router, _messenger);
+    function initialize() external initializer {
+        T1GatewayBase._initialize();
     }
 
     /**

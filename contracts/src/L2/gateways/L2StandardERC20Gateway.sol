@@ -68,22 +68,8 @@ contract L2StandardERC20Gateway is L2ERC20Gateway {
     }
 
     /// @notice Initialize the storage of L2StandardERC20Gateway.
-    ///
-    /// @dev The parameters `_counterpart`, `_router`, `_messenger` and `_tokenFactory` are no longer used.
-    ///
-    /// @param _counterpart The address of `L1StandardERC20Gateway` contract in L1.
-    /// @param _router The address of `L2GatewayRouter` contract in L2.
-    /// @param _messenger The address of `L2T1Messenger` contract in L2.
-    function initialize(
-        address _counterpart,
-        address _router,
-        address _messenger,
-        address /*_tokenFactory*/
-    )
-        external
-        initializer
-    {
-        T1GatewayBase._initialize(_counterpart, _router, _messenger);
+    function initialize() external initializer {
+        T1GatewayBase._initialize();
     }
 
     /**

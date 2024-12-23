@@ -75,7 +75,7 @@ abstract contract T1MessengerBase is
         counterpart = _counterpart;
     }
 
-    function __T1MessengerBase_init(address, address _feeVault) internal onlyInitializing {
+    function __T1MessengerBase_init(address _feeVault) internal onlyInitializing {
         OwnableUpgradeable.__Ownable_init();
         PausableUpgradeable.__Pausable_init();
         ReentrancyGuardUpgradeable.__ReentrancyGuard_init();

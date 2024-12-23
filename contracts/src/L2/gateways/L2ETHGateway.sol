@@ -39,14 +39,8 @@ contract L2ETHGateway is T1GatewayBase, IL2ETHGateway {
     }
 
     /// @notice Initialize the storage of L2ETHGateway.
-    ///
-    /// @dev The parameters `_counterpart`, `_router` and `_messenger` are no longer used.
-    ///
-    /// @param _counterpart The address of L1ETHGateway in L1.
-    /// @param _router The address of L2GatewayRouter in L2.
-    /// @param _messenger The address of L2T1Messenger in L2.
-    function initialize(address _counterpart, address _router, address _messenger) external initializer {
-        T1GatewayBase._initialize(_counterpart, _router, _messenger);
+    function initialize() external initializer {
+        T1GatewayBase._initialize();
     }
 
     /**

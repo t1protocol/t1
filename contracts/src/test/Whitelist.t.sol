@@ -3,7 +3,6 @@
 pragma solidity >=0.8.28;
 
 import { DSTestPlus } from "solmate/test/utils/DSTestPlus.sol";
-import { WETH } from "solmate/tokens/WETH.sol";
 
 import { Whitelist } from "../L2/predeploys/Whitelist.sol";
 

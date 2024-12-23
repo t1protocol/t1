@@ -69,10 +69,8 @@ contract L2GatewayRouterTest is L2GatewayTestBase {
 
         // Initialize L2 contracts
         factory.transferOwnership(address(l2StandardERC20Gateway));
-        l2StandardERC20Gateway.initialize(
-            address(l1StandardERC20Gateway), address(router), address(l1Messenger), address(factory)
-        );
-        l2ETHGateway.initialize(address(l1ETHGateway), address(router), address(l2Messenger));
+        l2StandardERC20Gateway.initialize();
+        l2ETHGateway.initialize();
         router.initialize(address(l2ETHGateway), address(l2StandardERC20Gateway));
 
         // Prepare token balances

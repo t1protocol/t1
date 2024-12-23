@@ -89,7 +89,7 @@ contract L2T1Messenger is T1MessengerBase, IL2T1Messenger {
     }
 
     function initialize(address, uint64[] memory chainIds) external initializer {
-        T1MessengerBase.__T1MessengerBase_init(address(0), address(0));
+        T1MessengerBase.__T1MessengerBase_init(address(0));
         for (uint256 i = 0; i < chainIds.length; i++) {
             _addChain(chainIds[i]);
         }
