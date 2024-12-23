@@ -1,0 +1,27 @@
+{
+  "name": "t1",
+  "version": "0.0.1",
+  "description": "A monorepo containing all major components of the t1 protocol",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/t1protocol/"
+  },
+  "author": "t1 Protocol",
+  "license": "SEE LICENSE IN <filename>",
+  "scripts": {
+    "prepare": "husky",
+    "commit": "./node_modules/cz-customizable/standalone.js"
+  },
+  "devDependencies": {
+    "@commitlint/cli": "19.6.1",
+    "@commitlint/config-conventional": "19.6.0",
+    "cz-conventional-changelog": "3.3.0",
+    "cz-customizable": "7.3.0",
+    "husky": "9.1.7"
+  },
+  "config": {
+    "commitizen": {
+      "path": "./node_modules/cz-conventional-changelog"
+    }
+  }
+}
