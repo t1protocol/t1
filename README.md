@@ -1,12 +1,15 @@
 # 𝚝𝟷
+
 Monorepo for 𝚝𝟷
 
 ## Getting Started
 
 ### Prerequisites
-1. Install (Bun)[https://bun.sh/]:
+
+1. Install [Bun](https://bun.sh/):
 
 Bun is the recommended package manager for this repository. ensure it's installed before proceeding:
+
 ```bash
 curl https://bun.sh/install | bash
 ```
@@ -29,18 +32,21 @@ bun install
 NB: Some sub-repos may have their own setup instructions (e.g., Rust for Reth). See the README.md within each subdirectory for details.
 
 ## Development Workflow
+
 * Use `bun commit` to ensure your commit messages follow the conventional commit format.
 * Check that the program compiles before pushing any changes. The particular command to run will depend on the specific subdirectory that you are working within.
 
 ## Contributing
+
 We welcome contributions! To get started:
 
 1. Fork the repo and create a branch for your changes.
 2. Ensure your changes pass tests and follow the commit message conventions (`bun commit` helps with this).
-2. Open a pull request for review.
+3. Open a pull request for review.
 
 ### Commit message guidelines
-This repo uses (conventional commits)[https://www.conventionalcommits.org/en/v1.0.0/] to standardize commit messages. Available commit types include:
+
+This repo uses [conventional commits](https://www.conventionalcommits.org/en/v1.0.0/) to standardize commit messages. Available commit types include:
 
 * feat: new features
 * fix: bug fixes
@@ -50,10 +56,9 @@ This repo uses (conventional commits)[https://www.conventionalcommits.org/en/v1.
 * WIP: work in progress (use for intermediate commits)
 
 ### Install pre-commit hooks
+
 Husky is used for managing pre-commit hooks. Hooks are installed automatically when you run `bun install`.
 
 ## Open Source
+
 This repository will eventually be open-sourced. We aim to make it modular and easy to fork, so users can access specific components without requiring the full stack.
-
-
-
