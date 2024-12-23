@@ -1,7 +1,7 @@
 # t1 Contracts [![Github Actions][gha-badge]][gha] [![Foundry][foundry-badge]][foundry] [![License: MIT][license-badge]][license]
 
-[gha]: https://github.com/t1protocol/t1-contracts/actions
-[gha-badge]: https://github.com/t1protocol/t1-contracts/actions/workflows/ci.yml/badge.svg?branch=main
+[gha]: https://github.com/t1protocol/t1/actions
+[gha-badge]: https://github.com/t1protocol/t1/actions/workflows/contracts.yml/badge.svg?branch=main
 [foundry]: https://getfoundry.sh/
 [foundry-badge]: https://img.shields.io/badge/Built%20with-Foundry-FFDB1C.svg
 [license]: https://opensource.org/licenses/MIT
@@ -13,7 +13,7 @@ contracts.
 ## Directory Structure
 
 <pre>
-├── <a href="./scripts">scripts</a>: Deployment scripts
+├── <a href="./script">script</a>: Deployment scripts
 ├── <a href="./src">src</a>
 │   ├── <a href="./src/L1/">L1</a>: Contracts deployed on the L1 (Ethereum)
 │   │   ├── <a href="./src/L1/gateways/">gateways</a>: Gateway router and token gateway contracts
@@ -63,7 +63,7 @@ following files:
 This project comes with GitHub Actions pre-configured. Your contracts will be linted and tested on every push and pull
 request made to the `main` branch.
 
-You can edit the CI script in [.github/workflows/ci.yml](./.github/workflows/ci.yml).
+You can edit the CI script in [contracts.yml](../.github/workflows/contracts.yml).
 
 ## Installing Dependencies
 
