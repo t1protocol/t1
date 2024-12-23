@@ -41,6 +41,6 @@ module.exports = {
   // skip any questions you want
   skipQuestions: ["customScope"],
 
-  // limit subject length
-  subjectLimit: 72,
+  scopeLimit: 20,
+  subjectLimit: 50,
 };
