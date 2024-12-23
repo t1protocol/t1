@@ -16,11 +16,57 @@ interface IL2T1Messenger is IT1Messenger {
     /// @param newMaxFailedExecutionTimes The new maximum number of times each message can fail in L2.
     event UpdateMaxFailedExecutionTimes(uint256 oldMaxFailedExecutionTimes, uint256 newMaxFailedExecutionTimes);
 
+    /// @notice Emitted when a new destination chain is added to the supported chains mapping
+    /// @param chainId The ID of the chain that was added as a supported destination
+    event DestinationChainAdded(uint64 indexed chainId);
+
+    /// @notice Emitted when a destination chain is removed from the supported chains mapping
+    /// @param chainId The ID of the chain that was removed as a supported destination
+    event DestinationChainRemoved(uint64 indexed chainId);
+
     /**
      *
      * Public Mutating Functions *
      *
      */
+
+    /// @notice Send cross chain message from t1 to L2 or t1 to L1.
+    /// @param target The address of account who receive the message.
+    /// @param value The amount of ether passed when call target contract.
+    /// @param message The content of the message.
+    /// @param gasLimit Gas limit required to complete the message relay on corresponding chain.
+    /// @param destChainId The ID of the chain for which the message is bound.
+    /// @return nonce The unique ID assigned to this request
+    function sendMessage(
+        address target,
+        uint256 value,
+        bytes calldata message,
+        uint256 gasLimit,
+        uint64 destChainId
+    )
+        external
+        payable
+        returns (uint256 nonce);
+
+    /// @notice Send cross chain message from t1 to L2 or t1 to L1.
+    /// @param target The address of account who receive the message.
+    /// @param value The amount of ether passed when call target contract.
+    /// @param message The content of the message.
+    /// @param gasLimit Gas limit required to complete the message relay on corresponding chain.
+    /// @param destChainId The ID of the chain for which the message is bound.
+    /// @param callbackAddress The address of account who will receive the callback and the refunded fee.
+    /// @return nonce The unique ID assigned to this request
+    function sendMessage(
+        address target,
+        uint256 value,
+        bytes calldata message,
+        uint256 gasLimit,
+        uint64 destChainId,
+        address callbackAddress
+    )
+        external
+        payable
+        returns (uint256 nonce);
 
     /// @notice execute L1 => L2 message
     /// @dev Make sure this is only called by privileged accounts.

@@ -7,6 +7,7 @@ import { IL2T1Messenger } from "../IL2T1Messenger.sol";
 import { IL2ETHGateway } from "./IL2ETHGateway.sol";
 
 import { T1GatewayBase } from "../../libraries/gateway/T1GatewayBase.sol";
+import { T1Constants } from "../../libraries/constants/T1Constants.sol";
 
 /// @title L2ETHGateway
 /// @notice The `L2ETHGateway` contract is used to withdraw ETH token on layer 2 and
@@ -135,7 +136,9 @@ contract L2ETHGateway is T1GatewayBase, IL2ETHGateway {
         // @note no rate limit here, since ETH is limited in messenger
 
         bytes memory _message = abi.encodeCall(IL1ETHGateway.finalizeWithdrawETH, (_from, _to, _amount, _data));
-        IL2T1Messenger(messenger).sendMessage{ value: msg.value }(counterpart, _amount, _message, _gasLimit);
+        IL2T1Messenger(messenger).sendMessage{ value: msg.value }(
+            counterpart, _amount, _message, _gasLimit, T1Constants.ETH_CHAIN_ID
+        );
 
         emit WithdrawETH(_from, _to, _amount, _data);
     }

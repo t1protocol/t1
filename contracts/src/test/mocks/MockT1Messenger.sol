@@ -31,17 +31,4 @@ contract MockT1Messenger is IT1Messenger {
             }
         }
     }
-
-    function sendMessage(address _to, uint256 _value, bytes memory _message, uint256 _gasLimit) external payable { }
-
-    function sendMessage(
-        address _to,
-        uint256 _value,
-        bytes memory _message,
-        uint256 _gasLimit,
-        address _refundAddress
-    )
-        external
-        payable
-    { }
 }

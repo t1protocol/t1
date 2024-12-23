@@ -13,6 +13,7 @@ import { T1StandardERC20 } from "../libraries/token/T1StandardERC20.sol";
 import { T1StandardERC20Factory } from "../libraries/token/T1StandardERC20Factory.sol";
 
 import { AddressAliasHelper } from "../libraries/common/AddressAliasHelper.sol";
+import { T1Constants } from "../libraries/constants/T1Constants.sol";
 
 import { L2GatewayTestBase } from "./L2GatewayTestBase.t.sol";
 import { MockT1Messenger } from "./mocks/MockT1Messenger.sol";
@@ -374,7 +375,9 @@ contract L2StandardERC20GatewayTest is L2GatewayTestBase {
             // emit SentMessage from L2T1Messenger
             {
                 hevm.expectEmit(true, true, false, true);
-                emit SentMessage(address(gateway), address(counterpartGateway), 0, 0, gasLimit, message);
+                emit SentMessage(
+                    address(gateway), address(counterpartGateway), 0, 0, gasLimit, message, T1Constants.ETH_CHAIN_ID
+                );
             }
 
             // emit WithdrawERC20 from L2StandardERC20Gateway
@@ -453,7 +456,9 @@ contract L2StandardERC20GatewayTest is L2GatewayTestBase {
             // emit SentMessage from L1T1Messenger
             {
                 hevm.expectEmit(true, true, false, true);
-                emit SentMessage(address(gateway), address(counterpartGateway), 0, 0, gasLimit, message);
+                emit SentMessage(
+                    address(gateway), address(counterpartGateway), 0, 0, gasLimit, message, T1Constants.ETH_CHAIN_ID
+                );
             }
 
             // emit WithdrawERC20 from L1StandardERC20Gateway
@@ -541,7 +546,9 @@ contract L2StandardERC20GatewayTest is L2GatewayTestBase {
             // emit SentMessage from L1T1Messenger
             {
                 hevm.expectEmit(true, true, false, true);
-                emit SentMessage(address(gateway), address(counterpartGateway), 0, 0, gasLimit, message);
+                emit SentMessage(
+                    address(gateway), address(counterpartGateway), 0, 0, gasLimit, message, T1Constants.ETH_CHAIN_ID
+                );
             }
 
             // emit WithdrawERC20 from L1StandardERC20Gateway

@@ -67,4 +67,31 @@ contract L2MessageQueueTest is DSTestPlus {
             queue.messageRoot(), bytes32(uint256(0xa9bb8c3f1f12e9aa903a50c47f314b57610a3ab32f2d463293f58836def38d36))
         );
     }
+
+    function testSetGasOracle() external {
+        // non-owner cannot set gas oracle
+        hevm.startPrank(address(0));
+        hevm.expectRevert("caller is not the owner");
+        queue.setGasOracle(1, address(0xdead));
+        hevm.stopPrank();
+
+        // owner can set gas oracle
+        uint64 chainId = 1;
+        address oracle = address(0xbeef);
+        queue.setGasOracle(chainId, oracle);
+        assertEq(queue.gasOraclesByChain(chainId), oracle);
+
+        // can update existing oracle
+        address newOracle = address(0xcafe);
+        queue.setGasOracle(chainId, newOracle);
+        assertEq(queue.gasOraclesByChain(chainId), newOracle);
+
+        // can set for different chain IDs
+        uint64 chainId2 = 2;
+        address oracle2 = address(0xdead);
+        queue.setGasOracle(chainId2, oracle2);
+        assertEq(queue.gasOraclesByChain(chainId2), oracle2);
+        // original chain ID oracle unchanged
+        assertEq(queue.gasOraclesByChain(chainId), newOracle);
+    }
 }

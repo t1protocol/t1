@@ -338,7 +338,15 @@ contract L1ETHGatewayTest is L1GatewayTestBase {
             // emit SentMessage from L1T1Messenger
             {
                 hevm.expectEmit(true, true, false, true);
-                emit SentMessage(address(gateway), address(counterpartGateway), amount, 0, gasLimit, message);
+                emit SentMessage(
+                    address(gateway),
+                    address(counterpartGateway),
+                    amount,
+                    0,
+                    gasLimit,
+                    message,
+                    T1Constants.T1_DEVNET_CHAIN_ID
+                );
             }
 
             // emit DepositETH from L1ETHGateway
@@ -405,7 +413,15 @@ contract L1ETHGatewayTest is L1GatewayTestBase {
             // emit SentMessage from L1T1Messenger
             {
                 hevm.expectEmit(true, true, false, true);
-                emit SentMessage(address(gateway), address(counterpartGateway), amount, 0, gasLimit, message);
+                emit SentMessage(
+                    address(gateway),
+                    address(counterpartGateway),
+                    amount,
+                    0,
+                    gasLimit,
+                    message,
+                    T1Constants.T1_DEVNET_CHAIN_ID
+                );
             }
 
             // emit DepositETH from L1ETHGateway
@@ -473,7 +489,15 @@ contract L1ETHGatewayTest is L1GatewayTestBase {
             // emit SentMessage from L1T1Messenger
             {
                 hevm.expectEmit(true, true, false, true);
-                emit SentMessage(address(gateway), address(counterpartGateway), amount, 0, gasLimit, message);
+                emit SentMessage(
+                    address(gateway),
+                    address(counterpartGateway),
+                    amount,
+                    0,
+                    gasLimit,
+                    message,
+                    T1Constants.T1_DEVNET_CHAIN_ID
+                );
             }
 
             // emit DepositETH from L1ETHGateway

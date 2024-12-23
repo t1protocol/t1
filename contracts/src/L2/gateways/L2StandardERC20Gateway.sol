@@ -11,6 +11,7 @@ import { IT1ERC20Upgradeable } from "../../libraries/token/IT1ERC20Upgradeable.s
 import { T1StandardERC20 } from "../../libraries/token/T1StandardERC20.sol";
 import { IT1StandardERC20Factory } from "../../libraries/token/IT1StandardERC20Factory.sol";
 import { T1GatewayBase } from "../../libraries/gateway/T1GatewayBase.sol";
+import { T1Constants } from "../../libraries/constants/T1Constants.sol";
 
 /// @title L2StandardERC20Gateway
 /// @notice The `L2StandardERC20Gateway` is used to withdraw standard ERC20 tokens on layer 2 and
@@ -197,7 +198,9 @@ contract L2StandardERC20Gateway is L2ERC20Gateway {
             abi.encodeCall(IL1ERC20Gateway.finalizeWithdrawERC20, (_l1Token, _token, _from, _to, _amount, _data));
 
         // 4. send message to L2T1Messenger
-        IL2T1Messenger(messenger).sendMessage{ value: msg.value }(counterpart, 0, _message, _gasLimit);
+        IL2T1Messenger(messenger).sendMessage{ value: msg.value }(
+            counterpart, 0, _message, _gasLimit, T1Constants.ETH_CHAIN_ID
+        );
 
         emit WithdrawERC20(_l1Token, _token, _from, _to, _amount, _data);
     }

@@ -28,7 +28,8 @@ abstract contract L2GatewayTestBase is DSTestPlus {
         uint256 value,
         uint256 messageNonce,
         uint256 gasLimit,
-        bytes message
+        bytes message,
+        uint64 indexed destChainId
     );
     event RelayedMessage(bytes32 indexed messageHash);
     event FailedRelayedMessage(bytes32 indexed messageHash);
@@ -47,6 +48,8 @@ abstract contract L2GatewayTestBase is DSTestPlus {
 
     // pay 0.1 extra ETH to test refund
     uint256 internal constant EXTRA_VALUE = 1e17;
+
+    uint64 internal constant ARB_CHAIN_ID = 42_161;
 
     ProxyAdmin internal admin;
     EmptyContract private placeholder;
@@ -79,8 +82,10 @@ abstract contract L2GatewayTestBase is DSTestPlus {
             ITransparentUpgradeableProxy(address(l2Messenger)),
             address(new L2T1Messenger(address(l1Messenger), address(l2MessageQueue)))
         );
-        l2Messenger.initialize(address(l1Messenger));
+        uint64[] memory network = new uint64[](1);
+        network[0] = ARB_CHAIN_ID;
 
+        l2Messenger.initialize(address(l1Messenger), network);
         // Initialize L2 contracts
         l2MessageQueue.initialize(address(l2Messenger));
         l1GasOracle.updateWhitelist(address(whitelist));

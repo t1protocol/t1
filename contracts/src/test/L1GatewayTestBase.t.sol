@@ -29,7 +29,8 @@ abstract contract L1GatewayTestBase is T1TestBase {
         uint256 value,
         uint256 messageNonce,
         uint256 gasLimit,
-        bytes message
+        bytes message,
+        uint64 indexed destChainId
     );
     event RelayedMessage(bytes32 indexed messageHash);
     event FailedRelayedMessage(bytes32 indexed messageHash);

@@ -9,6 +9,7 @@ import { IL1ETHGateway, L1ETHGateway } from "../L1/gateways/L1ETHGateway.sol";
 import { IL2ETHGateway, L2ETHGateway } from "../L2/gateways/L2ETHGateway.sol";
 
 import { AddressAliasHelper } from "../libraries/common/AddressAliasHelper.sol";
+import { T1Constants } from "../libraries/constants/T1Constants.sol";
 
 import { L2GatewayTestBase } from "./L2GatewayTestBase.t.sol";
 import { MockT1Messenger } from "./mocks/MockT1Messenger.sol";
@@ -268,7 +269,15 @@ contract L2ETHGatewayTest is L2GatewayTestBase {
             // emit SentMessage from L2T1Messenger
             {
                 hevm.expectEmit(true, true, false, true);
-                emit SentMessage(address(gateway), address(counterpartGateway), amount, 0, gasLimit, message);
+                emit SentMessage(
+                    address(gateway),
+                    address(counterpartGateway),
+                    amount,
+                    0,
+                    gasLimit,
+                    message,
+                    T1Constants.ETH_CHAIN_ID
+                );
             }
 
             // emit WithdrawETH from L2ETHGateway
@@ -334,7 +343,15 @@ contract L2ETHGatewayTest is L2GatewayTestBase {
             // emit SentMessage from L2T1Messenger
             {
                 hevm.expectEmit(true, true, false, true);
-                emit SentMessage(address(gateway), address(counterpartGateway), amount, 0, gasLimit, message);
+                emit SentMessage(
+                    address(gateway),
+                    address(counterpartGateway),
+                    amount,
+                    0,
+                    gasLimit,
+                    message,
+                    T1Constants.ETH_CHAIN_ID
+                );
             }
 
             // emit WithdrawETH from L2ETHGateway
@@ -401,7 +418,15 @@ contract L2ETHGatewayTest is L2GatewayTestBase {
             // emit SentMessage from L2T1Messenger
             {
                 hevm.expectEmit(true, true, false, true);
-                emit SentMessage(address(gateway), address(counterpartGateway), amount, 0, gasLimit, message);
+                emit SentMessage(
+                    address(gateway),
+                    address(counterpartGateway),
+                    amount,
+                    0,
+                    gasLimit,
+                    message,
+                    T1Constants.ETH_CHAIN_ID
+                );
             }
 
             // emit WithdrawETH from L2ETHGateway

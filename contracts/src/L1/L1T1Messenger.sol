@@ -6,7 +6,6 @@ import { IT1Chain } from "./rollup/IT1Chain.sol";
 import { IL1MessageQueue } from "./rollup/IL1MessageQueue.sol";
 import { IL1T1Messenger } from "./IL1T1Messenger.sol";
 import { T1Constants } from "../libraries/constants/T1Constants.sol";
-import { IT1Messenger } from "../libraries/IT1Messenger.sol";
 import { T1MessengerBase } from "../libraries/T1MessengerBase.sol";
 import { WithdrawTrieVerifier } from "../libraries/verifier/WithdrawTrieVerifier.sol";
 
@@ -127,7 +126,7 @@ contract L1T1Messenger is T1MessengerBase, IL1T1Messenger {
      *
      */
 
-    /// @inheritdoc IT1Messenger
+    /// @inheritdoc IL1T1Messenger
     function sendMessage(
         address _to,
         uint256 _value,
@@ -142,7 +141,7 @@ contract L1T1Messenger is T1MessengerBase, IL1T1Messenger {
         _sendMessage(_to, _value, _message, _gasLimit, _msgSender());
     }
 
-    /// @inheritdoc IT1Messenger
+    /// @inheritdoc IL1T1Messenger
     function sendMessage(
         address _to,
         uint256 _value,
@@ -384,7 +383,7 @@ contract L1T1Messenger is T1MessengerBase, IL1T1Messenger {
         require(messageSendTimestamp[_xDomainCalldataHash] == 0, "Duplicated message");
         messageSendTimestamp[_xDomainCalldataHash] = block.timestamp;
 
-        emit SentMessage(_msgSender(), _to, _value, _messageNonce, _gasLimit, _message);
+        emit SentMessage(_msgSender(), _to, _value, _messageNonce, _gasLimit, _message, T1Constants.T1_DEVNET_CHAIN_ID);
 
         // refund fee to `_refundAddress`
         unchecked {

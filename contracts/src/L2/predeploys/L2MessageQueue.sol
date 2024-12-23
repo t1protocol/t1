@@ -4,6 +4,7 @@ pragma solidity >=0.8.28;
 
 import { AppendOnlyMerkleTree } from "../../libraries/common/AppendOnlyMerkleTree.sol";
 import { OwnableBase } from "../../libraries/common/OwnableBase.sol";
+import { IL2GasPriceOracle } from "../../L1/rollup/IL2GasPriceOracle.sol";
 
 /// @title L2MessageQueue
 /// @notice The original idea is from Optimism, see
@@ -33,6 +34,10 @@ contract L2MessageQueue is AppendOnlyMerkleTree, OwnableBase {
 
     /// @notice The address of L2T1Messenger contract.
     address public messenger;
+
+    /// @notice Maps chain IDs to the address of the GasOracle contract responsible for reporting the gas for that
+    /// network.
+    mapping(uint64 chainId => address gasOracle) public gasOraclesByChain;
 
     /**
      *
@@ -71,5 +76,29 @@ contract L2MessageQueue is AppendOnlyMerkleTree, OwnableBase {
         emit AppendMessage(_currentNonce, _messageHash);
 
         return _currentRoot;
+    }
+
+    /// @notice Set the gas oracle for a specific chain ID
+    /// @param _chainId The ID of the chain to set the oracle for
+    /// @param _oracle The address of the gas oracle contract
+    function setGasOracle(uint64 _chainId, address _oracle) external onlyOwner {
+        gasOraclesByChain[_chainId] = _oracle;
+    }
+
+    /**
+     *
+     * Public View Functions *
+     *
+     */
+
+    /// @notice Return the amount of ETH should pay for cross domain message.
+    /// @param _gasLimit Gas limit required to complete the message relay on destination L2.
+    /// @param _chainId The ID of the destination chain.
+    /// @return fee The amount of ETH required to pay for the cross domain message, or 0 if no gas oracle is set for the
+    /// chain
+    function estimateCrossDomainMessageFee(uint256 _gasLimit, uint64 _chainId) external view returns (uint256) {
+        address _oracle = gasOraclesByChain[_chainId];
+        if (_oracle == address(0)) return 0;
+        return IL2GasPriceOracle(_oracle).estimateCrossDomainMessageFee(_gasLimit);
     }
 }
