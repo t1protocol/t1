@@ -2,6 +2,12 @@
 
 Monorepo for 𝚝𝟷
 
+## Structure
+```
+t1/
+└── contracts/           # t1 smart contracts and ABIs
+```
+
 ## Getting Started
 
 ### Prerequisites
