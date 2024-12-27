@@ -8,6 +8,9 @@ import { L2MessageQueue } from "./predeploys/L2MessageQueue.sol";
 import { T1Constants } from "../libraries/constants/T1Constants.sol";
 import { AddressAliasHelper } from "../libraries/common/AddressAliasHelper.sol";
 import { T1MessengerBase } from "../libraries/T1MessengerBase.sol";
+import { IL2T1MessengerCallback } from "../libraries/callbacks/IL2T1MessengerCallback.sol";
+
+import { IERC165Upgradeable } from "@openzeppelin/contracts-upgradeable/utils/introspection/IERC165Upgradeable.sol";
 
 // solhint-disable reason-string
 // solhint-disable not-rely-on-time
@@ -32,6 +35,9 @@ contract L2T1Messenger is T1MessengerBase, IL2T1Messenger {
 
     /// @dev used when owner tries to set this chain as a supported chain for cross chain messaging
     error CannotSupportCurrentChain();
+
+    /// @notice used when caller of sendMessage does not implement the IL2T1MessengerCallback interface
+    error UnsupportedSenderInterface();
 
     /// @dev Thrown when msg.value is less than the required fee for sending a cross-chain message
     error InsufficientMsgValue(uint256 minValue);
@@ -66,6 +72,12 @@ contract L2T1Messenger is T1MessengerBase, IL2T1Messenger {
 
     /// @notice Maps chain ID to true, if the chain is supported.
     mapping(uint64 chainId => bool isSupported) private _isSupportedDest;
+
+    /// @notice mapping of verifiers that provide the result of the cross-chain transaction to the caller
+    mapping(uint64 chainId => address verifier) public verifierContracts;
+
+    /// @notice A list of supported destination chains.
+    uint64[] private _chainIds;
 
     /// @notice The next nonce to be assigned to an L2 -> L2 message
     uint256 private _nextL2MessageNonce;
@@ -170,6 +182,11 @@ contract L2T1Messenger is T1MessengerBase, IL2T1Messenger {
         _removeChain(_chainId);
     }
 
+    /// @inheritdoc IL2T1Messenger
+    function setVerifier(uint64 _chainId, address _verifier) external whenNotPaused onlyOwner {
+        verifierContracts[_chainId] = _verifier;
+    }
+
     /**
      *
      * Public View Functions *
@@ -214,37 +231,16 @@ contract L2T1Messenger is T1MessengerBase, IL2T1Messenger {
     {
         if (!isSupportedDest(_destChainId)) revert InvalidDestinationChain();
 
-        uint256 _fee;
-        if (_destChainId == T1Constants.ETH_CHAIN_ID) {
-            if (msg.value != _value) revert InsufficientMsgValue(_value);
-            _nonce = L2MessageQueue(messageQueue).nextMessageIndex();
-        } else {
-            // compute and deduct the messaging fee to fee vault.
-            _fee = L2MessageQueue(messageQueue).estimateCrossDomainMessageFee(_gasLimit, _destChainId);
-            if (msg.value < _fee + _value) revert InsufficientMsgValue(_fee + _value);
-            if (_fee > 0) {
-                (bool _success,) = feeVault.call{ value: _fee }("");
-                if (!_success) revert FailedToDeductFee();
-            }
+        uint256 _refund = _handleFees(_value, _gasLimit, _destChainId, _callbackAddress);
 
-            _nonce = _nextL2MessageNonce;
-            unchecked {
-                _nextL2MessageNonce += 1;
-            }
-        }
-        bytes32 _xDomainCalldataHash = keccak256(_encodeXDomainCalldata(_msgSender(), _to, _value, _nonce, _message));
+        _nonce = _initializeMessage(_destChainId, _to, _value, _message);
 
-        // normally this won't happen, since each message has different nonce, but just in case.
-        require(messageSendTimestamp[_xDomainCalldataHash] == 0, "Duplicated message");
-        messageSendTimestamp[_xDomainCalldataHash] = block.timestamp;
-
-        if (_destChainId == T1Constants.ETH_CHAIN_ID) {
-            L2MessageQueue(messageQueue).appendMessage(_xDomainCalldataHash);
+        // handle eth refund if needed
+        if (_refund > 0) {
+            _sendRefund(_callbackAddress, _refund);
         }
 
         emit SentMessage(_callbackAddress, _to, _value, _nonce, _gasLimit, _message, _destChainId);
-
-        _checkAndSendRefund(_callbackAddress, _value, _fee);
     }
 
     /// @dev Internal function to execute a L1 => L2 message.
@@ -283,14 +279,61 @@ contract L2T1Messenger is T1MessengerBase, IL2T1Messenger {
         }
     }
 
-    function _checkAndSendRefund(address _callbackAddress, uint256 _value, uint256 _fee) private {
-        unchecked {
-            uint256 _refund = msg.value - _fee - _value;
-            if (_refund > 0) {
-                (bool _success,) = _callbackAddress.call{ value: _refund }("");
-                if (!_success) revert FailedToRefundFee();
-            }
+    function _handleFees(
+        uint256 _value,
+        uint256 _gasLimit,
+        uint64 _destChainId,
+        address _callbackAddress
+    )
+        internal
+        returns (uint256 refund)
+    {
+        if (_destChainId == T1Constants.ETH_CHAIN_ID) {
+            if (msg.value != _value) revert InsufficientMsgValue(_value);
+            return 0;
         }
+
+        if (!_isCallbackSupported(_callbackAddress)) revert UnsupportedSenderInterface();
+
+        uint256 fee = L2MessageQueue(messageQueue).estimateCrossDomainMessageFee(_gasLimit, _destChainId);
+        if (msg.value < fee + _value) revert InsufficientMsgValue(fee + _value);
+
+        if (fee > 0) {
+            (bool success,) = feeVault.call{ value: fee }("");
+            if (!success) revert FailedToDeductFee();
+        }
+
+        unchecked {
+            refund = msg.value - fee - _value;
+        }
+    }
+
+    function _initializeMessage(
+        uint64 _destChainId,
+        address _to,
+        uint256 _value,
+        bytes memory _message
+    )
+        internal
+        returns (uint256 nonce)
+    {
+        nonce = _destChainId == T1Constants.ETH_CHAIN_ID
+            ? L2MessageQueue(messageQueue).nextMessageIndex()
+            : _nextL2MessageNonce++;
+
+        bytes32 hash = keccak256(_encodeXDomainCalldata(msg.sender, _to, _value, nonce, _message));
+
+        if (messageSendTimestamp[hash] != 0) revert("Duplicated message");
+        messageSendTimestamp[hash] = block.timestamp;
+
+        if (_destChainId == T1Constants.ETH_CHAIN_ID) {
+            L2MessageQueue(messageQueue).appendMessage(hash);
+        }
+    }
+
+    function _sendRefund(address _to, uint256 _amount) internal {
+        (bool success,) = _to.call{ value: _amount }("");
+        if (!success) revert FailedToRefundFee();
     }
 
     function _addChain(uint64 _chainId) private {
@@ -304,5 +347,17 @@ contract L2T1Messenger is T1MessengerBase, IL2T1Messenger {
     function _removeChain(uint64 _chainId) private {
         _isSupportedDest[_chainId] = false;
         emit DestinationChainRemoved(_chainId);
+    }
+
+    /// @notice Checks if an account implements the IL2T1MessengerCallback interface
+    /// @dev Uses ERC165 interface detection, returns false if the check reverts
+    /// @param account The address to check for callback support
+    /// @return bool True if the account implements IL2T1MessengerCallback, false otherwise
+    function _isCallbackSupported(address account) internal view returns (bool) {
+        try IERC165Upgradeable(account).supportsInterface(T1Constants.INTERFACE_ID_ICALLBACK) returns (bool supported) {
+            return supported;
+        } catch {
+            return false;
+        }
     }
 }

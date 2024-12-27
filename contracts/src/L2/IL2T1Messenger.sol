@@ -76,4 +76,15 @@ interface IL2T1Messenger is IT1Messenger {
     /// @param nonce The nonce of the message to avoid replay attack.
     /// @param message The content of the message.
     function relayMessage(address from, address to, uint256 value, uint256 nonce, bytes calldata message) external;
+
+    /// @notice Get the verifier contract address for a given chain ID
+    /// @param _chainId The chain ID to get the verifier contract for
+    /// @return verifier The address of the verifier contract for the given chain ID
+    function verifierContracts(uint64 _chainId) external returns (address verifier);
+
+    /// @notice Sets the verifier contract address for a specific chain
+    /// @param _chainId The chain ID to set the verifier for
+    /// @param _verifier The address of the verifier contract
+    /// @dev Only callable by the owner when contract is not paused
+    function setVerifier(uint64 _chainId, address _verifier) external;
 }
