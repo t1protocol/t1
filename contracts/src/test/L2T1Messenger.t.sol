@@ -12,6 +12,9 @@ import { L2MessageQueue } from "../L2/predeploys/L2MessageQueue.sol";
 import { Whitelist } from "../L2/predeploys/Whitelist.sol";
 import { L1T1Messenger } from "../L1/L1T1Messenger.sol";
 import { L2T1Messenger } from "../L2/L2T1Messenger.sol";
+import { IL2T1Messenger } from "../L2/IL2T1Messenger.sol";
+import { L2T1MessageVerifier } from "../L2/L2T1MessageVerifier.sol";
+import { MockMessengerRecipient } from "./mocks/MockMessengerRecipient.sol";
 
 import { AddressAliasHelper } from "../libraries/common/AddressAliasHelper.sol";
 import { T1Constants } from "../libraries/constants/T1Constants.sol";
@@ -26,9 +29,11 @@ contract L2T1MessengerTest is DSTestPlus {
     Whitelist private whitelist;
 
     L2T1Messenger internal l2Messenger;
+    L2T1MessageVerifier internal l2MessageVerifier;
     L2MessageQueue internal l2MessageQueue;
     L1GasPriceOracle internal l1GasOracle;
     L2GasPriceOracle internal l2GasOracle;
+    MockMessengerRecipient internal mockMessengerRecipient;
 
     function setUp() public {
         // Deploy L1 contracts
@@ -46,6 +51,11 @@ contract L2T1MessengerTest is DSTestPlus {
                 )
             )
         );
+        l2MessageVerifier =
+            L2T1MessageVerifier(payable(new ERC1967Proxy(address(new L2T1MessageVerifier()), new bytes(0))));
+
+        // Initialize L2 contracts
+        l2MessageVerifier.initialize(address(l2MessageVerifier));
 
         uint64[] memory network = new uint64[](1);
         network[0] = ARB_CHAIN_ID;
@@ -63,6 +73,8 @@ contract L2T1MessengerTest is DSTestPlus {
         address[] memory _accounts = new address[](1);
         _accounts[0] = address(this);
         whitelist.updateWhitelistStatus(_accounts, true);
+
+        mockMessengerRecipient = new MockMessengerRecipient(IL2T1Messenger(address(l2MessageVerifier)));
     }
 
     function testRelayByCounterparty() external {
@@ -81,23 +93,40 @@ contract L2T1MessengerTest is DSTestPlus {
     }
 
     function testSendMessage(address callbackAddress) external {
+        hevm.assume(callbackAddress.code.length == 0);
+        hevm.assume(uint256(uint160(callbackAddress)) > 100); // ignore some precompile contracts
+        hevm.assume(callbackAddress != address(0x000000000000000000636F6e736F6c652e6c6f67)); // ignore console/console2
+        hevm.assume(callbackAddress != address(this));
+
+        // reverts with UnsupportedSenderInterface error if callback address does not implement interface
+        hevm.expectRevert(L2T1Messenger.UnsupportedSenderInterface.selector);
+        l2Messenger.sendMessage{ value: 1 }(address(0), 1, new bytes(0), 21_000, ARB_CHAIN_ID, address(this));
+
+        hevm.deal(address(mockMessengerRecipient), 100 ether);
+
+        hevm.startPrank(address(mockMessengerRecipient));
+
         // Insufficient msg.value
         hevm.expectRevert(abi.encodeWithSelector(L2T1Messenger.InsufficientMsgValue.selector, 1));
-        l2Messenger.sendMessage(address(0), 1, new bytes(0), 21_000, ARB_CHAIN_ID, callbackAddress);
+        l2Messenger.sendMessage(address(0), 1, new bytes(0), 21_000, ARB_CHAIN_ID);
 
         hevm.expectRevert(L2T1Messenger.InvalidDestinationChain.selector);
-        l2Messenger.sendMessage(address(0), 1, new bytes(0), 21_000, POLYGON_CHAIN_ID, callbackAddress);
+        l2Messenger.sendMessage(address(0), 1, new bytes(0), 21_000, POLYGON_CHAIN_ID, address(mockMessengerRecipient));
 
         // succeed normally
         uint256 balanceBefore = callbackAddress.balance;
-        uint256 nonce =
-            l2Messenger.sendMessage{ value: 1 }(address(0), 1, new bytes(0), 21_000, ARB_CHAIN_ID, callbackAddress);
+        uint256 nonce = l2Messenger.sendMessage{ value: 1 }(
+            address(0), 1, new bytes(0), 21_000, ARB_CHAIN_ID, address(mockMessengerRecipient)
+        );
         assertEq(nonce, 0);
         assertEq(balanceBefore, callbackAddress.balance);
 
-        nonce = l2Messenger.sendMessage{ value: 1 }(address(0), 1, new bytes(0), 21_000, ARB_CHAIN_ID, callbackAddress);
+        nonce = l2Messenger.sendMessage{ value: 1 }(
+            address(0), 1, new bytes(0), 21_000, ARB_CHAIN_ID, address(mockMessengerRecipient)
+        );
         assertEq(nonce, 1);
 
+        hevm.stopPrank();
         // 0.1 gwei = 100000000 wei
         uint256 l2BaseFee = 100_000_000;
         uint256 gasLimit = 21_000;
@@ -106,7 +135,7 @@ contract L2T1MessengerTest is DSTestPlus {
         /// only to cover gas fees on destination chain
         uint256 _value = l2BaseFee * gasLimit;
         nonce = l2Messenger.sendMessage{ value: _value }(
-            address(0), 0, new bytes(0), gasLimit, ARB_CHAIN_ID, callbackAddress
+            address(0), 0, new bytes(0), gasLimit, ARB_CHAIN_ID, address(mockMessengerRecipient)
         );
         assertEq(nonce, 2);
 
@@ -114,13 +143,11 @@ contract L2T1MessengerTest is DSTestPlus {
         uint256 _valueMinusOne = _value - 1;
         hevm.expectRevert(abi.encodeWithSelector(L2T1Messenger.InsufficientMsgValue.selector, _value));
         nonce = l2Messenger.sendMessage{ value: _valueMinusOne }(
-            address(0), 0, new bytes(0), gasLimit, ARB_CHAIN_ID, callbackAddress
+            address(0), 0, new bytes(0), gasLimit, ARB_CHAIN_ID, address(mockMessengerRecipient)
         );
     }
 
     function testSendMessageRefund() external {
-        address callbackAddress = address(0xbeef);
-
         // 0.1 gwei = 100000000 wei
         uint256 l2BaseFee = 100_000_000;
         uint256 gasLimit = 21_000;
@@ -133,13 +160,13 @@ contract L2T1MessengerTest is DSTestPlus {
         uint256 _balanceThisBefore = address(this).balance;
         uint256 _valuePlusOne = _value + 1;
         l2Messenger.sendMessage{ value: _valuePlusOne }(
-            address(0), 0, new bytes(0), gasLimit, ARB_CHAIN_ID, callbackAddress
+            address(0), 0, new bytes(0), gasLimit, ARB_CHAIN_ID, address(mockMessengerRecipient)
         );
 
         uint256 _balanceThisAfter = address(this).balance;
-        uint256 _balanceCallbackAddressAfter = address(callbackAddress).balance;
-        assertEq(_balanceThisAfter, _balanceThisBefore - _valuePlusOne);
-        assertEq(_balanceCallbackAddressAfter, 1);
+        uint256 _balanceCallbackAddressAfter = address(mockMessengerRecipient).balance;
+        assertEq(_balanceThisAfter, _balanceThisBefore - _valuePlusOne, "balance of this contract");
+        assertEq(_balanceCallbackAddressAfter, 1, "balance of mockMessengerRecipient contract");
     }
 
     function testAddChain() external {
