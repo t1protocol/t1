@@ -279,6 +279,14 @@ contract L2T1Messenger is T1MessengerBase, IL2T1Messenger {
         }
     }
 
+
+    /// @notice Handles fee calculation, collection and refunds for cross-chain messages
+    /// @param _value The amount of native tokens to send with the message
+    /// @param _gasLimit The gas limit for executing the message on the destination chain
+    /// @param _destChainId The ID of the destination chain
+    /// @param _callbackAddress The address that will receive any fee refunds
+    /// @return refund The amount of excess fees to be refunded
+    /// @dev For L1 messages, verifies msg.value matches _value. For L2, calculates fees and verifies sufficient msg.value.
     function _handleFees(
         uint256 _value,
         uint256 _gasLimit,
@@ -308,6 +316,13 @@ contract L2T1Messenger is T1MessengerBase, IL2T1Messenger {
         }
     }
 
+    /// @notice Initializes a cross-chain message and generates a unique nonce
+    /// @param _destChainId The ID of the destination chain
+    /// @param _to The address of the recipient on the destination chain
+    /// @param _value The amount of native tokens to send with the message
+    /// @param _message The message data to send
+    /// @return nonce The unique identifier assigned to this message
+    /// @dev For L1 messages, uses the message queue index as nonce. For L2, increments internal counter.
     function _initializeMessage(
         uint64 _destChainId,
         address _to,
@@ -331,6 +346,10 @@ contract L2T1Messenger is T1MessengerBase, IL2T1Messenger {
         }
     }
 
+    /// @notice Internal helper to refund excess fees to the specified address
+    /// @param _to The address to receive the refund
+    /// @param _amount The amount of ETH to refund
+    /// @dev Reverts with FailedToRefundFee if the refund transfer fails
     function _sendRefund(address _to, uint256 _amount) internal {
         (bool success,) = _to.call{ value: _amount }("");
         if (!success) revert FailedToRefundFee();
