@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: MIT
 pragma solidity >=0.8.28;
 
-import {IL2T1MessengerCallback, IERC165Upgradeable} from "./IL2T1MessengerCallback.sol";
-import {IL2T1Messenger} from "../../L2/IL2T1Messenger.sol";
+import { IL2T1MessengerCallback, IERC165Upgradeable } from "./IL2T1MessengerCallback.sol";
+import { IL2T1Messenger } from "../../L2/IL2T1Messenger.sol";
 
 /// @title L2T1MessengerCallback
 /// @notice Base contract for handling callbacks from L2T1Messenger cross-chain messages
@@ -72,7 +72,13 @@ abstract contract L2T1MessengerCallback is IL2T1MessengerCallback {
      */
 
     /// @inheritdoc IL2T1MessengerCallback
-    function onT1MessageCallback(uint64 chainId, uint256 nonce, bool success, bytes32 txHash, bytes memory result)
+    function onT1MessageCallback(
+        uint64 chainId,
+        uint256 nonce,
+        bool success,
+        bytes32 txHash,
+        bytes memory result
+    )
         external
         override
         onlyProtocol(chainId)
@@ -93,13 +99,18 @@ abstract contract L2T1MessengerCallback is IL2T1MessengerCallback {
         uint256 gasLimit,
         uint64 destChainId,
         address callbackAddress
-    ) external payable override returns (uint256 nonce) {
-        nonce = L2_MESSENGER.sendMessage{value: msg.value}(to, value, message, gasLimit, destChainId, callbackAddress);
+    )
+        external
+        payable
+        override
+        returns (uint256 nonce)
+    {
+        nonce = L2_MESSENGER.sendMessage{ value: msg.value }(to, value, message, gasLimit, destChainId, callbackAddress);
         pendingRequests[nonce] = true;
     }
 
     /// @notice Allows the contract to receive ETH
-    receive() external payable virtual {}
+    receive() external payable virtual { }
 
     /**
      * Public View Functions *
@@ -120,7 +131,12 @@ abstract contract L2T1MessengerCallback is IL2T1MessengerCallback {
     /// @param success Whether the message was successfully delivered and executed on the destination chain
     /// @param txHash The transaction hash of the message execution on the destination chain
     /// @param result The execution result data returned from the destination chain
-    function _handleCallbackResult(uint256 requestId, bool success, bytes32 txHash, bytes memory result)
+    function _handleCallbackResult(
+        uint256 requestId,
+        bool success,
+        bytes32 txHash,
+        bytes memory result
+    )
         internal
         virtual;
 }

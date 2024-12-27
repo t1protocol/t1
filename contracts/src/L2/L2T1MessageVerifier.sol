@@ -21,7 +21,6 @@ contract L2T1MessageVerifier is OwnableUpgradeable {
         OwnableUpgradeable.__Ownable_init();
     }
 
-
     /**
      * @notice Validates and forwards a cross-chain message callback to the target contract
      * @param chainId The destination chain ID where the message was sent
