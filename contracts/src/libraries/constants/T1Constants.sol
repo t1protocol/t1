@@ -2,6 +2,8 @@
 
 pragma solidity >=0.8.28;
 
+import { IL2T1MessengerCallback } from "../callbacks/IL2T1MessengerCallback.sol";
+
 library T1Constants {
     /// @notice The address of default cross chain message sender.
     address internal constant DEFAULT_XDOMAIN_MESSAGE_SENDER = address(1);
@@ -15,4 +17,8 @@ library T1Constants {
 
     /// @notice Chain ID of the T1 devnet
     uint64 internal constant T1_DEVNET_CHAIN_ID = 3_151_908;
+
+    /// @notice The interface ID for IL2T1MessengerCallback, used to verify if message senders implement the callback
+    /// interface
+    bytes4 internal constant INTERFACE_ID_ICALLBACK = type(IL2T1MessengerCallback).interfaceId;
 }
