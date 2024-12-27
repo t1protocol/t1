@@ -279,14 +279,14 @@ contract L2T1Messenger is T1MessengerBase, IL2T1Messenger {
         }
     }
 
-
     /// @notice Handles fee calculation, collection and refunds for cross-chain messages
     /// @param _value The amount of native tokens to send with the message
     /// @param _gasLimit The gas limit for executing the message on the destination chain
     /// @param _destChainId The ID of the destination chain
     /// @param _callbackAddress The address that will receive any fee refunds
     /// @return refund The amount of excess fees to be refunded
-    /// @dev For L1 messages, verifies msg.value matches _value. For L2, calculates fees and verifies sufficient msg.value.
+    /// @dev For L1 messages, verifies msg.value matches _value. For L2, calculates fees and verifies sufficient
+    /// msg.value.
     function _handleFees(
         uint256 _value,
         uint256 _gasLimit,
