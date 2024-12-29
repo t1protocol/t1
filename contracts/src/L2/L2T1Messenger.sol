@@ -296,7 +296,7 @@ contract L2T1Messenger is T1MessengerBase, IL2T1Messenger {
         internal
         returns (uint256 refund)
     {
-        if (_destChainId == T1Constants.ETH_CHAIN_ID) {
+        if (_destinationIsEthereum(_destChainId)) {
             if (msg.value != _value) revert InsufficientMsgValue(_value);
             return 0;
         }
@@ -332,7 +332,7 @@ contract L2T1Messenger is T1MessengerBase, IL2T1Messenger {
         internal
         returns (uint256 nonce)
     {
-        nonce = _destChainId == T1Constants.ETH_CHAIN_ID
+        nonce = _destinationIsEthereum(_destChainId)
             ? L2MessageQueue(messageQueue).nextMessageIndex()
             : _nextL2MessageNonce++;
 
@@ -341,7 +341,7 @@ contract L2T1Messenger is T1MessengerBase, IL2T1Messenger {
         if (messageSendTimestamp[hash] != 0) revert("Duplicated message");
         messageSendTimestamp[hash] = block.timestamp;
 
-        if (_destChainId == T1Constants.ETH_CHAIN_ID) {
+        if (_destinationIsEthereum(_destChainId)) {
             L2MessageQueue(messageQueue).appendMessage(hash);
         }
     }
@@ -378,5 +378,9 @@ contract L2T1Messenger is T1MessengerBase, IL2T1Messenger {
         } catch {
             return false;
         }
+    }
+
+    function _destinationIsEthereum(uint64 _destChainId) internal pure returns (bool) {
+        return _destChainId == T1Constants.ETH_CHAIN_ID;
     }
 }
