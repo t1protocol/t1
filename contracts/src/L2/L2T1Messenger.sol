@@ -231,7 +231,7 @@ contract L2T1Messenger is T1MessengerBase, IL2T1Messenger {
     {
         if (!isSupportedDest(_destChainId)) revert InvalidDestinationChain();
 
-        uint256 _refund = _handleFees(_value, _gasLimit, _destChainId, _callbackAddress);
+        uint256 _refund = _checkAndSendRefund(_value, _gasLimit, _destChainId, _callbackAddress);
 
         _nonce = _initializeMessage(_destChainId, _to, _value, _message);
 
@@ -287,7 +287,7 @@ contract L2T1Messenger is T1MessengerBase, IL2T1Messenger {
     /// @return refund The amount of excess fees to be refunded
     /// @dev For L1 messages, verifies msg.value matches _value. For L2, calculates fees and verifies sufficient
     /// msg.value.
-    function _handleFees(
+    function _checkAndSendRefund(
         uint256 _value,
         uint256 _gasLimit,
         uint64 _destChainId,
