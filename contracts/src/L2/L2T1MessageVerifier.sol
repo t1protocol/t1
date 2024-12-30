@@ -116,6 +116,6 @@ contract L2T1MessageVerifier is OwnableUpgradeable {
 
         delete messageGasCosts[nonce];
         delete messageAmounts[nonce];
-        delete messageGasCosts[nonce];
+        delete messageValues[nonce];
     }
 }
