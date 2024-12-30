@@ -3,12 +3,12 @@
 pragma solidity >=0.8.28;
 
 import { IL2T1Messenger } from "./IL2T1Messenger.sol";
+import { L2T1MessageVerifier } from "./L2T1MessageVerifier.sol";
 import { L2MessageQueue } from "./predeploys/L2MessageQueue.sol";
 
 import { T1Constants } from "../libraries/constants/T1Constants.sol";
 import { AddressAliasHelper } from "../libraries/common/AddressAliasHelper.sol";
 import { T1MessengerBase } from "../libraries/T1MessengerBase.sol";
-import { IL2T1MessengerCallback } from "../libraries/callbacks/IL2T1MessengerCallback.sol";
 
 import { IERC165Upgradeable } from "@openzeppelin/contracts-upgradeable/utils/introspection/IERC165Upgradeable.sol";
 
@@ -42,8 +42,8 @@ contract L2T1Messenger is T1MessengerBase, IL2T1Messenger {
     /// @dev Thrown when msg.value is less than the required fee for sending a cross-chain message
     error InsufficientMsgValue(uint256 minValue);
 
-    /// @dev Thrown when the contract fails to transfer fee to the fee vault
-    error FailedToDeductFee();
+    /// @dev Thrown when the contract fails to transfer fee
+    error FailedToTransferValue();
 
     /// @dev Thrown when the contract fails to refund excess fee to the refund address
     error FailedToRefundFee();
@@ -70,11 +70,11 @@ contract L2T1Messenger is T1MessengerBase, IL2T1Messenger {
     /// executed.
     mapping(bytes32 => bool) public isL1MessageExecuted;
 
-    /// @notice Maps chain ID to true, if the chain is supported.
-    mapping(uint64 chainId => bool isSupported) private _isSupportedDest;
-
     /// @notice mapping of verifiers that provide the result of the cross-chain transaction to the caller
     mapping(uint64 chainId => address verifier) public verifierContracts;
+
+    /// @notice Maps chain ID to true, if the chain is supported.
+    mapping(uint64 chainId => bool isSupported) private _isSupportedDest;
 
     /// @notice A list of supported destination chains.
     uint64[] private _chainIds;
@@ -231,14 +231,9 @@ contract L2T1Messenger is T1MessengerBase, IL2T1Messenger {
     {
         if (!isSupportedDest(_destChainId)) revert InvalidDestinationChain();
 
-        uint256 _refund = _checkAndSendRefund(_value, _gasLimit, _destChainId, _callbackAddress);
-
         _nonce = _initializeMessage(_destChainId, _to, _value, _message);
 
-        // handle eth refund if needed
-        if (_refund > 0) {
-            _sendRefund(_callbackAddress, _refund);
-        }
+        _checkAndSendFees(_value, _gasLimit, _destChainId, _callbackAddress, _nonce);
 
         emit SentMessage(_callbackAddress, _to, _value, _nonce, _gasLimit, _message, _destChainId);
     }
@@ -279,41 +274,36 @@ contract L2T1Messenger is T1MessengerBase, IL2T1Messenger {
         }
     }
 
-    /// @notice Handles fee calculation, collection and refunds for cross-chain messages
+    /// @notice Handles fee calculation and collection for cross-chain messages
     /// @param _value The amount of native tokens to send with the message
     /// @param _gasLimit The gas limit for executing the message on the destination chain
     /// @param _destChainId The ID of the destination chain
     /// @param _callbackAddress The address that will receive any fee refunds
-    /// @return refund The amount of excess fees to be refunded
     /// @dev For L1 messages, verifies msg.value matches _value. For L2, calculates fees and verifies sufficient
     /// msg.value.
-    function _checkAndSendRefund(
+    function _checkAndSendFees(
         uint256 _value,
         uint256 _gasLimit,
         uint64 _destChainId,
-        address _callbackAddress
+        address _callbackAddress,
+        uint256 _nonce
     )
         internal
-        returns (uint256 refund)
     {
         if (_isDestinationEthereum(_destChainId)) {
             if (msg.value != _value) revert InsufficientMsgValue(_value);
-            return 0;
+            return;
         }
 
         if (!_isCallbackSupported(_callbackAddress)) revert UnsupportedSenderInterface();
 
-        uint256 fee = L2MessageQueue(messageQueue).estimateCrossDomainMessageFee(_gasLimit, _destChainId);
-        if (msg.value < fee + _value) revert InsufficientMsgValue(fee + _value);
+        uint256 destChainGasCost = L2MessageQueue(messageQueue).estimateCrossDomainMessageFee(_gasLimit, _destChainId);
+        uint256 minRequired = destChainGasCost + _value;
+        if (msg.value < minRequired) revert InsufficientMsgValue(minRequired);
 
-        if (fee > 0) {
-            (bool success,) = feeVault.call{ value: fee }("");
-            if (!success) revert FailedToDeductFee();
-        }
-
-        unchecked {
-            refund = msg.value - fee - _value;
-        }
+        L2T1MessageVerifier(payable(verifierContracts[_destChainId])).setMessageValues{ value: msg.value }(
+            _value, destChainGasCost, _nonce
+        );
     }
 
     /// @notice Initializes a cross-chain message and generates a unique nonce
