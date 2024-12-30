@@ -21,7 +21,7 @@ contract InitializeL1BridgeContracts is Script {
 
         address to = address("0xdeadbeef");
         uint256 value = 1000000000;
-        bytes message = 0x0;
+        bytes memory message = 0x0;
         uint256 gasLimit = 10000000000000;
 
         T1L1MessengerMock(T1L1_MESSENGER_MOCK_ADDR).sendMessage(to, value, message, gasLimit);
