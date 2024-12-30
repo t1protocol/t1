@@ -10,15 +10,24 @@ import { OwnableUpgradeable } from "@openzeppelin/contracts-upgradeable/access/O
 /// @dev This contract is deployed on t1 and acts as a trusted verifier for cross-chain message callbacks
 /// originating from t1.
 contract L2T1MessageVerifier is OwnableUpgradeable {
-    /// @notice Thrown when caller of setMessageValues is not messenger contract
-    error OnlyMessenger();
+    /**
+     * Errors *
+     */
+    /// @notice Thrown when the caller passes an actual gas value lower than what the user supplied
+    error ActualGasExceedsUserSupplied();
 
     /// @notice Thrown when the contract fails to transfer fee
     error FailedToTransferValue();
 
-    /// @notice Thrown when the caller passes an actual gas value lower than what the user supplied
-    error InvalidGasValue();
+    /// @dev Thrown when msg.value is less than the required fee for sending a cross-chain message
+    error InsufficientMsgValue(uint256 minValue);
 
+    /// @notice Thrown when caller of setMessageValues is not messenger contract
+    error OnlyMessenger();
+
+    /**
+     * Variables *
+     */
     /// @notice amount user sent to cover cross-chain tx gas cost + value transfer
     mapping(uint256 nonce => uint256 amount) public messageAmounts;
 
@@ -55,6 +64,8 @@ contract L2T1MessageVerifier is OwnableUpgradeable {
      * @param _nonce The unique identifier for the message.
      */
     function setMessageValues(uint256 _value, uint256 _gasCost, uint256 _nonce) external payable onlyMessenger {
+        uint256 minRequired = _gasCost + _value;
+        if (msg.value < minRequired) revert InsufficientMsgValue(minRequired);
         messageAmounts[_nonce] = msg.value;
         messageGasCosts[_nonce] = _gasCost;
         messageValues[_nonce] = _value;
@@ -90,7 +101,7 @@ contract L2T1MessageVerifier is OwnableUpgradeable {
         /// @dev totalAmount - transferAmount accounts for any buffer that the user sent to cover gas costs
         /// @dev this check should never fail because txs cannot succeed if more gas was used than was supplied by the
         /// user
-        if (totalAmount - transferAmount < actualGasUsed && success) revert InvalidGasValue();
+        if (totalAmount - transferAmount < actualGasUsed && success) revert ActualGasExceedsUserSupplied();
 
         if (success) {
             // pay postman their gas costs
