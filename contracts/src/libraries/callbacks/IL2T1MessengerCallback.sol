@@ -18,7 +18,8 @@ interface IL2T1MessengerCallback is IERC165Upgradeable {
         bytes32 txHash,
         bytes memory result
     )
-        external;
+        external
+        payable;
 
     /// @notice Sends a cross-chain message via the L2T1Messenger contract
     /// @param to The address of the recipient on the destination chain

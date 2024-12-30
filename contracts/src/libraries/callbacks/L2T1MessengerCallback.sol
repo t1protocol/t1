@@ -80,6 +80,7 @@ abstract contract L2T1MessengerCallback is IL2T1MessengerCallback {
         bytes memory result
     )
         external
+        payable
         override
         onlyProtocol(chainId)
         nonReentrant
