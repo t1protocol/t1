@@ -1,0 +1,40 @@
+name: 'reth'
+
+services:
+  reth:
+    restart: unless-stopped
+    image: t1/reth
+    ports:
+      - '30303:30303' # eth/66 peering
+      - '8545:8545' # rpc
+      - '8546:8546' # ws-rpc
+      - '8551:8551' # engine
+    volumes:
+      - execution_data:/root/reth-data
+      - logs:/root/logs
+      - ./network-configs:/root/network-configs
+      - ./jwttoken:/root/jwt:ro
+    environment:
+      COUNTER_CONTRACT_ADDRESS: "${COUNTER_CONTRACT_ADDRESS}"
+      STATE_ROOT_CONTRACT_ADDRESS: "${STATE_ROOT_CONTRACT_ADDRESS}"
+      L1_RPC_ADDRESS: "${L1_RPC_ADDRESS}"
+      PREFUNDED_SECRET: "${PREFUNDED_SECRET}"
+    pid: host
+    command: >
+      node
+      -vvv
+      --chain=/root/network-configs/genesis.json
+      --dev
+      --dev.block-time 1s
+      --datadir=/root/reth-data
+      --http --http.port=8545 --http.addr=0.0.0.0 --http.corsdomain=* --http.api=admin,net,eth,web3,debug,txpool,trace
+      --ws --ws.addr=0.0.0.0 --ws.port=8546 --ws.api=net,eth --ws.origins=*
+      --nat=publicip
+      --authrpc.port=8551 --authrpc.jwtsecret=/root/jwt/jwtsecret --authrpc.addr=0.0.0.0
+      --log.file.directory /root/logs
+
+volumes:
+  execution_data:
+    driver: local
+  logs:
+    driver: local
