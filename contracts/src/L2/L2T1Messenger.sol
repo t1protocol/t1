@@ -149,7 +149,7 @@ contract L2T1Messenger is T1MessengerBase, IL2T1Messenger {
         whenNotPaused
     {
         // It is impossible to deploy a contract with the same address, reentrance is prevented in nature.
-        require(AddressAliasHelper.undoL1ToL2Alias(_msgSender()) == counterpart, "Caller is not L1T1Messenger");
+//        require(AddressAliasHelper.undoL1ToL2Alias(_msgSender()) == counterpart, "Caller is not L1T1Messenger"); // TODO this should not be L1 Messenger address. it should be the Postman identity address. or perhaps pass this address as param, not msgSender()
 
         bytes32 _xDomainCalldataHash = keccak256(_encodeXDomainCalldata(_from, _to, _value, _nonce, _message));
 
@@ -269,11 +269,11 @@ contract L2T1Messenger is T1MessengerBase, IL2T1Messenger {
         // @note This usually will never happen, just in case.
         require(_from != xDomainMessageSender, "Invalid message sender");
 
-        xDomainMessageSender = _from;
+        xDomainMessageSender = _from; // TODO this does nothing
         // solhint-disable-next-line avoid-low-level-calls
         (bool success,) = _to.call{ value: _value }(_message);
         // reset value to refund gas.
-        xDomainMessageSender = T1Constants.DEFAULT_XDOMAIN_MESSAGE_SENDER;
+        xDomainMessageSender = T1Constants.DEFAULT_XDOMAIN_MESSAGE_SENDER; // why? seems dangerous
 
         if (success) {
             isL1MessageExecuted[_xDomainCalldataHash] = true;
