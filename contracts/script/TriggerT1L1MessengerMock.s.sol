@@ -20,7 +20,7 @@ contract InitializeL1BridgeContracts is Script {
 
         vm.startBroadcast(L1_DEPLOYER_PRIVATE_KEY);
 
-        address to = makeAddr("0xdeadbeef");
+        address to = makeAddr("0xE25583099BA105D9ec0A67f5Ae86D90e50036425");
         uint256 value = 1000000000;
         bytes memory message = abi.encodeWithSignature("ping()");
         uint256 gasLimit = 10000000000000;
