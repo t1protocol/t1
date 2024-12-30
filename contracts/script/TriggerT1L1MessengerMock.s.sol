@@ -11,10 +11,10 @@ import { ProxyAdmin } from "@openzeppelin/contracts/proxy/transparent/ProxyAdmin
 // solhint-disable state-visibility
 // solhint-disable var-name-mixedcase
 
-contract InitializeL1BridgeContracts is Script {
+contract TriggerT1L1MessengerMock is Script {
     uint256 L1_DEPLOYER_PRIVATE_KEY = vm.envUint("L1_DEPLOYER_PRIVATE_KEY");
 
-    address T1L1_MESSENGER_MOCK_ADDR = makeAddr("0x373E0B8B80A15cdf587C1263654c6B5edd195a43");
+    address T1L1_MESSENGER_MOCK_ADDR =  vm.envAddress("T1L1_MESSENGER_MOCK_ADDRESS");
 
     function run() external {
 
