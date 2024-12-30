@@ -1,0 +1,60 @@
+name: "Reth"
+
+on:
+  workflow_dispatch:
+  pull_request:
+    types:
+      - opened
+      - reopened
+      - synchronize
+      - ready_for_review
+    paths:
+      - 'reth/**'
+  push:
+    branches:
+      - "main"
+    paths:
+      - 'reth/**'
+
+jobs:
+  build:
+    runs-on: "ubuntu-latest"
+    steps:
+      - name: "Check out the repo"
+        uses: "actions/checkout@v4"
+
+      - name: "Set up Rust"
+        uses: "actions-rs/toolchain@v1"
+        with:
+          toolchain: stable
+          override: true
+          override-file: Cargo.toml
+
+      - name: "Cache Cargo registry"
+        uses: actions/cache@v2
+        with:
+          path: ~/.cargo/registry
+          key: ${{ runner.os }}-cargo-registry-${{ hashFiles('**/Cargo.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-cargo-registry-
+
+      - name: "Cache Cargo build"
+        uses: actions/cache@v2
+        with:
+          path: target
+          key: ${{ runner.os }}-cargo-build-${{ hashFiles('**/Cargo.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-cargo-build-
+
+      - name: "Build"
+        working-directory: "reth"
+        run: "cargo build"
+
+      - name: "Run tests"
+        working-directory: "reth"
+        run: "cargo test"
+
+      - name: "Add build summary"
+        run: |
+          echo "## Build result" >> $GITHUB_STEP_SUMMARY
+          echo "✅ Passed" >> $GITHUB_STEP_SUMMARY
