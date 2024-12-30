@@ -30,7 +30,6 @@ contract DeployL1BridgeContracts is Script {
         messengerMock = new T1L1MessengerMock();
 
         logAddress("T1L1_MESSENGER_MOCK_ADDRESS", address(messengerMock));
-        vm.envSet("T1L1_MESSENGER_MOCK_ADDRESS", address(messengerMock));
     }
 
     function logAddress(string memory name, address addr) internal pure {

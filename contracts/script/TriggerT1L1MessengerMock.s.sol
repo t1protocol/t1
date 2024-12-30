@@ -14,7 +14,7 @@ import { ProxyAdmin } from "@openzeppelin/contracts/proxy/transparent/ProxyAdmin
 contract TriggerT1L1MessengerMock is Script {
     uint256 L1_DEPLOYER_PRIVATE_KEY = vm.envUint("L1_DEPLOYER_PRIVATE_KEY");
 
-    address T1L1_MESSENGER_MOCK_ADDR =  vm.envAddress("T1L1_MESSENGER_MOCK_ADDRESS");
+    address T1L1_MESSENGER_MOCK_ADDR = vm.envAddress("T1L1_MESSENGER_MOCK_ADDRESS");
 
     function run() external {
 
