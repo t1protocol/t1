@@ -3,11 +3,7 @@
 pragma solidity >=0.8.28;
 
 import {T1L1MessengerMock} from "../src/mocks/T1L1MessengerMock.sol";
-import {CommonBase} from "forge-std/src/Base.sol";
 import {Script} from "forge-std/src/Script.sol";
-import {StdChains} from "forge-std/src/StdChains.sol";
-import {StdCheatsSafe} from "forge-std/src/StdCheats.sol";
-import {StdUtils} from "forge-std/src/StdUtils.sol";
 import {console} from "forge-std/src/console.sol";
 
 // solhint-disable no-console
