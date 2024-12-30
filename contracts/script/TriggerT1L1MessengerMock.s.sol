@@ -22,7 +22,7 @@ contract InitializeL1BridgeContracts is Script {
 
         address to = makeAddr("0xdeadbeef");
         uint256 value = 1000000000;
-        bytes memory message = ProxyAdmin.changeProxyAdmin.selector;
+        bytes memory message = abi.encodeWithSignature("ping()");
         uint256 gasLimit = 10000000000000;
 
         T1L1MessengerMock(T1L1_MESSENGER_MOCK_ADDR).sendMessage(to, value, message, gasLimit);
