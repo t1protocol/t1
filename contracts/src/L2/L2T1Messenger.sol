@@ -298,8 +298,6 @@ contract L2T1Messenger is T1MessengerBase, IL2T1Messenger {
         if (!_isCallbackSupported(_callbackAddress)) revert UnsupportedSenderInterface();
 
         uint256 destChainGasCost = L2MessageQueue(messageQueue).estimateCrossDomainMessageFee(_gasLimit, _destChainId);
-        uint256 minRequired = destChainGasCost + _value;
-        if (msg.value < minRequired) revert InsufficientMsgValue(minRequired);
 
         L2T1MessageVerifier(payable(verifierContracts[_destChainId])).setMessageValues{ value: msg.value }(
             _value, destChainGasCost, _nonce
