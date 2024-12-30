@@ -4,6 +4,16 @@ pragma solidity >=0.8.28;
 import { IERC165Upgradeable } from "@openzeppelin/contracts-upgradeable/utils/introspection/IERC165Upgradeable.sol";
 
 interface IL2T1MessengerCallback is IERC165Upgradeable {
+    /// @notice Emitted when a message callback is received from the L2T1Messenger
+    /// @param chainId The ID of the chain where the message was sent
+    /// @param nonce The unique identifier of the original message request
+    /// @param success Whether the message was successfully delivered and executed
+    /// @param txHash The transaction hash of the message execution on the destination chain
+    /// @param result The execution result data returned from the destination chain
+    event MessageCallbackReceived(
+        uint64 chainId, uint256 indexed nonce, bool success, bytes32 indexed txHash, bytes result
+    );
+
     /// @notice Validates and forwards a cross-chain message callback to the target contract
     /// @param chainId The ID of the destination chain where the message was sent
     /// @param nonce The unique identifier of the original message request

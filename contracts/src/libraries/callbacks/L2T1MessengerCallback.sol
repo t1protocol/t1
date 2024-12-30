@@ -73,23 +73,25 @@ abstract contract L2T1MessengerCallback is IL2T1MessengerCallback {
 
     /// @inheritdoc IL2T1MessengerCallback
     function onT1MessageCallback(
-        uint64 chainId,
-        uint256 nonce,
-        bool success,
-        bytes32 txHash,
-        bytes memory result
+        uint64 _chainId,
+        uint256 _nonce,
+        bool _success,
+        bytes32 _txHash,
+        bytes memory _result
     )
         external
         payable
         override
-        onlyProtocol(chainId)
+        onlyProtocol(_chainId)
         nonReentrant
     {
-        if (!pendingRequests[nonce]) {
-            revert UnknownRequest(nonce);
+        if (!pendingRequests[_nonce]) {
+            revert UnknownRequest(_nonce);
         }
-        delete pendingRequests[nonce];
-        _handleCallbackResult(nonce, success, txHash, result);
+        delete pendingRequests[_nonce];
+        _handleCallbackResult(_nonce, _success, _txHash, _result);
+
+        emit MessageCallbackReceived(_chainId, _nonce, _success, _txHash, _result);
     }
 
     /// @inheritdoc IL2T1MessengerCallback
