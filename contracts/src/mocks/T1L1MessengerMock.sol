@@ -27,7 +27,6 @@ contract T1L1MessengerMock {
     )
     external
     payable
-    override
     {
         emit SentMessage(msg.sender, _to, _value, nonce, _gasLimit, _message, T1Constants.T1_DEVNET_CHAIN_ID);
         nonce = nonce + 1;
