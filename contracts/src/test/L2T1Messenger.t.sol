@@ -55,13 +55,14 @@ contract L2T1MessengerTest is DSTestPlus {
             L2T1MessageVerifier(payable(new ERC1967Proxy(address(new L2T1MessageVerifier()), new bytes(0))));
 
         // Initialize L2 contracts
-        l2MessageVerifier.initialize(address(l2MessageVerifier));
+        l2MessageVerifier.initialize(address(l2MessageVerifier), address(l2Messenger));
 
         uint64[] memory network = new uint64[](1);
         network[0] = ARB_CHAIN_ID;
         // Initialize L2 contracts
         l2Messenger.initialize(address(l1Messenger), network);
         l2MessageQueue.initialize(address(l2Messenger));
+        l2Messenger.setVerifier(ARB_CHAIN_ID, address(l2MessageVerifier));
         l2MessageQueue.setGasOracle(ARB_CHAIN_ID, address(l2GasOracle));
         uint64 _txGas = 21_000;
         uint64 _txGasContractCreation = 32_000;
@@ -157,16 +158,13 @@ contract L2T1MessengerTest is DSTestPlus {
         uint256 _value = l2BaseFee * gasLimit;
 
         // refund case - 1 wei over
-        uint256 _balanceThisBefore = address(this).balance;
         uint256 _valuePlusOne = _value + 1;
         l2Messenger.sendMessage{ value: _valuePlusOne }(
             address(0), 0, new bytes(0), gasLimit, ARB_CHAIN_ID, address(mockMessengerRecipient)
         );
 
-        uint256 _balanceThisAfter = address(this).balance;
-        uint256 _balanceCallbackAddressAfter = address(mockMessengerRecipient).balance;
-        assertEq(_balanceThisAfter, _balanceThisBefore - _valuePlusOne, "balance of this contract");
-        assertEq(_balanceCallbackAddressAfter, 1, "balance of mockMessengerRecipient contract");
+        uint256 _balanceVerifierAfter = address(l2MessageVerifier).balance;
+        assertEq(_balanceVerifierAfter, _valuePlusOne, "balance of verifier contract");
     }
 
     function testAddChain() external {
@@ -198,4 +196,6 @@ contract L2T1MessengerTest is DSTestPlus {
         assert(l2Messenger.isSupportedDest(T1Constants.ETH_CHAIN_ID));
         assert(!l2Messenger.isSupportedDest(ARB_CHAIN_ID));
     }
+
+    receive() external payable { }
 }
