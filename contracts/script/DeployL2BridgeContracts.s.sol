@@ -105,7 +105,8 @@ contract DeployL2BridgeContracts is Script {
     }
 
     function deployL2T1Messenger() internal {
-        L2T1Messenger impl = new L2T1Messenger{value: 100000}(L1_T1_MESSENGER_PROXY_ADDR, address(queue));
+        uint256 TEN_THOUSAND_ETHER = 10000000000000000000000;
+        L2T1Messenger impl = new L2T1Messenger{value: TEN_THOUSAND_ETHER}(L1_T1_MESSENGER_PROXY_ADDR, address(queue));
 
         logAddress("L2_T1_MESSENGER_IMPLEMENTATION_ADDR", address(impl));
     }
