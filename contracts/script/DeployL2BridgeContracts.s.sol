@@ -57,7 +57,7 @@ contract DeployL2BridgeContracts is Script {
         deployL2Whitelist();
 
         // upgradable
-        deployL2T1Messenger(vm);
+        deployL2T1Messenger();
         deployL2GatewayRouter();
         deployT1StandardERC20Factory();
         deployL2StandardERC20Gateway();
