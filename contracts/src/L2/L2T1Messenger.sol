@@ -78,7 +78,7 @@ contract L2T1Messenger is T1MessengerBase, IL2T1Messenger {
      * Constructor *
      *
      */
-    constructor(address _counterpart, address _messageQueue) T1MessengerBase(_counterpart) {
+    constructor(address _counterpart, address _messageQueue) payable T1MessengerBase(_counterpart) {
         if (_messageQueue == address(0)) {
             revert ErrorZeroAddress();
         }
