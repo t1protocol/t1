@@ -160,8 +160,8 @@ contract L1T1Messenger is T1MessengerBase, IL1T1Messenger {
         address _to,
         uint256 _value,
         uint256 _nonce,
-        bytes memory _message,
-        L2MessageProof memory _proof
+        bytes memory _message
+//        L2MessageProof memory _proof
     )
         external
         override
@@ -171,14 +171,15 @@ contract L1T1Messenger is T1MessengerBase, IL1T1Messenger {
         bytes32 _xDomainCalldataHash = keccak256(_encodeXDomainCalldata(_from, _to, _value, _nonce, _message));
         require(!isL2MessageExecuted[_xDomainCalldataHash], "Message was already successfully executed");
 
-        {
-            require(IT1Chain(rollup).isBatchFinalized(_proof.batchIndex), "Batch is not finalized");
-            bytes32 _messageRoot = IT1Chain(rollup).withdrawRoots(_proof.batchIndex);
-            require(
-                WithdrawTrieVerifier.verifyMerkleProof(_messageRoot, _xDomainCalldataHash, _nonce, _proof.merkleProof),
-                "Invalid proof"
-            );
-        }
+        // TODO enable proof
+//        {
+//            require(IT1Chain(rollup).isBatchFinalized(_proof.batchIndex), "Batch is not finalized");
+//            bytes32 _messageRoot = IT1Chain(rollup).withdrawRoots(_proof.batchIndex);
+//            require(
+//                WithdrawTrieVerifier.verifyMerkleProof(_messageRoot, _xDomainCalldataHash, _nonce, _proof.merkleProof),
+//                "Invalid proof"
+//            );
+//        }
 
         // @note check more `_to` address to avoid attack in the future when we add more gateways.
         require(_to != messageQueue, "Forbid to call message queue");
