@@ -13,13 +13,13 @@ import {console} from "forge-std/console.sol";
 // solhint-disable var-name-mixedcase
 
 contract DeployT1L1MessengerMock is Script {
-    uint256 L1_DEPLOYER_PRIVATE_KEY = vm.envUint("L1_DEPLOYER_PRIVATE_KEY");
+    uint256 L2_DEPLOYER_PRIVATE_KEY = vm.envUint("L2_DEPLOYER_PRIVATE_KEY");
 
     T1MessengerMock messengerMock;
 
     function run() external {
 
-        vm.startBroadcast(L1_DEPLOYER_PRIVATE_KEY);
+        vm.startBroadcast(L2_DEPLOYER_PRIVATE_KEY);
 
         deployMessengerMock();
 
@@ -29,7 +29,7 @@ contract DeployT1L1MessengerMock is Script {
     function deployMessengerMock() internal {
         messengerMock = new T1MessengerMock();
 
-        logAddress("T1L1_MESSENGER_MOCK_ADDRESS", address(messengerMock));
+        logAddress("T1L2_MESSENGER_MOCK_ADDRESS", address(messengerMock));
     }
 
     function logAddress(string memory name, address addr) internal pure {

@@ -2,7 +2,7 @@
 pragma solidity ^0.8.10;
 import "../libraries/constants/T1Constants.sol";
 
-contract T1L1MessengerMock {
+contract T1MessengerMock {
     event SentMessage(
         address indexed sender,
         address indexed target,
