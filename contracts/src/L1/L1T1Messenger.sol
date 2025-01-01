@@ -166,7 +166,7 @@ contract L1T1Messenger is T1MessengerBase, IL1T1Messenger {
         external
         override
         whenNotPaused
-        notInExecution
+//        notInExecution
     {
         bytes32 _xDomainCalldataHash = keccak256(_encodeXDomainCalldata(_from, _to, _value, _nonce, _message));
         require(!isL2MessageExecuted[_xDomainCalldataHash], "Message was already successfully executed");
@@ -215,7 +215,7 @@ contract L1T1Messenger is T1MessengerBase, IL1T1Messenger {
         payable
         override
         whenNotPaused
-        notInExecution
+//        notInExecution
     {
         // We will use a different `queueIndex` for the replaced message. However, the original `queueIndex` or `nonce`
         // is encoded in the `_message`. We will check the `xDomainCalldata` on layer 2 to avoid duplicated execution.
@@ -282,7 +282,7 @@ contract L1T1Messenger is T1MessengerBase, IL1T1Messenger {
         external
         override
         whenNotPaused
-        notInExecution
+//        notInExecution
     {
         // The criteria for dropping a message:
         // 1. The message is a L1 message.
