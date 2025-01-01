@@ -96,7 +96,7 @@ contract L1T1Messenger is T1MessengerBase, IL1T1Messenger {
      * Constructor *
      *
      */
-    constructor(address _counterpart, address _rollup, address _messageQueue) T1MessengerBase(_counterpart) {
+    constructor(address _counterpart, address _rollup, address _messageQueue) payable T1MessengerBase(_counterpart) {
         if (_rollup == address(0) || _messageQueue == address(0)) {
             revert ErrorZeroAddress();
         }
