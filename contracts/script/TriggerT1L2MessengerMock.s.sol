@@ -11,7 +11,7 @@ import { Script } from "forge-std/Script.sol";
 // solhint-disable state-visibility
 // solhint-disable var-name-mixedcase
 
-contract TriggerT1L1MessengerMock is Script {
+contract TriggerT1L2MessengerMock is Script {
     uint256 L2_DEPLOYER_PRIVATE_KEY = vm.envUint("L2_DEPLOYER_PRIVATE_KEY");
 
     address T1L2_MESSENGER_MOCK_ADDR = vm.envAddress("T1L2_MESSENGER_MOCK_ADDRESS");
