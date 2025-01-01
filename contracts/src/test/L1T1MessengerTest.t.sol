@@ -27,11 +27,12 @@ contract L1T1MessengerTest is L1GatewayTestBase {
         );
         prepareL2MessageRoot(_xDomainCalldataHash);
 
-        IL1T1Messenger.L2MessageProof memory proof;
-        proof.batchIndex = rollup.lastFinalizedBatchIndex();
+//        IL1T1Messenger.L2MessageProof memory proof;
+//        proof.batchIndex = rollup.lastFinalizedBatchIndex();
 
         hevm.expectRevert("Forbid to call message queue");
-        l1Messenger.relayMessageWithProof(address(this), address(messageQueue), 0, 0, new bytes(0), proof);
+//        l1Messenger.relayMessageWithProof(address(this), address(messageQueue), 0, 0, new bytes(0), proof);
+        l1Messenger.relayMessageWithProof(address(this), address(messageQueue), 0, 0, new bytes(0));
     }
 
     function testForbidCallSelfFromL2() external {
@@ -46,11 +47,12 @@ contract L1T1MessengerTest is L1GatewayTestBase {
             )
         );
         prepareL2MessageRoot(_xDomainCalldataHash);
-        IL1T1Messenger.L2MessageProof memory proof;
-        proof.batchIndex = rollup.lastFinalizedBatchIndex();
+//        IL1T1Messenger.L2MessageProof memory proof;
+//        proof.batchIndex = rollup.lastFinalizedBatchIndex();
 
         hevm.expectRevert("Forbid to call self");
-        l1Messenger.relayMessageWithProof(address(this), address(l1Messenger), 0, 0, new bytes(0), proof);
+//        l1Messenger.relayMessageWithProof(address(this), address(l1Messenger), 0, 0, new bytes(0), proof);
+        l1Messenger.relayMessageWithProof(address(this), address(l1Messenger), 0, 0, new bytes(0));
     }
 
     function testSendMessage(uint256 exceedValue, address refundAddress) external {
@@ -168,8 +170,9 @@ contract L1T1MessengerTest is L1GatewayTestBase {
         hevm.expectRevert("Pausable: paused");
         l1Messenger.sendMessage(address(0), 0, new bytes(0), DEFAULT_GAS_LIMIT, address(0));
         hevm.expectRevert("Pausable: paused");
-        IL1T1Messenger.L2MessageProof memory _proof;
-        l1Messenger.relayMessageWithProof(address(0), address(0), 0, 0, new bytes(0), _proof);
+//        IL1T1Messenger.L2MessageProof memory _proof;
+//        l1Messenger.relayMessageWithProof(address(0), address(0), 0, 0, new bytes(0), _proof);
+        l1Messenger.relayMessageWithProof(address(0), address(0), 0, 0, new bytes(0));
         hevm.expectRevert("Pausable: paused");
         l1Messenger.replayMessage(address(0), address(0), 0, 0, new bytes(0), 0, address(0));
         hevm.expectRevert("Pausable: paused");
