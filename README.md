@@ -1,14 +1,13 @@
 # 𝚝𝟷
-
+[![Reth](https://github.com/t1protocol/t1/actions/workflows/reth.yml/badge.svg?branch=main)](https://github.com/t1protocol/t1/actions/workflows/reth.yml)
 [![Contracts](https://github.com/t1protocol/t1/actions/workflows/contracts.yml/badge.svg?branch=main)](https://github.com/t1protocol/t1/actions/workflows/contracts.yml)
 
 Monorepo for 𝚝𝟷
 
 ## Directory Structure
 
-<pre>
-├── <a href="./contracts/">contracts</a>: Solidity code for t1 L1 bridge and rollup contracts, plus L2 bridge and pre-deployed contracts.
-</pre>
+- **[contracts](./contracts/)**: Solidity code for t1 L1 bridge and rollup contracts, plus L2 bridge and pre-deployed contracts.
+- **[reth](./reth/)**: Rust code for the t1 extension of reth.
 
 ## Getting Started
 

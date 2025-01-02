@@ -1,0 +1,52 @@
+name: "reth"
+
+on:
+  workflow_dispatch:
+  pull_request:
+    types: [opened, reopened, synchronize, ready_for_review]
+    paths:
+      - 'reth/**'
+      - '.github/workflows/reth.yml'
+  push:
+    branches:
+      - "main"
+    paths:
+      - 'reth/**'
+
+# prevent redundant builds
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  CARGO_TERM_COLOR: always
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out the repo
+      - uses: actions/checkout@v4
+
+      - name: Setup rust
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Rust cache
+        uses: swatinem/rust-cache@v2
+        with:
+          workspaces: "reth -> target"
+          
+      - name: Build
+        working-directory: reth
+        run: cargo build --verbose
+        
+      - name: Test 
+        working-directory: reth
+        run: cargo test --verbose
+
+      - name: Add build summary
+        if: always()
+        run: |
+          echo "## Reth build status" >> $GITHUB_STEP_SUMMARY
+          echo "- commit: ${{ github.sha }}" >> $GITHUB_STEP_SUMMARY
+          echo "- status: ${{ job.status }}" >> $GITHUB_STEP_SUMMARY
