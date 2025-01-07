@@ -32,6 +32,7 @@ services:
       --nat=publicip
       --authrpc.port=8551 --authrpc.jwtsecret=/root/jwt/jwtsecret --authrpc.addr=0.0.0.0
       --log.file.directory /root/logs
+      --builder.gaslimit 100000000
 
 volumes:
   execution_data:
