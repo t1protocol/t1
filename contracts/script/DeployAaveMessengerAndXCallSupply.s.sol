@@ -4,10 +4,10 @@ pragma solidity >=0.8.28;
 
 import { Script } from "forge-std/Script.sol";
 import { console } from "forge-std/console.sol";
-import { IWETH } from "./IWETH.sol";
 import { IPool } from "aave/interfaces/IPool.sol";
 import { AaveMessenger } from "../src/libraries/examples/AaveMessenger.sol";
 import { IL2T1Messenger } from "../src/L2/IL2T1Messenger.sol";
+import { IWETH } from "../src/misc/IWETH.sol";
 
 contract DeployAaveMessengerAndXCallSupply is Script {
     function run() public {
