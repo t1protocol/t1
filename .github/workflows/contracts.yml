@@ -22,6 +22,7 @@ on:
 
 jobs:
   lint:
+    name: lint
     runs-on: "ubuntu-latest"
     steps:
       - name: "Check out the repo"
@@ -47,6 +48,7 @@ jobs:
           echo "✅ Passed" >> $GITHUB_STEP_SUMMARY
 
   build:
+    name: build
     runs-on: "ubuntu-latest"
     steps:
       - name: "Check out the repo"
@@ -72,6 +74,7 @@ jobs:
           echo "✅ Passed" >> $GITHUB_STEP_SUMMARY
 
   test:
+    name: test
     needs: ["lint", "build"]
     runs-on: "ubuntu-latest"
     steps:
