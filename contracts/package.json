@@ -8,7 +8,8 @@
   },
   "dependencies": {
     "@openzeppelin/contracts": "^v4.9.3",
-    "@openzeppelin/contracts-upgradeable": "^v4.9.3"
+    "@openzeppelin/contracts-upgradeable": "^v4.9.3",
+    "aave": "github:aave/aave-v3-core#v1.19.4"
   },
   "devDependencies": {
     "ds-test": "github:dapphub/ds-test",
