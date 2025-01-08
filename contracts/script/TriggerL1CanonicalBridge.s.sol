@@ -15,16 +15,16 @@ import {L1ETHGateway} from "../src/L1/gateways/L1ETHGateway.sol";
 contract TriggerL1CanonicalBridge is Script {
     uint256 L1_DEPLOYER_PRIVATE_KEY = vm.envUint("L1_DEPLOYER_PRIVATE_KEY");
 
-    address L1_ETH_GATEWAY_IMPLEMENTATION_ADDR = vm.envAddress("L1_ETH_GATEWAY_IMPLEMENTATION_ADDR");
+    address L1_ETH_GATEWAY_PROXY_ADDR = vm.envAddress("L1_ETH_GATEWAY_PROXY_ADDR");
 
     function run() external {
 
         vm.startBroadcast(L1_DEPLOYER_PRIVATE_KEY);
 
-        uint256 value = 1000000000;
+        uint256 ZERO_POINT_ONE_ETHER = 100000000000000000;
         uint256 gasLimit = 10000000000000;
 
-        L1ETHGateway(L1_ETH_GATEWAY_IMPLEMENTATION_ADDR).depositETH(value, gasLimit);
+        L1ETHGateway(L1_ETH_GATEWAY_PROXY_ADDR).depositETH(ZERO_POINT_ONE_ETHER, gasLimit);
 
         vm.stopBroadcast();
     }
