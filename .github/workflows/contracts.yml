@@ -11,17 +11,13 @@ on:
       - reopened
       - synchronize
       - ready_for_review
-    paths:
-      - 'contracts/**'
-      - '.github/workflows/contracts.yml'
   push:
     branches:
-      - "main"
-    paths:
-      - 'contracts/**'
+      - "develop"
 
 jobs:
   lint:
+    name: lint
     runs-on: "ubuntu-latest"
     steps:
       - name: "Check out the repo"
@@ -47,6 +43,7 @@ jobs:
           echo "✅ Passed" >> $GITHUB_STEP_SUMMARY
 
   build:
+    name: build
     runs-on: "ubuntu-latest"
     steps:
       - name: "Check out the repo"
@@ -72,6 +69,7 @@ jobs:
           echo "✅ Passed" >> $GITHUB_STEP_SUMMARY
 
   test:
+    name: test
     needs: ["lint", "build"]
     runs-on: "ubuntu-latest"
     steps:
