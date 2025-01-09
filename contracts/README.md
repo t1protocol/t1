@@ -61,7 +61,7 @@ following files:
 ### GitHub Actions
 
 This project comes with GitHub Actions pre-configured. Your contracts will be linted and tested on every push and pull
-request made to the `main` branch.
+request made to the `develop` branch.
 
 You can edit the CI script in [contracts.yml](../.github/workflows/contracts.yml).
 

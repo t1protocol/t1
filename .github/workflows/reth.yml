@@ -8,14 +8,9 @@ on:
       - reopened
       - synchronize
       - ready_for_review
-    paths:
-      - 'reth/**'
-      - '.github/workflows/reth.yml'
   push:
     branches:
-      - "main"
-    paths:
-      - 'reth/**'
+      - "develop"
 
 # prevent redundant builds
 concurrency:
