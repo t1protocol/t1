@@ -9,21 +9,23 @@ import { IL2T1Messenger } from "../../L2/IL2T1Messenger.sol";
 /// @dev Contracts that want to send messages via L2T1Messenger.sendMessage() must inherit this contract
 /// to receive callbacks about the message delivery status. The contract implements ERC165 interface
 /// detection which L2T1Messenger uses to verify callback support.
+/// @dev Inheriting contracts should not implement a receive method unless unless they have a specific need for it
+/// beyond handling protocol refunds
 abstract contract L2T1MessengerCallback is IL2T1MessengerCallback {
     /**
      * Errors *
      */
 
-    /// @notice used when caller of onT1MessageCallback is not T1 protocol
+    /// @dev used when caller of onT1MessageCallback is not T1 protocol
     error Unauthorized();
 
-    /// @notice used when nonce passed to onT1MessageCallback is not a pending request in this contract
+    /// @dev used when nonce passed to onT1MessageCallback is not a pending request in this contract
     error UnknownRequest(uint256 nonce);
 
-    /// @notice used when a reentrancy call is made
+    /// @dev used when a reentrancy call is made
     error ReentrantCall();
 
-    /// @notice used when a zero address is provided for the messenger contract
+    /// @dev used when a zero address is provided for the messenger contract
     error NoZeroAddress();
 
     /**
@@ -34,7 +36,7 @@ abstract contract L2T1MessengerCallback is IL2T1MessengerCallback {
     /// @dev This is set immutably in the constructor and used to verify callbacks come from the protocol
     IL2T1Messenger public immutable L2_MESSENGER;
 
-    /// @notice For preventing reentrancy attacks
+    /// @dev For preventing reentrancy attacks
     bool private _processingCallback;
 
     /// @notice Tracks pending requests
@@ -112,15 +114,12 @@ abstract contract L2T1MessengerCallback is IL2T1MessengerCallback {
         pendingRequests[nonce] = true;
     }
 
-    /// @notice Allows the contract to receive ETH
-    receive() external payable virtual { }
-
     /**
      * Public View Functions *
      */
 
     /// @inheritdoc IERC165Upgradeable
-    function supportsInterface(bytes4 interfaceId) public view virtual override returns (bool) {
+    function supportsInterface(bytes4 interfaceId) public pure override returns (bool) {
         return interfaceId == type(IL2T1MessengerCallback).interfaceId
             || interfaceId == type(IERC165Upgradeable).interfaceId;
     }
