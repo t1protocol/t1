@@ -39,6 +39,4 @@ contract AaveMessenger is L2T1MessengerCallback {
     {
         emit SupplyCompleted(nonce, success);
     }
-
-    receive() external payable override { }
 }
