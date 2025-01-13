@@ -13,7 +13,7 @@ contract DeployAaveMessengerAndXCallSupply is Script {
     function run() public {
         uint256 deployerPrivateKey = vm.envUint("PRIVATE_KEY");
         uint256 depositAmount = vm.envUint("DEPOSIT_AMOUNT");
-        uint64 arbitrumPrivateTestnetChainId = 412346;
+        uint64 arbitrumPrivateTestnetChainId = 412_346;
         address postmanAddress = 0x3f1Eae7D46d88F08fc2F8ed27FCb2AB183EB2d0E;
         IL2T1Messenger l2t1Messenger = IL2T1Messenger(0x086f77C5686dfe3F2f8FE487C5f8d357952C8556);
         IWETH weth = IWETH(0x47b8399a8A3aD9665e4257904F99eAFE043c4F50);
@@ -23,7 +23,7 @@ contract DeployAaveMessengerAndXCallSupply is Script {
 
         AaveMessenger messenger = new AaveMessenger(l2t1Messenger);
 
-        messenger.supplyOnAave{value: 0.01 ether}(
+        messenger.supplyOnAave{ value: depositAmount }(
             address(pool),
             address(weth),
             depositAmount,
