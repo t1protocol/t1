@@ -3,7 +3,7 @@
 pragma solidity >=0.8.28;
 
 import { IL2T1Messenger } from "./IL2T1Messenger.sol";
-import { L2T1MessageVerifier } from "./L2T1MessageVerifier.sol";
+import { IL2T1MessageVerifier } from "./IL2T1MessageVerifier.sol";
 import { L2MessageQueue } from "./predeploys/L2MessageQueue.sol";
 
 import { T1Constants } from "../libraries/constants/T1Constants.sol";
@@ -36,7 +36,7 @@ contract L2T1Messenger is T1MessengerBase, IL2T1Messenger {
     /// @dev used when owner tries to set this chain as a supported chain for cross chain messaging
     error CannotSupportCurrentChain();
 
-    /// @notice used when caller of sendMessage does not implement the IL2T1MessengerCallback interface
+    /// @dev used when caller of sendMessage does not implement the IL2T1MessengerCallback interface
     error UnsupportedSenderInterface();
 
     /// @dev Thrown when msg.value is less than the required fee for sending a cross-chain message
@@ -75,9 +75,6 @@ contract L2T1Messenger is T1MessengerBase, IL2T1Messenger {
 
     /// @notice Maps chain ID to true, if the chain is supported.
     mapping(uint64 chainId => bool isSupported) private _isSupportedDest;
-
-    /// @notice A list of supported destination chains.
-    uint64[] private _chainIds;
 
     /// @notice The next nonce to be assigned to an L2 -> L2 message
     uint256 private _nextL2MessageNonce;
@@ -299,9 +296,11 @@ contract L2T1Messenger is T1MessengerBase, IL2T1Messenger {
 
         uint256 destChainGasCost = L2MessageQueue(messageQueue).estimateCrossDomainMessageFee(_gasLimit, _destChainId);
 
-        L2T1MessageVerifier(payable(verifierContracts[_destChainId])).setMessageValues{ value: msg.value }(
+        IL2T1MessageVerifier(payable(verifierContracts[_destChainId])).setMessageValues{ value: msg.value }(
             _value, destChainGasCost, _nonce
         );
+
+        emit FeeSent(msg.value, _value, destChainGasCost);
     }
 
     /// @notice Initializes a cross-chain message and generates a unique nonce

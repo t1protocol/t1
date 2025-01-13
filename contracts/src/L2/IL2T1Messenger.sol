@@ -24,6 +24,12 @@ interface IL2T1Messenger is IT1Messenger {
     /// @param chainId The ID of the chain that was removed as a supported destination
     event DestinationChainRemoved(uint64 indexed chainId);
 
+    /// @notice Emitted when fees are sent to the L2T1MessageVerifier contract
+    /// @param msgValue the msg.value sent by the user to cover gas and value transfer on the destination chain
+    /// @param xChainValue the native value designated by the user to be transferred in their cross chain transaction
+    /// @param destChainGasCost the native cost to execute the cross chain transaction
+    event FeeSent(uint256 msgValue, uint256 xChainValue, uint256 destChainGasCost);
+
     /**
      *
      * Public Mutating Functions *
