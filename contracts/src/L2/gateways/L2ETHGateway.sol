@@ -83,7 +83,7 @@ contract L2ETHGateway is T1GatewayBase, IL2ETHGateway {
         external
         payable
         override
-        onlyCallByCounterpart
+//        onlyCallByCounterpart // TODO this should not be L1 Messenger address. it should be the Postman identity address
         nonReentrant
     {
         require(msg.value == _amount, "msg.value mismatch");

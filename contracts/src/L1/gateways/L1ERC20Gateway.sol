@@ -71,7 +71,7 @@ abstract contract L1ERC20Gateway is IL1ERC20Gateway, IMessageDropCallback, T1Gat
         payable
         virtual
         override
-        onlyCallByCounterpart
+//        onlyCallByCounterpart // TODO this should not be L1 Messenger address. it should be the Postman identity address
         nonReentrant
     {
         _beforeFinalizeWithdrawERC20(_l1Token, _l2Token, _from, _to, _amount, _data);
