@@ -14,6 +14,7 @@ import { L1T1Messenger } from "../L1/L1T1Messenger.sol";
 import { L2T1Messenger } from "../L2/L2T1Messenger.sol";
 import { IL2T1Messenger } from "../L2/IL2T1Messenger.sol";
 import { L2T1MessageVerifier } from "../L2/L2T1MessageVerifier.sol";
+import { IL2T1MessageVerifier } from "../L2/IL2T1MessageVerifier.sol";
 import { MockMessengerRecipient } from "./mocks/MockMessengerRecipient.sol";
 
 contract L2T1MessageVerifierTest is DSTestPlus {
@@ -186,7 +187,7 @@ contract L2T1MessageVerifierTest is DSTestPlus {
 
         // Attempt to call setMessageValues from the mock caller
         hevm.prank(mockCaller);
-        hevm.expectRevert(L2T1MessageVerifier.OnlyMessenger.selector);
+        hevm.expectRevert(IL2T1MessageVerifier.OnlyMessenger.selector);
         l2MessageVerifier.setMessageValues(0, 0, 0);
     }
 

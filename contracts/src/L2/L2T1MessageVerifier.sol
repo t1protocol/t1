@@ -3,6 +3,7 @@
 pragma solidity >=0.8.28;
 
 import { IL2T1MessengerCallback } from "../libraries/callbacks/IL2T1MessengerCallback.sol";
+import { IL2T1MessageVerifier } from "./IL2T1MessageVerifier.sol";
 
 import { OwnableUpgradeable } from "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
 
@@ -10,7 +11,7 @@ import { OwnableUpgradeable } from "@openzeppelin/contracts-upgradeable/access/O
 /// @notice Contract for verifying and forwarding cross-chain message results to users on t1
 /// @dev This contract is deployed on t1 and acts as a trusted verifier for cross-chain message callbacks
 /// originating from t1.
-contract L2T1MessageVerifier is OwnableUpgradeable {
+contract L2T1MessageVerifier is OwnableUpgradeable, IL2T1MessageVerifier {
     /**
      * Errors *
      */
@@ -19,12 +20,6 @@ contract L2T1MessageVerifier is OwnableUpgradeable {
 
     /// @notice Thrown when the contract fails to transfer fee
     error FailedToTransferValue();
-
-    /// @dev Thrown when msg.value is less than the required fee for sending a cross-chain message
-    error InsufficientMsgValue(uint256 minValue);
-
-    /// @notice Thrown when caller of setMessageValues is not messenger contract
-    error OnlyMessenger();
 
     /**
      * Variables *
@@ -49,7 +44,7 @@ contract L2T1MessageVerifier is OwnableUpgradeable {
     }
 
     modifier onlyMessenger() {
-        if (msg.sender != L2_T1_MESSENGER) revert OnlyMessenger();
+        require(msg.sender == L2_T1_MESSENGER, OnlyMessenger());
         _;
     }
 
@@ -58,12 +53,7 @@ contract L2T1MessageVerifier is OwnableUpgradeable {
         OwnableUpgradeable.__Ownable_init();
     }
 
-    /**
-     * @notice Sets the values for a cross-chain message, including the amount to be transferred, gas cost, and nonce.
-     * @param _value The amount of ether to be transferred.
-     * @param _gasCost The estimated gas cost for the transaction.
-     * @param _nonce The unique identifier for the message.
-     */
+    /// @inheritdoc IL2T1MessageVerifier
     function setMessageValues(uint256 _value, uint256 _gasCost, uint256 _nonce) external payable onlyMessenger {
         uint256 minRequired = _gasCost + _value;
         if (msg.value < minRequired) revert InsufficientMsgValue(minRequired);
