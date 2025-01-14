@@ -2,8 +2,8 @@
 
 pragma solidity >=0.8.28;
 
-import {ERC20} from "@openzeppelin/contracts/token/ERC20/ERC20.sol";
-import {ERC20Permit} from "@openzeppelin/contracts/token/ERC20/extensions/draft-ERC20Permit.sol";
+import { ERC20 } from "@openzeppelin/contracts/token/ERC20/ERC20.sol";
+import { ERC20Permit } from "@openzeppelin/contracts/token/ERC20/extensions/draft-ERC20Permit.sol";
 
 // solhint-disable reason-string
 // solhint-disable no-empty-blocks
@@ -20,7 +20,7 @@ contract WrappedEther is ERC20Permit {
     /// @param wad The amount of Ether in wei withdrawn.
     event Withdrawal(address indexed src, uint256 wad);
 
-    constructor() ERC20Permit("Wrapped Ether") ERC20("Wrapped Ether", "WETH") {}
+    constructor() ERC20Permit("Wrapped Ether") ERC20("Wrapped Ether", "WETH") { }
 
     receive() external payable {
         deposit();
@@ -39,7 +39,7 @@ contract WrappedEther is ERC20Permit {
 
         _burn(_sender, wad);
 
-        (bool success, ) = _sender.call{value: wad}("");
+        (bool success,) = _sender.call{ value: wad }("");
         require(success, "withdraw ETH failed");
 
         emit Withdrawal(_sender, wad);

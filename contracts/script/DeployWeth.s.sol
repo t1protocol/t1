@@ -2,10 +2,10 @@
 
 pragma solidity >=0.8.28;
 
-import {Script} from "forge-std/Script.sol";
-import {console} from "forge-std/console.sol";
+import { Script } from "forge-std/Script.sol";
+import { console } from "forge-std/console.sol";
 
-import {WrappedEther} from "../src/L2/predeploys/WrappedEther.sol";
+import { WrappedEther } from "../src/L2/predeploys/WrappedEther.sol";
 
 contract DeployWeth is Script {
     address L1_WETH_ADDR = vm.envAddress("L1_WETH_ADDR");

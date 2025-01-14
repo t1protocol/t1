@@ -15,6 +15,7 @@ import { L1GatewayRouter } from "../src/L1/gateways/L1GatewayRouter.sol";
 import { L1MessageQueueWithGasPriceOracle } from "../src/L1/rollup/L1MessageQueueWithGasPriceOracle.sol";
 import { L1T1Messenger } from "../src/L1/L1T1Messenger.sol";
 import { L1StandardERC20Gateway } from "../src/L1/gateways/L1StandardERC20Gateway.sol";
+import { L1WETHGateway } from "../src/L1/gateways/L1WETHGateway.sol";
 import { L2GasPriceOracle } from "../src/L1/rollup/L2GasPriceOracle.sol";
 import { MultipleVersionRollupVerifier } from "../src/L1/rollup/MultipleVersionRollupVerifier.sol";
 import { T1Chain } from "../src/L1/rollup/T1Chain.sol";
@@ -30,6 +31,9 @@ contract DeployL1BridgeContracts is Script {
 
     uint64 CHAIN_ID_L2 = uint64(vm.envUint("CHAIN_ID_L2"));
 
+    address L1_WETH_ADDR = vm.envAddress("L1_WETH_ADDR");
+    address L2_WETH_ADDR = vm.envAddress("L2_WETH_ADDR");
+
     address L1_PLONK_VERIFIER_ADDR = vm.envAddress("L1_PLONK_VERIFIER_ADDR");
 
     address L1_PROXY_ADMIN_ADDR = vm.envAddress("L1_PROXY_ADMIN_ADDR");
@@ -41,6 +45,7 @@ contract DeployL1BridgeContracts is Script {
     address L2_T1_MESSENGER_PROXY_ADDR = vm.envAddress("L2_T1_MESSENGER_PROXY_ADDR");
     address L2_ETH_GATEWAY_PROXY_ADDR = vm.envAddress("L2_ETH_GATEWAY_PROXY_ADDR");
     address L2_STANDARD_ERC20_GATEWAY_PROXY_ADDR = vm.envAddress("L2_STANDARD_ERC20_GATEWAY_PROXY_ADDR");
+    address L2_WETH_GATEWAY_PROXY_ADDR = vm.envAddress("L2_WETH_GATEWAY_PROXY_ADDR");
     address L2_T1_STANDARD_ERC20_ADDR = vm.envAddress("L2_T1_STANDARD_ERC20_ADDR");
     address L2_T1_STANDARD_ERC20_FACTORY_ADDR = vm.envAddress("L2_T1_STANDARD_ERC20_FACTORY_ADDR");
 
@@ -63,6 +68,7 @@ contract DeployL1BridgeContracts is Script {
         deployL1T1Messenger();
         deployL1GatewayRouter();
         deployL1ETHGateway();
+        deployL1WETHGateway();
         deployL1StandardERC20Gateway();
 
         vm.stopBroadcast();
@@ -145,6 +151,14 @@ contract DeployL1BridgeContracts is Script {
         L1ETHGateway impl = new L1ETHGateway(L2_ETH_GATEWAY_PROXY_ADDR, address(router), L1_T1_MESSENGER_PROXY_ADDR);
 
         logAddress("L1_ETH_GATEWAY_IMPLEMENTATION_ADDR", address(impl));
+    }
+
+    function deployL1WETHGateway() internal {
+        L1WETHGateway impl = new L1WETHGateway(
+            L1_WETH_ADDR, L2_WETH_ADDR, L2_WETH_GATEWAY_PROXY_ADDR, address(router), L1_T1_MESSENGER_PROXY_ADDR
+        );
+
+        logAddress("L1_WETH_GATEWAY_IMPLEMENTATION_ADDR", address(impl));
     }
 
     function logAddress(string memory name, address addr) internal pure {
