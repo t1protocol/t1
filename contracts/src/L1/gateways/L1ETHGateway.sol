@@ -101,7 +101,9 @@ contract L1ETHGateway is T1GatewayBase, IL1ETHGateway, IMessageDropCallback {
     }
 
     /// @inheritdoc IMessageDropCallback
-    function onDropMessage(bytes calldata _message) external payable virtual onlyInDropContext nonReentrant {
+    function onDropMessage(bytes calldata _message) external payable virtual
+//    onlyInDropContext // TODO this should not be L1 Messenger address. it should be the Postman identity address
+    nonReentrant {
         // _message should start with 0x232e8748  =>  finalizeDepositETH(address,address,uint256,bytes)
         require(bytes4(_message[0:4]) == IL2ETHGateway.finalizeDepositETH.selector, "invalid selector");
 
