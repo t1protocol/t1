@@ -12,7 +12,7 @@
 4. Start the application:  
    Run the following command to start the services using Docker Compose:  
    ```bash
-   docker compose --env-file ./reth/env.tmp -d
+   docker compose --env-file ./reth/env.tmp up -d
    ```
    To stop use
    ```bash
