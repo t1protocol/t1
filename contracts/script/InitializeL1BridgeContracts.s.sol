@@ -11,6 +11,7 @@ import { L1ETHGateway } from "../src/L1/gateways/L1ETHGateway.sol";
 import { L1GatewayRouter } from "../src/L1/gateways/L1GatewayRouter.sol";
 import { L1T1Messenger } from "../src/L1/L1T1Messenger.sol";
 import { L1StandardERC20Gateway } from "../src/L1/gateways/L1StandardERC20Gateway.sol";
+import { L1WETHGateway } from "../src/L1/gateways/L1WETHGateway.sol";
 import { T1Chain } from "../src/L1/rollup/T1Chain.sol";
 import { L1MessageQueueWithGasPriceOracle } from "../src/L1/rollup/L1MessageQueueWithGasPriceOracle.sol";
 import { L2GasPriceOracle } from "../src/L1/rollup/L2GasPriceOracle.sol";
@@ -28,6 +29,7 @@ contract InitializeL1BridgeContracts is Script {
     address L1_COMMIT_SENDER_ADDRESS = vm.envAddress("L1_COMMIT_SENDER_ADDRESS");
     address L1_FINALIZE_SENDER_ADDRESS = vm.envAddress("L1_FINALIZE_SENDER_ADDRESS");
     address L1_FEE_VAULT_ADDR = vm.envAddress("L1_FEE_VAULT_ADDR");
+    address L1_WETH_ADDR = vm.envAddress("L1_WETH_ADDR");
 
     address L1_PROXY_ADMIN_ADDR = vm.envAddress("L1_PROXY_ADMIN_ADDR");
 
@@ -45,6 +47,8 @@ contract InitializeL1BridgeContracts is Script {
     address L1_STANDARD_ERC20_GATEWAY_PROXY_ADDR = vm.envAddress("L1_STANDARD_ERC20_GATEWAY_PROXY_ADDR");
     address L1_STANDARD_ERC20_GATEWAY_IMPLEMENTATION_ADDR =
         vm.envAddress("L1_STANDARD_ERC20_GATEWAY_IMPLEMENTATION_ADDR");
+    address L1_WETH_GATEWAY_PROXY_ADDR = vm.envAddress("L1_WETH_GATEWAY_PROXY_ADDR");
+    address L1_WETH_GATEWAY_IMPLEMENTATION_ADDR = vm.envAddress("L1_WETH_GATEWAY_IMPLEMENTATION_ADDR");
     address L1_MULTIPLE_VERSION_ROLLUP_VERIFIER_ADDR = vm.envAddress("L1_MULTIPLE_VERSION_ROLLUP_VERIFIER_ADDR");
 
     address L2_T1_MESSENGER_PROXY_ADDR = vm.envAddress("L2_T1_MESSENGER_PROXY_ADDR");
@@ -113,6 +117,22 @@ contract InitializeL1BridgeContracts is Script {
         );
 
         L1StandardERC20Gateway(L1_STANDARD_ERC20_GATEWAY_PROXY_ADDR).initialize();
+
+        // initialize L1WETHGateway
+        proxyAdmin.upgrade(
+            ITransparentUpgradeableProxy(L1_WETH_GATEWAY_PROXY_ADDR), L1_WETH_GATEWAY_IMPLEMENTATION_ADDR
+        );
+
+        L1WETHGateway(payable(L1_WETH_GATEWAY_PROXY_ADDR)).initialize();
+
+        // set WETH gateway in router
+        {
+            address[] memory _tokens = new address[](1);
+            _tokens[0] = L1_WETH_ADDR;
+            address[] memory _gateways = new address[](1);
+            _gateways[0] = L1_WETH_GATEWAY_PROXY_ADDR;
+            L1GatewayRouter(L1_GATEWAY_ROUTER_PROXY_ADDR).setERC20Gateway(_tokens, _gateways);
+        }
 
         vm.stopBroadcast();
     }
