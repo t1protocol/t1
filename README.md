@@ -8,6 +8,7 @@ Monorepo for 𝚝𝟷
 
 - **[contracts](./contracts/)**: Solidity code for t1 L1 bridge and rollup contracts, plus L2 bridge and pre-deployed contracts.
 - **[reth](./reth/)**: Rust code for the t1 extension of reth.
+- **[offchain](./offchain/)**: Offchain utilities that we use.
 
 ## Getting Started
 
