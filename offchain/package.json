@@ -1,0 +1,19 @@
+{
+  "name": "offchain",
+  "version": "1.0.0",
+  "type": "commonjs",
+  "scripts": {
+    "build": "tsc",
+    "test": "npm run build && mocha 'dist/test/**/*.test.js'"
+  },
+  "devDependencies": {
+    "@types/chai": "^5.0.1",
+    "@types/mocha": "^10.0.10",
+    "chai": "^4.3.7",
+    "mocha": "^11.0.1",
+    "typescript": "^5.7.3"
+  },
+  "dependencies": {
+    "ethereumjs-util": "^7.1.5"
+  }
+}

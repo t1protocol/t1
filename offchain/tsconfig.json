@@ -1,0 +1,15 @@
+{
+  "compilerOptions": {
+    "target": "ES2019",      // or ES2020, etc.
+    "module": "CommonJS",    // simplest for Node
+    "outDir": "dist",        // compiled output
+    "rootDir": ".",          // root directory for input
+    "esModuleInterop": true, // often recommended
+    "strict": true           // good practice
+  },
+  "include": [
+    "src",
+    "test"
+  ]
+}
+
