@@ -45,6 +45,7 @@ contract InitializeL2T1Owner is Script {
     address L2_GATEWAY_ROUTER_PROXY_ADDR = vm.envAddress("L2_GATEWAY_ROUTER_PROXY_ADDR");
     address L2_ETH_GATEWAY_PROXY_ADDR = vm.envAddress("L2_ETH_GATEWAY_PROXY_ADDR");
     address L2_STANDARD_ERC20_GATEWAY_PROXY_ADDR = vm.envAddress("L2_STANDARD_ERC20_GATEWAY_PROXY_ADDR");
+    address L2_WETH_GATEWAY_PROXY_ADDR = vm.envAddress("L2_WETH_GATEWAY_PROXY_ADDR");
 
     T1Owner owner;
 
@@ -75,6 +76,7 @@ contract InitializeL2T1Owner is Script {
         Ownable(L2_GATEWAY_ROUTER_PROXY_ADDR).transferOwnership(address(owner));
         Ownable(L2_ETH_GATEWAY_PROXY_ADDR).transferOwnership(address(owner));
         Ownable(L2_STANDARD_ERC20_GATEWAY_PROXY_ADDR).transferOwnership(address(owner));
+        Ownable(L2_WETH_GATEWAY_PROXY_ADDR).transferOwnership(address(owner));
     }
 
     function grantRoles() internal {
