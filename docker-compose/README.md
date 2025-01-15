@@ -1,9 +1,6 @@
 # Setup
 
-1. Refer to the Notion page for detailed setup instructions [WIP]. For now, use the following link: [GCP Devnet Setup](https://www.notion.so/t1protocol/GCP-devnet-setup-114231194dc3805897a6d53108141a6a).  
-   **Note**:  
-   - Do not run Kurtosis.
-   - Installing Kurtosis is not required.
+1. Currently we are using vanilla `reth`, so you only need to make sure you have `docker` installed.
 
 2. Generate the JWT secret:  
    Use the provided script to create a secure JWT secret.
@@ -15,5 +12,29 @@
 4. Start the application:  
    Run the following command to start the services using Docker Compose:  
    ```bash
-   docker compose --env-file .env up -d
+   docker compose --env-file ./reth/env.tmp -d
+   ```
+   To stop use
+   ```bash
+   docker compose down
+   ```
+   To stop and delete volumes use
+   ```bash
+   docker compose down -v
+   ```
+
+5. If you want to run your node with Blockscout
+   ```
+   docker compose --env-file ./reth/env.tmp --profile blockscout up -d
+   ```
+   **Note**:
+   If you are not accessing blockscout at `localhost`, you need to change `localhost` to the public IP/DNS you want to access it at in `./blockscout/envs/common-frontend.env` for the following fields: `NEXT_PUBLIC_API_HOST`, `NEXT_PUBLIC_STATS_API_HOST`, `NEXT_PUBLIC_APP_HOST`, `NEXT_PUBLIC_VISUALIZE_API_HOST`.
+   
+   To stop use
+   ```bash
+   docker compose --profile blockscout down
+   ```
+   To stop and remove volumes use
+   ```bash
+   docker compose --profile blockscout down -v
    ```
