@@ -161,25 +161,25 @@ contract L1T1Messenger is T1MessengerBase, IL1T1Messenger {
         uint256 _value,
         uint256 _nonce,
         bytes memory _message
-//        L2MessageProof memory _proof
+        // L2MessageProof memory _proof
     )
-        external
+    external
         override
         whenNotPaused
-//        notInExecution
+        // notInExecution
     {
         bytes32 _xDomainCalldataHash = keccak256(_encodeXDomainCalldata(_from, _to, _value, _nonce, _message));
         require(!isL2MessageExecuted[_xDomainCalldataHash], "Message was already successfully executed");
 
         // TODO enable proof
-//        {
-//            require(IT1Chain(rollup).isBatchFinalized(_proof.batchIndex), "Batch is not finalized");
-//            bytes32 _messageRoot = IT1Chain(rollup).withdrawRoots(_proof.batchIndex);
-//            require(
-//                WithdrawTrieVerifier.verifyMerkleProof(_messageRoot, _xDomainCalldataHash, _nonce, _proof.merkleProof),
-//                "Invalid proof"
-//            );
-//        }
+        // {
+        //     require(IT1Chain(rollup).isBatchFinalized(_proof.batchIndex), "Batch is not finalized");
+        //     bytes32 _messageRoot = IT1Chain(rollup).withdrawRoots(_proof.batchIndex);
+        //     require(
+        //         WithdrawTrieVerifier.verifyMerkleProof(_messageRoot, _xDomainCalldataHash, _nonce, _proof.merkleProof),
+        //         "Invalid proof"
+        //     );
+        // }
 
         // @note check more `_to` address to avoid attack in the future when we add more gateways.
         require(_to != messageQueue, "Forbid to call message queue");
@@ -215,7 +215,7 @@ contract L1T1Messenger is T1MessengerBase, IL1T1Messenger {
         payable
         override
         whenNotPaused
-//        notInExecution
+        // notInExecution
     {
         // We will use a different `queueIndex` for the replaced message. However, the original `queueIndex` or `nonce`
         // is encoded in the `_message`. We will check the `xDomainCalldata` on layer 2 to avoid duplicated execution.
@@ -282,7 +282,7 @@ contract L1T1Messenger is T1MessengerBase, IL1T1Messenger {
         external
         override
         whenNotPaused
-//        notInExecution
+        // notInExecution
     {
         // The criteria for dropping a message:
         // 1. The message is a L1 message.

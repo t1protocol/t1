@@ -234,8 +234,8 @@ contract L1ETHGatewayTest is L1GatewayTestBase {
 
         prepareL2MessageRoot(keccak256(xDomainCalldata));
 
-//        IL1T1Messenger.L2MessageProof memory proof;
-//        proof.batchIndex = rollup.lastFinalizedBatchIndex();
+        // IL1T1Messenger.L2MessageProof memory proof;
+        // proof.batchIndex = rollup.lastFinalizedBatchIndex();
 
         // counterpart is not L2ETHGateway
         // emit FailedRelayedMessage from L1T1Messenger
@@ -245,9 +245,9 @@ contract L1ETHGatewayTest is L1GatewayTestBase {
         uint256 messengerBalance = address(l1Messenger).balance;
         uint256 recipientBalance = recipient.balance;
         assertBoolEq(false, l1Messenger.isL2MessageExecuted(keccak256(xDomainCalldata)));
-//        l1Messenger.relayMessageWithProof(
-//            address(uint160(address(counterpartGateway)) + 1), address(gateway), amount, 0, message, proof
-//        );
+        // l1Messenger.relayMessageWithProof(
+        //     address(uint160(address(counterpartGateway)) + 1), address(gateway), amount, 0, message, proof
+        // );
         l1Messenger.relayMessageWithProof(
             address(uint160(address(counterpartGateway)) + 1), address(gateway), amount, 0, message
         );
@@ -279,8 +279,8 @@ contract L1ETHGatewayTest is L1GatewayTestBase {
 
         prepareL2MessageRoot(keccak256(xDomainCalldata));
 
-//        IL1T1Messenger.L2MessageProof memory proof;
-//        proof.batchIndex = rollup.lastFinalizedBatchIndex();
+        // IL1T1Messenger.L2MessageProof memory proof;
+        // proof.batchIndex = rollup.lastFinalizedBatchIndex();
 
         // emit FinalizeWithdrawETH from L1ETHGateway
         {
@@ -297,7 +297,7 @@ contract L1ETHGatewayTest is L1GatewayTestBase {
         uint256 messengerBalance = address(l1Messenger).balance;
         uint256 recipientBalance = address(recipient).balance;
         assertBoolEq(false, l1Messenger.isL2MessageExecuted(keccak256(xDomainCalldata)));
-//        l1Messenger.relayMessageWithProof(address(counterpartGateway), address(gateway), amount, 0, message, proof);
+        // l1Messenger.relayMessageWithProof(address(counterpartGateway), address(gateway), amount, 0, message, proof);
         l1Messenger.relayMessageWithProof(address(counterpartGateway), address(gateway), amount, 0, message);
         assertEq(messengerBalance - amount, address(l1Messenger).balance);
         assertEq(recipientBalance + amount, address(recipient).balance);

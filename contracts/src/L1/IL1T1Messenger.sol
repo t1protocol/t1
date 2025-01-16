@@ -69,7 +69,7 @@ interface IL1T1Messenger is IT1Messenger {
         uint256 value,
         uint256 nonce,
         bytes memory message
-//        L2MessageProof memory proof
+        // L2MessageProof memory proof
     )
         external;
 
