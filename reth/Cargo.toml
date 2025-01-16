@@ -1,13 +1,24 @@
 [package]
 name = "t1-reth"
 version = "0.1.0"
-edition = "2024"
+edition = "2021"
 
 [dependencies]
-reth = { git = "https://github.com/paradigmxyz/reth.git", tag = "v1.1.5" }               # Reth
-reth-exex = { git = "https://github.com/paradigmxyz/reth.git", tag = "v1.1.5" }                          # Execution Extensions
-reth-node-ethereum = { git = "https://github.com/paradigmxyz/reth.git", tag = "v1.1.5" }                 # Ethereum Node implementation
-reth-tracing = { git = "https://github.com/paradigmxyz/reth.git", tag = "v1.1.5" }                       # Logging
+# reth
+reth = { git = "https://github.com/paradigmxyz/reth.git", tag = "v1.1.5" }
+reth-exex = { git = "https://github.com/paradigmxyz/reth.git", tag = "v1.1.5" }
+reth-node-api = { git = "https://github.com/paradigmxyz/reth.git", tag = "v1.1.5" }
+reth-node-ethereum = { git = "https://github.com/paradigmxyz/reth.git", tag = "v1.1.5" }
+reth-tracing = { git = "https://github.com/paradigmxyz/reth.git", tag = "v1.1.5" }
+reth-execution-types = { git = "https://github.com/paradigmxyz/reth.git", tag = "v1.1.5" }
 
-eyre = "0.6"         # Easy error handling
-futures-util = "0.3" # Stream utilities for consuming notifications
+# misc
+eyre = "0.6"
+
+# async
+futures = "0.3"
+
+[dev-dependencies]
+# testing
+reth-exex-test-utils = { git = "https://github.com/paradigmxyz/reth.git", tag = "v1.1.5" }
+tokio = "1.43"
