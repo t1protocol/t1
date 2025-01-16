@@ -1,10 +1,31 @@
-use reth::api::FullNodeComponents;
-use reth_exex::ExExContext;
+use futures_util::TryStreamExt;
+use reth::{api::FullNodeComponents, builder::NodeTypes, primitives::EthPrimitives};
+use reth_exex::{ExExContext, ExExEvent, ExExNotification};
 use reth_node_ethereum::EthereumNode;
+use reth_tracing::tracing::info;
 
-async fn t1_exex<Node: FullNodeComponents>(mut _ctx: ExExContext<Node>) -> eyre::Result<()> {
-    #[allow(clippy::empty_loop)]
-    loop {}
+async fn t1_exex<Node: FullNodeComponents<Types: NodeTypes<Primitives = EthPrimitives>>>(
+    mut ctx: ExExContext<Node>,
+) -> eyre::Result<()> {
+    while let Some(notification) = ctx.notifications.try_next().await? {
+        match &notification {
+            ExExNotification::ChainCommitted { new } => {
+                info!(committed_chain = ?new.range(), "Received commit");
+            }
+            ExExNotification::ChainReorged { old, new } => {
+                info!(from_chain = ?old.range(), to_chain = ?new.range(), "Received reorg");
+            }
+            ExExNotification::ChainReverted { old } => {
+                info!(reverted_chain = ?old.range(), "Received revert");
+            }
+        };
+
+        if let Some(committed_chain) = notification.committed_chain() {
+            ctx.events.send(ExExEvent::FinishedHeight(committed_chain.tip().num_hash()))?;
+        }
+    }
+
+    Ok(())
 }
 
 fn main() -> eyre::Result<()> {
