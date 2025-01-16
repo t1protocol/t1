@@ -269,11 +269,11 @@ contract L2T1Messenger is T1MessengerBase, IL2T1Messenger {
         // @note This usually will never happen, just in case.
         require(_from != xDomainMessageSender, "Invalid message sender");
 
-        xDomainMessageSender = _from; // TODO this does nothing
+        xDomainMessageSender = _from;
         // solhint-disable-next-line avoid-low-level-calls
         (bool success,) = _to.call{ value: _value }(_message);
         // reset value to refund gas.
-        xDomainMessageSender = T1Constants.DEFAULT_XDOMAIN_MESSAGE_SENDER; // why? seems dangerous
+        xDomainMessageSender = T1Constants.DEFAULT_XDOMAIN_MESSAGE_SENDER;
 
         if (success) {
             isL1MessageExecuted[_xDomainCalldataHash] = true;
