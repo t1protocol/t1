@@ -47,9 +47,10 @@ contract DeployL2BridgeProxyPlaceholder is Script {
     }
 
     function deployL2T1Messenger() internal {
-        uint256 ONE_THOUSAND_ETHER = 1000000000000000000000;
-        TransparentUpgradeableProxy proxy =
-            new TransparentUpgradeableProxy{value: ONE_THOUSAND_ETHER}(address(placeholder), address(proxyAdmin), new bytes(0));
+        uint256 ONE_THOUSAND_ETHER = 1_000_000_000_000_000_000_000;
+        TransparentUpgradeableProxy proxy = new TransparentUpgradeableProxy{ value: ONE_THOUSAND_ETHER }(
+            address(placeholder), address(proxyAdmin), new bytes(0)
+        );
 
         logAddress("L2_T1_MESSENGER_PROXY_ADDR", address(proxy));
     }
