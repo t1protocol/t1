@@ -2,8 +2,6 @@
 
 pragma solidity >=0.8.28;
 
-import "../src/mocks/T1MessengerMock.sol";
-
 import { ProxyAdmin } from "@openzeppelin/contracts/proxy/transparent/ProxyAdmin.sol";
 import { Script } from "forge-std/Script.sol";
 import {L1ETHGateway} from "../src/L1/gateways/L1ETHGateway.sol";
