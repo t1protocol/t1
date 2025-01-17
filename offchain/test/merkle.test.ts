@@ -166,26 +166,26 @@ describe('WithdrawTrie', () => {
 
     expect(() => trie.AppendMessages(hashes)).to.throw('NextMessageNonce exceeds maximum safe integer value');
   });
-
+  
   it('should produce the correct root when two known hashes are appended', () => {
   // The two leaf hashes you provided:
   const hashA = Buffer.from(
-    '72530d2135620c0c7ddfac2cc523ae31c2901f62ce0109d2f74ab99f1756b51f',
+    '9b5b1d59b335a00b606d7205151d64b2911c1288eb16459a9dfa1cf11b9ea66f',
     'hex'
   );
   const hashB = Buffer.from(
-    '3bb63288619c7896198f42167e192d5365da04f5fd5e9f418ea31bafc1f3bf53',
+    'b422010be7f6a70f14ecde88a985a165b49358ef8a569f7a8dc819233548ef25',
     'hex'
   );
 
   const hashC = Buffer.from(
-    '6dae1726e96e70a2bbe52917a67d578c67958b774160cc29f34e16843793703b',
+    '68dd94d74c1ef2aae72b068a686d6518aa7fb22bbfe2a164575df423d49378bd',
     'hex'
   );
 
   // The expected Merkle root (in hex, 32 bytes => 64 hex chars).
   const expectedRootHex =
-    '77ca755fbc2499f32c71f55d967145ca263c415261a1e52c7cca5c25db2e2753';
+    '222854db53c4515941d8fef2e5367f5fe781fa56506bb1463985c15bfa4a59da';
 
   // Create a fresh trie
   const trie = new WithdrawTrie();
