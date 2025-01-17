@@ -331,7 +331,7 @@ contract L1T1MessengerTest is L1GatewayTestBase {
             mcopy(add(batchHeader1, add(0x20, 129)), add(blobDataProof, 0x20), 64) // blobDataProof
         }
         batchHeader1[1] = bytes1(uint8(0)); // change back
-        bytes32 withdrawRoot = 0x77ca755fbc2499f32c71f55d967145ca263c415261a1e52c7cca5c25db2e2753;
+        bytes32 withdrawRoot = 0x222854db53c4515941d8fef2e5367f5fe781fa56506bb1463985c15bfa4a59da;
         assertBoolEq(rollup.isBatchFinalized(1), false);
         hevm.startPrank(address(0));
         rollup.finalizeBundleWithProof(batchHeader1, bytes32(uint256(2)), withdrawRoot, new bytes(0));
@@ -342,18 +342,16 @@ contract L1T1MessengerTest is L1GatewayTestBase {
         bytes32 withdrawRootBatch1 = rollup.withdrawRoots(1);
         assertEq(withdrawRoot, withdrawRootBatch1, "withdraw root");
 
-        // let's relay a message with PROOF
-        // nonce = l2Messenger.sendMessage{ value: 1 }(address(0), 1, new bytes(0), 21_000, ETH_CHAIN_ID,
-        // callbackAddress);
-        // generates proof
+        // generated with off-chain merkle proof generator
         bytes memory proofForThirdMessageInTree =
-            hex"0000000000000000000000000000000000000000000000000000000000000000eac9b33976a25627817774db946ec33e0268bea17c0eed2346fa659afd9aa5cc";
+            hex"00000000000000000000000000000000000000000000000000000000000000005bc8d719dee759f579606f5e9326010c9b4f1c89d2579636761a6bd37e348f4e";
         IL1T1Messenger.L2MessageProof memory messageProof =
             IL1T1Messenger.L2MessageProof({ batchIndex: 1, merkleProof: proofForThirdMessageInTree });
         uint256 nonce = 2;
         uint256 msgValue = 1;
         bytes memory message = new bytes(0);
-        address from = 0x000000000000000000000000000000000000148F;
+        address from = address(0xbeef);
+        // does not revert
         l1Messenger.relayMessageWithProof(from, address(0), msgValue, nonce, message, messageProof);
     }
 
