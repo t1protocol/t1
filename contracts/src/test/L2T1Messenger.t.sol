@@ -119,7 +119,8 @@ contract L2T1MessengerTest is DSTestPlus {
         );
     }
 
-    function testSendMessageToEthereum(address callbackAddress) external {
+    function testSendMessageToEthereum() external {
+        address callbackAddress = address(0xbeef);
         // succeed normally
         uint256 nonce =
             l2Messenger.sendMessage{ value: 1 }(address(0), 1, new bytes(0), 21_000, ETH_CHAIN_ID, callbackAddress);
