@@ -145,6 +145,9 @@ describe('WithdrawTrie', () => {
     const hashes = [randomHash(), randomHash(), randomHash()];
     const proofs = trie.AppendMessages(hashes);
 
+    const hexProofs = proofs.map(proof => proof.toString('hex'));
+    console.log("proofs as hex:", hexProofs);
+
     // We should get an array of the same length as `hashes`
     expect(proofs).to.have.length(hashes.length);
 
@@ -175,15 +178,22 @@ describe('WithdrawTrie', () => {
     'hex'
   );
 
+  const hashC = Buffer.from(
+    '6dae1726e96e70a2bbe52917a67d578c67958b774160cc29f34e16843793703b',
+    'hex'
+  );
+
   // The expected Merkle root (in hex, 32 bytes => 64 hex chars).
   const expectedRootHex =
-    'eac9b33976a25627817774db946ec33e0268bea17c0eed2346fa659afd9aa5cc';
+    '77ca755fbc2499f32c71f55d967145ca263c415261a1e52c7cca5c25db2e2753';
 
   // Create a fresh trie
   const trie = new WithdrawTrie();
 
   // Append the two known messages
-  trie.AppendMessages([hashA, hashB]);
+  let proofs = trie.AppendMessages([hashA, hashB, hashC]);
+  const hexProofs = proofs.map(proof => proof.toString('hex'));
+  console.log("proofs as hex:", hexProofs);
 
   // Check that the resulting root matches the expected root
   const actualRootHex = trie.MessageRoot().toString('hex');
