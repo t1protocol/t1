@@ -29,6 +29,7 @@ contract DeployL1BridgeProxyPlaceholder is Script {
         deployL1MessageQueue();
         deployT1Chain();
         deployL1ETHGateway();
+        deployL1WETHGateway();
         deployL1StandardERC20Gateway();
         deployL1T1Messenger();
 
@@ -72,6 +73,13 @@ contract DeployL1BridgeProxyPlaceholder is Script {
             new TransparentUpgradeableProxy(address(placeholder), address(proxyAdmin), new bytes(0));
 
         logAddress("L1_ETH_GATEWAY_PROXY_ADDR", address(proxy));
+    }
+
+    function deployL1WETHGateway() internal {
+        TransparentUpgradeableProxy proxy =
+            new TransparentUpgradeableProxy(address(placeholder), address(proxyAdmin), new bytes(0));
+
+        logAddress("L1_WETH_GATEWAY_PROXY_ADDR", address(proxy));
     }
 
     function deployL1T1Messenger() internal {

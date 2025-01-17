@@ -11,6 +11,7 @@ import { L2T1Messenger } from "../src/L2/L2T1Messenger.sol";
 import { L2ETHGateway } from "../src/L2/gateways/L2ETHGateway.sol";
 import { L2GatewayRouter } from "../src/L2/gateways/L2GatewayRouter.sol";
 import { L2StandardERC20Gateway } from "../src/L2/gateways/L2StandardERC20Gateway.sol";
+import { L2WETHGateway } from "../src/L2/gateways/L2WETHGateway.sol";
 import { L2MessageQueue } from "../src/L2/predeploys/L2MessageQueue.sol";
 import { L1GasPriceOracle } from "../src/L2/predeploys/L1GasPriceOracle.sol";
 import { T1StandardERC20Factory } from "../src/libraries/token/T1StandardERC20Factory.sol";
@@ -23,6 +24,7 @@ import { T1Constants } from "../src/libraries/constants/T1Constants.sol";
 contract InitializeL2BridgeContracts is Script {
     uint256 deployerPrivateKey = vm.envUint("L2_DEPLOYER_PRIVATE_KEY");
 
+    address L2_WETH_ADDR = vm.envAddress("L2_WETH_ADDR");
     address L2_PROXY_ADMIN_ADDR = vm.envAddress("L2_PROXY_ADMIN_ADDR");
 
     address L1_T1_MESSENGER_PROXY_ADDR = vm.envAddress("L1_T1_MESSENGER_PROXY_ADDR");
@@ -42,6 +44,8 @@ contract InitializeL2BridgeContracts is Script {
     address L2_STANDARD_ERC20_GATEWAY_PROXY_ADDR = vm.envAddress("L2_STANDARD_ERC20_GATEWAY_PROXY_ADDR");
     address L2_STANDARD_ERC20_GATEWAY_IMPLEMENTATION_ADDR =
         vm.envAddress("L2_STANDARD_ERC20_GATEWAY_IMPLEMENTATION_ADDR");
+    address L2_WETH_GATEWAY_PROXY_ADDR = vm.envAddress("L2_WETH_GATEWAY_PROXY_ADDR");
+    address L2_WETH_GATEWAY_IMPLEMENTATION_ADDR = vm.envAddress("L2_WETH_GATEWAY_IMPLEMENTATION_ADDR");
     address L2_T1_STANDARD_ERC20_FACTORY_ADDR = vm.envAddress("L2_T1_STANDARD_ERC20_FACTORY_ADDR");
 
     function run() external {
@@ -84,6 +88,22 @@ contract InitializeL2BridgeContracts is Script {
         );
 
         L2StandardERC20Gateway(L2_STANDARD_ERC20_GATEWAY_PROXY_ADDR).initialize();
+
+        // initialize L2WETHGateway
+        proxyAdmin.upgrade(
+            ITransparentUpgradeableProxy(L2_WETH_GATEWAY_PROXY_ADDR), L2_WETH_GATEWAY_IMPLEMENTATION_ADDR
+        );
+
+        L2WETHGateway(payable(L2_WETH_GATEWAY_PROXY_ADDR)).initialize();
+
+        // set WETH gateway in router
+        {
+            address[] memory _tokens = new address[](1);
+            _tokens[0] = L2_WETH_ADDR;
+            address[] memory _gateways = new address[](1);
+            _gateways[0] = L2_WETH_GATEWAY_PROXY_ADDR;
+            L2GatewayRouter(L2_GATEWAY_ROUTER_PROXY_ADDR).setERC20Gateway(_tokens, _gateways);
+        }
 
         // initialize T1StandardERC20Factory
         T1StandardERC20Factory(L2_T1_STANDARD_ERC20_FACTORY_ADDR).transferOwnership(

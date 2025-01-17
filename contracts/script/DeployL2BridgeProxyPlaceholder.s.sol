@@ -29,6 +29,7 @@ contract DeployL2BridgeProxyPlaceholder is Script {
         deployPlaceHolder();
         deployL2T1Messenger();
         deployL2ETHGateway();
+        deployL2WETHGateway();
         deployL2StandardERC20Gateway();
 
         vm.stopBroadcast();
@@ -67,6 +68,13 @@ contract DeployL2BridgeProxyPlaceholder is Script {
             new TransparentUpgradeableProxy(address(placeholder), address(proxyAdmin), new bytes(0));
 
         logAddress("L2_ETH_GATEWAY_PROXY_ADDR", address(proxy));
+    }
+
+    function deployL2WETHGateway() internal {
+        TransparentUpgradeableProxy proxy =
+            new TransparentUpgradeableProxy(address(placeholder), address(proxyAdmin), new bytes(0));
+
+        logAddress("L2_WETH_GATEWAY_PROXY_ADDR", address(proxy));
     }
 
     function logAddress(string memory name, address addr) internal pure {

@@ -1,6 +1,6 @@
 # 𝚝𝟷
-[![Reth](https://github.com/t1protocol/t1/actions/workflows/reth.yml/badge.svg?branch=main)](https://github.com/t1protocol/t1/actions/workflows/reth.yml)
-[![Contracts](https://github.com/t1protocol/t1/actions/workflows/contracts.yml/badge.svg?branch=main)](https://github.com/t1protocol/t1/actions/workflows/contracts.yml)
+[![Reth](https://github.com/t1protocol/t1/actions/workflows/reth.yml/badge.svg?branch=develop)](https://github.com/t1protocol/t1/actions/workflows/reth.yml)
+[![Contracts](https://github.com/t1protocol/t1/actions/workflows/contracts.yml/badge.svg?branch=develop)](https://github.com/t1protocol/t1/actions/workflows/contracts.yml)
 
 Monorepo for 𝚝𝟷
 
@@ -8,6 +8,7 @@ Monorepo for 𝚝𝟷
 
 - **[contracts](./contracts/)**: Solidity code for t1 L1 bridge and rollup contracts, plus L2 bridge and pre-deployed contracts.
 - **[reth](./reth/)**: Rust code for the t1 extension of reth.
+- **[docker-compose](./docker-compose/)**: Docker compose files to spin up the t1 reth node and other services (currently Blockscout)
 
 ## Getting Started
 

@@ -1,9 +1,7 @@
-name: 'reth'
-
 services:
   reth:
     restart: unless-stopped
-    image: t1/reth
+    image: ghcr.io/paradigmxyz/reth
     ports:
       - '30303:30303' # eth/66 peering
       - '8545:8545' # rpc
@@ -26,13 +24,14 @@ services:
       --chain=/root/network-configs/genesis.json
       --dev
       --dev.block-time 1s
+      --txpool.gas-limit 1125899906842624
+      --builder.gaslimit 1125899906842624
       --datadir=/root/reth-data
       --http --http.port=8545 --http.addr=0.0.0.0 --http.corsdomain=* --http.api=admin,net,eth,web3,debug,txpool,trace
       --ws --ws.addr=0.0.0.0 --ws.port=8546 --ws.api=net,eth --ws.origins=*
       --nat=publicip
       --authrpc.port=8551 --authrpc.jwtsecret=/root/jwt/jwtsecret --authrpc.addr=0.0.0.0
       --log.file.directory /root/logs
-
 volumes:
   execution_data:
     driver: local
