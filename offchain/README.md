@@ -5,6 +5,10 @@ This module provides an **append-only Merkle trie** (`WithdrawTrie`) and helper 
 ## Build
 
 ```bash
+npm i --save-dev @types/mocha
+```
+
+```bash
 npm run build
 ```
 
