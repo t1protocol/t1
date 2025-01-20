@@ -344,6 +344,7 @@ contract L1T1MessengerTest is L1GatewayTestBase {
 
         // generated with off-chain merkle proof generator
         bytes memory proofForThirdMessageInTree =
+        // solhint-disable-next-line max-line-length
             hex"00000000000000000000000000000000000000000000000000000000000000005bc8d719dee759f579606f5e9326010c9b4f1c89d2579636761a6bd37e348f4e";
         IL1T1Messenger.L2MessageProof memory messageProof =
             IL1T1Messenger.L2MessageProof({ batchIndex: 1, merkleProof: proofForThirdMessageInTree });
