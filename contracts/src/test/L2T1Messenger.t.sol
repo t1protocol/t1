@@ -3,7 +3,7 @@
 pragma solidity >=0.8.28;
 
 import { DSTestPlus } from "solmate/test/utils/DSTestPlus.sol";
-
+import { console } from "forge-std/console.sol";
 import { ERC1967Proxy } from "@openzeppelin/contracts/proxy/ERC1967/ERC1967Proxy.sol";
 
 import { L1GasPriceOracle } from "../L2/predeploys/L1GasPriceOracle.sol";
@@ -81,6 +81,8 @@ contract L2T1MessengerTest is DSTestPlus {
     }
 
     function testSendMessage(address callbackAddress) external {
+        hevm.assume(callbackAddress.code.length == 0);
+        hevm.assume(uint256(uint160(callbackAddress)) > 100); // ignore some precompile contracts
         // Insufficient msg.value
         hevm.expectRevert(abi.encodeWithSelector(L2T1Messenger.InsufficientMsgValue.selector, 1));
         l2Messenger.sendMessage(address(0), 1, new bytes(0), 21_000, ARB_CHAIN_ID, callbackAddress);
@@ -118,8 +120,9 @@ contract L2T1MessengerTest is DSTestPlus {
         );
     }
 
-    function testSendMessageRefund() external {
-        address callbackAddress = address(0xbeef);
+    function testSendMessageRefund(address callbackAddress) external {
+        hevm.assume(callbackAddress.code.length == 0);
+        hevm.assume(uint256(uint160(callbackAddress)) > 100); // ignore some precompile contracts
 
         // 0.1 gwei = 100000000 wei
         uint256 l2BaseFee = 100_000_000;

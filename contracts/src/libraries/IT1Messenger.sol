@@ -25,6 +25,7 @@ interface IT1Messenger {
     /// @param gasLimit The optional gas limit passed to L1 or L2.
     /// @param message The calldata passed to the target contract.
     /// @param destChainId The chain ID for which the message is bound.
+    /// @param messageHash The hash of the cross-chain message
     event SentMessage(
         address indexed sender,
         address indexed target,
@@ -32,7 +33,8 @@ interface IT1Messenger {
         uint256 messageNonce,
         uint256 gasLimit,
         bytes message,
-        uint64 indexed destChainId
+        uint64 indexed destChainId,
+        bytes32 messageHash
     );
 
     /**
