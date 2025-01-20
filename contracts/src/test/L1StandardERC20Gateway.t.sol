@@ -485,7 +485,8 @@ contract L1StandardERC20GatewayTest is L1GatewayTestBase {
                     0,
                     gasLimit,
                     message,
-                    T1Constants.T1_DEVNET_CHAIN_ID
+                    T1Constants.T1_DEVNET_CHAIN_ID,
+                    keccak256(xDomainCalldata)
                 );
             }
 
@@ -566,7 +567,8 @@ contract L1StandardERC20GatewayTest is L1GatewayTestBase {
                     0,
                     gasLimit,
                     message,
-                    T1Constants.T1_DEVNET_CHAIN_ID
+                    T1Constants.T1_DEVNET_CHAIN_ID,
+                    keccak256(xDomainCalldata)
                 );
             }
 
@@ -652,7 +654,8 @@ contract L1StandardERC20GatewayTest is L1GatewayTestBase {
                     0,
                     gasLimit,
                     message,
-                    T1Constants.T1_DEVNET_CHAIN_ID
+                    T1Constants.T1_DEVNET_CHAIN_ID,
+                    keccak256(xDomainCalldata)
                 );
             }
 
