@@ -120,8 +120,7 @@ contract L2T1MessengerTest is DSTestPlus {
     }
 
     // no assertions - used as inputs for merkle proof generation
-    function testSendMessageToEthereum() external {
-        address callbackAddress = address(0xbeef);
+    function testSendMessageToEthereum(address callbackAddress) external {
         // succeed normally
         uint256 nonce = l2Messenger.sendMessage{ value: 1 }(
             address(0), 1, new bytes(0), 21_000, T1Constants.ETH_CHAIN_ID, callbackAddress
