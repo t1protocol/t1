@@ -20,9 +20,7 @@ contract TriggerL1CanonicalBridge is Script {
 
         uint256 gasLimit = 1_000_000;
 
-        L1ETHGateway(L1_ETH_GATEWAY_PROXY_ADDR).depositETH{ value: 0.001 ether }(
-            0.001 ether, gasLimit
-        );
+        L1ETHGateway(L1_ETH_GATEWAY_PROXY_ADDR).depositETH{ value: 0.001 ether }(0.001 ether, gasLimit);
 
         vm.stopBroadcast();
     }

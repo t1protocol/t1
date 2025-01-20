@@ -20,9 +20,7 @@ contract TriggerL2CanonicalBridge is Script {
 
         uint256 gasLimit = 1_000_000;
 
-        L2ETHGateway(L2_ETH_GATEWAY_PROXY_ADDR).withdrawETH{ value: 0.001 ether }(
-            0.001 ether, gasLimit
-        );
+        L2ETHGateway(L2_ETH_GATEWAY_PROXY_ADDR).withdrawETH{ value: 0.001 ether }(0.001 ether, gasLimit);
 
         vm.stopBroadcast();
     }
