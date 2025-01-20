@@ -11,13 +11,13 @@ with no errors!
 
 The magical deploy order is as follows:
 
-- DeployL1BridgeProxyPlaceholder.s.sol
-- DeployL1T1Owner.s.sol
-- DeployL2BridgeProxyPlaceholder.s.sol
-- DeployL2T1Owner.s.sol
-- DeployL2BridgeContracts.s.sol
-- DeployL1BridgeContracts.s.sol
-- InitializeL1BridgeContracts.s.sol
-- InitializeL2BridgeContracts.s.sol
-- InitializeL1T1Owner.s.sol
-- InitializeL2T1Owner.s.sol
+1. [DeployL1BridgeProxyPlaceholder.s.sol](DeployL1BridgeProxyPlaceholder.s.sol)
+2. [DeployL1T1Owner.s.sol](DeployL1T1Owner.s.sol)
+3. [DeployL2BridgeProxyPlaceholder.s.sol](DeployL2BridgeProxyPlaceholder.s.sol)
+4. [DeployL2T1Owner.s.sol](DeployL2T1Owner.s.sol)
+5. [DeployL2BridgeContracts.s.sol](DeployL2BridgeContracts.s.sol)
+6. [DeployL1BridgeContracts.s.sol](DeployL1BridgeContracts.s.sol)
+7. [InitializeL1BridgeContracts.s.sol](InitializeL1BridgeContracts.s.sol)
+8. [InitializeL2BridgeContracts.s.sol](InitializeL2BridgeContracts.s.sol)
+9. [InitializeL1T1Owner.s.sol](InitializeL1T1Owner.s.sol)
+10. [InitializeL2T1Owner.s.sol](InitializeL2T1Owner.s.sol)
