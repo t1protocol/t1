@@ -120,8 +120,9 @@ contract L2T1MessengerTest is DSTestPlus {
         );
     }
 
-    function testSendMessageRefund() external {
-        address callbackAddress = address(0xbeef);
+    function testSendMessageRefund(address callbackAddress) external {
+        hevm.assume(callbackAddress.code.length == 0);
+        hevm.assume(uint256(uint160(callbackAddress)) > 100); // ignore some precompile contracts
 
         // 0.1 gwei = 100000000 wei
         uint256 l2BaseFee = 100_000_000;
