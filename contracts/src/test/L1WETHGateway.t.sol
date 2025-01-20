@@ -357,9 +357,9 @@ contract L1WETHGatewayTest is L1GatewayTestBase {
         uint256 messengerBalance = address(l1Messenger).balance;
         uint256 recipientBalance = l1weth.balanceOf(recipient);
         assertBoolEq(false, l1Messenger.isL2MessageExecuted(keccak256(xDomainCalldata)));
-//        l1Messenger.relayMessageWithProof(
-//            address(uint160(address(counterpartGateway)) + 1), address(gateway), amount, 0, message, proof
-//        );
+        //        l1Messenger.relayMessageWithProof(
+        //            address(uint160(address(counterpartGateway)) + 1), address(gateway), amount, 0, message, proof
+        //        );
         l1Messenger.relayMessageWithProof(
             address(uint160(address(counterpartGateway)) + 1), address(gateway), amount, 0, message
         );
@@ -415,7 +415,8 @@ contract L1WETHGatewayTest is L1GatewayTestBase {
         uint256 messengerBalance = address(l1Messenger).balance;
         uint256 recipientBalance = l1weth.balanceOf(address(recipient));
         assertBoolEq(false, l1Messenger.isL2MessageExecuted(keccak256(xDomainCalldata)));
-//        l1Messenger.relayMessageWithProof(address(counterpartGateway), address(gateway), amount, 0, message, proof);
+        //        l1Messenger.relayMessageWithProof(address(counterpartGateway), address(gateway), amount, 0, message,
+        // proof);
         l1Messenger.relayMessageWithProof(address(counterpartGateway), address(gateway), amount, 0, message);
         assertEq(messengerBalance - amount, address(l1Messenger).balance);
         assertEq(recipientBalance + amount, l1weth.balanceOf(address(recipient)));
