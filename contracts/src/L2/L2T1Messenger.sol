@@ -232,7 +232,8 @@ contract L2T1Messenger is T1MessengerBase, IL2T1Messenger {
                 _nextL2MessageNonce += 1;
             }
         }
-        bytes32 _xDomainCalldataHash = keccak256(_encodeXDomainCalldata(_callbackAddress, _to, _value, _nonce, _message));
+        bytes32 _xDomainCalldataHash =
+            keccak256(_encodeXDomainCalldata(_callbackAddress, _to, _value, _nonce, _message));
 
         // normally this won't happen, since each message has different nonce, but just in case.
         require(messageSendTimestamp[_xDomainCalldataHash] == 0, "Duplicated message");
