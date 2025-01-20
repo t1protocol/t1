@@ -310,6 +310,51 @@ contract L1T1MessengerTest is L1GatewayTestBase {
         l1Messenger.replayMessage(address(this), address(0), 0, 6, new bytes(0), DEFAULT_GAS_LIMIT, address(0));
     }
 
+    function testRelayMessageWithProof() external {
+        rollup.addProver(address(0));
+        bytes memory batchHeader1 = new bytes(193);
+        bytes32 blobVersionedHash = 0x013590dc3544d56629ba81bb14d4d31248f825001653aa575eb8e3a719046757;
+        bytes32 batchHash0 = rollup.committedBatches(0);
+        bytes memory blobDataProof =
+        // solhint-disable-next-line max-line-length
+            hex"2c9d777660f14ad49803a6442935c0d24a0d83551de5995890bf70a17d24e68753ab0fe6807c7081f0885fe7da741554d658a03730b1fa006f8319f8b993bcb0a5a0c9e8a145c5ef6e415c245690effa2914ec9393f58a7251d30c0657da1453d9ad906eae8b97dd60c9a216f81b4df7af34d01e214e1ec5865f0133ecc16d7459e49dab66087340677751e82097fbdd20551d66076f425775d1758a9dfd186b";
+        assembly {
+            mstore8(add(batchHeader1, 0x20), 3) // version
+            mstore(add(batchHeader1, add(0x20, 1)), shl(192, 1)) // batchIndex
+            mstore(add(batchHeader1, add(0x20, 9)), 0) // l1MessagePopped
+            mstore(add(batchHeader1, add(0x20, 17)), 0) // totalL1MessagePopped
+            // dataHash
+            mstore(add(batchHeader1, add(0x20, 25)), 0x246394445f4fe64ed5598554d55d1682d6fb3fe04bf58eb54ef81d1189fafb51)
+            mstore(add(batchHeader1, add(0x20, 57)), blobVersionedHash) // blobVersionedHash
+            mstore(add(batchHeader1, add(0x20, 89)), batchHash0) // parentBatchHash
+            mstore(add(batchHeader1, add(0x20, 121)), 0) // lastBlockTimestamp
+            mcopy(add(batchHeader1, add(0x20, 129)), add(blobDataProof, 0x20), 64) // blobDataProof
+        }
+        batchHeader1[1] = bytes1(uint8(0)); // change back
+        bytes32 withdrawRoot = 0x222854db53c4515941d8fef2e5367f5fe781fa56506bb1463985c15bfa4a59da;
+        assertBoolEq(rollup.isBatchFinalized(1), false);
+        hevm.startPrank(address(0));
+        rollup.finalizeBundleWithProof(batchHeader1, bytes32(uint256(2)), withdrawRoot, new bytes(0));
+
+        hevm.stopPrank();
+        assertBoolEq(rollup.isBatchFinalized(1), true);
+
+        bytes32 withdrawRootBatch1 = rollup.withdrawRoots(1);
+        assertEq(withdrawRoot, withdrawRootBatch1, "withdraw root");
+
+        // generated with off-chain merkle proof generator
+        bytes memory proofForThirdMessageInTree =
+            hex"00000000000000000000000000000000000000000000000000000000000000005bc8d719dee759f579606f5e9326010c9b4f1c89d2579636761a6bd37e348f4e";
+        IL1T1Messenger.L2MessageProof memory messageProof =
+            IL1T1Messenger.L2MessageProof({ batchIndex: 1, merkleProof: proofForThirdMessageInTree });
+        uint256 nonce = 2;
+        uint256 msgValue = 1;
+        bytes memory message = new bytes(0);
+        address from = address(0xbeef);
+        // does not revert
+        l1Messenger.relayMessageWithProof(from, address(0), msgValue, nonce, message, messageProof);
+    }
+
     function onDropMessage(bytes memory message) external payable {
         emit OnDropMessageCalled(message);
     }
