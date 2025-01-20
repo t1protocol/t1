@@ -119,39 +119,6 @@ contract L2T1MessengerTest is DSTestPlus {
         );
     }
 
-    // no assertions - used as inputs for merkle proof generation
-    function testSendMessageToEthereum(address callbackAddress) external {
-        // succeed normally
-        uint256 nonce = l2Messenger.sendMessage{ value: 1 }(
-            address(0), 1, new bytes(0), 21_000, T1Constants.ETH_CHAIN_ID, callbackAddress
-        );
-        assertEq(nonce, 0, "nonce is zero");
-
-        nonce = l2Messenger.sendMessage{ value: 1 }(
-            address(0), 1, new bytes(0), 21_000, T1Constants.ETH_CHAIN_ID, callbackAddress
-        );
-        assertEq(nonce, 1, "nonce is one");
-        nonce = l2Messenger.sendMessage{ value: 1 }(
-            address(0), 1, new bytes(0), 21_000, T1Constants.ETH_CHAIN_ID, callbackAddress
-        );
-
-        bytes32 messageRoot = l2MessageQueue.messageRoot();
-        console.logString("messageRoot: ");
-        console.logBytes32(messageRoot);
-
-        bytes32 branch0 = l2MessageQueue.branches(0);
-        bytes32 branch1 = l2MessageQueue.branches(1);
-        bytes32 branch2 = l2MessageQueue.branches(2);
-        console.logString("branches[0]: ");
-        console.logBytes32(branch0);
-
-        console.logString("branches[1]: ");
-        console.logBytes32(branch1);
-
-        console.logString("branches[2]: ");
-        console.logBytes32(branch2);
-    }
-
     function testSendMessageRefund() external {
         address callbackAddress = address(0xbeef);
 
