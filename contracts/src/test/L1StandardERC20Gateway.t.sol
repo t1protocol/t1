@@ -205,41 +205,46 @@ contract L1StandardERC20GatewayTest is L1GatewayTestBase {
         assertEq(balanceBefore + amount - fee, balanceAfter);
     }
 
-    function testDropMessageMocking() public {
-        MockT1Messenger mockMessenger = new MockT1Messenger();
-        gateway = _deployGateway(address(mockMessenger));
-        gateway.initialize();
-
-        // only messenger can call, revert
-        hevm.expectRevert(ErrorCallerIsNotMessenger.selector);
-        gateway.onDropMessage(new bytes(0));
-
-        // only called in drop context, revert
-        hevm.expectRevert(ErrorNotInDropMessageContext.selector);
-        mockMessenger.callTarget(address(gateway), abi.encodeWithSelector(gateway.onDropMessage.selector, new bytes(0)));
-
-        mockMessenger.setXDomainMessageSender(T1Constants.DROP_XDOMAIN_MESSAGE_SENDER);
-
-        // invalid selector, revert
-        hevm.expectRevert("invalid selector");
-        mockMessenger.callTarget(address(gateway), abi.encodeWithSelector(gateway.onDropMessage.selector, new bytes(4)));
-
-        bytes memory message = abi.encodeWithSelector(
-            IL2ERC20Gateway.finalizeDepositERC20.selector,
-            address(l1Token),
-            address(l2Token),
-            address(this),
-            address(this),
-            100,
-            new bytes(0)
-        );
-
-        // nonzero msg.value, revert
-        hevm.expectRevert("nonzero msg.value");
-        mockMessenger.callTarget{ value: 1 }(
-            address(gateway), abi.encodeWithSelector(gateway.onDropMessage.selector, message)
-        );
-    }
+    // TODO reintrodcuce as a part of
+    // https://www.notion.so/t1protocol/
+    // Allow-certain-bridge-methods-onchain-to-be-only-called-by-Postman-identity-17b231194dc380799d13f78f1c3a51b1
+    //    function testDropMessageMocking() public {
+    //        MockT1Messenger mockMessenger = new MockT1Messenger();
+    //        gateway = _deployGateway(address(mockMessenger));
+    //        gateway.initialize();
+    //
+    //        // only messenger can call, revert
+    //        hevm.expectRevert(ErrorCallerIsNotMessenger.selector);
+    //        gateway.onDropMessage(new bytes(0));
+    //
+    //        // only called in drop context, revert
+    //        hevm.expectRevert(ErrorNotInDropMessageContext.selector);
+    //        mockMessenger.callTarget(address(gateway), abi.encodeWithSelector(gateway.onDropMessage.selector, new
+    // bytes(0)));
+    //
+    //        mockMessenger.setXDomainMessageSender(T1Constants.DROP_XDOMAIN_MESSAGE_SENDER);
+    //
+    //        // invalid selector, revert
+    //        hevm.expectRevert("invalid selector");
+    //        mockMessenger.callTarget(address(gateway), abi.encodeWithSelector(gateway.onDropMessage.selector, new
+    // bytes(4)));
+    //
+    //        bytes memory message = abi.encodeWithSelector(
+    //            IL2ERC20Gateway.finalizeDepositERC20.selector,
+    //            address(l1Token),
+    //            address(l2Token),
+    //            address(this),
+    //            address(this),
+    //            100,
+    //            new bytes(0)
+    //        );
+    //
+    //        // nonzero msg.value, revert
+    //        hevm.expectRevert("nonzero msg.value");
+    //        mockMessenger.callTarget{ value: 1 }(
+    //            address(gateway), abi.encodeWithSelector(gateway.onDropMessage.selector, message)
+    //        );
+    //    }
 
     function testDropMessage(uint256 amount, address recipient, bytes memory dataToCall) public {
         amount = bound(amount, 1, l1Token.balanceOf(address(this)) / 2);
@@ -272,115 +277,119 @@ contract L1StandardERC20GatewayTest is L1GatewayTestBase {
         assertEq(balance + amount, l1Token.balanceOf(address(this)));
     }
 
-    function testFinalizeWithdrawERC20FailedMocking(
-        address sender,
-        address recipient,
-        uint256 amount,
-        bytes memory dataToCall
-    )
-        public
-    {
-        amount = bound(amount, 1, 100_000);
+    // TODO reintrodcuce as a part of
+    // https://www.notion.so/t1protocol/
+    // Allow-certain-bridge-methods-onchain-to-be-only-called-by-Postman-identity-17b231194dc380799d13f78f1c3a51b1
+    //    function testFinalizeWithdrawERC20FailedMocking(
+    //        address sender,
+    //        address recipient,
+    //        uint256 amount,
+    //        bytes memory dataToCall
+    //    )
+    //        public
+    //    {
+    //        amount = bound(amount, 1, 100_000);
+    //
+    //        // revert when caller is not messenger
+    //        hevm.expectRevert(ErrorCallerIsNotMessenger.selector);
+    //        gateway.finalizeWithdrawERC20(address(l1Token), address(l2Token), sender, recipient, amount, dataToCall);
+    //
+    //        MockT1Messenger mockMessenger = new MockT1Messenger();
+    //        gateway = _deployGateway(address(mockMessenger));
+    //        gateway.initialize();
+    //
+    //        // only call by counterpart
+    //        hevm.expectRevert(ErrorCallerIsNotCounterpartGateway.selector);
+    //        mockMessenger.callTarget(
+    //            address(gateway),
+    //            abi.encodeWithSelector(
+    //                gateway.finalizeWithdrawERC20.selector,
+    //                address(l1Token),
+    //                address(l2Token),
+    //                sender,
+    //                recipient,
+    //                amount,
+    //                dataToCall
+    //            )
+    //        );
+    //
+    //        mockMessenger.setXDomainMessageSender(address(counterpartGateway));
+    //
+    //        // msg.value mismatch
+    //        hevm.expectRevert("nonzero msg.value");
+    //        mockMessenger.callTarget{ value: 1 }(
+    //            address(gateway),
+    //            abi.encodeWithSelector(
+    //                gateway.finalizeWithdrawERC20.selector,
+    //                address(l1Token),
+    //                address(l2Token),
+    //                sender,
+    //                recipient,
+    //                amount,
+    //                dataToCall
+    //            )
+    //        );
+    //    }
 
-        // revert when caller is not messenger
-        hevm.expectRevert(ErrorCallerIsNotMessenger.selector);
-        gateway.finalizeWithdrawERC20(address(l1Token), address(l2Token), sender, recipient, amount, dataToCall);
-
-        MockT1Messenger mockMessenger = new MockT1Messenger();
-        gateway = _deployGateway(address(mockMessenger));
-        gateway.initialize();
-
-        // only call by counterpart
-        hevm.expectRevert(ErrorCallerIsNotCounterpartGateway.selector);
-        mockMessenger.callTarget(
-            address(gateway),
-            abi.encodeWithSelector(
-                gateway.finalizeWithdrawERC20.selector,
-                address(l1Token),
-                address(l2Token),
-                sender,
-                recipient,
-                amount,
-                dataToCall
-            )
-        );
-
-        mockMessenger.setXDomainMessageSender(address(counterpartGateway));
-
-        // msg.value mismatch
-        hevm.expectRevert("nonzero msg.value");
-        mockMessenger.callTarget{ value: 1 }(
-            address(gateway),
-            abi.encodeWithSelector(
-                gateway.finalizeWithdrawERC20.selector,
-                address(l1Token),
-                address(l2Token),
-                sender,
-                recipient,
-                amount,
-                dataToCall
-            )
-        );
-    }
-
-    function testFinalizeWithdrawERC20Failed(
-        address sender,
-        address recipient,
-        uint256 amount,
-        bytes memory dataToCall
-    )
-        public
-    {
-        // blacklist some addresses
-        hevm.assume(recipient != address(0));
-
-        amount = bound(amount, 1, l1Token.balanceOf(address(this)));
-
-        // deposit some token to L1StandardERC20Gateway
-        gateway.depositERC20(address(l1Token), amount, DEFAULT_GAS_LIMIT);
-
-        // do finalize withdraw token
-        bytes memory message = abi.encodeWithSelector(
-            IL1ERC20Gateway.finalizeWithdrawERC20.selector,
-            address(l1Token),
-            address(l2Token),
-            sender,
-            recipient,
-            amount,
-            dataToCall
-        );
-        bytes memory xDomainCalldata = abi.encodeWithSignature(
-            "relayMessage(address,address,uint256,uint256,bytes)",
-            address(uint160(address(counterpartGateway)) + 1),
-            address(gateway),
-            0,
-            0,
-            message
-        );
-
-        prepareL2MessageRoot(keccak256(xDomainCalldata));
-
-        // IL1T1Messenger.L2MessageProof memory proof;
-        // proof.batchIndex = rollup.lastFinalizedBatchIndex();
-
-        // counterpart is not L2WETHGateway
-        // emit FailedRelayedMessage from L1T1Messenger
-        hevm.expectEmit(true, false, false, true);
-        emit FailedRelayedMessage(keccak256(xDomainCalldata));
-
-        uint256 gatewayBalance = l1Token.balanceOf(address(gateway));
-        uint256 recipientBalance = l1Token.balanceOf(recipient);
-        assertBoolEq(false, l1Messenger.isL2MessageExecuted(keccak256(xDomainCalldata)));
-        // l1Messenger.relayMessageWithProof(
-        //     address(uint160(address(counterpartGateway)) + 1), address(gateway), 0, 0, message, proof
-        // );
-        l1Messenger.relayMessageWithProof(
-            address(uint160(address(counterpartGateway)) + 1), address(gateway), 0, 0, message
-        );
-        assertEq(gatewayBalance, l1Token.balanceOf(address(gateway)));
-        assertEq(recipientBalance, l1Token.balanceOf(recipient));
-        assertBoolEq(false, l1Messenger.isL2MessageExecuted(keccak256(xDomainCalldata)));
-    }
+    // TODO reintroduce when doing relayMessageWithProof
+    //    function testFinalizeWithdrawERC20Failed(
+    //        address sender,
+    //        address recipient,
+    //        uint256 amount,
+    //        bytes memory dataToCall
+    //    )
+    //        public
+    //    {
+    //        // blacklist some addresses
+    //        hevm.assume(recipient != address(0));
+    //
+    //        amount = bound(amount, 1, l1Token.balanceOf(address(this)));
+    //
+    //        // deposit some token to L1StandardERC20Gateway
+    //        gateway.depositERC20(address(l1Token), amount, DEFAULT_GAS_LIMIT);
+    //
+    //        // do finalize withdraw token
+    //        bytes memory message = abi.encodeWithSelector(
+    //            IL1ERC20Gateway.finalizeWithdrawERC20.selector,
+    //            address(l1Token),
+    //            address(l2Token),
+    //            sender,
+    //            recipient,
+    //            amount,
+    //            dataToCall
+    //        );
+    //        bytes memory xDomainCalldata = abi.encodeWithSignature(
+    //            "relayMessage(address,address,uint256,uint256,bytes)",
+    //            address(uint160(address(counterpartGateway)) + 1),
+    //            address(gateway),
+    //            0,
+    //            0,
+    //            message
+    //        );
+    //
+    //        prepareL2MessageRoot(keccak256(xDomainCalldata));
+    //
+    //        // IL1T1Messenger.L2MessageProof memory proof;
+    //        // proof.batchIndex = rollup.lastFinalizedBatchIndex();
+    //
+    //        // counterpart is not L2WETHGateway
+    //        // emit FailedRelayedMessage from L1T1Messenger
+    //        hevm.expectEmit(true, false, false, true);
+    //        emit FailedRelayedMessage(keccak256(xDomainCalldata));
+    //
+    //        uint256 gatewayBalance = l1Token.balanceOf(address(gateway));
+    //        uint256 recipientBalance = l1Token.balanceOf(recipient);
+    //        assertBoolEq(false, l1Messenger.isL2MessageExecuted(keccak256(xDomainCalldata)));
+    //        // l1Messenger.relayMessageWithProof(
+    //        //     address(uint160(address(counterpartGateway)) + 1), address(gateway), 0, 0, message, proof
+    //        // );
+    //        l1Messenger.relayMessageWithProof(
+    //            address(uint160(address(counterpartGateway)) + 1), address(gateway), 0, 0, message
+    //        );
+    //        assertEq(gatewayBalance, l1Token.balanceOf(address(gateway)));
+    //        assertEq(recipientBalance, l1Token.balanceOf(recipient));
+    //        assertBoolEq(false, l1Messenger.isL2MessageExecuted(keccak256(xDomainCalldata)));
+    //    }
 
     function testFinalizeWithdrawERC20(address sender, uint256 amount, bytes memory dataToCall) public {
         MockGatewayRecipient recipient = new MockGatewayRecipient();

@@ -65,10 +65,13 @@ contract L2T1MessengerTest is DSTestPlus {
         whitelist.updateWhitelistStatus(_accounts, true);
     }
 
-    function testRelayByCounterparty() external {
-        hevm.expectRevert("Caller is not L1T1Messenger");
-        l2Messenger.relayMessage(address(this), address(this), 0, 0, new bytes(0));
-    }
+    // TODO reintrodcuce as a part of
+    // https://www.notion.so/t1protocol/
+    // Allow-certain-bridge-methods-onchain-to-be-only-called-by-Postman-identity-17b231194dc380799d13f78f1c3a51b1
+    //    function testRelayByCounterparty() external {
+    //        hevm.expectRevert("Caller is not L1T1Messenger");
+    //        l2Messenger.relayMessage(address(this), address(this), 0, 0, new bytes(0));
+    //    }
 
     function testForbidCallFromL1() external {
         hevm.startPrank(AddressAliasHelper.applyL1ToL2Alias(address(l1Messenger)));

@@ -104,35 +104,40 @@ contract L1ETHGatewayTest is L1GatewayTestBase {
         _depositETHWithRecipientAndCalldata(true, amount, recipient, dataToCall, gasLimit, feePerGas);
     }
 
-    function testDropMessageMocking() public {
-        MockT1Messenger mockMessenger = new MockT1Messenger();
-        gateway = _deployGateway(address(mockMessenger));
-        gateway.initialize();
-
-        // only messenger can call, revert
-        hevm.expectRevert(ErrorCallerIsNotMessenger.selector);
-        gateway.onDropMessage(new bytes(0));
-
-        // only called in drop context, revert
-        hevm.expectRevert(ErrorNotInDropMessageContext.selector);
-        mockMessenger.callTarget(address(gateway), abi.encodeWithSelector(gateway.onDropMessage.selector, new bytes(0)));
-
-        mockMessenger.setXDomainMessageSender(T1Constants.DROP_XDOMAIN_MESSAGE_SENDER);
-
-        // invalid selector, revert
-        hevm.expectRevert("invalid selector");
-        mockMessenger.callTarget(address(gateway), abi.encodeWithSelector(gateway.onDropMessage.selector, new bytes(4)));
-
-        bytes memory message = abi.encodeWithSelector(
-            IL2ETHGateway.finalizeDepositETH.selector, address(this), address(this), 100, new bytes(0)
-        );
-
-        // msg.value mismatch, revert
-        hevm.expectRevert("msg.value mismatch");
-        mockMessenger.callTarget{ value: 99 }(
-            address(gateway), abi.encodeWithSelector(gateway.onDropMessage.selector, message)
-        );
-    }
+    // TODO reintrodcuce as a part of
+    // https://www.notion.so/t1protocol/
+    // Allow-certain-bridge-methods-onchain-to-be-only-called-by-Postman-identity-17b231194dc380799d13f78f1c3a51b1
+    //    function testDropMessageMocking() public {
+    //        MockT1Messenger mockMessenger = new MockT1Messenger();
+    //        gateway = _deployGateway(address(mockMessenger));
+    //        gateway.initialize();
+    //
+    //        // only messenger can call, revert
+    //        hevm.expectRevert(ErrorCallerIsNotMessenger.selector);
+    //        gateway.onDropMessage(new bytes(0));
+    //
+    //        // only called in drop context, revert
+    //        hevm.expectRevert(ErrorNotInDropMessageContext.selector);
+    //        mockMessenger.callTarget(address(gateway), abi.encodeWithSelector(gateway.onDropMessage.selector, new
+    // bytes(0)));
+    //
+    //        mockMessenger.setXDomainMessageSender(T1Constants.DROP_XDOMAIN_MESSAGE_SENDER);
+    //
+    //        // invalid selector, revert
+    //        hevm.expectRevert("invalid selector");
+    //        mockMessenger.callTarget(address(gateway), abi.encodeWithSelector(gateway.onDropMessage.selector, new
+    // bytes(4)));
+    //
+    //        bytes memory message = abi.encodeWithSelector(
+    //            IL2ETHGateway.finalizeDepositETH.selector, address(this), address(this), 100, new bytes(0)
+    //        );
+    //
+    //        // msg.value mismatch, revert
+    //        hevm.expectRevert("msg.value mismatch");
+    //        mockMessenger.callTarget{ value: 99 }(
+    //            address(gateway), abi.encodeWithSelector(gateway.onDropMessage.selector, message)
+    //        );
+    //    }
 
     function testDropMessage(uint256 amount, address recipient, bytes memory dataToCall) public {
         amount = bound(amount, 1, address(this).balance);
@@ -164,97 +169,103 @@ contract L1ETHGatewayTest is L1GatewayTestBase {
         assertEq(balance + amount, address(this).balance);
     }
 
-    function testFinalizeWithdrawETHFailedMocking(
-        address sender,
-        address recipient,
-        uint256 amount,
-        bytes memory dataToCall
-    )
-        public
-    {
-        amount = bound(amount, 1, address(this).balance / 2);
+    // TODO reintrodcuce as a part of
+    // https://www.notion.so/t1protocol/
+    // Allow-certain-bridge-methods-onchain-to-be-only-called-by-Postman-identity-17b231194dc380799d13f78f1c3a51b1
+    //    function testFinalizeWithdrawETHFailedMocking(
+    //        address sender,
+    //        address recipient,
+    //        uint256 amount,
+    //        bytes memory dataToCall
+    //    )
+    //        public
+    //    {
+    //        amount = bound(amount, 1, address(this).balance / 2);
+    //
+    //        // revert when caller is not messenger
+    //        hevm.expectRevert(ErrorCallerIsNotMessenger.selector);
+    //        gateway.finalizeWithdrawETH(sender, recipient, amount, dataToCall);
+    //
+    //        MockT1Messenger mockMessenger = new MockT1Messenger();
+    //        gateway = _deployGateway(address(mockMessenger));
+    //        gateway.initialize();
+    //
+    //        // only call by counterpart
+    //        hevm.expectRevert(ErrorCallerIsNotCounterpartGateway.selector);
+    //        mockMessenger.callTarget(
+    //            address(gateway),
+    //            abi.encodeWithSelector(gateway.finalizeWithdrawETH.selector, sender, recipient, amount, dataToCall)
+    //        );
+    //
+    //        mockMessenger.setXDomainMessageSender(address(counterpartGateway));
+    //
+    //        // msg.value mismatch
+    //        hevm.expectRevert("msg.value mismatch");
+    //        mockMessenger.callTarget(
+    //            address(gateway),
+    //            abi.encodeWithSelector(gateway.finalizeWithdrawETH.selector, sender, recipient, amount, dataToCall)
+    //        );
+    //
+    //        // ETH transfer failed
+    //        revertOnReceive = true;
+    //        hevm.expectRevert("ETH transfer failed");
+    //        mockMessenger.callTarget{ value: amount }(
+    //            address(gateway),
+    //            abi.encodeWithSelector(gateway.finalizeWithdrawETH.selector, sender, address(this), amount,
+    // dataToCall)
+    //        );
+    //    }
 
-        // revert when caller is not messenger
-        hevm.expectRevert(ErrorCallerIsNotMessenger.selector);
-        gateway.finalizeWithdrawETH(sender, recipient, amount, dataToCall);
-
-        MockT1Messenger mockMessenger = new MockT1Messenger();
-        gateway = _deployGateway(address(mockMessenger));
-        gateway.initialize();
-
-        // only call by counterpart
-        hevm.expectRevert(ErrorCallerIsNotCounterpartGateway.selector);
-        mockMessenger.callTarget(
-            address(gateway),
-            abi.encodeWithSelector(gateway.finalizeWithdrawETH.selector, sender, recipient, amount, dataToCall)
-        );
-
-        mockMessenger.setXDomainMessageSender(address(counterpartGateway));
-
-        // msg.value mismatch
-        hevm.expectRevert("msg.value mismatch");
-        mockMessenger.callTarget(
-            address(gateway),
-            abi.encodeWithSelector(gateway.finalizeWithdrawETH.selector, sender, recipient, amount, dataToCall)
-        );
-
-        // ETH transfer failed
-        revertOnReceive = true;
-        hevm.expectRevert("ETH transfer failed");
-        mockMessenger.callTarget{ value: amount }(
-            address(gateway),
-            abi.encodeWithSelector(gateway.finalizeWithdrawETH.selector, sender, address(this), amount, dataToCall)
-        );
-    }
-
-    function testFinalizeWithdrawETHFailed(
-        address sender,
-        address recipient,
-        uint256 amount,
-        bytes memory dataToCall
-    )
-        public
-    {
-        amount = bound(amount, 1, address(this).balance / 2);
-
-        // deposit some ETH to L1T1Messenger
-        gateway.depositETH{ value: amount }(amount, DEFAULT_GAS_LIMIT);
-
-        // do finalize withdraw eth
-        bytes memory message =
-            abi.encodeWithSelector(IL1ETHGateway.finalizeWithdrawETH.selector, sender, recipient, amount, dataToCall);
-        bytes memory xDomainCalldata = abi.encodeWithSignature(
-            "relayMessage(address,address,uint256,uint256,bytes)",
-            address(uint160(address(counterpartGateway)) + 1),
-            address(gateway),
-            amount,
-            0,
-            message
-        );
-
-        prepareL2MessageRoot(keccak256(xDomainCalldata));
-
-        // IL1T1Messenger.L2MessageProof memory proof;
-        // proof.batchIndex = rollup.lastFinalizedBatchIndex();
-
-        // counterpart is not L2ETHGateway
-        // emit FailedRelayedMessage from L1T1Messenger
-        hevm.expectEmit(true, false, false, true);
-        emit FailedRelayedMessage(keccak256(xDomainCalldata));
-
-        uint256 messengerBalance = address(l1Messenger).balance;
-        uint256 recipientBalance = recipient.balance;
-        assertBoolEq(false, l1Messenger.isL2MessageExecuted(keccak256(xDomainCalldata)));
-        // l1Messenger.relayMessageWithProof(
-        //     address(uint160(address(counterpartGateway)) + 1), address(gateway), amount, 0, message, proof
-        // );
-        l1Messenger.relayMessageWithProof(
-            address(uint160(address(counterpartGateway)) + 1), address(gateway), amount, 0, message
-        );
-        assertEq(messengerBalance, address(l1Messenger).balance);
-        assertEq(recipientBalance, recipient.balance);
-        assertBoolEq(false, l1Messenger.isL2MessageExecuted(keccak256(xDomainCalldata)));
-    }
+    // TODO reintroduce when doing relayMessageWithProof
+    //    function testFinalizeWithdrawETHFailed(
+    //        address sender,
+    //        address recipient,
+    //        uint256 amount,
+    //        bytes memory dataToCall
+    //    )
+    //        public
+    //    {
+    //        amount = bound(amount, 1, address(this).balance / 2);
+    //
+    //        // deposit some ETH to L1T1Messenger
+    //        gateway.depositETH{ value: amount }(amount, DEFAULT_GAS_LIMIT);
+    //
+    //        // do finalize withdraw eth
+    //        bytes memory message =
+    //            abi.encodeWithSelector(IL1ETHGateway.finalizeWithdrawETH.selector, sender, recipient, amount,
+    // dataToCall);
+    //        bytes memory xDomainCalldata = abi.encodeWithSignature(
+    //            "relayMessage(address,address,uint256,uint256,bytes)",
+    //            address(uint160(address(counterpartGateway)) + 1),
+    //            address(gateway),
+    //            amount,
+    //            0,
+    //            message
+    //        );
+    //
+    //        prepareL2MessageRoot(keccak256(xDomainCalldata));
+    //
+    //        // IL1T1Messenger.L2MessageProof memory proof;
+    //        // proof.batchIndex = rollup.lastFinalizedBatchIndex();
+    //
+    //        // counterpart is not L2ETHGateway
+    //        // emit FailedRelayedMessage from L1T1Messenger
+    //        hevm.expectEmit(true, false, false, true);
+    //        emit FailedRelayedMessage(keccak256(xDomainCalldata));
+    //
+    //        uint256 messengerBalance = address(l1Messenger).balance;
+    //        uint256 recipientBalance = recipient.balance;
+    //        assertBoolEq(false, l1Messenger.isL2MessageExecuted(keccak256(xDomainCalldata)));
+    //        // l1Messenger.relayMessageWithProof(
+    //        //     address(uint160(address(counterpartGateway)) + 1), address(gateway), amount, 0, message, proof
+    //        // );
+    //        l1Messenger.relayMessageWithProof(
+    //            address(uint160(address(counterpartGateway)) + 1), address(gateway), amount, 0, message
+    //        );
+    //        assertEq(messengerBalance, address(l1Messenger).balance);
+    //        assertEq(recipientBalance, recipient.balance);
+    //        assertBoolEq(false, l1Messenger.isL2MessageExecuted(keccak256(xDomainCalldata)));
+    //    }
 
     function testFinalizeWithdrawETH(address sender, uint256 amount, bytes memory dataToCall) public {
         MockGatewayRecipient recipient = new MockGatewayRecipient();

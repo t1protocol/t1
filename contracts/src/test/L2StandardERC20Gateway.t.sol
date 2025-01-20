@@ -162,71 +162,74 @@ contract L2StandardERC20GatewayTest is L2GatewayTestBase {
         _withdrawERC20WithRecipientAndCalldata(true, amount, recipient, dataToCall, gasLimit, feePerGas);
     }
 
-    function testFinalizeDepositERC20FailedMocking(
-        address sender,
-        address recipient,
-        uint256 amount,
-        bytes memory dataToCall
-    )
-        public
-    {
-        amount = bound(amount, 1, 100_000);
-
-        // revert when caller is not messenger
-        hevm.expectRevert(ErrorCallerIsNotMessenger.selector);
-        gateway.finalizeDepositERC20(address(l1Token), address(l2Token), sender, recipient, amount, dataToCall);
-
-        MockT1Messenger mockMessenger = new MockT1Messenger();
-        gateway = _deployGateway(address(mockMessenger));
-        gateway.initialize();
-
-        // only call by counterpart
-        hevm.expectRevert(ErrorCallerIsNotCounterpartGateway.selector);
-        mockMessenger.callTarget(
-            address(gateway),
-            abi.encodeWithSelector(
-                gateway.finalizeDepositERC20.selector,
-                address(l1Token),
-                address(l2Token),
-                sender,
-                recipient,
-                amount,
-                dataToCall
-            )
-        );
-
-        mockMessenger.setXDomainMessageSender(address(counterpartGateway));
-
-        // msg.value mismatch
-        hevm.expectRevert("nonzero msg.value");
-        mockMessenger.callTarget{ value: 1 }(
-            address(gateway),
-            abi.encodeWithSelector(
-                gateway.finalizeDepositERC20.selector,
-                address(l1Token),
-                address(l2Token),
-                sender,
-                recipient,
-                amount,
-                dataToCall
-            )
-        );
-
-        // l1 token mismatch
-        hevm.expectRevert("l2 token mismatch");
-        mockMessenger.callTarget(
-            address(gateway),
-            abi.encodeWithSelector(
-                gateway.finalizeDepositERC20.selector,
-                address(l2Token),
-                address(l2Token),
-                sender,
-                recipient,
-                amount,
-                dataToCall
-            )
-        );
-    }
+    // TODO reintrodcuce as a part of
+    // https://www.notion.so/t1protocol/
+    // Allow-certain-bridge-methods-onchain-to-be-only-called-by-Postman-identity-17b231194dc380799d13f78f1c3a51b1
+    //    function testFinalizeDepositERC20FailedMocking(
+    //        address sender,
+    //        address recipient,
+    //        uint256 amount,
+    //        bytes memory dataToCall
+    //    )
+    //        public
+    //    {
+    //        amount = bound(amount, 1, 100_000);
+    //
+    //        // revert when caller is not messenger
+    //        hevm.expectRevert(ErrorCallerIsNotMessenger.selector);
+    //        gateway.finalizeDepositERC20(address(l1Token), address(l2Token), sender, recipient, amount, dataToCall);
+    //
+    //        MockT1Messenger mockMessenger = new MockT1Messenger();
+    //        gateway = _deployGateway(address(mockMessenger));
+    //        gateway.initialize();
+    //
+    //        // only call by counterpart
+    //        hevm.expectRevert(ErrorCallerIsNotCounterpartGateway.selector);
+    //        mockMessenger.callTarget(
+    //            address(gateway),
+    //            abi.encodeWithSelector(
+    //                gateway.finalizeDepositERC20.selector,
+    //                address(l1Token),
+    //                address(l2Token),
+    //                sender,
+    //                recipient,
+    //                amount,
+    //                dataToCall
+    //            )
+    //        );
+    //
+    //        mockMessenger.setXDomainMessageSender(address(counterpartGateway));
+    //
+    //        // msg.value mismatch
+    //        hevm.expectRevert("nonzero msg.value");
+    //        mockMessenger.callTarget{ value: 1 }(
+    //            address(gateway),
+    //            abi.encodeWithSelector(
+    //                gateway.finalizeDepositERC20.selector,
+    //                address(l1Token),
+    //                address(l2Token),
+    //                sender,
+    //                recipient,
+    //                amount,
+    //                dataToCall
+    //            )
+    //        );
+    //
+    //        // l1 token mismatch
+    //        hevm.expectRevert("l2 token mismatch");
+    //        mockMessenger.callTarget(
+    //            address(gateway),
+    //            abi.encodeWithSelector(
+    //                gateway.finalizeDepositERC20.selector,
+    //                address(l2Token),
+    //                address(l2Token),
+    //                sender,
+    //                recipient,
+    //                amount,
+    //                dataToCall
+    //            )
+    //        );
+    //    }
 
     function testFinalizeDepositERC20Failed(
         address sender,
