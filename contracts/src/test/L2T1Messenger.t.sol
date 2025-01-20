@@ -19,7 +19,6 @@ import { T1Constants } from "../libraries/constants/T1Constants.sol";
 contract L2T1MessengerTest is DSTestPlus {
     uint64 internal constant POLYGON_CHAIN_ID = 137;
     uint64 internal constant ARB_CHAIN_ID = 42_161;
-    uint64 internal constant ETH_CHAIN_ID = 1;
 
     L1T1Messenger internal l1Messenger;
 
@@ -125,12 +124,12 @@ contract L2T1MessengerTest is DSTestPlus {
         address callbackAddress = address(0xbeef);
         // succeed normally
         uint256 nonce =
-            l2Messenger.sendMessage{ value: 1 }(address(0), 1, new bytes(0), 21_000, ETH_CHAIN_ID, callbackAddress);
+            l2Messenger.sendMessage{ value: 1 }(address(0), 1, new bytes(0), 21_000, T1Constants.ETH_CHAIN_ID, callbackAddress);
         assertEq(nonce, 0, "nonce is zero");
 
-        nonce = l2Messenger.sendMessage{ value: 1 }(address(0), 1, new bytes(0), 21_000, ETH_CHAIN_ID, callbackAddress);
+        nonce = l2Messenger.sendMessage{ value: 1 }(address(0), 1, new bytes(0), 21_000, T1Constants.ETH_CHAIN_ID, callbackAddress);
         assertEq(nonce, 1, "nonce is one");
-        nonce = l2Messenger.sendMessage{ value: 1 }(address(0), 1, new bytes(0), 21_000, ETH_CHAIN_ID, callbackAddress);
+        nonce = l2Messenger.sendMessage{ value: 1 }(address(0), 1, new bytes(0), 21_000, T1Constants.ETH_CHAIN_ID, callbackAddress);
 
         bytes32 messageRoot = l2MessageQueue.messageRoot();
         console.logString("messageRoot: ");
