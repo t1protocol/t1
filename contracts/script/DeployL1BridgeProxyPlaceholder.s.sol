@@ -84,7 +84,7 @@ contract DeployL1BridgeProxyPlaceholder is Script {
 
     function deployL1T1Messenger() internal {
         TransparentUpgradeableProxy proxy =
-            new TransparentUpgradeableProxy{ value: 1ether }(address(placeholder), address(proxyAdmin), new bytes(0));
+            new TransparentUpgradeableProxy{ value: 1 ether }(address(placeholder), address(proxyAdmin), new bytes(0));
 
         logAddress("L1_T1_MESSENGER_PROXY_ADDR", address(proxy));
     }
