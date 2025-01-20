@@ -81,7 +81,8 @@ contract L2T1MessengerTest is DSTestPlus {
         hevm.stopPrank();
     }
 
-    function testSendMessage(address callbackAddress) external {
+    function testSendMessage() external {
+        address callbackAddress = address(0xbeef);
         // Insufficient msg.value
         hevm.expectRevert(abi.encodeWithSelector(L2T1Messenger.InsufficientMsgValue.selector, 1));
         l2Messenger.sendMessage(address(0), 1, new bytes(0), 21_000, ARB_CHAIN_ID, callbackAddress);
