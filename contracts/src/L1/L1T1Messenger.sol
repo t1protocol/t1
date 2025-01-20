@@ -380,7 +380,16 @@ contract L1T1Messenger is T1MessengerBase, IL1T1Messenger {
         require(messageSendTimestamp[_xDomainCalldataHash] == 0, "Duplicated message");
         messageSendTimestamp[_xDomainCalldataHash] = block.timestamp;
 
-        emit SentMessage(_msgSender(), _to, _value, _messageNonce, _gasLimit, _message, T1Constants.T1_DEVNET_CHAIN_ID, _xDomainCalldataHash);
+        emit SentMessage(
+            _msgSender(),
+            _to,
+            _value,
+            _messageNonce,
+            _gasLimit,
+            _message,
+            T1Constants.T1_DEVNET_CHAIN_ID,
+            _xDomainCalldataHash
+        );
 
         // refund fee to `_refundAddress`
         unchecked {

@@ -376,7 +376,14 @@ contract L2StandardERC20GatewayTest is L2GatewayTestBase {
             {
                 hevm.expectEmit(true, true, false, true);
                 emit SentMessage(
-                    address(gateway), address(counterpartGateway), 0, 0, gasLimit, message, T1Constants.ETH_CHAIN_ID, keccak256(xDomainCalldata)
+                    address(gateway),
+                    address(counterpartGateway),
+                    0,
+                    0,
+                    gasLimit,
+                    message,
+                    T1Constants.ETH_CHAIN_ID,
+                    keccak256(xDomainCalldata)
                 );
             }
 
@@ -457,7 +464,14 @@ contract L2StandardERC20GatewayTest is L2GatewayTestBase {
             {
                 hevm.expectEmit(true, true, false, true);
                 emit SentMessage(
-                    address(gateway), address(counterpartGateway), 0, 0, gasLimit, message, T1Constants.ETH_CHAIN_ID, keccak256(xDomainCalldata)
+                    address(gateway),
+                    address(counterpartGateway),
+                    0,
+                    0,
+                    gasLimit,
+                    message,
+                    T1Constants.ETH_CHAIN_ID,
+                    keccak256(xDomainCalldata)
                 );
             }
 
@@ -547,7 +561,14 @@ contract L2StandardERC20GatewayTest is L2GatewayTestBase {
             {
                 hevm.expectEmit(true, true, false, true);
                 emit SentMessage(
-                    address(gateway), address(counterpartGateway), 0, 0, gasLimit, message, T1Constants.ETH_CHAIN_ID, keccak256(xDomainCalldata)
+                    address(gateway),
+                    address(counterpartGateway),
+                    0,
+                    0,
+                    gasLimit,
+                    message,
+                    T1Constants.ETH_CHAIN_ID,
+                    keccak256(xDomainCalldata)
                 );
             }
 

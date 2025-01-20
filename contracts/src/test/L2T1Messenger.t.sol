@@ -123,13 +123,18 @@ contract L2T1MessengerTest is DSTestPlus {
     function testSendMessageToEthereum() external {
         address callbackAddress = address(0xbeef);
         // succeed normally
-        uint256 nonce =
-            l2Messenger.sendMessage{ value: 1 }(address(0), 1, new bytes(0), 21_000, T1Constants.ETH_CHAIN_ID, callbackAddress);
+        uint256 nonce = l2Messenger.sendMessage{ value: 1 }(
+            address(0), 1, new bytes(0), 21_000, T1Constants.ETH_CHAIN_ID, callbackAddress
+        );
         assertEq(nonce, 0, "nonce is zero");
 
-        nonce = l2Messenger.sendMessage{ value: 1 }(address(0), 1, new bytes(0), 21_000, T1Constants.ETH_CHAIN_ID, callbackAddress);
+        nonce = l2Messenger.sendMessage{ value: 1 }(
+            address(0), 1, new bytes(0), 21_000, T1Constants.ETH_CHAIN_ID, callbackAddress
+        );
         assertEq(nonce, 1, "nonce is one");
-        nonce = l2Messenger.sendMessage{ value: 1 }(address(0), 1, new bytes(0), 21_000, T1Constants.ETH_CHAIN_ID, callbackAddress);
+        nonce = l2Messenger.sendMessage{ value: 1 }(
+            address(0), 1, new bytes(0), 21_000, T1Constants.ETH_CHAIN_ID, callbackAddress
+        );
 
         bytes32 messageRoot = l2MessageQueue.messageRoot();
         console.logString("messageRoot: ");
