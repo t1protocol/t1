@@ -3,7 +3,7 @@
 pragma solidity >=0.8.28;
 
 import { DSTestPlus } from "solmate/test/utils/DSTestPlus.sol";
-
+import { console } from "forge-std/console.sol";
 import { ERC1967Proxy } from "@openzeppelin/contracts/proxy/ERC1967/ERC1967Proxy.sol";
 
 import { L1GasPriceOracle } from "../L2/predeploys/L1GasPriceOracle.sol";
@@ -19,6 +19,7 @@ import { T1Constants } from "../libraries/constants/T1Constants.sol";
 contract L2T1MessengerTest is DSTestPlus {
     uint64 internal constant POLYGON_CHAIN_ID = 137;
     uint64 internal constant ARB_CHAIN_ID = 42_161;
+    uint64 internal constant ETH_CHAIN_ID = 1;
 
     L1T1Messenger internal l1Messenger;
 
@@ -116,6 +117,35 @@ contract L2T1MessengerTest is DSTestPlus {
         nonce = l2Messenger.sendMessage{ value: _valueMinusOne }(
             address(0), 0, new bytes(0), gasLimit, ARB_CHAIN_ID, callbackAddress
         );
+    }
+
+    // no assertions - used as inputs for merkle proof generation
+    function testSendMessageToEthereum() external {
+        address callbackAddress = address(0xbeef);
+        // succeed normally
+        uint256 nonce =
+            l2Messenger.sendMessage{ value: 1 }(address(0), 1, new bytes(0), 21_000, ETH_CHAIN_ID, callbackAddress);
+        assertEq(nonce, 0, "nonce is zero");
+
+        nonce = l2Messenger.sendMessage{ value: 1 }(address(0), 1, new bytes(0), 21_000, ETH_CHAIN_ID, callbackAddress);
+        assertEq(nonce, 1, "nonce is one");
+        nonce = l2Messenger.sendMessage{ value: 1 }(address(0), 1, new bytes(0), 21_000, ETH_CHAIN_ID, callbackAddress);
+
+        bytes32 messageRoot = l2MessageQueue.messageRoot();
+        console.logString("messageRoot: ");
+        console.logBytes32(messageRoot);
+
+        bytes32 branch0 = l2MessageQueue.branches(0);
+        bytes32 branch1 = l2MessageQueue.branches(1);
+        bytes32 branch2 = l2MessageQueue.branches(2);
+        console.logString("branches[0]: ");
+        console.logBytes32(branch0);
+
+        console.logString("branches[1]: ");
+        console.logBytes32(branch1);
+
+        console.logString("branches[2]: ");
+        console.logBytes32(branch2);
     }
 
     function testSendMessageRefund() external {
