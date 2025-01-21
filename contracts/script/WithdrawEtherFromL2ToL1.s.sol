@@ -10,7 +10,7 @@ import { L2ETHGateway } from "../src/L2/gateways/L2ETHGateway.sol";
 // solhint-disable state-visibility
 // solhint-disable var-name-mixedcase
 
-contract TriggerL2CanonicalBridge is Script {
+contract WithdrawEtherFromL2ToL1 is Script {
     uint256 L2_DEPLOYER_PRIVATE_KEY = vm.envUint("L2_DEPLOYER_PRIVATE_KEY");
 
     address L2_ETH_GATEWAY_PROXY_ADDR = vm.envAddress("L2_ETH_GATEWAY_PROXY_ADDR");

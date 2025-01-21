@@ -489,6 +489,7 @@ contract T1Chain is OwnableUpgradeable, PausableUpgradeable, IT1Chain {
         // load version from batch header, it is always the first byte.
         uint256 batchVersion = BatchHeaderV0Codec.getVersion(batchPtr);
         // verify batch
+        // TODO: Diego to replace following with verifying TEE signature
         IRollupVerifier(verifier).verifyAggregateProof(batchVersion, _batchIndex, _aggrProof, _publicInputHash);
 
         // Pop finalized and non-skipped message from L1MessageQueue.

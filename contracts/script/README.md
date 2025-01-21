@@ -21,3 +21,11 @@ The magical deploy order is as follows:
 8. [InitializeL2BridgeContracts.s.sol](InitializeL2BridgeContracts.s.sol)
 9. [InitializeL1T1Owner.s.sol](InitializeL1T1Owner.s.sol)
 10. [InitializeL2T1Owner.s.sol](InitializeL2T1Owner.s.sol)
+
+## Testing
+
+Scripts to test the canonical bridge:
+
+- ETH
+  - [Deposit Ether from L1->L2](DepositEtherFromL1ToL2.s.sol)
+  - [Withdraw Ether from L2->L1](WithdrawEtherFromL2ToL1.s.sol)
