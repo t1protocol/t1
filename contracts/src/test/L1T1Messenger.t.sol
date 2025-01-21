@@ -27,12 +27,12 @@ contract L1T1MessengerTest is L1GatewayTestBase {
         );
         prepareL2MessageRoot(_xDomainCalldataHash);
 
-        // IL1T1Messenger.L2MessageProof memory proof;
-        // proof.batchIndex = rollup.lastFinalizedBatchIndex();
+         IL1T1Messenger.L2MessageProof memory proof;
+         proof.batchIndex = rollup.lastFinalizedBatchIndex();
 
         hevm.expectRevert("Forbid to call message queue");
-        // l1Messenger.relayMessageWithProof(address(this), address(messageQueue), 0, 0, new bytes(0), proof);
-        l1Messenger.relayMessageWithProof(address(this), address(messageQueue), 0, 0, new bytes(0));
+         l1Messenger.relayMessageWithProof(address(this), address(messageQueue), 0, 0, new bytes(0), proof);
+//        l1Messenger.relayMessageWithProof(address(this), address(messageQueue), 0, 0, new bytes(0));
     }
 
     function testForbidCallSelfFromL2() external {
@@ -47,12 +47,12 @@ contract L1T1MessengerTest is L1GatewayTestBase {
             )
         );
         prepareL2MessageRoot(_xDomainCalldataHash);
-        // IL1T1Messenger.L2MessageProof memory proof;
-        // proof.batchIndex = rollup.lastFinalizedBatchIndex();
+         IL1T1Messenger.L2MessageProof memory proof;
+         proof.batchIndex = rollup.lastFinalizedBatchIndex();
 
         hevm.expectRevert("Forbid to call self");
-        // l1Messenger.relayMessageWithProof(address(this), address(l1Messenger), 0, 0, new bytes(0), proof);
-        l1Messenger.relayMessageWithProof(address(this), address(l1Messenger), 0, 0, new bytes(0));
+         l1Messenger.relayMessageWithProof(address(this), address(l1Messenger), 0, 0, new bytes(0), proof);
+//        l1Messenger.relayMessageWithProof(address(this), address(l1Messenger), 0, 0, new bytes(0));
     }
 
     function testSendMessage(uint256 exceedValue, address refundAddress) external {
@@ -170,9 +170,9 @@ contract L1T1MessengerTest is L1GatewayTestBase {
         hevm.expectRevert("Pausable: paused");
         l1Messenger.sendMessage(address(0), 0, new bytes(0), DEFAULT_GAS_LIMIT, address(0));
         hevm.expectRevert("Pausable: paused");
-        // IL1T1Messenger.L2MessageProof memory _proof;
-        // l1Messenger.relayMessageWithProof(address(0), address(0), 0, 0, new bytes(0), _proof);
-        l1Messenger.relayMessageWithProof(address(0), address(0), 0, 0, new bytes(0));
+         IL1T1Messenger.L2MessageProof memory _proof;
+         l1Messenger.relayMessageWithProof(address(0), address(0), 0, 0, new bytes(0), _proof);
+//        l1Messenger.relayMessageWithProof(address(0), address(0), 0, 0, new bytes(0));
         hevm.expectRevert("Pausable: paused");
         l1Messenger.replayMessage(address(0), address(0), 0, 0, new bytes(0), 0, address(0));
         hevm.expectRevert("Pausable: paused");
@@ -346,18 +346,17 @@ contract L1T1MessengerTest is L1GatewayTestBase {
         assertEq(withdrawRoot, withdrawRootBatch1, "withdraw root");
 
         // generated with off-chain merkle proof generator
-        // bytes memory proofForThirdMessageInTree =
-        // // solhint-disable-next-line max-line-length
-        //hex"00000000000000000000000000000000000000000000000000000000000000005bc
-        //8d719dee759f579606f5e9326010c9b4f1c89d2579636761a6bd37e348f4e";
-        // // IL1T1Messenger.L2MessageProof memory messageProof =
-        // //     IL1T1Messenger.L2MessageProof({ batchIndex: 1, merkleProof: proofForThirdMessageInTree });
+         bytes memory proofForThirdMessageInTree =
+         // solhint-disable-next-line max-line-length
+        hex"00000000000000000000000000000000000000000000000000000000000000005bc8d719dee759f579606f5e9326010c9b4f1c89d2579636761a6bd37e348f4e";
+          IL1T1Messenger.L2MessageProof memory messageProof =
+              IL1T1Messenger.L2MessageProof({ batchIndex: 1, merkleProof: proofForThirdMessageInTree });
         uint256 nonce = 2;
         uint256 msgValue = 1;
         bytes memory message = new bytes(0);
         address from = address(0xbeef);
         // does not revert
-        l1Messenger.relayMessageWithProof(from, address(0), msgValue, nonce, message);
+        l1Messenger.relayMessageWithProof(from, address(0), msgValue, nonce, message, messageProof);
     }
 
     function onDropMessage(bytes memory message) external payable {
