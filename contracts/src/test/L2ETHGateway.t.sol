@@ -280,7 +280,8 @@ contract L2ETHGatewayTest is L2GatewayTestBase {
                     0,
                     gasLimit,
                     message,
-                    T1Constants.ETH_CHAIN_ID
+                    T1Constants.ETH_CHAIN_ID,
+                    keccak256(xDomainCalldata)
                 );
             }
 
@@ -354,7 +355,8 @@ contract L2ETHGatewayTest is L2GatewayTestBase {
                     0,
                     gasLimit,
                     message,
-                    T1Constants.ETH_CHAIN_ID
+                    T1Constants.ETH_CHAIN_ID,
+                    keccak256(xDomainCalldata)
                 );
             }
 
@@ -429,7 +431,8 @@ contract L2ETHGatewayTest is L2GatewayTestBase {
                     0,
                     gasLimit,
                     message,
-                    T1Constants.ETH_CHAIN_ID
+                    T1Constants.ETH_CHAIN_ID,
+                    keccak256(xDomainCalldata)
                 );
             }
 
