@@ -346,17 +346,17 @@ contract L1T1MessengerTest is L1GatewayTestBase {
         assertEq(withdrawRoot, withdrawRootBatch1, "withdraw root");
 
         // generated with off-chain merkle proof generator
-        bytes memory proofForThirdMessageInTree =
-        // solhint-disable-next-line max-line-length
-            hex"00000000000000000000000000000000000000000000000000000000000000005bc8d719dee759f579606f5e9326010c9b4f1c89d2579636761a6bd37e348f4e";
-        IL1T1Messenger.L2MessageProof memory messageProof =
-            IL1T1Messenger.L2MessageProof({ batchIndex: 1, merkleProof: proofForThirdMessageInTree });
+        // bytes memory proofForThirdMessageInTree =
+        // // solhint-disable-next-line max-line-length
+        //     hex"00000000000000000000000000000000000000000000000000000000000000005bc8d719dee759f579606f5e9326010c9b4f1c89d2579636761a6bd37e348f4e";
+        // // IL1T1Messenger.L2MessageProof memory messageProof =
+        // //     IL1T1Messenger.L2MessageProof({ batchIndex: 1, merkleProof: proofForThirdMessageInTree });
         uint256 nonce = 2;
         uint256 msgValue = 1;
         bytes memory message = new bytes(0);
         address from = address(0xbeef);
         // does not revert
-        l1Messenger.relayMessageWithProof(from, address(0), msgValue, nonce, message, messageProof);
+        l1Messenger.relayMessageWithProof(from, address(0), msgValue, nonce, message);
     }
 
     function onDropMessage(bytes memory message) external payable {
