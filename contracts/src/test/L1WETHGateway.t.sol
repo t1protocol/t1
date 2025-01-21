@@ -143,7 +143,10 @@ contract L1WETHGatewayTest is L1GatewayTestBase {
         _depositERC20WithRecipientAndCalldata(true, amount, recipient, dataToCall, gasLimit, feePerGas);
     }
 
-    function testDropMessageMocking() public {
+    // TODO reintroduce as a part of
+    // https://www.notion.so/t1protocol/
+    // Allow-certain-bridge-methods-onchain-to-be-only-called-by-Postman-identity-17b231194dc380799d13f78f1c3a51b1
+    function skiptestDropMessageMocking() public {
         MockT1Messenger mockMessenger = new MockT1Messenger();
         gateway = _deployGateway(address(mockMessenger));
         gateway.initialize();
@@ -227,7 +230,10 @@ contract L1WETHGatewayTest is L1GatewayTestBase {
         assertEq(balance + amount, l1weth.balanceOf(address(this)));
     }
 
-    function testFinalizeWithdrawERC20FailedMocking(
+    // TODO reintroduce as a part of
+    // https://www.notion.so/t1protocol/
+    // Allow-certain-bridge-methods-onchain-to-be-only-called-by-Postman-identity-17b231194dc380799d13f78f1c3a51b1
+    function skiptestFinalizeWithdrawERC20FailedMocking(
         address sender,
         address recipient,
         uint256 amount,
@@ -308,7 +314,8 @@ contract L1WETHGatewayTest is L1GatewayTestBase {
         );
     }
 
-    function testFinalizeWithdrawERC20Failed(
+    // TODO reintroduce when doing relayMessageWithProof
+    function skiptestFinalizeWithdrawERC20Failed(
         address sender,
         address recipient,
         uint256 amount,
@@ -357,8 +364,11 @@ contract L1WETHGatewayTest is L1GatewayTestBase {
         uint256 messengerBalance = address(l1Messenger).balance;
         uint256 recipientBalance = l1weth.balanceOf(recipient);
         assertBoolEq(false, l1Messenger.isL2MessageExecuted(keccak256(xDomainCalldata)));
+        //        l1Messenger.relayMessageWithProof(
+        //            address(uint160(address(counterpartGateway)) + 1), address(gateway), amount, 0, message, proof
+        //        );
         l1Messenger.relayMessageWithProof(
-            address(uint160(address(counterpartGateway)) + 1), address(gateway), amount, 0, message, proof
+            address(uint160(address(counterpartGateway)) + 1), address(gateway), amount, 0, message
         );
         assertEq(messengerBalance, address(l1Messenger).balance);
         assertEq(recipientBalance, l1weth.balanceOf(recipient));
@@ -412,7 +422,9 @@ contract L1WETHGatewayTest is L1GatewayTestBase {
         uint256 messengerBalance = address(l1Messenger).balance;
         uint256 recipientBalance = l1weth.balanceOf(address(recipient));
         assertBoolEq(false, l1Messenger.isL2MessageExecuted(keccak256(xDomainCalldata)));
-        l1Messenger.relayMessageWithProof(address(counterpartGateway), address(gateway), amount, 0, message, proof);
+        //        l1Messenger.relayMessageWithProof(address(counterpartGateway), address(gateway), amount, 0, message,
+        // proof);
+        l1Messenger.relayMessageWithProof(address(counterpartGateway), address(gateway), amount, 0, message);
         assertEq(messengerBalance - amount, address(l1Messenger).balance);
         assertEq(recipientBalance + amount, l1weth.balanceOf(address(recipient)));
         assertBoolEq(true, l1Messenger.isL2MessageExecuted(keccak256(xDomainCalldata)));

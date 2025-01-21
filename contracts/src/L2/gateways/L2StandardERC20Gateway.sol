@@ -106,7 +106,8 @@ contract L2StandardERC20Gateway is L2ERC20Gateway {
         external
         payable
         override
-        onlyCallByCounterpart
+        // onlyCallByCounterpart
+        // TODO this should not be L1 Messenger address. it should be the Postman identity address
         nonReentrant
     {
         require(msg.value == 0, "nonzero msg.value");

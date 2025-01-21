@@ -78,7 +78,7 @@ contract L2T1Messenger is T1MessengerBase, IL2T1Messenger {
      * Constructor *
      *
      */
-    constructor(address _counterpart, address _messageQueue) T1MessengerBase(_counterpart) {
+    constructor(address _counterpart, address _messageQueue) payable T1MessengerBase(_counterpart) {
         if (_messageQueue == address(0)) {
             revert ErrorZeroAddress();
         }
@@ -149,7 +149,8 @@ contract L2T1Messenger is T1MessengerBase, IL2T1Messenger {
         whenNotPaused
     {
         // It is impossible to deploy a contract with the same address, reentrance is prevented in nature.
-        require(AddressAliasHelper.undoL1ToL2Alias(_msgSender()) == counterpart, "Caller is not L1T1Messenger");
+        // require(AddressAliasHelper.undoL1ToL2Alias(_msgSender()) == counterpart, "Caller is not L1T1Messenger");
+        // TODO this should not be L1 Messenger address. it should be the Postman identity address
 
         bytes32 _xDomainCalldataHash = keccak256(_encodeXDomainCalldata(_from, _to, _value, _nonce, _message));
 

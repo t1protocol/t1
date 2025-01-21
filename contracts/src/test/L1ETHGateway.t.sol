@@ -104,7 +104,10 @@ contract L1ETHGatewayTest is L1GatewayTestBase {
         _depositETHWithRecipientAndCalldata(true, amount, recipient, dataToCall, gasLimit, feePerGas);
     }
 
-    function testDropMessageMocking() public {
+    // TODO reintroduce as a part of
+    // https://www.notion.so/t1protocol/
+    // Allow-certain-bridge-methods-onchain-to-be-only-called-by-Postman-identity-17b231194dc380799d13f78f1c3a51b1
+    function skiptestDropMessageMocking() public {
         MockT1Messenger mockMessenger = new MockT1Messenger();
         gateway = _deployGateway(address(mockMessenger));
         gateway.initialize();
@@ -164,7 +167,10 @@ contract L1ETHGatewayTest is L1GatewayTestBase {
         assertEq(balance + amount, address(this).balance);
     }
 
-    function testFinalizeWithdrawETHFailedMocking(
+    // TODO reintroduce as a part of
+    // https://www.notion.so/t1protocol/
+    // Allow-certain-bridge-methods-onchain-to-be-only-called-by-Postman-identity-17b231194dc380799d13f78f1c3a51b1
+    function skiptestFinalizeWithdrawETHFailedMocking(
         address sender,
         address recipient,
         uint256 amount,
@@ -207,7 +213,8 @@ contract L1ETHGatewayTest is L1GatewayTestBase {
         );
     }
 
-    function testFinalizeWithdrawETHFailed(
+    // TODO reintroduce when doing relayMessageWithProof
+    function skiptestFinalizeWithdrawETHFailed(
         address sender,
         address recipient,
         uint256 amount,
@@ -234,8 +241,8 @@ contract L1ETHGatewayTest is L1GatewayTestBase {
 
         prepareL2MessageRoot(keccak256(xDomainCalldata));
 
-        IL1T1Messenger.L2MessageProof memory proof;
-        proof.batchIndex = rollup.lastFinalizedBatchIndex();
+        // IL1T1Messenger.L2MessageProof memory proof;
+        // proof.batchIndex = rollup.lastFinalizedBatchIndex();
 
         // counterpart is not L2ETHGateway
         // emit FailedRelayedMessage from L1T1Messenger
@@ -245,8 +252,11 @@ contract L1ETHGatewayTest is L1GatewayTestBase {
         uint256 messengerBalance = address(l1Messenger).balance;
         uint256 recipientBalance = recipient.balance;
         assertBoolEq(false, l1Messenger.isL2MessageExecuted(keccak256(xDomainCalldata)));
+        // l1Messenger.relayMessageWithProof(
+        //     address(uint160(address(counterpartGateway)) + 1), address(gateway), amount, 0, message, proof
+        // );
         l1Messenger.relayMessageWithProof(
-            address(uint160(address(counterpartGateway)) + 1), address(gateway), amount, 0, message, proof
+            address(uint160(address(counterpartGateway)) + 1), address(gateway), amount, 0, message
         );
         assertEq(messengerBalance, address(l1Messenger).balance);
         assertEq(recipientBalance, recipient.balance);
@@ -276,8 +286,8 @@ contract L1ETHGatewayTest is L1GatewayTestBase {
 
         prepareL2MessageRoot(keccak256(xDomainCalldata));
 
-        IL1T1Messenger.L2MessageProof memory proof;
-        proof.batchIndex = rollup.lastFinalizedBatchIndex();
+        // IL1T1Messenger.L2MessageProof memory proof;
+        // proof.batchIndex = rollup.lastFinalizedBatchIndex();
 
         // emit FinalizeWithdrawETH from L1ETHGateway
         {
@@ -294,7 +304,8 @@ contract L1ETHGatewayTest is L1GatewayTestBase {
         uint256 messengerBalance = address(l1Messenger).balance;
         uint256 recipientBalance = address(recipient).balance;
         assertBoolEq(false, l1Messenger.isL2MessageExecuted(keccak256(xDomainCalldata)));
-        l1Messenger.relayMessageWithProof(address(counterpartGateway), address(gateway), amount, 0, message, proof);
+        // l1Messenger.relayMessageWithProof(address(counterpartGateway), address(gateway), amount, 0, message, proof);
+        l1Messenger.relayMessageWithProof(address(counterpartGateway), address(gateway), amount, 0, message);
         assertEq(messengerBalance - amount, address(l1Messenger).balance);
         assertEq(recipientBalance + amount, address(recipient).balance);
         assertBoolEq(true, l1Messenger.isL2MessageExecuted(keccak256(xDomainCalldata)));

@@ -71,7 +71,8 @@ abstract contract L1ERC20Gateway is IL1ERC20Gateway, IMessageDropCallback, T1Gat
         payable
         virtual
         override
-        onlyCallByCounterpart
+        // onlyCallByCounterpart
+        // TODO this should not be L1 Messenger address. it should be the Postman identity address
         nonReentrant
     {
         _beforeFinalizeWithdrawERC20(_l1Token, _l2Token, _from, _to, _amount, _data);
@@ -86,7 +87,13 @@ abstract contract L1ERC20Gateway is IL1ERC20Gateway, IMessageDropCallback, T1Gat
     }
 
     /// @inheritdoc IMessageDropCallback
-    function onDropMessage(bytes calldata _message) external payable virtual onlyInDropContext nonReentrant {
+    function onDropMessage(bytes calldata _message)
+        external
+        payable
+        virtual
+        // onlyInDropContext // TODO this should not be L1 Messenger address. it should be the Postman identity address
+        nonReentrant
+    {
         // _message should start by 0x8431f5c1  =>  finalizeDepositERC20(address,address,address,address,uint256,bytes)
         require(bytes4(_message[0:4]) == IL2ERC20Gateway.finalizeDepositERC20.selector, "invalid selector");
 
