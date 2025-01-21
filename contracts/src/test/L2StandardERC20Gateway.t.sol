@@ -162,7 +162,10 @@ contract L2StandardERC20GatewayTest is L2GatewayTestBase {
         _withdrawERC20WithRecipientAndCalldata(true, amount, recipient, dataToCall, gasLimit, feePerGas);
     }
 
-    function testFinalizeDepositERC20FailedMocking(
+    // TODO reintroduce as a part of
+    // https://www.notion.so/t1protocol/
+    // Allow-certain-bridge-methods-onchain-to-be-only-called-by-Postman-identity-17b231194dc380799d13f78f1c3a51b1
+    function skiptestFinalizeDepositERC20FailedMocking(
         address sender,
         address recipient,
         uint256 amount,

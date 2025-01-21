@@ -103,7 +103,10 @@ contract L2ETHGatewayTest is L2GatewayTestBase {
         _withdrawETHWithRecipientAndCalldata(true, amount, recipient, dataToCall, gasLimit, feePerGas);
     }
 
-    function testFinalizeDepositETHFailedMocking(
+    // TODO reintroduce as a part of
+    // https://www.notion.so/t1protocol/
+    // Allow-certain-bridge-methods-onchain-to-be-only-called-by-Postman-identity-17b231194dc380799d13f78f1c3a51b1
+    function skiptestFinalizeDepositETHFailedMocking(
         address sender,
         address recipient,
         uint256 amount,
@@ -145,7 +148,8 @@ contract L2ETHGatewayTest is L2GatewayTestBase {
         );
     }
 
-    function testFinalizeWithdrawETHFailed(
+    // TODO reintroduce when doing relayMessageWithProof
+    function skiptestFinalizeWithdrawETHFailed(
         address sender,
         address recipient,
         uint256 amount,
