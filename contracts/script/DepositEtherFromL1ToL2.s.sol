@@ -10,7 +10,7 @@ import { L1ETHGateway } from "../src/L1/gateways/L1ETHGateway.sol";
 // solhint-disable state-visibility
 // solhint-disable var-name-mixedcase
 
-contract TriggerL1CanonicalBridge is Script {
+contract DepositEtherFromL1ToL2 is Script {
     uint256 L1_DEPLOYER_PRIVATE_KEY = vm.envUint("L1_DEPLOYER_PRIVATE_KEY");
 
     address L1_ETH_GATEWAY_PROXY_ADDR = vm.envAddress("L1_ETH_GATEWAY_PROXY_ADDR");
