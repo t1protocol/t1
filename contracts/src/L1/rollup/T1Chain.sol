@@ -422,7 +422,8 @@ contract T1Chain is OwnableUpgradeable, PausableUpgradeable, IT1Chain {
 //        bytes32 _postStateRoot,
         bytes32 _withdrawRoot
 //        bytes calldata _aggrProof
-    ) external override OnlyProver whenNotPaused {
+    ) external override whenNotPaused {
+//    ) external override OnlyProver whenNotPaused {
 //        (uint256 batchPtr, bytes32 _batchHash, uint256 _batchIndex) = _beforeFinalizeBatch(
 //            _batchHeader,
 //            _postStateRoot
