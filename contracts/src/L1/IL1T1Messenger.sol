@@ -72,7 +72,7 @@ interface IL1T1Messenger is IT1Messenger {
         bytes memory message,
         L2MessageProof memory proof
     )
-    external;
+        external;
 
     /// @notice Replay an existing message.
     /// @param from The address of the sender of the message.
