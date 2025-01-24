@@ -126,7 +126,7 @@ contract L2T1MessengerTest is DSTestPlus {
     function testSendMessageRefund(address callbackAddress) external {
         hevm.assume(callbackAddress.code.length == 0);
         hevm.assume(uint256(uint160(callbackAddress)) > 100); // ignore some precompile contracts
-
+        uint256 _balanceCallbackAddressBefore = address(callbackAddress).balance;
         // 0.1 gwei = 100000000 wei
         uint256 l2BaseFee = 100_000_000;
         uint256 gasLimit = 21_000;
@@ -145,7 +145,7 @@ contract L2T1MessengerTest is DSTestPlus {
         uint256 _balanceThisAfter = address(this).balance;
         uint256 _balanceCallbackAddressAfter = address(callbackAddress).balance;
         assertEq(_balanceThisAfter, _balanceThisBefore - _valuePlusOne);
-        assertEq(_balanceCallbackAddressAfter, 1);
+        assertEq(_balanceCallbackAddressAfter - _balanceCallbackAddressBefore, 1);
     }
 
     function testAddChain() external {
