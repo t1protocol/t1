@@ -51,7 +51,6 @@ contract L1T1MessengerTest is L1GatewayTestBase {
 
         hevm.expectRevert("Forbid to call self");
         l1Messenger.relayMessageWithProof(address(this), address(l1Messenger), 0, 0, new bytes(0), proof);
-        //        l1Messenger.relayMessageWithProof(address(this), address(l1Messenger), 0, 0, new bytes(0));
     }
 
     function testSendMessage(uint256 exceedValue, address refundAddress) external {
@@ -359,27 +358,9 @@ contract L1T1MessengerTest is L1GatewayTestBase {
 
     function testRelayMessageWithProofNonce18() external {
         rollup.addProver(address(0));
-        bytes memory batchHeader1 = new bytes(193);
-        bytes32 blobVersionedHash = 0x013590dc3544d56629ba81bb14d4d31248f825001653aa575eb8e3a719046757;
-        bytes32 batchHash0 = rollup.committedBatches(0);
-        bytes memory blobDataProof =
-        // solhint-disable-next-line max-line-length
-            hex"2c9d777660f14ad49803a6442935c0d24a0d83551de5995890bf70a17d24e68753ab0fe6807c7081f0885fe7da741554d658a03730b1fa006f8319f8b993bcb0a5a0c9e8a145c5ef6e415c245690effa2914ec9393f58a7251d30c0657da1453d9ad906eae8b97dd60c9a216f81b4df7af34d01e214e1ec5865f0133ecc16d7459e49dab66087340677751e82097fbdd20551d66076f425775d1758a9dfd186b";
-        assembly {
-            mstore8(add(batchHeader1, 0x20), 3) // version
-            mstore(add(batchHeader1, add(0x20, 1)), shl(192, 1)) // batchIndex
-            mstore(add(batchHeader1, add(0x20, 9)), 0) // l1MessagePopped
-            mstore(add(batchHeader1, add(0x20, 17)), 0) // totalL1MessagePopped
-            // dataHash
-            mstore(add(batchHeader1, add(0x20, 25)), 0x246394445f4fe64ed5598554d55d1682d6fb3fe04bf58eb54ef81d1189fafb51)
-            mstore(add(batchHeader1, add(0x20, 57)), blobVersionedHash) // blobVersionedHash
-            mstore(add(batchHeader1, add(0x20, 89)), batchHash0) // parentBatchHash
-            mstore(add(batchHeader1, add(0x20, 121)), 0) // lastBlockTimestamp
-            mcopy(add(batchHeader1, add(0x20, 129)), add(blobDataProof, 0x20), 64) // blobDataProof
-        }
-        batchHeader1[1] = bytes1(uint8(0)); // change back
-        bytes32 withdrawRoot = 0xf527187db10d953f02ec890a9d325af97abfcf3ee8fc4d3e388c3a38c8905065;
+        bytes memory batchHeader1 = generateBatchHeader();
         assertBoolEq(rollup.isBatchFinalized(1), false);
+        bytes32 withdrawRoot = 0xf527187db10d953f02ec890a9d325af97abfcf3ee8fc4d3e388c3a38c8905065;
         hevm.startPrank(address(0));
         rollup.finalizeBundleWithProof(batchHeader1, bytes32(uint256(2)), withdrawRoot, new bytes(0));
 
@@ -408,27 +389,9 @@ contract L1T1MessengerTest is L1GatewayTestBase {
 
     function testRelayMessageWithProofNonce19() external {
         rollup.addProver(address(0));
-        bytes memory batchHeader1 = new bytes(193);
-        bytes32 blobVersionedHash = 0x013590dc3544d56629ba81bb14d4d31248f825001653aa575eb8e3a719046757;
-        bytes32 batchHash0 = rollup.committedBatches(0);
-        bytes memory blobDataProof =
-        // solhint-disable-next-line max-line-length
-            hex"2c9d777660f14ad49803a6442935c0d24a0d83551de5995890bf70a17d24e68753ab0fe6807c7081f0885fe7da741554d658a03730b1fa006f8319f8b993bcb0a5a0c9e8a145c5ef6e415c245690effa2914ec9393f58a7251d30c0657da1453d9ad906eae8b97dd60c9a216f81b4df7af34d01e214e1ec5865f0133ecc16d7459e49dab66087340677751e82097fbdd20551d66076f425775d1758a9dfd186b";
-        assembly {
-            mstore8(add(batchHeader1, 0x20), 3) // version
-            mstore(add(batchHeader1, add(0x20, 1)), shl(192, 1)) // batchIndex
-            mstore(add(batchHeader1, add(0x20, 9)), 0) // l1MessagePopped
-            mstore(add(batchHeader1, add(0x20, 17)), 0) // totalL1MessagePopped
-            // dataHash
-            mstore(add(batchHeader1, add(0x20, 25)), 0x246394445f4fe64ed5598554d55d1682d6fb3fe04bf58eb54ef81d1189fafb51)
-            mstore(add(batchHeader1, add(0x20, 57)), blobVersionedHash) // blobVersionedHash
-            mstore(add(batchHeader1, add(0x20, 89)), batchHash0) // parentBatchHash
-            mstore(add(batchHeader1, add(0x20, 121)), 0) // lastBlockTimestamp
-            mcopy(add(batchHeader1, add(0x20, 129)), add(blobDataProof, 0x20), 64) // blobDataProof
-        }
-        batchHeader1[1] = bytes1(uint8(0)); // change back
-        bytes32 withdrawRoot = 0xd820115d49a31129d66a3307cd020b6632f30813de0922c45102429f1a56a2f9;
+        bytes memory batchHeader1 = generateBatchHeader();
         assertBoolEq(rollup.isBatchFinalized(1), false);
+        bytes32 withdrawRoot = 0xd820115d49a31129d66a3307cd020b6632f30813de0922c45102429f1a56a2f9;
         hevm.startPrank(address(0));
         rollup.finalizeBundleWithProof(batchHeader1, bytes32(uint256(2)), withdrawRoot, new bytes(0));
 
@@ -456,27 +419,9 @@ contract L1T1MessengerTest is L1GatewayTestBase {
 
     function testRelayMessageWithProofNonce20() external {
         rollup.addProver(address(0));
-        bytes memory batchHeader1 = new bytes(193);
-        bytes32 blobVersionedHash = 0x013590dc3544d56629ba81bb14d4d31248f825001653aa575eb8e3a719046757;
-        bytes32 batchHash0 = rollup.committedBatches(0);
-        bytes memory blobDataProof =
-        // solhint-disable-next-line max-line-length
-            hex"2c9d777660f14ad49803a6442935c0d24a0d83551de5995890bf70a17d24e68753ab0fe6807c7081f0885fe7da741554d658a03730b1fa006f8319f8b993bcb0a5a0c9e8a145c5ef6e415c245690effa2914ec9393f58a7251d30c0657da1453d9ad906eae8b97dd60c9a216f81b4df7af34d01e214e1ec5865f0133ecc16d7459e49dab66087340677751e82097fbdd20551d66076f425775d1758a9dfd186b";
-        assembly {
-            mstore8(add(batchHeader1, 0x20), 3) // version
-            mstore(add(batchHeader1, add(0x20, 1)), shl(192, 1)) // batchIndex
-            mstore(add(batchHeader1, add(0x20, 9)), 0) // l1MessagePopped
-            mstore(add(batchHeader1, add(0x20, 17)), 0) // totalL1MessagePopped
-            // dataHash
-            mstore(add(batchHeader1, add(0x20, 25)), 0x246394445f4fe64ed5598554d55d1682d6fb3fe04bf58eb54ef81d1189fafb51)
-            mstore(add(batchHeader1, add(0x20, 57)), blobVersionedHash) // blobVersionedHash
-            mstore(add(batchHeader1, add(0x20, 89)), batchHash0) // parentBatchHash
-            mstore(add(batchHeader1, add(0x20, 121)), 0) // lastBlockTimestamp
-            mcopy(add(batchHeader1, add(0x20, 129)), add(blobDataProof, 0x20), 64) // blobDataProof
-        }
-        batchHeader1[1] = bytes1(uint8(0)); // change back
-        bytes32 withdrawRoot = 0xccc0f65eda86a6324bdec4fb7a5f162395fd7029cd5f27480c63888ce204958d;
+        bytes memory batchHeader1 = generateBatchHeader();
         assertBoolEq(rollup.isBatchFinalized(1), false);
+        bytes32 withdrawRoot = 0xccc0f65eda86a6324bdec4fb7a5f162395fd7029cd5f27480c63888ce204958d;
         hevm.startPrank(address(0));
         rollup.finalizeBundleWithProof(batchHeader1, bytes32(uint256(2)), withdrawRoot, new bytes(0));
 
@@ -505,5 +450,27 @@ contract L1T1MessengerTest is L1GatewayTestBase {
 
     function onDropMessage(bytes memory message) external payable {
         emit OnDropMessageCalled(message);
+    }
+
+    function generateBatchHeader() internal view returns (bytes memory batchHeader1) {
+        batchHeader1 = new bytes(193);
+        bytes32 blobVersionedHash = 0x013590dc3544d56629ba81bb14d4d31248f825001653aa575eb8e3a719046757;
+        bytes32 batchHash0 = rollup.committedBatches(0);
+        bytes memory blobDataProof =
+        // solhint-disable-next-line max-line-length
+            hex"2c9d777660f14ad49803a6442935c0d24a0d83551de5995890bf70a17d24e68753ab0fe6807c7081f0885fe7da741554d658a03730b1fa006f8319f8b993bcb0a5a0c9e8a145c5ef6e415c245690effa2914ec9393f58a7251d30c0657da1453d9ad906eae8b97dd60c9a216f81b4df7af34d01e214e1ec5865f0133ecc16d7459e49dab66087340677751e82097fbdd20551d66076f425775d1758a9dfd186b";
+        assembly {
+            mstore8(add(batchHeader1, 0x20), 3) // version
+            mstore(add(batchHeader1, add(0x20, 1)), shl(192, 1)) // batchIndex
+            mstore(add(batchHeader1, add(0x20, 9)), 0) // l1MessagePopped
+            mstore(add(batchHeader1, add(0x20, 17)), 0) // totalL1MessagePopped
+            // dataHash
+            mstore(add(batchHeader1, add(0x20, 25)), 0x246394445f4fe64ed5598554d55d1682d6fb3fe04bf58eb54ef81d1189fafb51)
+            mstore(add(batchHeader1, add(0x20, 57)), blobVersionedHash) // blobVersionedHash
+            mstore(add(batchHeader1, add(0x20, 89)), batchHash0) // parentBatchHash
+            mstore(add(batchHeader1, add(0x20, 121)), 0) // lastBlockTimestamp
+            mcopy(add(batchHeader1, add(0x20, 129)), add(blobDataProof, 0x20), 64) // blobDataProof
+        }
+        batchHeader1[1] = bytes1(uint8(0)); // change back
     }
 }
