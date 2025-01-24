@@ -127,6 +127,9 @@ interface IT1Chain {
     /// |---------|---------|----------------|-----------|
     /// | bytes32 | bytes32 |    bytes48     |  bytes48  |
     ///
+    /// @param batchHeader The header of current batch, see the encoding in comments of `commitBatch.
+    /// @param prevStateRoot The state root of parent batch.
+    /// @param postStateRoot The state root of current batch.
     /// @param withdrawRoot The withdraw trie root of current batch.
     /// @param blobDataProof The proof for blob data.
     /// @param aggrProof The aggregation proof for current batch.
