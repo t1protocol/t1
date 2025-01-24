@@ -415,43 +415,39 @@ contract T1Chain is OwnableUpgradeable, PausableUpgradeable, IT1Chain {
         }
     }
 
-    /* This function will never be used since we already upgrade to 4844. We comment out the codes for reference.
     /// @inheritdoc IT1Chain
     function finalizeBatchWithProof(
-        bytes calldata _batchHeader,
-        bytes32 _prevStateRoot,
-        bytes32 _postStateRoot,
-        bytes32 _withdrawRoot,
-        bytes calldata _aggrProof
-    ) external override OnlyProver whenNotPaused {
-        (uint256 batchPtr, bytes32 _batchHash, uint256 _batchIndex) = _beforeFinalizeBatch(
-            _batchHeader,
-            _postStateRoot
-        );
-
-        // compute public input hash
-        bytes32 _publicInputHash;
-        {
-            bytes32 _dataHash = BatchHeaderV0Codec.getDataHash(batchPtr);
-            bytes32 _prevStateRoot = finalizedStateRoots[_batchIndex - 1];
-            _publicInputHash = keccak256(
-                abi.encodePacked(layer2ChainId, _prevStateRoot, _postStateRoot, _withdrawRoot, _dataHash)
-            );
-        }
-        // verify batch
-        IRollupVerifier(verifier).verifyAggregateProof(0, _batchIndex, _aggrProof, _publicInputHash);
+        //        bytes calldata _batchHeader,
+        //        bytes32 _prevStateRoot,
+        //        bytes32 _postStateRoot,
+        bytes32 _withdrawRoot
+    )
+        //        bytes calldata _aggrProof
+        external
+        override
+        whenNotPaused
+    {
+        //    ) external override OnlyProver whenNotPaused {
+        //        (uint256 batchPtr, bytes32 _batchHash, uint256 _batchIndex) = _beforeFinalizeBatch(
+        //            _batchHeader,
+        //            _postStateRoot
+        //        );
+        //        // TODO: Diego to replace following with verifying TEE signature
+        //        // verify batch
+        //        IRollupVerifier(verifier).verifyAggregateProof(0, _batchIndex, _aggrProof, _publicInputHash);
 
         // Pop finalized and non-skipped message from L1MessageQueue.
-        uint256 _totalL1MessagesPoppedOverall = BatchHeaderV0Codec.getTotalL1MessagePopped(batchPtr);
-        _popL1MessagesMemory(
-            BatchHeaderV0Codec.getSkippedBitmapPtr(batchPtr),
-            _totalL1MessagesPoppedOverall,
-            BatchHeaderV0Codec.getL1MessagePopped(batchPtr)
-        );
+        //        uint256 _totalL1MessagesPoppedOverall = BatchHeaderV0Codec.getTotalL1MessagePopped(batchPtr);
+        //        _popL1MessagesMemory(
+        //            BatchHeaderV0Codec.getSkippedBitmapPtr(batchPtr),
+        //            _totalL1MessagesPoppedOverall,
+        //            BatchHeaderV0Codec.getL1MessagePopped(batchPtr)
+        //        );
 
-        _afterFinalizeBatch(_totalL1MessagesPoppedOverall, _batchIndex, _batchHash, _postStateRoot, _withdrawRoot);
+        //        _afterFinalizeBatch(_totalL1MessagesPoppedOverall, _batchIndex, _batchHash, _postStateRoot,
+        // _withdrawRoot);
+        _afterFinalizeBatch(0, 1, "", "", _withdrawRoot);
     }
-    */
 
     /// @inheritdoc IT1Chain
     /// @dev Memory layout of `_blobDataProof`:
@@ -703,18 +699,18 @@ contract T1Chain is OwnableUpgradeable, PausableUpgradeable, IT1Chain {
     )
         internal
     {
-        // check and update lastFinalizedBatchIndex
-        unchecked {
-            if (lastFinalizedBatchIndex + 1 != _batchIndex) revert ErrorIncorrectBatchIndex();
-            lastFinalizedBatchIndex = _batchIndex;
-        }
+        //        // check and update lastFinalizedBatchIndex
+        //        unchecked {
+        //            if (lastFinalizedBatchIndex + 1 != _batchIndex) revert ErrorIncorrectBatchIndex();
+        lastFinalizedBatchIndex = _batchIndex;
+        //        }
 
-        // record state root and withdraw root
-        finalizedStateRoots[_batchIndex] = _postStateRoot;
+        //        // record state root and withdraw root
+        //        finalizedStateRoots[_batchIndex] = _postStateRoot;
         withdrawRoots[_batchIndex] = _withdrawRoot;
 
-        // Pop finalized and non-skipped message from L1MessageQueue.
-        _finalizePoppedL1Messages(_totalL1MessagesPoppedOverall);
+        //        // Pop finalized and non-skipped message from L1MessageQueue.
+        //        _finalizePoppedL1Messages(_totalL1MessagesPoppedOverall);
 
         emit FinalizeBatch(_batchIndex, _batchHash, _postStateRoot, _withdrawRoot);
     }
