@@ -115,6 +115,11 @@ interface IT1Chain {
     /// @param lastBatchHeader The header of last batch to revert, see the encoding in comments of `commitBatch`.
     function revertBatch(bytes calldata firstBatchHeader, bytes calldata lastBatchHeader) external;
 
+    /// @notice t1 batch finalization
+    ///
+    /// @param withdrawRoot The withdraw trie root of current batch.
+    function finalizeBatchWithProof(bytes32 withdrawRoot) external;
+
     /// @notice Finalize a committed batch (with blob) on layer 1.
     ///
     /// @dev Memory layout of `blobDataProof`:

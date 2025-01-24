@@ -63,14 +63,15 @@ interface IL1T1Messenger is IT1Messenger {
     /// @param value The msg.value passed to the message call.
     /// @param nonce The nonce of the message to avoid replay attack.
     /// @param message The content of the message.
+    /// @param proof The proof used to verify the correctness of the transaction.
     function relayMessageWithProof(
         address from,
         address to,
         uint256 value,
         uint256 nonce,
-        bytes memory message
+        bytes memory message,
+        L2MessageProof memory proof
     )
-        // L2MessageProof memory proof
         external;
 
     /// @notice Replay an existing message.

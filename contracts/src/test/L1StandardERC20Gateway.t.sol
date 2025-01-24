@@ -367,8 +367,8 @@ contract L1StandardERC20GatewayTest is L1GatewayTestBase {
 
         prepareL2MessageRoot(keccak256(xDomainCalldata));
 
-        // IL1T1Messenger.L2MessageProof memory proof;
-        // proof.batchIndex = rollup.lastFinalizedBatchIndex();
+        IL1T1Messenger.L2MessageProof memory proof;
+        proof.batchIndex = rollup.lastFinalizedBatchIndex();
 
         // counterpart is not L2WETHGateway
         // emit FailedRelayedMessage from L1T1Messenger
@@ -378,11 +378,8 @@ contract L1StandardERC20GatewayTest is L1GatewayTestBase {
         uint256 gatewayBalance = l1Token.balanceOf(address(gateway));
         uint256 recipientBalance = l1Token.balanceOf(recipient);
         assertBoolEq(false, l1Messenger.isL2MessageExecuted(keccak256(xDomainCalldata)));
-        // l1Messenger.relayMessageWithProof(
-        //     address(uint160(address(counterpartGateway)) + 1), address(gateway), 0, 0, message, proof
-        // );
         l1Messenger.relayMessageWithProof(
-            address(uint160(address(counterpartGateway)) + 1), address(gateway), 0, 0, message
+            address(uint160(address(counterpartGateway)) + 1), address(gateway), 0, 0, message, proof
         );
         assertEq(gatewayBalance, l1Token.balanceOf(address(gateway)));
         assertEq(recipientBalance, l1Token.balanceOf(recipient));
@@ -418,8 +415,8 @@ contract L1StandardERC20GatewayTest is L1GatewayTestBase {
 
         prepareL2MessageRoot(keccak256(xDomainCalldata));
 
-        // IL1T1Messenger.L2MessageProof memory proof;
-        // proof.batchIndex = rollup.lastFinalizedBatchIndex();
+        IL1T1Messenger.L2MessageProof memory proof;
+        proof.batchIndex = rollup.lastFinalizedBatchIndex();
 
         // emit FinalizeWithdrawERC20 from L1StandardERC20Gateway
         {
@@ -438,8 +435,7 @@ contract L1StandardERC20GatewayTest is L1GatewayTestBase {
         uint256 gatewayBalance = l1Token.balanceOf(address(gateway));
         uint256 recipientBalance = l1Token.balanceOf(address(recipient));
         assertBoolEq(false, l1Messenger.isL2MessageExecuted(keccak256(xDomainCalldata)));
-        // l1Messenger.relayMessageWithProof(address(counterpartGateway), address(gateway), 0, 0, message, proof);
-        l1Messenger.relayMessageWithProof(address(counterpartGateway), address(gateway), 0, 0, message);
+        l1Messenger.relayMessageWithProof(address(counterpartGateway), address(gateway), 0, 0, message, proof);
         assertEq(gatewayBalance - amount, l1Token.balanceOf(address(gateway)));
         assertEq(recipientBalance + amount, l1Token.balanceOf(address(recipient)));
         assertBoolEq(true, l1Messenger.isL2MessageExecuted(keccak256(xDomainCalldata)));
