@@ -29,6 +29,7 @@ contract L2T1MessengerTest is DSTestPlus {
     L2MessageQueue internal l2MessageQueue;
     L1GasPriceOracle internal l1GasOracle;
     L2GasPriceOracle internal l2GasOracle;
+    MockCallbackRecipient internal mockCallbackRecipient;
 
     function setUp() public {
         // Deploy L1 contracts
@@ -46,6 +47,8 @@ contract L2T1MessengerTest is DSTestPlus {
                 )
             )
         );
+
+        mockCallbackRecipient = new MockCallbackRecipient();
 
         uint64[] memory network = new uint64[](1);
         network[0] = ARB_CHAIN_ID;
@@ -123,9 +126,9 @@ contract L2T1MessengerTest is DSTestPlus {
         );
     }
 
-    function testSendMessageRefund(address callbackAddress) external {
-        hevm.assume(callbackAddress.code.length == 0);
-        hevm.assume(uint256(uint160(callbackAddress)) > 100); // ignore some precompile contracts
+    function testSendMessageRefund() external {
+        // using mock contract because this test requires a contract to receive ETH
+        address callbackAddress = address(mockCallbackRecipient);
         uint256 _balanceCallbackAddressBefore = address(callbackAddress).balance;
         // 0.1 gwei = 100000000 wei
         uint256 l2BaseFee = 100_000_000;
@@ -161,7 +164,7 @@ contract L2T1MessengerTest is DSTestPlus {
         l2Messenger.addChain(ARB_CHAIN_ID);
 
         // Ethereum is always supported
-        assert(l2Messenger.isSupportedDest(T1Constants.ETH_CHAIN_ID));
+        assert(l2Messenger.isSupportedDest(T1Constants.L1_CHAIN_ID));
         assert(l2Messenger.isSupportedDest(ARB_CHAIN_ID));
         assert(!l2Messenger.isSupportedDest(POLYGON_CHAIN_ID));
     }
@@ -174,7 +177,11 @@ contract L2T1MessengerTest is DSTestPlus {
         l2Messenger.removeChain(ARB_CHAIN_ID);
 
         // Ethereum is always supported
-        assert(l2Messenger.isSupportedDest(T1Constants.ETH_CHAIN_ID));
+        assert(l2Messenger.isSupportedDest(T1Constants.L1_CHAIN_ID));
         assert(!l2Messenger.isSupportedDest(ARB_CHAIN_ID));
     }
+}
+
+contract MockCallbackRecipient {
+    fallback() external payable { }
 }

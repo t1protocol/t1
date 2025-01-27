@@ -183,7 +183,7 @@ contract L2T1Messenger is T1MessengerBase, IL2T1Messenger {
 
     /// @notice returns whether the provided chain ID is supported as a destination
     function isSupportedDest(uint64 chainId_) public view returns (bool) {
-        if (chainId_ == T1Constants.ETH_CHAIN_ID) return true; // Ethereum always supported
+        if (chainId_ == T1Constants.L1_CHAIN_ID) return true; // Ethereum always supported
         return _isSupportedDest[chainId_];
     }
 
@@ -216,7 +216,7 @@ contract L2T1Messenger is T1MessengerBase, IL2T1Messenger {
         if (!isSupportedDest(_destChainId)) revert InvalidDestinationChain();
 
         uint256 _fee;
-        if (_destChainId == T1Constants.ETH_CHAIN_ID) {
+        if (_destChainId == T1Constants.L1_CHAIN_ID) {
             if (msg.value != _value) revert InsufficientMsgValue(_value);
             _nonce = L2MessageQueue(messageQueue).nextMessageIndex();
         } else {
@@ -240,7 +240,7 @@ contract L2T1Messenger is T1MessengerBase, IL2T1Messenger {
         require(messageSendTimestamp[_xDomainCalldataHash] == 0, "Duplicated message");
         messageSendTimestamp[_xDomainCalldataHash] = block.timestamp;
 
-        if (_destChainId == T1Constants.ETH_CHAIN_ID) {
+        if (_destChainId == T1Constants.L1_CHAIN_ID) {
             L2MessageQueue(messageQueue).appendMessage(_xDomainCalldataHash);
         }
 
