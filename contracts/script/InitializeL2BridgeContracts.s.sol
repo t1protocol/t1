@@ -68,7 +68,7 @@ contract InitializeL2BridgeContracts is Script {
         );
 
         uint64[] memory network = new uint64[](1);
-        network[0] = T1Constants.ETH_CHAIN_ID;
+        network[0] = T1Constants.L1_CHAIN_ID;
         L2T1Messenger(payable(L2_T1_MESSENGER_PROXY_ADDR)).initialize(L1_T1_MESSENGER_PROXY_ADDR, network);
 
         // initialize L2GatewayRouter
