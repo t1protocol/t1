@@ -67,9 +67,9 @@ You can edit the CI script in [contracts.yml](../.github/workflows/contracts.yml
 
 ## Install Foundry
 
-`
+```
 curl -L https://foundry.paradigm.xyz | bash
-`
+```
 
 ## Installing Dependencies
 
