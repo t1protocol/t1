@@ -164,7 +164,7 @@ contract L2WETHGateway is L2ERC20Gateway {
 
         // 4. Send message to L1T1Messenger.
         IL2T1Messenger(messenger).sendMessage{ value: _amount + msg.value }(
-            counterpart, _amount, _message, _gasLimit, T1Constants.ETH_CHAIN_ID
+            counterpart, _amount, _message, _gasLimit, T1Constants.L1_CHAIN_ID
         );
 
         emit WithdrawERC20(_l1WETH, _token, _from, _to, _amount, _data);

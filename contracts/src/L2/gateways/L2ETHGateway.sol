@@ -132,7 +132,7 @@ contract L2ETHGateway is T1GatewayBase, IL2ETHGateway {
 
         bytes memory _message = abi.encodeCall(IL1ETHGateway.finalizeWithdrawETH, (_from, _to, _amount, _data));
         IL2T1Messenger(messenger).sendMessage{ value: msg.value }(
-            counterpart, _amount, _message, _gasLimit, T1Constants.ETH_CHAIN_ID
+            counterpart, _amount, _message, _gasLimit, T1Constants.L1_CHAIN_ID
         );
 
         emit WithdrawETH(_from, _to, _amount, _data);

@@ -186,7 +186,7 @@ contract L2StandardERC20Gateway is L2ERC20Gateway {
 
         // 4. send message to L2T1Messenger
         IL2T1Messenger(messenger).sendMessage{ value: msg.value }(
-            counterpart, 0, _message, _gasLimit, T1Constants.ETH_CHAIN_ID
+            counterpart, 0, _message, _gasLimit, T1Constants.L1_CHAIN_ID
         );
 
         emit WithdrawERC20(_l1Token, _token, _from, _to, _amount, _data);
