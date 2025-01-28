@@ -8,7 +8,8 @@
   },
   "dependencies": {
     "@openzeppelin/contracts": "^v4.9.3",
-    "@openzeppelin/contracts-upgradeable": "^v4.9.3"
+    "@openzeppelin/contracts-upgradeable": "^v4.9.3",
+    "@uniswap/permit2": "github:uniswap/permit2#0x000000000022D473030F116dDEE9F6B43aC78BA3"
   },
   "devDependencies": {
     "ds-test": "github:dapphub/ds-test",
