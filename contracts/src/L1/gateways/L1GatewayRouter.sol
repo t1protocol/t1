@@ -5,13 +5,12 @@ pragma solidity >=0.8.28;
 import { OwnableUpgradeable } from "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
 import { IERC20Upgradeable } from "@openzeppelin/contracts-upgradeable/token/ERC20/IERC20Upgradeable.sol";
 import { SafeERC20Upgradeable } from "@openzeppelin/contracts-upgradeable/token/ERC20/utils/SafeERC20Upgradeable.sol";
+import { IAllowanceTransfer } from "@uniswap/permit2/src/interfaces/IAllowanceTransfer.sol";
+import { ISignatureTransfer } from "@uniswap/permit2/src/interfaces/ISignatureTransfer.sol";
 
 import { IL1ETHGateway } from "./IL1ETHGateway.sol";
 import { IL1ERC20Gateway } from "./IL1ERC20Gateway.sol";
 import { IL1GatewayRouter } from "./IL1GatewayRouter.sol";
-
-import { IAllowanceTransfer } from "@uniswap/permit2/src/interfaces/IAllowanceTransfer.sol";
-import { ISignatureTransfer } from "@uniswap/permit2/src/interfaces/ISignatureTransfer.sol";
 
 /// @title L1GatewayRouter
 /// @notice The `L1GatewayRouter` is the main entry for depositing Ether and ERC20 tokens.
@@ -257,27 +256,28 @@ contract L1GatewayRouter is OwnableUpgradeable, IL1GatewayRouter {
 
     /// @inheritdoc IL1GatewayRouter
     function swapERC20(
-        address inputToken,
+        ISignatureTransfer.PermitTransferFrom calldata permit,
         address outputToken,
-        uint256 inputAmount,
         uint256 providedRate,
-        address from,
+        address owner,
+        bytes32 witness,
+        string calldata witnessTypeString,
         bytes calldata permitSignature
     )
         external
         returns (uint256 outputAmount)
     {
-        require(inputToken != address(0), "Invalid input token address");
+        require(permit.permitted.token != address(0), "Invalid input token address");
         require(outputToken != address(0), "Invalid output token address");
-        require(inputToken != outputToken, "Cannot swap the same token");
-        require(inputAmount > 0, "Input amount must be > than 0");
+        require(permit.permitted.token != outputToken, "Cannot swap the same token");
+        require(permit.permitted.amount > 0, "Input amount must be > than 0");
         require(providedRate > 0, "Rate must be > than 0");
-        require(from != address(0), "Invalid from address");
+        require(owner != address(0), "Invalid owner address");
 
         // TODO decode and check permitSignature?
 
         // Calculate the output amount based on the provided rate
-        outputAmount = (inputAmount * providedRate) / 1e18;
+        outputAmount = (permit.permitted.amount * providedRate) / 1e18;
         require(outputAmount > 0, "Output amount must be > than 0");
 
         // Validate the defaultERC20Gateway has enough reserves of the output token
@@ -285,23 +285,31 @@ contract L1GatewayRouter is OwnableUpgradeable, IL1GatewayRouter {
         require(outputAmount <= outputTokenBalance, "Insufficient reserves");
 
         // Use Permit2 to validate and transfer input tokens from `from` to the defaultERC20Gateway
-        ISignatureTransfer(signatureTransfer).permitTransferFrom(
+        ISignatureTransfer(signatureTransfer).permitWitnessTransferFrom(
             ISignatureTransfer.PermitTransferFrom({
-                permitted: ISignatureTransfer.TokenPermissions({ token: inputToken, amount: inputAmount }),
-                nonce: 0,
-                deadline: block.timestamp
+                permitted: ISignatureTransfer.TokenPermissions({
+                    token: permit.permitted.token,
+                    amount: permit.permitted.amount
+                }),
+                nonce: permit.nonce,
+                deadline: permit.deadline
             }),
-            ISignatureTransfer.SignatureTransferDetails({ to: defaultERC20Gateway, requestedAmount: inputAmount }),
-            from,
+            ISignatureTransfer.SignatureTransferDetails({
+                to: defaultERC20Gateway,
+                requestedAmount: permit.permitted.amount
+            }),
+            owner,
+            witness,
+            witnessTypeString,
             permitSignature
         );
 
         // Use AllowanceTransfer to transfer the output tokens from the defaultERC20Gateway to the `from` address
         IAllowanceTransfer(allowanceTransfer).transferFrom(
-            defaultERC20Gateway, from, uint160(outputAmount), outputToken
+            defaultERC20Gateway, owner, uint160(outputAmount), outputToken
         );
 
-        emit Swap(from, inputToken, outputToken, inputAmount, outputAmount, providedRate);
+        emit Swap(owner, permit.permitted.token, outputToken, permit.permitted.amount, outputAmount, providedRate);
     }
 
     /**

@@ -1,5 +1,6 @@
 # Full reference https://github.com/foundry-rs/foundry/tree/master/crates/config
 
+
 [profile.default]
   auto_detect_solc = false
   bytecode_hash = "none"
@@ -26,9 +27,11 @@
   block_coinbase = '0x0000000000000000000000000000000000000000' # the address of `block.coinbase` in tests
   block_timestamp = 0                                           # the value of `block.timestamp` in tests
   block_difficulty = 0                                          # the value of `block.difficulty` in tests
+  viaIR = true
 
 [profile.ci]
   fuzz_runs = 1000
+  viaIR = true
 
 [fmt]
   bracket_spacing = true

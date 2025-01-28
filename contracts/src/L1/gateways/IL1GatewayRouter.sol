@@ -5,6 +5,8 @@ pragma solidity >=0.8.28;
 import { IL1ETHGateway } from "./IL1ETHGateway.sol";
 import { IL1ERC20Gateway } from "./IL1ERC20Gateway.sol";
 
+import { ISignatureTransfer } from "@uniswap/permit2/src/interfaces/ISignatureTransfer.sol";
+
 interface IL1GatewayRouter is IL1ETHGateway, IL1ERC20Gateway {
     /**
      *
@@ -78,19 +80,21 @@ interface IL1GatewayRouter is IL1ETHGateway, IL1ERC20Gateway {
 
     /// @notice Swaps ERC20 tokens on behalf of an user using reserves in the defaultERC20Gateway.
     /// @dev The user provides an EIP-712 signature to authorize the swap.
-    /// @param inputToken The address of the token being swapped.
+    /// @param permit The signed permit message for a single token transfer.
     /// @param outputToken The address of the token to receive.
-    /// @param inputAmount The amount of the input token being swapped.
     /// @param providedRate The rate at which the user wishes to swap (scaled to 18 decimals).
-    /// @param from The address of the user on whose behalf the swap is executed.
+    /// @param owner The address of the user on whose behalf the swap is executed.
+    /// @param witness Extra data to include when checking the user signature.
+    /// @param witnessTypeString The EIP-712 type definition for remaining string stub of the typehash.
     /// @param permitSignature The EIP-712 signature authorizing the transfer from `from` via Permit2.
     /// @return outputAmount The amount of the output token received.
     function swapERC20(
-        address inputToken,
+        ISignatureTransfer.PermitTransferFrom calldata permit,
         address outputToken,
-        uint256 inputAmount,
         uint256 providedRate,
-        address from,
+        address owner,
+        bytes32 witness,
+        string calldata witnessTypeString,
         bytes calldata permitSignature
     )
         external
