@@ -6,6 +6,7 @@ import { L1WETHGateway } from "../src/L1/gateways/L1WETHGateway.sol";
 import { L1ETHGateway } from "../src/L1/gateways/L1ETHGateway.sol";
 import { ProxyAdmin } from "@openzeppelin/contracts/proxy/transparent/ProxyAdmin.sol";
 import { Script } from "forge-std/Script.sol";
+import {WrappedEther} from "../src/L2/predeploys/WrappedEther.sol";
 
 // solhint-disable max-states-count
 // solhint-disable state-visibility
@@ -16,12 +17,14 @@ contract DepositWethFromL1ToL2 is Script {
 
     address payable L1_WETH_GATEWAY_PROXY_ADDR = payable(vm.envAddress("L1_WETH_GATEWAY_PROXY_ADDR"));
 
-    address L1_WETH_ADDR = vm.envAddress("L1_WETH_ADDR");
+    address payable L1_WETH_ADDR = payable(vm.envAddress("L1_WETH_ADDR"));
 
     function run() external {
         vm.startBroadcast(L1_DEPLOYER_PRIVATE_KEY);
 
         uint256 gasLimit = 1_000_000;
+
+        WrappedEther(L1_WETH_ADDR).approve(L1_WETH_GATEWAY_PROXY_ADDR, 0.01 ether);
 
         L1WETHGateway(L1_WETH_GATEWAY_PROXY_ADDR).depositERC20(L1_WETH_ADDR, 0.01 ether, gasLimit);
 
