@@ -10,17 +10,20 @@ import { IL1ETHGateway } from "./IL1ETHGateway.sol";
 import { IL1ERC20Gateway } from "./IL1ERC20Gateway.sol";
 import { IL1GatewayRouter } from "./IL1GatewayRouter.sol";
 
+import { IAllowanceTransfer } from "@uniswap/permit2/src/interfaces/IAllowanceTransfer.sol";
+import { ISignatureTransfer } from "@uniswap/permit2/src/interfaces/ISignatureTransfer.sol";
+
 /// @title L1GatewayRouter
 /// @notice The `L1GatewayRouter` is the main entry for depositing Ether and ERC20 tokens.
 /// All deposited tokens are routed to corresponding gateways.
 /// @dev One can also use this contract to query L1/L2 token address mapping.
-/// In the future, ERC-721 and ERC-1155 tokens will be added to the router too.
+/// It also includes a new functionality for swapping ERC20 tokens using `Permit2`.
 contract L1GatewayRouter is OwnableUpgradeable, IL1GatewayRouter {
     using SafeERC20Upgradeable for IERC20Upgradeable;
 
     /**
      *
-     * Variables *
+     * Variables *>
      *
      */
 
@@ -36,6 +39,12 @@ contract L1GatewayRouter is OwnableUpgradeable, IL1GatewayRouter {
 
     /// @notice The address of gateway in current execution context.
     address public gatewayInContext;
+
+    /// @notice The Permit2 `SignatureTransfer` contract.
+    address public signatureTransfer;
+
+    /// @notice The Permit2 `AllowanceTransfer` contract.
+    address public allowanceTransfer;
 
     /**
      *
@@ -64,7 +73,17 @@ contract L1GatewayRouter is OwnableUpgradeable, IL1GatewayRouter {
     /// @notice Initialize the storage of L1GatewayRouter.
     /// @param _ethGateway The address of L1ETHGateway contract.
     /// @param _defaultERC20Gateway The address of default ERC20 Gateway contract.
-    function initialize(address _ethGateway, address _defaultERC20Gateway) external initializer {
+    /// @param _signatureTransfer The address of the `SignatureTransfer` contract.
+    /// @param _allowanceTransfer The address of the `AllowanceTransfer` contract.
+    function initialize(
+        address _ethGateway,
+        address _defaultERC20Gateway,
+        address _allowanceTransfer,
+        address _signatureTransfer
+    )
+        external
+        initializer
+    {
         OwnableUpgradeable.__Ownable_init();
 
         // it can be zero during initialization
@@ -77,6 +96,18 @@ contract L1GatewayRouter is OwnableUpgradeable, IL1GatewayRouter {
         if (_ethGateway != address(0)) {
             ethGateway = _ethGateway;
             emit SetETHGateway(address(0), _ethGateway);
+        }
+
+        // it can be zero during initialization
+        if (_signatureTransfer != address(0)) {
+            signatureTransfer = _signatureTransfer;
+            emit SetSignatureTransfer(address(0), _signatureTransfer);
+        }
+
+        // it can be zero during initialization
+        if (_allowanceTransfer != address(0)) {
+            allowanceTransfer = _allowanceTransfer;
+            emit SetAllowanceTransfer(address(0), _allowanceTransfer);
         }
     }
 
@@ -224,6 +255,55 @@ contract L1GatewayRouter is OwnableUpgradeable, IL1GatewayRouter {
         revert("should never be called");
     }
 
+    /// @inheritdoc IL1GatewayRouter
+    function swapERC20(
+        address inputToken,
+        address outputToken,
+        uint256 inputAmount,
+        uint256 providedRate,
+        address from,
+        bytes calldata permitSignature
+    )
+        external
+        returns (uint256 outputAmount)
+    {
+        require(inputToken != address(0), "Invalid input token address");
+        require(outputToken != address(0), "Invalid output token address");
+        require(inputToken != outputToken, "Cannot swap the same token");
+        require(inputAmount > 0, "Input amount must be > than 0");
+        require(providedRate > 0, "Rate must be > than 0");
+        require(from != address(0), "Invalid from address");
+
+        // TODO decode and check permitSignature?
+
+        // Calculate the output amount based on the provided rate
+        outputAmount = (inputAmount * providedRate) / 1e18;
+        require(outputAmount > 0, "Output amount must be > than 0");
+
+        // Validate the defaultERC20Gateway has enough reserves of the output token
+        uint256 outputTokenBalance = IERC20Upgradeable(outputToken).balanceOf(defaultERC20Gateway);
+        require(outputAmount <= outputTokenBalance, "Insufficient reserves");
+
+        // Use Permit2 to validate and transfer input tokens from `from` to the defaultERC20Gateway
+        ISignatureTransfer(signatureTransfer).permitTransferFrom(
+            ISignatureTransfer.PermitTransferFrom({
+                permitted: ISignatureTransfer.TokenPermissions({ token: inputToken, amount: inputAmount }),
+                nonce: 0,
+                deadline: block.timestamp
+            }),
+            ISignatureTransfer.SignatureTransferDetails({ to: defaultERC20Gateway, requestedAmount: inputAmount }),
+            from,
+            permitSignature
+        );
+
+        // Use AllowanceTransfer to transfer the output tokens from the defaultERC20Gateway to the `from` address
+        IAllowanceTransfer(allowanceTransfer).transferFrom(
+            defaultERC20Gateway, from, uint160(outputAmount), outputToken
+        );
+
+        emit Swap(from, inputToken, outputToken, inputAmount, outputAmount, providedRate);
+    }
+
     /**
      *
      * Restricted Functions *
@@ -256,5 +336,21 @@ contract L1GatewayRouter is OwnableUpgradeable, IL1GatewayRouter {
 
             emit SetERC20Gateway(_tokens[i], _oldGateway, _gateways[i]);
         }
+    }
+
+    /// @inheritdoc IL1GatewayRouter
+    function setSignatureTransfer(address _newSignatureTransfer) external onlyOwner {
+        address _oldSignatureTransfer = signatureTransfer;
+        signatureTransfer = _newSignatureTransfer;
+
+        emit SetSignatureTransfer(_oldSignatureTransfer, _newSignatureTransfer);
+    }
+
+    /// @inheritdoc IL1GatewayRouter
+    function setAllowanceTransfer(address _newAllowanceTransfer) external onlyOwner {
+        address _oldAllowanceTransfer = allowanceTransfer;
+        allowanceTransfer = _newAllowanceTransfer;
+
+        emit SetAllowanceTransfer(_oldAllowanceTransfer, _newAllowanceTransfer);
     }
 }

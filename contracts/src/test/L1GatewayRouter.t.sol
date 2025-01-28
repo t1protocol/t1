@@ -60,7 +60,8 @@ contract L1GatewayRouterTest is L1GatewayTestBase {
                     address(router),
                     address(l1Messenger),
                     address(template),
-                    address(factory)
+                    address(factory),
+                    address(0)
                 )
             )
         );
@@ -72,7 +73,7 @@ contract L1GatewayRouterTest is L1GatewayTestBase {
         // Initialize L1 contracts
         l1StandardERC20Gateway.initialize();
         l1ETHGateway.initialize();
-        router.initialize(address(l1ETHGateway), address(l1StandardERC20Gateway));
+        router.initialize(address(l1ETHGateway), address(l1StandardERC20Gateway), address(0), address(0));
     }
 
     function testOwnership() public {
@@ -88,7 +89,7 @@ contract L1GatewayRouterTest is L1GatewayTestBase {
         assertEq(address(l1StandardERC20Gateway), router.getERC20Gateway(address(l1Token)));
 
         hevm.expectRevert("Initializable: contract is already initialized");
-        router.initialize(address(l1ETHGateway), address(l1StandardERC20Gateway));
+        router.initialize(address(l1ETHGateway), address(l1StandardERC20Gateway), address(0), address(0));
     }
 
     function testSetDefaultERC20Gateway() public {

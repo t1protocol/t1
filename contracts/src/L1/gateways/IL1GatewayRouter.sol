@@ -28,6 +28,32 @@ interface IL1GatewayRouter is IL1ETHGateway, IL1ERC20Gateway {
     /// @param newGateway The corresponding address of the new gateway.
     event SetERC20Gateway(address indexed token, address indexed oldGateway, address indexed newGateway);
 
+    /// @notice Emitted when a swap occurs.
+    /// @param sender The address of the user performing the swap.
+    /// @param inputToken The address of the token being swapped.
+    /// @param outputToken The address of the token received.
+    /// @param inputAmount The amount of the input token swapped.
+    /// @param outputAmount The amount of the output token received.
+    /// @param rate The rate provided for the swap.
+    event Swap(
+        address indexed sender,
+        address indexed inputToken,
+        address indexed outputToken,
+        uint256 inputAmount,
+        uint256 outputAmount,
+        uint256 rate
+    );
+
+    /// @notice Emitted when the address of SignatureTransfer is updated.
+    /// @param oldSignatureTransfer The address of the old SignatureTransfer.
+    /// @param newSignatureTransfer The address of the new SignatureTransfer.
+    event SetSignatureTransfer(address indexed oldSignatureTransfer, address indexed newSignatureTransfer);
+
+    /// @notice Emitted when the address of AllowanceTransfer is updated.
+    /// @param oldAllowanceTransfer The address of the old AllowanceTransfer.
+    /// @param newAllowanceTransfer The address of the new AllowanceTransfer.
+    event SetAllowanceTransfer(address indexed oldAllowanceTransfer, address indexed newAllowanceTransfer);
+
     /**
      *
      * Public View Functions *
@@ -50,6 +76,26 @@ interface IL1GatewayRouter is IL1ETHGateway, IL1ERC20Gateway {
     /// @param amount The amount of token to request.
     function requestERC20(address sender, address token, uint256 amount) external returns (uint256);
 
+    /// @notice Swaps ERC20 tokens on behalf of an user using reserves in the defaultERC20Gateway.
+    /// @dev The user provides an EIP-712 signature to authorize the swap.
+    /// @param inputToken The address of the token being swapped.
+    /// @param outputToken The address of the token to receive.
+    /// @param inputAmount The amount of the input token being swapped.
+    /// @param providedRate The rate at which the user wishes to swap (scaled to 18 decimals).
+    /// @param from The address of the user on whose behalf the swap is executed.
+    /// @param permitSignature The EIP-712 signature authorizing the transfer from `from` via Permit2.
+    /// @return outputAmount The amount of the output token received.
+    function swapERC20(
+        address inputToken,
+        address outputToken,
+        uint256 inputAmount,
+        uint256 providedRate,
+        address from,
+        bytes calldata permitSignature
+    )
+        external
+        returns (uint256 outputAmount);
+
     /**
      *
      * Restricted Functions *
@@ -71,4 +117,14 @@ interface IL1GatewayRouter is IL1ETHGateway, IL1ERC20Gateway {
     /// @param _tokens The list of addresses of tokens to update.
     /// @param _gateways The list of addresses of gateways to update.
     function setERC20Gateway(address[] calldata _tokens, address[] calldata _gateways) external;
+
+    /// @notice Update the address of SignatureTransfer contract.
+    /// @dev This function should only be called by contract owner.
+    /// @param _signatureTransfer The address to update.
+    function setSignatureTransfer(address _signatureTransfer) external;
+
+    /// @notice Update the address of AllowanceTransfer contract.
+    /// @dev This function should only be called by contract owner.
+    /// @param _allowanceTransfer The address to update.
+    function setAllowanceTransfer(address _allowanceTransfer) external;
 }
