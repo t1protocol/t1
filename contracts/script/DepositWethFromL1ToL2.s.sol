@@ -14,7 +14,7 @@ import { Script } from "forge-std/Script.sol";
 contract DepositWethFromL1ToL2 is Script {
     uint256 L1_DEPLOYER_PRIVATE_KEY = vm.envUint("L1_DEPLOYER_PRIVATE_KEY");
 
-    address payable L1_ETH_GATEWAY_PROXY_ADDR = vm.envAddress("L1_ETH_GATEWAY_PROXY_ADDR");
+    address payable L1_WETH_GATEWAY_PROXY_ADDR = payable(vm.envAddress("L1_WETH_GATEWAY_PROXY_ADDR"));
 
     address L1_WETH_ADDR = vm.envAddress("L1_WETH_ADDR");
 
@@ -23,7 +23,7 @@ contract DepositWethFromL1ToL2 is Script {
 
         uint256 gasLimit = 1_000_000;
 
-        L1WETHGateway(L1_ETH_GATEWAY_PROXY_ADDR).depositERC20(L1_WETH_ADDR, 0.01 ether, gasLimit);
+        L1WETHGateway(L1_WETH_GATEWAY_PROXY_ADDR).depositERC20(L1_WETH_ADDR, 0.01 ether, gasLimit);
 
         vm.stopBroadcast();
     }
