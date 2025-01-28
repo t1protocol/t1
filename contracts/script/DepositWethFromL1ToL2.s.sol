@@ -23,7 +23,7 @@ contract DepositWethFromL1ToL2 is Script {
 
         uint256 gasLimit = 1_000_000;
 
-        L1WETHGateway(L1_ETH_GATEWAY_PROXY_ADDR).depositERC20(L1_WETH_ADDR, 1 ether, gasLimit);
+        L1WETHGateway(L1_ETH_GATEWAY_PROXY_ADDR).depositERC20(L1_WETH_ADDR, 0.01 ether, gasLimit);
 
         vm.stopBroadcast();
     }
