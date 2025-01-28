@@ -22,6 +22,16 @@ contract DeployWeth is Script {
         }
 
         logAddress("L1_WETH_ADDR", L1_WETH_ADDR);
+
+        if (L2_WETH_ADDR == address(0)) {
+            uint256 L2_DEPLOYER_PRIVATE_KEY = vm.envUint("L2_DEPLOYER_PRIVATE_KEY");
+            vm.startBroadcast(L2_DEPLOYER_PRIVATE_KEY);
+            WrappedEther weth = new WrappedEther();
+            L2_WETH_ADDR = address(weth);
+            weth.deposit{ value: 100 ether }();
+            vm.stopBroadcast();
+        }
+
         logAddress("L2_WETH_ADDR", L2_WETH_ADDR);
     }
 
