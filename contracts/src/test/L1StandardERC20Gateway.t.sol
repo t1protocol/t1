@@ -699,7 +699,8 @@ contract L1StandardERC20GatewayTest is L1GatewayTestBase {
                     address(router),
                     address(messenger),
                     address(template),
-                    address(factory)
+                    address(factory),
+                    address(1)
                 )
             )
         );

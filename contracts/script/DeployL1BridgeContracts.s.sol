@@ -49,6 +49,8 @@ contract DeployL1BridgeContracts is Script {
     address L2_T1_STANDARD_ERC20_ADDR = vm.envAddress("L2_T1_STANDARD_ERC20_ADDR");
     address L2_T1_STANDARD_ERC20_FACTORY_ADDR = vm.envAddress("L2_T1_STANDARD_ERC20_FACTORY_ADDR");
 
+    address L1_PERMIT2_ALLOWANCE_TRANSFER = vm.envAddress("L1_PERMIT2_ALLOWANCE_TRANSFER");
+
     ZkEvmVerifierV1 zkEvmVerifierV1;
     MultipleVersionRollupVerifier rollupVerifier;
     ProxyAdmin proxyAdmin;
@@ -141,7 +143,8 @@ contract DeployL1BridgeContracts is Script {
             address(router),
             L1_T1_MESSENGER_PROXY_ADDR,
             L2_T1_STANDARD_ERC20_ADDR,
-            L2_T1_STANDARD_ERC20_FACTORY_ADDR
+            L2_T1_STANDARD_ERC20_FACTORY_ADDR,
+            L1_PERMIT2_ALLOWANCE_TRANSFER
         );
 
         logAddress("L1_STANDARD_ERC20_GATEWAY_IMPLEMENTATION_ADDR", address(impl));

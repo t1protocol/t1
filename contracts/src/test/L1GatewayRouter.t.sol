@@ -61,7 +61,7 @@ contract L1GatewayRouterTest is L1GatewayTestBase {
                     address(l1Messenger),
                     address(template),
                     address(factory),
-                    address(0)
+                    address(1)
                 )
             )
         );
