@@ -32,6 +32,7 @@
   ],
   "private": true,
   "scripts": {
+    "format": "forge fmt",
     "clean": "rm -rf cache out artifacts coverage lcov.info",
     "build": "forge build",
     "lint": "bun run lint:sol && bun run prettier:check",
