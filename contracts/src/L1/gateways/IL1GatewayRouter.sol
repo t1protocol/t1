@@ -66,6 +66,21 @@ interface IL1GatewayRouter is IL1ETHGateway, IL1ERC20Gateway {
     /// @param _token The address of token to query.
     function getERC20Gateway(address _token) external view returns (address);
 
+    /// @notice Return output amount for the provided rate
+    /// @param inputToken The address of the token being swapped.
+    /// @param inputAmount The amount of the input token swapped.
+    /// @param outputToken The address of the token to receive.
+    /// @param providedRate The rate at which the user wishes to swap (scaled to 18 decimals).
+    function calculateOutputAmount(
+        address inputToken,
+        uint256 inputAmount,
+        address outputToken,
+        uint256 providedRate
+    )
+        external
+        view
+        returns (uint256 outputAmount);
+
     /**
      *
      * Public Mutating Functions *
