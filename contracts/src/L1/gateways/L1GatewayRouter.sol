@@ -4,6 +4,8 @@ pragma solidity >=0.8.28;
 
 import { OwnableUpgradeable } from "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
 import { IERC20Upgradeable } from "@openzeppelin/contracts-upgradeable/token/ERC20/IERC20Upgradeable.sol";
+import { IERC20MetadataUpgradeable } from
+    "@openzeppelin/contracts-upgradeable/token/ERC20/extensions/IERC20MetadataUpgradeable.sol";
 import { SafeERC20Upgradeable } from "@openzeppelin/contracts-upgradeable/token/ERC20/utils/SafeERC20Upgradeable.sol";
 import { IAllowanceTransfer } from "@uniswap/permit2/src/interfaces/IAllowanceTransfer.sol";
 import { ISignatureTransfer } from "@uniswap/permit2/src/interfaces/ISignatureTransfer.sol";
@@ -287,7 +289,7 @@ contract L1GatewayRouter is OwnableUpgradeable, IL1GatewayRouter {
 
         // TODO decode and check witness?
 
-        uint256 outputAmount_ = _calculateOutputAmount(inputAmount, outputTokenMemory, providedRateMemory);
+        uint256 outputAmount_ = _calculateOutputAmount(inputToken, inputAmount, outputTokenMemory, providedRateMemory);
 
         // Use Permit2 to validate and transfer input tokens from `owner` to the defaultERC20Gateway
         _permitWitnessTransfer(
@@ -338,6 +340,7 @@ contract L1GatewayRouter is OwnableUpgradeable, IL1GatewayRouter {
     }
 
     function _calculateOutputAmount(
+        address inputToken,
         uint256 inputAmount,
         address outputToken,
         uint256 providedRate
@@ -346,8 +349,16 @@ contract L1GatewayRouter is OwnableUpgradeable, IL1GatewayRouter {
         view
         returns (uint256 outputAmount)
     {
-        // Calculate the output amount based on the provided rate
-        outputAmount = (inputAmount * providedRate) / 1e18;
+        uint8 inputDecimals = IERC20MetadataUpgradeable(inputToken).decimals();
+        uint8 outputDecimals = IERC20MetadataUpgradeable(outputToken).decimals();
+
+        // Normalize the amount to `outputToken`'s decimals
+        if (inputDecimals > outputDecimals) {
+            outputAmount = (inputAmount * providedRate * (10 ** outputDecimals)) / (10 ** inputDecimals) / 1e18;
+        } else {
+            outputAmount = (inputAmount * providedRate * (10 ** (outputDecimals - inputDecimals))) / 1e18;
+        }
+
         require(outputAmount > 0, "Output amount must be > than 0");
 
         // Validate the defaultERC20Gateway has enough reserves of the output token
