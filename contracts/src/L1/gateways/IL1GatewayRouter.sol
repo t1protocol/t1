@@ -70,7 +70,7 @@ interface IL1GatewayRouter is IL1ETHGateway, IL1ERC20Gateway {
     /// @param inputToken The address of the token being swapped.
     /// @param inputAmount The amount of the input token swapped.
     /// @param outputToken The address of the token to receive.
-    /// @param providedRate The rate at which the user wishes to swap (scaled to 18 decimals).
+    /// @param providedRate The rate at which the user's swap is executed (scaled to 18 decimals).
     function calculateOutputAmount(
         address inputToken,
         uint256 inputAmount,
@@ -97,11 +97,11 @@ interface IL1GatewayRouter is IL1ETHGateway, IL1ERC20Gateway {
     /// @dev The user provides an EIP-712 signature to authorize the swap.
     /// @param permit The signed permit message for a single token transfer.
     /// @param outputToken The address of the token to receive.
-    /// @param providedRate The rate at which the user wishes to swap (scaled to 18 decimals).
+    /// @param providedRate The rate at which the user's swap is executed (scaled to 18 decimals).
     /// @param owner The address of the user on whose behalf the swap is executed.
     /// @param witness Extra data to include when checking the user signature.
     /// @param witnessTypeString The EIP-712 type definition for remaining string stub of the typehash.
-    /// @param permitSignature The EIP-712 signature authorizing the transfer from `from` via Permit2.
+    /// @param permitSignature The EIP-712 signature authorizing the transfer from the owner via Permit2.
     /// @return outputAmount The amount of the output token received.
     function swapERC20(
         ISignatureTransfer.PermitTransferFrom calldata permit,
