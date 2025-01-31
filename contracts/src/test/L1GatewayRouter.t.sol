@@ -2,6 +2,7 @@
 
 pragma solidity >=0.8.28;
 
+import "@openzeppelin/contracts/utils/math/Math.sol";
 import { MockERC20 } from "solmate/test/utils/mocks/MockERC20.sol";
 
 import { ITransparentUpgradeableProxy } from "@openzeppelin/contracts/proxy/transparent/TransparentUpgradeableProxy.sol";
@@ -35,12 +36,18 @@ contract L1GatewayRouterTest is L1GatewayTestBase {
 
     L1GatewayRouter private router;
     MockERC20 private l1Token;
+    MockERC20 private usdt;
+    MockERC20 private aave;
+    MockERC20 private dai;
 
     function setUp() public {
         __L1GatewayTestBase_setUp();
 
         // Deploy tokens
         l1Token = new MockERC20("Mock", "M", 18);
+        usdt = new MockERC20("Tether", "USDT", 6);
+        aave = new MockERC20("Aave coin", "AAVE", 18);
+        dai = new MockERC20("Dai Stablecoin", "DAI", 18);
 
         // Deploy L2 contracts
         template = new T1StandardERC20();
@@ -74,6 +81,10 @@ contract L1GatewayRouterTest is L1GatewayTestBase {
         l1StandardERC20Gateway.initialize();
         l1ETHGateway.initialize();
         router.initialize(address(l1ETHGateway), address(l1StandardERC20Gateway), address(0), address(0));
+
+        aave.mint(address(l1StandardERC20Gateway), 1e24); // 1,000 AAVE
+        dai.mint(address(l1StandardERC20Gateway), 1e24); // 1,000 DAI
+        usdt.mint(address(l1StandardERC20Gateway), 1e6); // 1,000,000 USDT
     }
 
     function testOwnership() public {
@@ -178,5 +189,59 @@ contract L1GatewayRouterTest is L1GatewayTestBase {
         );
         hevm.expectRevert("Only not in context");
         router.depositERC20(address(reentrantToken), 1, 0);
+    }
+
+    function testSwapERC20SameDecimals() public {
+        uint256 inputAmount = 1e18; // 1 DAI
+        uint256 providedRate = 2e18; // 2 AAVE per DAI
+
+        uint256 expectedOutput = (inputAmount * providedRate) / 1e18;
+        uint256 actualOutput = router.calculateOutputAmount(address(dai), inputAmount, address(aave), providedRate);
+
+        assertEq(actualOutput, expectedOutput, "Output amount incorrect for 18 -> 18 decimals");
+    }
+
+    function testSwapERC20USDTtoAAVE() public {
+        uint256 inputAmount = 1e6; // 1 USDT
+        uint256 providedRate = 2e18; // 2 AAVE per USDT
+
+        uint256 expectedOutput = Math.mulDiv(inputAmount, providedRate * 1e18, 1e6 * 1e18);
+        uint256 actualOutput = router.calculateOutputAmount(address(usdt), inputAmount, address(aave), providedRate);
+
+        assertEq(actualOutput, expectedOutput, "Output amount incorrect for 6 -> 18 decimals");
+    }
+
+    function testSwapERC20AAVEtoUSDT() public {
+        uint256 inputAmount = 1e18; // 1 AAVE
+        uint256 providedRate = 2e18; // 2 USDT per AAVE
+
+        uint256 expectedOutput = Math.mulDiv(inputAmount, providedRate * 1e6, 1e18 * 1e18);
+        uint256 actualOutput = router.calculateOutputAmount(address(aave), inputAmount, address(usdt), providedRate);
+
+        assertEq(actualOutput, expectedOutput, "Output amount incorrect for 18 -> 6 decimals");
+    }
+
+    function testSwapERC20ZeroInput() public {
+        hevm.expectRevert("Output amount must be > than 0");
+        router.calculateOutputAmount(address(aave), 0, address(usdt), 2e18);
+    }
+
+    function testSwapERC20InsufficientReserves() public {
+        uint256 inputAmount = 1e18; // 1 AAVE
+        uint256 providedRate = 100e18; // High rate to exceed reserves
+
+        aave.mint(address(l1StandardERC20Gateway), 1e15); // Only 0.001 WETH in reserves
+        hevm.expectRevert("Insufficient reserves");
+        router.calculateOutputAmount(address(aave), inputAmount, address(usdt), providedRate);
+    }
+
+    function testSwapERC20LargeValues() public {
+        uint256 inputAmount = 1e30; // Large input value
+        uint256 providedRate = 5e18; // Large rate
+
+        uint256 expectedOutput = Math.mulDiv(inputAmount, providedRate, 1e18);
+        uint256 actualOutput = router.calculateOutputAmount(address(dai), inputAmount, address(aave), providedRate);
+
+        assertEq(actualOutput, expectedOutput, "Output amount incorrect for large values");
     }
 }

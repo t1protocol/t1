@@ -6,6 +6,7 @@ import { OwnableUpgradeable } from "@openzeppelin/contracts-upgradeable/access/O
 import { IERC20Upgradeable } from "@openzeppelin/contracts-upgradeable/token/ERC20/IERC20Upgradeable.sol";
 import { IERC20MetadataUpgradeable } from
     "@openzeppelin/contracts-upgradeable/token/ERC20/extensions/IERC20MetadataUpgradeable.sol";
+import "@openzeppelin/contracts/utils/math/Math.sol";
 import { SafeERC20Upgradeable } from "@openzeppelin/contracts-upgradeable/token/ERC20/utils/SafeERC20Upgradeable.sol";
 import { IAllowanceTransfer } from "@uniswap/permit2/src/interfaces/IAllowanceTransfer.sol";
 import { ISignatureTransfer } from "@uniswap/permit2/src/interfaces/ISignatureTransfer.sol";
@@ -151,17 +152,22 @@ contract L1GatewayRouter is OwnableUpgradeable, IL1GatewayRouter {
         uint8 inputDecimals = IERC20MetadataUpgradeable(inputToken).decimals();
         uint8 outputDecimals = IERC20MetadataUpgradeable(outputToken).decimals();
 
-        // Normalize the amount to `outputToken`'s decimals
+        // Normalize `inputAmount` to match `outputToken` decimals
         if (inputDecimals > outputDecimals) {
-            outputAmount = (inputAmount * providedRate * (10 ** outputDecimals)) / (10 ** inputDecimals) / 1e18;
+            unchecked {
+                outputAmount = Math.mulDiv(inputAmount, providedRate, 1e18 * (10 ** (inputDecimals - outputDecimals)));
+            }
         } else {
-            outputAmount = (inputAmount * providedRate * (10 ** (outputDecimals - inputDecimals))) / 1e18;
+            unchecked {
+                outputAmount = Math.mulDiv(inputAmount, providedRate * (10 ** (outputDecimals - inputDecimals)), 1e18);
+            }
         }
 
         require(outputAmount > 0, "Output amount must be > than 0");
 
         // Validate the defaultERC20Gateway has enough reserves of the output token
-        uint256 outputTokenBalance = IERC20Upgradeable(outputToken).balanceOf(defaultERC20Gateway);
+        uint256 outputTokenBalance = IERC20MetadataUpgradeable(outputToken).balanceOf(defaultERC20Gateway);
+
         require(outputAmount <= outputTokenBalance, "Insufficient reserves");
     }
 
