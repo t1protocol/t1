@@ -65,6 +65,12 @@ request made to the `develop` branch.
 
 You can edit the CI script in [contracts.yml](../.github/workflows/contracts.yml).
 
+## Install Foundry
+
+```
+curl -L https://foundry.paradigm.xyz | bash
+```
+
 ## Installing Dependencies
 
 Foundry typically uses git submodules to manage dependencies, but this project uses Node.js packages because
