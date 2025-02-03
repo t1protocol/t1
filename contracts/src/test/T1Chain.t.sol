@@ -2,6 +2,8 @@
 
 pragma solidity >=0.8.28;
 
+import "forge-std/Test.sol";
+import "forge-std/console.sol";
 import { DSTestPlus } from "solmate/test/utils/DSTestPlus.sol";
 import { ProxyAdmin } from "@openzeppelin/contracts/proxy/transparent/ProxyAdmin.sol";
 import {
@@ -1641,4 +1643,59 @@ contract T1ChainTest is DSTestPlus {
         TransparentUpgradeableProxy proxy = new TransparentUpgradeableProxy(_logic, address(admin), new bytes(0));
         return address(proxy);
     }
+}
+
+contract BatchFinalizerTest is Test {
+    T1Chain batchFinalizer;
+
+    // Test addresses
+    uint64 chainId = 1; // Set a valid test chain ID
+    address messageQueue = address(0x1001); // Mock address for message queue
+    address verifier = address(0x1002); // Mock address for verifier
+    address validSigner = address(0xB9118A1C36B8BADB74908301b7f3b58913f3F40F);
+    address attacker = address(0x123456); // An unauthorized address
+
+    function setUp() public {
+        batchFinalizer = new T1Chain(chainId, messageQueue, verifier); // Pass required constructor parameters
+    }
+
+
+
+    function testFinalizeBatchWithValidSignature() public {
+    bytes32 withdrawRoot = keccak256(abi.encodePacked("valid_withdraw_root"));
+    bytes32 ethSignedMessageHash = keccak256(
+        abi.encodePacked("\x19Ethereum Signed Message:\n32", withdrawRoot)
+    );
+
+    bytes memory signature = signMessage(validSigner, withdrawRoot);
+
+    vm.prank(validSigner);
+    batchFinalizer.finalizeBatchWithProof(withdrawRoot, signature);
+}
+
+    function testFinalizeBatchWithInvalidSignature() public {
+        bytes32 withdrawRoot = keccak256(abi.encodePacked("invalid_withdraw_root"));
+        bytes memory invalidSignature = new bytes(65);	
+
+        vm.expectRevert("Invalid signature");
+        batchFinalizer.finalizeBatchWithProof(withdrawRoot, invalidSignature);
+    }
+
+    function signMessage(address signer, bytes32 message) internal returns (bytes memory) {
+        // Prefix the message as Ethereum wallets do
+        bytes32 ethSignedMessageHash = keccak256(
+            abi.encodePacked("\x19Ethereum Signed Message:\n32", message)
+        );
+
+        // Sign the prefixed hash
+        (uint8 v, bytes32 r, bytes32 s) = vm.sign(uint256(uint160(signer)), ethSignedMessageHash);
+
+        // Ensure v is in the correct range (27/28)
+        if (v < 27) {
+            v += 27;
+        }
+
+        return abi.encodePacked(r, s, v);
+    }
+
 }

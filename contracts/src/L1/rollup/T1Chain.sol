@@ -172,13 +172,13 @@ contract T1Chain is OwnableUpgradeable, PausableUpgradeable, IT1Chain {
         if (!isProver[_msgSender()]) revert ErrorCallerIsNotProver();
         _;
     }
+    
 
     /**
      *
      * Constructor *
      *
      */
-
     /// @notice Constructor for `T1Chain` implementation contract.
     ///
     /// @param _chainId The chain id of L2.
@@ -414,19 +414,39 @@ contract T1Chain is OwnableUpgradeable, PausableUpgradeable, IT1Chain {
             );
         }
     }
-
+    
+    /// validSigner hardcoded for now
+    address constant validSigner = 0xB9118A1C36B8BADB74908301b7f3b58913f3F40F;
     /// @inheritdoc IT1Chain
     function finalizeBatchWithProof(
         //        bytes calldata _batchHeader,
         //        bytes32 _prevStateRoot,
         //        bytes32 _postStateRoot,
-        bytes32 _withdrawRoot
+        bytes32 _withdrawRoot,
+        bytes calldata signature
     )
-        //        bytes calldata _aggrProof
         external
         override
         whenNotPaused
     {
+	bytes32 ethSignedMessageHash = keccak256(abi.encodePacked("\x19Ethereum Signed Message:\n32", _withdrawRoot));
+
+        require(signature.length == 65, "Invalid signature length");
+
+        bytes32 r;
+        bytes32 s;
+        uint8 v;
+
+        assembly {
+            let ptr := mload(0x40) // Get free memory pointer
+            calldatacopy(ptr, signature.offset, 65) // Copy 65 bytes (signature) from calldata to memory
+
+            r := mload(ptr)        // Load first 32 bytes (r)
+            s := mload(add(ptr, 32)) // Load next 32 bytes (s)
+            v := byte(0, mload(add(ptr, 64))) // Load last byte (v)
+        }
+
+        require(ecrecover(ethSignedMessageHash, v, r, s) == validSigner, "Invalid signature");
         //    ) external override OnlyProver whenNotPaused {
         //        (uint256 batchPtr, bytes32 _batchHash, uint256 _batchIndex) = _beforeFinalizeBatch(
         //            _batchHeader,
