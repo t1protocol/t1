@@ -168,7 +168,7 @@ contract L1GatewayRouter is OwnableUpgradeable, IL1GatewayRouter {
         // Validate the defaultERC20Gateway has enough reserves of the output token
         uint256 outputTokenBalance = IERC20MetadataUpgradeable(outputToken).balanceOf(defaultERC20Gateway);
 
-        require(outputAmount <= outputTokenBalance, "Insufficient reserves");
+        require(outputAmount < outputTokenBalance, "Insufficient reserves");
     }
 
     /**
