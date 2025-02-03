@@ -5,16 +5,16 @@ pragma solidity >=0.8.28;
 import { ClonesUpgradeable } from "@openzeppelin/contracts-upgradeable/proxy/ClonesUpgradeable.sol";
 import { IERC20MetadataUpgradeable } from
     "@openzeppelin/contracts-upgradeable/token/ERC20/extensions/IERC20MetadataUpgradeable.sol";
+import { IAllowanceTransfer } from "@uniswap/permit2/src/interfaces/IAllowanceTransfer.sol";
 
 import { IL2ERC20Gateway } from "../../L2/gateways/IL2ERC20Gateway.sol";
 import { IL1T1Messenger } from "../IL1T1Messenger.sol";
 import { IL1ERC20Gateway } from "./IL1ERC20Gateway.sol";
 import { IL1StandardERC20Gateway } from "./IL1StandardERC20Gateway.sol";
+import { IL1GatewayRouter } from "../../L1/gateways/IL1GatewayRouter.sol";
 
 import { T1GatewayBase } from "../../libraries/gateway/T1GatewayBase.sol";
 import { L1ERC20Gateway } from "./L1ERC20Gateway.sol";
-
-import { IAllowanceTransfer } from "@uniswap/permit2/src/interfaces/IAllowanceTransfer.sol";
 
 /// @title L1StandardERC20Gateway
 /// @notice The `L1StandardERC20Gateway` is used to deposit standard ERC20 tokens on layer 1 and
@@ -48,9 +48,6 @@ contract L1StandardERC20Gateway is L1ERC20Gateway, IL1StandardERC20Gateway {
     /// pass deploy data on first call to the token.
     mapping(address => address) private tokenMapping;
 
-    /// @notice The Permit2 `AllowanceTransfer` contract.
-    address public allowanceTransfer;
-
     /**
      *
      * Constructor *
@@ -64,21 +61,16 @@ contract L1StandardERC20Gateway is L1ERC20Gateway, IL1StandardERC20Gateway {
     /// @param _messenger The address of `L1T1Messenger` contract in L1.
     /// @param _l2TokenImplementation The address of `T1StandardERC20` implementation in L2.
     /// @param _l2TokenFactory The address of `T1StandardERC20Factory` contract in L2.
-    /// @param _l1AllowanceTransfer The Permit2 `AllowanceTransfer` contract in L1.
     constructor(
         address _counterpart,
         address _router,
         address _messenger,
         address _l2TokenImplementation,
-        address _l2TokenFactory,
-        address _l1AllowanceTransfer
+        address _l2TokenFactory
     )
         T1GatewayBase(_counterpart, _router, _messenger)
     {
-        if (
-            _router == address(0) || _l2TokenImplementation == address(0) || _l2TokenFactory == address(0)
-                || _l1AllowanceTransfer == address(0)
-        ) {
+        if (_router == address(0) || _l2TokenImplementation == address(0) || _l2TokenFactory == address(0)) {
             revert ErrorZeroAddress();
         }
 
@@ -86,27 +78,11 @@ contract L1StandardERC20Gateway is L1ERC20Gateway, IL1StandardERC20Gateway {
 
         l2TokenImplementation = _l2TokenImplementation;
         l2TokenFactory = _l2TokenFactory;
-        allowanceTransfer = _l1AllowanceTransfer;
     }
 
     /// @notice Initialize the storage of L1StandardERC20Gateway.
     function initialize() external initializer {
         T1GatewayBase._initialize();
-    }
-
-    /**
-     *
-     * Public Mutating Functions *
-     *
-     */
-
-    /// @inheritdoc IL1StandardERC20Gateway
-    function allowRouterToTransfer(address token, uint160 amount, uint48 expiration) external {
-        require(token != address(0), "Invalid token address");
-        require(expiration > block.timestamp, "Expiration must be in the future");
-
-        // Call the Permit2 `approve` method to grant allowance to the router
-        IAllowanceTransfer(allowanceTransfer).approve(token, T1GatewayBase.router, amount, expiration);
     }
 
     /**
@@ -126,16 +102,17 @@ contract L1StandardERC20Gateway is L1ERC20Gateway, IL1StandardERC20Gateway {
 
     /**
      *
-     * Restricted Functions *
+     * Public Mutating Functions *
      *
      */
 
     /// @inheritdoc IL1StandardERC20Gateway
-    function setAllowanceTransfer(address _newAllowanceTransfer) external onlyOwner {
-        address _oldAllowanceTransfer = allowanceTransfer;
-        allowanceTransfer = _newAllowanceTransfer;
+    function allowRouterToTransfer(address token, uint160 amount, uint48 expiration) external {
+        require(token != address(0), "Invalid token address");
+        require(expiration > block.timestamp, "Expiration must be in the future");
 
-        emit SetAllowanceTransfer(_oldAllowanceTransfer, _newAllowanceTransfer);
+        // Call the Permit2 `approve` method to grant allowance to the router
+        IAllowanceTransfer(IL1GatewayRouter(router).permit2()).approve(token, T1GatewayBase.router, amount, expiration);
     }
 
     /**

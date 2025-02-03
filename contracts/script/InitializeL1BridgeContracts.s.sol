@@ -57,8 +57,7 @@ contract InitializeL1BridgeContracts is Script {
     address L2_T1_STANDARD_ERC20_ADDR = vm.envAddress("L2_T1_STANDARD_ERC20_ADDR");
     address L2_T1_STANDARD_ERC20_FACTORY_ADDR = vm.envAddress("L2_T1_STANDARD_ERC20_FACTORY_ADDR");
 
-    address L1_PERMIT2_ALLOWANCE_TRANSFER = vm.envAddress("L1_PERMIT2_ALLOWANCE_TRANSFER");
-    address L1_PERMIT2_SIGNATURE_TRANSFER = vm.envAddress("L1_PERMIT2_SIGNATURE_TRANSFER");
+    address L1_PERMIT2 = vm.envAddress("L1_PERMIT2");
 
     function run() external {
         ProxyAdmin proxyAdmin = ProxyAdmin(L1_PROXY_ADMIN_ADDR);
@@ -105,10 +104,7 @@ contract InitializeL1BridgeContracts is Script {
 
         // initialize L1GatewayRouter
         L1GatewayRouter(L1_GATEWAY_ROUTER_PROXY_ADDR).initialize(
-            L1_ETH_GATEWAY_PROXY_ADDR,
-            L1_STANDARD_ERC20_GATEWAY_PROXY_ADDR,
-            L1_PERMIT2_ALLOWANCE_TRANSFER,
-            L1_PERMIT2_SIGNATURE_TRANSFER
+            L1_ETH_GATEWAY_PROXY_ADDR, L1_STANDARD_ERC20_GATEWAY_PROXY_ADDR, L1_PERMIT2
         );
 
         // initialize L1ETHGateway

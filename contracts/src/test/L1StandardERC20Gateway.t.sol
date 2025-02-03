@@ -3,8 +3,13 @@
 pragma solidity >=0.8.28;
 
 import { MockERC20 } from "solmate/test/utils/mocks/MockERC20.sol";
+import { DSTestPlus } from "solmate/test/utils/DSTestPlus.sol";
+import { StdUtils } from "forge-std/StdUtils.sol";
+import { console } from "forge-std/console.sol";
 
 import { ITransparentUpgradeableProxy } from "@openzeppelin/contracts/proxy/transparent/TransparentUpgradeableProxy.sol";
+import { DeployPermit2 } from "@uniswap/permit2/test/utils/DeployPermit2.sol";
+import { IAllowanceTransfer } from "@uniswap/permit2/src/interfaces/IAllowanceTransfer.sol";
 
 import { L1GatewayRouter } from "../L1/gateways/L1GatewayRouter.sol";
 import { IL1ERC20Gateway, L1StandardERC20Gateway } from "../L1/gateways/L1StandardERC20Gateway.sol";
@@ -21,7 +26,7 @@ import { TransferReentrantToken } from "./mocks/tokens/TransferReentrantToken.so
 import { FeeOnTransferToken } from "./mocks/tokens/FeeOnTransferToken.sol";
 import { MockGatewayRecipient } from "./mocks/MockGatewayRecipient.sol";
 
-contract L1StandardERC20GatewayTest is L1GatewayTestBase {
+contract L1StandardERC20GatewayTest is L1GatewayTestBase, DeployPermit2 {
     // from L1StandardERC20Gateway
     event FinalizeWithdrawERC20(
         address indexed _l1Token,
@@ -54,8 +59,13 @@ contract L1StandardERC20GatewayTest is L1GatewayTestBase {
     TransferReentrantToken private reentrantToken;
     FeeOnTransferToken private feeToken;
 
+    address permit2;
+
     function setUp() public {
         __L1GatewayTestBase_setUp();
+
+        // Deploy Permit2
+        permit2 = DeployPermit2.deployPermit2();
 
         // Deploy tokens
         l1Token = new MockERC20("Mock", "M", 18);
@@ -73,7 +83,7 @@ contract L1StandardERC20GatewayTest is L1GatewayTestBase {
 
         // Initialize L1 contracts
         gateway.initialize();
-        router.initialize(address(0), address(gateway), address(0), address(0));
+        router.initialize(address(0), address(gateway), permit2);
 
         // Prepare token balances
         l2Token = MockERC20(gateway.getL2ERC20Address(address(l1Token)));
@@ -105,6 +115,24 @@ contract L1StandardERC20GatewayTest is L1GatewayTestBase {
         assertEq(
             gateway.getL2ERC20Address(l1Address), factory.computeL2TokenAddress(address(counterpartGateway), l1Address)
         );
+    }
+
+    function testAllowRouterToTransfer(address token, uint160 amount, uint48 expiration) public {
+        hevm.expectRevert("Invalid token address");
+        gateway.allowRouterToTransfer(address(0), amount, expiration);
+
+        hevm.assume(token != address(0));
+        hevm.expectRevert("Expiration must be in the future");
+        gateway.allowRouterToTransfer(token, amount, uint48(block.timestamp - 1));
+
+        hevm.assume(token != address(0));
+        hevm.assume(expiration > block.timestamp);
+        gateway.allowRouterToTransfer(token, amount, expiration);
+        (uint160 _amount, uint48 _expiration, uint48 _nonce) =
+            IAllowanceTransfer(permit2).allowance(address(gateway), address(token), address(router));
+        assertEq(amount, _amount);
+        assertEq(expiration, _expiration);
+        assertEq(0, _nonce);
     }
 
     function testDepositERC20(uint256 amount, uint256 gasLimit, uint256 feePerGas) public {
@@ -699,10 +727,23 @@ contract L1StandardERC20GatewayTest is L1GatewayTestBase {
                     address(router),
                     address(messenger),
                     address(template),
-                    address(factory),
-                    address(1)
+                    address(factory)
                 )
             )
         );
+    }
+
+    // Override to prefer DSTestPlus bouns()
+    function bound(
+        uint256 x,
+        uint256 min,
+        uint256 max
+    )
+        internal
+        pure
+        override(DSTestPlus, StdUtils)
+        returns (uint256)
+    {
+        return StdUtils.bound(x, min, max); // Explicitly choose DSTestPlus version
     }
 }

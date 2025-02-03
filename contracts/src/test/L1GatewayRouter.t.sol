@@ -2,10 +2,10 @@
 
 pragma solidity >=0.8.28;
 
-import "@openzeppelin/contracts/utils/math/Math.sol";
 import { MockERC20 } from "solmate/test/utils/mocks/MockERC20.sol";
 
 import { ITransparentUpgradeableProxy } from "@openzeppelin/contracts/proxy/transparent/TransparentUpgradeableProxy.sol";
+import { Math } from "@openzeppelin/contracts/utils/math/Math.sol";
 
 import { L1ETHGateway } from "../L1/gateways/L1ETHGateway.sol";
 import { IL1GatewayRouter } from "../L1/gateways/IL1GatewayRouter.sol";
@@ -63,8 +63,7 @@ contract L1GatewayRouterTest is L1GatewayTestBase {
                     address(router),
                     address(l1Messenger),
                     address(template),
-                    address(factory),
-                    address(1)
+                    address(factory)
                 )
             )
         );
@@ -76,7 +75,7 @@ contract L1GatewayRouterTest is L1GatewayTestBase {
         // Initialize L1 contracts
         l1StandardERC20Gateway.initialize();
         l1ETHGateway.initialize();
-        router.initialize(address(l1ETHGateway), address(l1StandardERC20Gateway), address(1), address(1));
+        router.initialize(address(l1ETHGateway), address(l1StandardERC20Gateway), address(1));
 
         aave.mint(address(l1StandardERC20Gateway), 1e21); // 1,000 AAVE
         dai.mint(address(l1StandardERC20Gateway), 1e21); // 1,000 DAI
@@ -96,7 +95,7 @@ contract L1GatewayRouterTest is L1GatewayTestBase {
         assertEq(address(l1StandardERC20Gateway), router.getERC20Gateway(address(l1Token)));
 
         hevm.expectRevert("Initializable: contract is already initialized");
-        router.initialize(address(l1ETHGateway), address(l1StandardERC20Gateway), address(0), address(0));
+        router.initialize(address(l1ETHGateway), address(l1StandardERC20Gateway), address(0));
     }
 
     function testSetEthGateway() public {
@@ -133,32 +132,18 @@ contract L1GatewayRouterTest is L1GatewayTestBase {
         assertEq(address(l1StandardERC20Gateway), router.defaultERC20Gateway());
     }
 
-    function testSetSignatureTransfer() public {
+    function testSetPermit2() public {
         hevm.startPrank(address(1));
         hevm.expectRevert("Ownable: caller is not the owner");
-        router.setSignatureTransfer(address(2));
+        router.setPermit2(address(2));
         hevm.stopPrank();
 
         // set by owner, should succeed
         hevm.expectEmit(true, true, true, true);
-        emit IL1GatewayRouter.SetSignatureTransfer(address(1), address(2));
+        emit IL1GatewayRouter.SetPermit2(address(1), address(2));
 
-        router.setSignatureTransfer(address(2));
-        assertEq(address(2), router.signatureTransfer());
-    }
-
-    function testSetAllowanceTransfer() public {
-        hevm.startPrank(address(1));
-        hevm.expectRevert("Ownable: caller is not the owner");
-        router.setAllowanceTransfer(address(2));
-        hevm.stopPrank();
-
-        // set by owner, should succeed
-        hevm.expectEmit(true, true, true, true);
-        emit IL1GatewayRouter.SetAllowanceTransfer(address(1), address(2));
-
-        router.setAllowanceTransfer(address(2));
-        assertEq(address(2), router.allowanceTransfer());
+        router.setPermit2(address(2));
+        assertEq(address(2), router.permit2());
     }
 
     function testSetERC20Gateway() public {

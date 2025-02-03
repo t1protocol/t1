@@ -6,7 +6,7 @@ import { OwnableUpgradeable } from "@openzeppelin/contracts-upgradeable/access/O
 import { IERC20Upgradeable } from "@openzeppelin/contracts-upgradeable/token/ERC20/IERC20Upgradeable.sol";
 import { IERC20MetadataUpgradeable } from
     "@openzeppelin/contracts-upgradeable/token/ERC20/extensions/IERC20MetadataUpgradeable.sol";
-import "@openzeppelin/contracts/utils/math/Math.sol";
+import { Math } from "@openzeppelin/contracts/utils/math/Math.sol";
 import { SafeERC20Upgradeable } from "@openzeppelin/contracts-upgradeable/token/ERC20/utils/SafeERC20Upgradeable.sol";
 import { IAllowanceTransfer } from "@uniswap/permit2/src/interfaces/IAllowanceTransfer.sol";
 import { ISignatureTransfer } from "@uniswap/permit2/src/interfaces/ISignatureTransfer.sol";
@@ -42,11 +42,8 @@ contract L1GatewayRouter is OwnableUpgradeable, IL1GatewayRouter {
     /// @notice The address of gateway in current execution context.
     address public gatewayInContext;
 
-    /// @notice The Permit2 `SignatureTransfer` contract.
-    address public signatureTransfer;
-
-    /// @notice The Permit2 `AllowanceTransfer` contract.
-    address public allowanceTransfer;
+    /// @notice The Permit2 contract.
+    address public permit2;
 
     /**
      *
@@ -75,17 +72,8 @@ contract L1GatewayRouter is OwnableUpgradeable, IL1GatewayRouter {
     /// @notice Initialize the storage of L1GatewayRouter.
     /// @param _ethGateway The address of L1ETHGateway contract.
     /// @param _defaultERC20Gateway The address of default ERC20 Gateway contract.
-    /// @param _signatureTransfer The address of the `SignatureTransfer` contract.
-    /// @param _allowanceTransfer The address of the `AllowanceTransfer` contract.
-    function initialize(
-        address _ethGateway,
-        address _defaultERC20Gateway,
-        address _allowanceTransfer,
-        address _signatureTransfer
-    )
-        external
-        initializer
-    {
+    /// @param _permit2 The address of the Permit2 contract.
+    function initialize(address _ethGateway, address _defaultERC20Gateway, address _permit2) external initializer {
         OwnableUpgradeable.__Ownable_init();
 
         // it can be zero during initialization
@@ -101,15 +89,9 @@ contract L1GatewayRouter is OwnableUpgradeable, IL1GatewayRouter {
         }
 
         // it can be zero during initialization
-        if (_signatureTransfer != address(0)) {
-            signatureTransfer = _signatureTransfer;
-            emit SetSignatureTransfer(address(0), _signatureTransfer);
-        }
-
-        // it can be zero during initialization
-        if (_allowanceTransfer != address(0)) {
-            allowanceTransfer = _allowanceTransfer;
-            emit SetAllowanceTransfer(address(0), _allowanceTransfer);
+        if (_permit2 != address(0)) {
+            permit2 = _permit2;
+            emit SetPermit2(address(0), _permit2);
         }
     }
 
@@ -235,7 +217,7 @@ contract L1GatewayRouter is OwnableUpgradeable, IL1GatewayRouter {
         );
 
         // Use AllowanceTransfer to transfer the output tokens from the defaultERC20Gateway to the `owner` address
-        IAllowanceTransfer(allowanceTransfer).transferFrom(
+        IAllowanceTransfer(permit2).transferFrom(
             defaultERC20Gateway, ownerMemory, uint160(outputAmount_), outputTokenMemory
         );
 
@@ -382,19 +364,11 @@ contract L1GatewayRouter is OwnableUpgradeable, IL1GatewayRouter {
     }
 
     /// @inheritdoc IL1GatewayRouter
-    function setSignatureTransfer(address _newSignatureTransfer) external onlyOwner {
-        address _oldSignatureTransfer = signatureTransfer;
-        signatureTransfer = _newSignatureTransfer;
+    function setPermit2(address _newPermit2) external onlyOwner {
+        address _oldPermit2 = permit2;
+        permit2 = _newPermit2;
 
-        emit SetSignatureTransfer(_oldSignatureTransfer, _newSignatureTransfer);
-    }
-
-    /// @inheritdoc IL1GatewayRouter
-    function setAllowanceTransfer(address _newAllowanceTransfer) external onlyOwner {
-        address _oldAllowanceTransfer = allowanceTransfer;
-        allowanceTransfer = _newAllowanceTransfer;
-
-        emit SetAllowanceTransfer(_oldAllowanceTransfer, _newAllowanceTransfer);
+        emit SetPermit2(_oldPermit2, _newPermit2);
     }
 
     /**
@@ -414,7 +388,7 @@ contract L1GatewayRouter is OwnableUpgradeable, IL1GatewayRouter {
     )
         internal
     {
-        ISignatureTransfer(signatureTransfer).permitWitnessTransferFrom(
+        ISignatureTransfer(permit2).permitWitnessTransferFrom(
             ISignatureTransfer.PermitTransferFrom({
                 permitted: ISignatureTransfer.TokenPermissions({ token: inputToken, amount: inputAmount }),
                 nonce: nonce,

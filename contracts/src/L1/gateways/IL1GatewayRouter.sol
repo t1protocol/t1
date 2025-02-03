@@ -46,15 +46,10 @@ interface IL1GatewayRouter is IL1ETHGateway, IL1ERC20Gateway {
         uint256 rate
     );
 
-    /// @notice Emitted when the address of SignatureTransfer is updated.
-    /// @param oldSignatureTransfer The address of the old SignatureTransfer.
-    /// @param newSignatureTransfer The address of the new SignatureTransfer.
-    event SetSignatureTransfer(address indexed oldSignatureTransfer, address indexed newSignatureTransfer);
-
-    /// @notice Emitted when the address of AllowanceTransfer is updated.
-    /// @param oldAllowanceTransfer The address of the old AllowanceTransfer.
-    /// @param newAllowanceTransfer The address of the new AllowanceTransfer.
-    event SetAllowanceTransfer(address indexed oldAllowanceTransfer, address indexed newAllowanceTransfer);
+    /// @notice Emitted when the address of Permit2 is updated.
+    /// @param oldPermit2 The address of the old Permit2.
+    /// @param newPermit2 The address of the new Permit2.
+    event SetPermit2(address indexed oldPermit2, address indexed newPermit2);
 
     /**
      *
@@ -65,6 +60,9 @@ interface IL1GatewayRouter is IL1ETHGateway, IL1ERC20Gateway {
     /// @notice Return the corresponding gateway address for given token address.
     /// @param _token The address of token to query.
     function getERC20Gateway(address _token) external view returns (address);
+
+    /// @notice Return the current Allowance Transfer contract address
+    function permit2() external view returns (address);
 
     /// @notice Return output amount for the provided rate
     /// @param inputToken The address of the token being swapped.
@@ -137,13 +135,8 @@ interface IL1GatewayRouter is IL1ETHGateway, IL1ERC20Gateway {
     /// @param _gateways The list of addresses of gateways to update.
     function setERC20Gateway(address[] calldata _tokens, address[] calldata _gateways) external;
 
-    /// @notice Update the address of SignatureTransfer contract.
+    /// @notice Update the address of Permit2 contract.
     /// @dev This function should only be called by contract owner.
-    /// @param _signatureTransfer The address to update.
-    function setSignatureTransfer(address _signatureTransfer) external;
-
-    /// @notice Update the address of AllowanceTransfer contract.
-    /// @dev This function should only be called by contract owner.
-    /// @param _allowanceTransfer The address to update.
-    function setAllowanceTransfer(address _allowanceTransfer) external;
+    /// @param _newPermit2 The address to update.
+    function setPermit2(address _newPermit2) external;
 }

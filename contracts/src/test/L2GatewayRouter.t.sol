@@ -45,9 +45,8 @@ contract L2GatewayRouterTest is L2GatewayTestBase {
         factory = new T1StandardERC20Factory(address(template));
 
         // Deploy L1 contracts
-        l1StandardERC20Gateway = new L1StandardERC20Gateway(
-            address(1), address(1), address(1), address(template), address(factory), address(1)
-        );
+        l1StandardERC20Gateway =
+            new L1StandardERC20Gateway(address(1), address(1), address(1), address(template), address(factory));
         l1ETHGateway = new L1ETHGateway(address(1), address(1), address(1));
 
         // Deploy L2 contracts
