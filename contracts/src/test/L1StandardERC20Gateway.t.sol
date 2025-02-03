@@ -5,7 +5,6 @@ pragma solidity >=0.8.28;
 import { MockERC20 } from "solmate/test/utils/mocks/MockERC20.sol";
 import { DSTestPlus } from "solmate/test/utils/DSTestPlus.sol";
 import { StdUtils } from "forge-std/StdUtils.sol";
-import { console } from "forge-std/console.sol";
 
 import { ITransparentUpgradeableProxy } from "@openzeppelin/contracts/proxy/transparent/TransparentUpgradeableProxy.sol";
 import { DeployPermit2 } from "@uniswap/permit2/test/utils/DeployPermit2.sol";
@@ -59,7 +58,7 @@ contract L1StandardERC20GatewayTest is L1GatewayTestBase, DeployPermit2 {
     TransferReentrantToken private reentrantToken;
     FeeOnTransferToken private feeToken;
 
-    address permit2;
+    address private permit2;
 
     function setUp() public {
         __L1GatewayTestBase_setUp();
@@ -733,7 +732,7 @@ contract L1StandardERC20GatewayTest is L1GatewayTestBase, DeployPermit2 {
         );
     }
 
-    // Override to prefer DSTestPlus bouns()
+    // Override to prefer StdUtils bouns()
     function bound(
         uint256 x,
         uint256 min,
@@ -744,6 +743,6 @@ contract L1StandardERC20GatewayTest is L1GatewayTestBase, DeployPermit2 {
         override(DSTestPlus, StdUtils)
         returns (uint256)
     {
-        return StdUtils.bound(x, min, max); // Explicitly choose DSTestPlus version
+        return StdUtils.bound(x, min, max); // Explicitly choose StdUtils version
     }
 }

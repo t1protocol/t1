@@ -200,26 +200,26 @@ contract L1GatewayRouter is OwnableUpgradeable, IL1GatewayRouter {
         require(providedRateMemory > 0, "Rate must be > than 0");
         require(ownerMemory != address(0), "Invalid owner address");
 
-        // TODO decode and check witness?
+        // TODO decode and check owner,outputToken and expected outputTokenAmount from witness
 
         uint256 outputAmount_ = calculateOutputAmount(inputToken, inputAmount, outputTokenMemory, providedRateMemory);
 
         // Use Permit2 to validate and transfer input tokens from `owner` to the defaultERC20Gateway
-        _permitWitnessTransfer(
-            inputToken,
-            inputAmount,
-            nonce,
-            deadline,
-            ownerMemory,
-            witnessMemory,
-            witnessTypeStringMemory,
-            permitSignatureMemory
-        );
+        // _permitWitnessTransfer(
+        //     inputToken,
+        //     inputAmount,
+        //     nonce,
+        //     deadline,
+        //     ownerMemory,
+        //     witnessMemory,
+        //     witnessTypeStringMemory,
+        //     permitSignatureMemory
+        // );
 
-        // Use AllowanceTransfer to transfer the output tokens from the defaultERC20Gateway to the `owner` address
-        IAllowanceTransfer(permit2).transferFrom(
-            defaultERC20Gateway, ownerMemory, uint160(outputAmount_), outputTokenMemory
-        );
+        // // Use AllowanceTransfer to transfer the output tokens from the defaultERC20Gateway to the `owner` address
+        // IAllowanceTransfer(permit2).transferFrom(
+        //     defaultERC20Gateway, ownerMemory, uint160(outputAmount_), outputTokenMemory
+        // );
 
         emit Swap(ownerMemory, inputToken, outputTokenMemory, inputAmount, outputAmount_, providedRateMemory);
 
