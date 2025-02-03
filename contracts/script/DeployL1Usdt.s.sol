@@ -6,7 +6,7 @@ import { Script } from "forge-std/Script.sol";
 import { console } from "forge-std/console.sol";
 
 import { WrappedEther } from "../src/L2/predeploys/WrappedEther.sol";
-import {Usdt} from "../src/libraries/token/Usdt.sol";
+import { Usdt } from "../src/libraries/token/Usdt.sol";
 
 contract DeployL1Usdt is Script {
     function run() external {

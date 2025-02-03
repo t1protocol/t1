@@ -17,7 +17,8 @@ import { console } from "forge-std/console.sol";
 contract DepositWethFromL1ToL2 is Script {
     uint256 L1_DEPLOYER_PRIVATE_KEY = vm.envUint("L1_DEPLOYER_PRIVATE_KEY");
 
-    address payable L1_STANDARD_ERC20_GATEWAY_PROXY_ADDR = payable(vm.envAddress("L1_STANDARD_ERC20_GATEWAY_PROXY_ADDR"));
+    address payable L1_STANDARD_ERC20_GATEWAY_PROXY_ADDR =
+        payable(vm.envAddress("L1_STANDARD_ERC20_GATEWAY_PROXY_ADDR"));
 
     address payable L1_USDT_ADDR = payable(vm.envAddress("L1_USDT_ADDR"));
 
@@ -30,7 +31,8 @@ contract DepositWethFromL1ToL2 is Script {
 
         L1StandardERC20Gateway(L1_STANDARD_ERC20_GATEWAY_PROXY_ADDR).depositERC20(L1_USDT_ADDR, 0.01 ether, gasLimit);
 
-        address l2usdtAddress = L1StandardERC20Gateway(L1_STANDARD_ERC20_GATEWAY_PROXY_ADDR).getL2ERC20Address(L1_USDT_ADDR);
+        address l2usdtAddress =
+            L1StandardERC20Gateway(L1_STANDARD_ERC20_GATEWAY_PROXY_ADDR).getL2ERC20Address(L1_USDT_ADDR);
         logAddress("L2_USDT_ADDR", l2usdtAddress);
 
         vm.stopBroadcast();

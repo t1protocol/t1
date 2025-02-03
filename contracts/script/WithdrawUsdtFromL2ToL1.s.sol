@@ -15,7 +15,8 @@ import { L2StandardERC20Gateway } from "../src/L2/gateways/L2StandardERC20Gatewa
 contract DepositWethFromL1ToL2 is Script {
     uint256 L2_DEPLOYER_PRIVATE_KEY = vm.envUint("L2_DEPLOYER_PRIVATE_KEY");
 
-    address payable L2_STANDARD_ERC20_GATEWAY_PROXY_ADDR = payable(vm.envAddress("L2_STANDARD_ERC20_GATEWAY_PROXY_ADDR"));
+    address payable L2_STANDARD_ERC20_GATEWAY_PROXY_ADDR =
+        payable(vm.envAddress("L2_STANDARD_ERC20_GATEWAY_PROXY_ADDR"));
 
     address payable L2_USDT_ADDR = payable(vm.envAddress("L2_USDT_ADDR"));
 
