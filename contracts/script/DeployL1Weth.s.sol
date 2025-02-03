@@ -7,9 +7,8 @@ import { console } from "forge-std/console.sol";
 
 import { WrappedEther } from "../src/L2/predeploys/WrappedEther.sol";
 
-contract DeployWeth is Script {
+contract DeployL1Weth is Script {
     address L1_WETH_ADDR = vm.envAddress("L1_WETH_ADDR");
-    address L2_WETH_ADDR = vm.envAddress("L2_WETH_ADDR");
 
     function run() external {
         // deploy weth only if we're running a private L1 network
@@ -22,7 +21,6 @@ contract DeployWeth is Script {
         }
 
         logAddress("L1_WETH_ADDR", L1_WETH_ADDR);
-        logAddress("L2_WETH_ADDR", L2_WETH_ADDR);
     }
 
     function logAddress(string memory name, address addr) internal pure {
