@@ -15,7 +15,7 @@ import {T1StandardERC20} from "../src/libraries/token/T1StandardERC20.sol";
 contract DepositWethFromL1ToL2 is Script {
     uint256 L1_DEPLOYER_PRIVATE_KEY = vm.envUint("L1_DEPLOYER_PRIVATE_KEY");
 
-    address payable L2_STANDARD_ERC20_GATEWAY_PROXY_ADDR = payable(vm.envAddress("L2_STANDARD_ERC20_GATEWAY_PROXY_ADDR"));
+    address payable L1_STANDARD_ERC20_GATEWAY_PROXY_ADDR = payable(vm.envAddress("L1_STANDARD_ERC20_GATEWAY_PROXY_ADDR"));
 
     address payable L1_USDT_ADDR = payable(vm.envAddress("L1_USDT_ADDR"));
 
@@ -24,9 +24,9 @@ contract DepositWethFromL1ToL2 is Script {
 
         uint256 gasLimit = 1_000_000;
 
-        T1StandardERC20(L1_USDT_ADDR).approve(L2_STANDARD_ERC20_GATEWAY_PROXY_ADDR, 0.01 ether);
+        T1StandardERC20(L1_USDT_ADDR).approve(L1_STANDARD_ERC20_GATEWAY_PROXY_ADDR, 0.01 ether);
 
-        L1StandardERC20Gateway(L2_STANDARD_ERC20_GATEWAY_PROXY_ADDR).depositERC20(L1_USDT_ADDR, 0.01 ether, gasLimit);
+        L1StandardERC20Gateway(L1_STANDARD_ERC20_GATEWAY_PROXY_ADDR).depositERC20(L1_USDT_ADDR, 0.01 ether, gasLimit);
 
         vm.stopBroadcast();
     }
