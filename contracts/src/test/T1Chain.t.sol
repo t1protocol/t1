@@ -1659,23 +1659,19 @@ contract BatchFinalizerTest is Test {
         batchFinalizer = new T1Chain(chainId, messageQueue, verifier); // Pass required constructor parameters
     }
 
-
-
     function testFinalizeBatchWithValidSignature() public {
-    bytes32 withdrawRoot = keccak256(abi.encodePacked("valid_withdraw_root"));
-    bytes32 ethSignedMessageHash = keccak256(
-        abi.encodePacked("\x19Ethereum Signed Message:\n32", withdrawRoot)
-    );
+        bytes32 withdrawRoot = keccak256(abi.encodePacked("valid_withdraw_root"));
+        bytes32 ethSignedMessageHash = keccak256(abi.encodePacked("\x19Ethereum Signed Message:\n32", withdrawRoot));
 
-    bytes memory signature = signMessage(validSigner, withdrawRoot);
+        bytes memory signature = signMessage(validSigner, withdrawRoot);
 
-    vm.prank(validSigner);
-    batchFinalizer.finalizeBatchWithProof(withdrawRoot, signature);
-}
+        vm.prank(validSigner);
+        batchFinalizer.finalizeBatchWithProof(withdrawRoot, signature);
+    }
 
     function testFinalizeBatchWithInvalidSignature() public {
         bytes32 withdrawRoot = keccak256(abi.encodePacked("invalid_withdraw_root"));
-        bytes memory invalidSignature = new bytes(65);	
+        bytes memory invalidSignature = new bytes(65);
 
         vm.expectRevert("Invalid signature");
         batchFinalizer.finalizeBatchWithProof(withdrawRoot, invalidSignature);
@@ -1683,9 +1679,7 @@ contract BatchFinalizerTest is Test {
 
     function signMessage(address signer, bytes32 message) internal returns (bytes memory) {
         // Prefix the message as Ethereum wallets do
-        bytes32 ethSignedMessageHash = keccak256(
-            abi.encodePacked("\x19Ethereum Signed Message:\n32", message)
-        );
+        bytes32 ethSignedMessageHash = keccak256(abi.encodePacked("\x19Ethereum Signed Message:\n32", message));
 
         // Sign the prefixed hash
         (uint8 v, bytes32 r, bytes32 s) = vm.sign(uint256(uint160(signer)), ethSignedMessageHash);
@@ -1697,5 +1691,4 @@ contract BatchFinalizerTest is Test {
 
         return abi.encodePacked(r, s, v);
     }
-
 }

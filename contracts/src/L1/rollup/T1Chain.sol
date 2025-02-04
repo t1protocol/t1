@@ -172,7 +172,6 @@ contract T1Chain is OwnableUpgradeable, PausableUpgradeable, IT1Chain {
         if (!isProver[_msgSender()]) revert ErrorCallerIsNotProver();
         _;
     }
-    
 
     /**
      *
@@ -414,10 +413,11 @@ contract T1Chain is OwnableUpgradeable, PausableUpgradeable, IT1Chain {
             );
         }
     }
-    
+
     /// validSigner hardcoded for now
     address constant validSigner = 0xB9118A1C36B8BADB74908301b7f3b58913f3F40F;
     /// @inheritdoc IT1Chain
+
     function finalizeBatchWithProof(
         //        bytes calldata _batchHeader,
         //        bytes32 _prevStateRoot,
@@ -429,7 +429,7 @@ contract T1Chain is OwnableUpgradeable, PausableUpgradeable, IT1Chain {
         override
         whenNotPaused
     {
-	bytes32 ethSignedMessageHash = keccak256(abi.encodePacked("\x19Ethereum Signed Message:\n32", _withdrawRoot));
+        bytes32 ethSignedMessageHash = keccak256(abi.encodePacked("\x19Ethereum Signed Message:\n32", _withdrawRoot));
 
         require(signature.length == 65, "Invalid signature length");
 
@@ -441,7 +441,7 @@ contract T1Chain is OwnableUpgradeable, PausableUpgradeable, IT1Chain {
             let ptr := mload(0x40) // Get free memory pointer
             calldatacopy(ptr, signature.offset, 65) // Copy 65 bytes (signature) from calldata to memory
 
-            r := mload(ptr)        // Load first 32 bytes (r)
+            r := mload(ptr) // Load first 32 bytes (r)
             s := mload(add(ptr, 32)) // Load next 32 bytes (s)
             v := byte(0, mload(add(ptr, 64))) // Load last byte (v)
         }
