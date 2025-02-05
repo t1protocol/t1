@@ -32,6 +32,8 @@ services:
       --nat=publicip
       --authrpc.port=8551 --authrpc.jwtsecret=/root/jwt/jwtsecret --authrpc.addr=0.0.0.0
       --log.file.directory /root/logs
+    profiles:
+      - reth
 volumes:
   execution_data:
     driver: local
