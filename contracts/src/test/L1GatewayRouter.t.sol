@@ -13,7 +13,6 @@ import { Math } from "@openzeppelin/contracts/utils/math/Math.sol";
 
 import { DeployPermit2 } from "@uniswap/permit2/test/utils/DeployPermit2.sol";
 import { ISignatureTransfer } from "@uniswap/permit2/src/interfaces/ISignatureTransfer.sol";
-import { PermitSignature } from "@uniswap/permit2/test/utils/PermitSignature.sol";
 
 import { L1ETHGateway } from "../L1/gateways/L1ETHGateway.sol";
 import { IL1GatewayRouter } from "../L1/gateways/IL1GatewayRouter.sol";
@@ -27,6 +26,8 @@ import { T1StandardERC20Factory } from "../libraries/token/T1StandardERC20Factor
 import { L1GatewayTestBase } from "./L1GatewayTestBase.t.sol";
 
 import { TransferReentrantToken } from "./mocks/tokens/TransferReentrantToken.sol";
+
+import { PermitSignature } from "./utils/PermitSignature.sol";
 
 contract L1GatewayRouterTest is L1GatewayTestBase, DeployPermit2, PermitSignature {
     T1StandardERC20 private template;
@@ -263,7 +264,7 @@ contract L1GatewayRouterTest is L1GatewayTestBase, DeployPermit2, PermitSignatur
 
         // hevm.startPrank(address(router));
         // console.log(msg.sender, address(this), address(router));
-        bytes memory sig = getCompactPermitTransferSignature(
+        bytes memory sig = getPermitTransferSignature(
             permit, alicePrivateKey, ISignatureTransfer(permit2).DOMAIN_SEPARATOR(), address(router)
         );
         // hevm.stopPrank();
