@@ -2,11 +2,15 @@
 
 pragma solidity >=0.8.28;
 
-import { MockERC20 } from "solmate/test/utils/mocks/MockERC20.sol";
-import { DSTestPlus } from "solmate/test/utils/DSTestPlus.sol";
 import { StdUtils } from "forge-std/StdUtils.sol";
 
+import { MockERC20 } from "solmate/test/utils/mocks/MockERC20.sol";
+import { DSTestPlus } from "solmate/test/utils/DSTestPlus.sol";
+
 import { ITransparentUpgradeableProxy } from "@openzeppelin/contracts/proxy/transparent/TransparentUpgradeableProxy.sol";
+import { IERC20MetadataUpgradeable } from
+    "@openzeppelin/contracts-upgradeable/token/ERC20/extensions/IERC20MetadataUpgradeable.sol";
+
 import { DeployPermit2 } from "@uniswap/permit2/test/utils/DeployPermit2.sol";
 import { IAllowanceTransfer } from "@uniswap/permit2/src/interfaces/IAllowanceTransfer.sol";
 
@@ -116,22 +120,31 @@ contract L1StandardERC20GatewayTest is L1GatewayTestBase, DeployPermit2 {
         );
     }
 
-    function testAllowRouterToTransfer(address token, uint160 amount, uint48 expiration) public {
+    function testAllowRouterToTransfer(uint160 amount, uint48 expiration) public {
         hevm.expectRevert("Invalid token address");
         gateway.allowRouterToTransfer(address(0), amount, expiration);
 
-        hevm.assume(token != address(0));
         hevm.expectRevert("Expiration must be in the future");
-        gateway.allowRouterToTransfer(token, amount, uint48(block.timestamp - 1));
+        gateway.allowRouterToTransfer(address(l1Token), amount, uint48(block.timestamp - 1));
 
-        hevm.assume(token != address(0));
         hevm.assume(expiration > block.timestamp);
-        gateway.allowRouterToTransfer(token, amount, expiration);
+        gateway.allowRouterToTransfer(address(l1Token), amount, expiration);
+
         (uint160 _amount, uint48 _expiration, uint48 _nonce) =
-            IAllowanceTransfer(permit2).allowance(address(gateway), address(token), address(router));
+            IAllowanceTransfer(permit2).allowance(address(gateway), address(l1Token), address(router));
         assertEq(amount, _amount);
         assertEq(expiration, _expiration);
         assertEq(0, _nonce);
+    }
+
+    function testAllowRouterToTransferLowAllowance(uint48 expiration) public {
+        uint256 allowanceBefore = IERC20MetadataUpgradeable(address(l1Token)).allowance(address(gateway), permit2);
+
+        hevm.assume(expiration > block.timestamp);
+        gateway.allowRouterToTransfer(address(l1Token), type(uint160).max, expiration);
+
+        uint256 allowanceAfter = IERC20MetadataUpgradeable(address(l1Token)).allowance(address(gateway), permit2);
+        assertTrue(allowanceBefore < allowanceAfter);
     }
 
     function testDepositERC20(uint256 amount, uint256 gasLimit, uint256 feePerGas) public {

@@ -111,8 +111,15 @@ contract L1StandardERC20Gateway is L1ERC20Gateway, IL1StandardERC20Gateway {
         require(token != address(0), "Invalid token address");
         require(expiration > block.timestamp, "Expiration must be in the future");
 
+        address permit2 = IL1GatewayRouter(router).permit2();
+
+        // Give permissions to Permit2 if the current ones aren't enough
+        if (IERC20MetadataUpgradeable(token).allowance(address(this), permit2) < amount) {
+            IERC20MetadataUpgradeable(token).approve(permit2, type(uint160).max);
+        }
+
         // Call the Permit2 `approve` method to grant allowance to the router
-        IAllowanceTransfer(IL1GatewayRouter(router).permit2()).approve(token, T1GatewayBase.router, amount, expiration);
+        IAllowanceTransfer(permit2).approve(token, T1GatewayBase.router, amount, expiration);
     }
 
     /**
