@@ -217,9 +217,9 @@ contract L1GatewayRouter is OwnableUpgradeable, IL1GatewayRouter {
         // );
 
         // // Use AllowanceTransfer to transfer the output tokens from the defaultERC20Gateway to the `owner` address
-        // IAllowanceTransfer(permit2).transferFrom(
-        //     defaultERC20Gateway, ownerMemory, uint160(outputAmount_), outputTokenMemory
-        // );
+        IAllowanceTransfer(permit2).transferFrom(
+            defaultERC20Gateway, ownerMemory, uint160(outputAmount_), outputTokenMemory
+        );
 
         emit Swap(ownerMemory, inputToken, outputTokenMemory, inputAmount, outputAmount_, providedRateMemory);
 
