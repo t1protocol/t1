@@ -182,10 +182,9 @@ contract L1GatewayRouter is OwnableUpgradeable, IL1GatewayRouter {
         external
         returns (uint256 outputAmount)
     {
+        ISignatureTransfer.PermitTransferFrom memory permit_ = permit;
         address inputToken = permit.permitted.token;
         uint256 inputAmount = permit.permitted.amount;
-        uint256 nonce = permit.nonce;
-        uint256 deadline = permit.deadline;
         address outputTokenMemory = outputToken;
         uint256 providedRateMemory = providedRate;
         address ownerMemory = owner;
@@ -205,16 +204,13 @@ contract L1GatewayRouter is OwnableUpgradeable, IL1GatewayRouter {
         uint256 outputAmount_ = calculateOutputAmount(inputToken, inputAmount, outputTokenMemory, providedRateMemory);
 
         // Use Permit2 to validate and transfer input tokens from `owner` to the defaultERC20Gateway
-        // _permitWitnessTransfer(
-        //     inputToken,
-        //     inputAmount,
-        //     nonce,
-        //     deadline,
-        //     ownerMemory,
-        //     witnessMemory,
-        //     witnessTypeStringMemory,
-        //     permitSignatureMemory
-        // );
+        _permitTransfer(
+            permit_,
+            ownerMemory,
+            // witnessMemory,
+            // witnessTypeStringMemory,
+            permitSignatureMemory
+        );
 
         // // Use AllowanceTransfer to transfer the output tokens from the defaultERC20Gateway to the `owner` address
         IAllowanceTransfer(permit2).transferFrom(
@@ -376,28 +372,24 @@ contract L1GatewayRouter is OwnableUpgradeable, IL1GatewayRouter {
      * Internal Functions *
      *
      */
-    function _permitWitnessTransfer(
-        address inputToken,
-        uint256 inputAmount,
-        uint256 nonce,
-        uint256 deadline,
+    function _permitTransfer(
+        ISignatureTransfer.PermitTransferFrom memory permit,
         address owner,
-        bytes32 witness,
-        string calldata witnessTypeString,
+        // bytes32 witness,
+        // string calldata witnessTypeString,
         bytes calldata permitSignature
     )
         internal
     {
-        ISignatureTransfer(permit2).permitWitnessTransferFrom(
-            ISignatureTransfer.PermitTransferFrom({
-                permitted: ISignatureTransfer.TokenPermissions({ token: inputToken, amount: inputAmount }),
-                nonce: nonce,
-                deadline: deadline
+        ISignatureTransfer(permit2).permitTransferFrom(
+            permit,
+            ISignatureTransfer.SignatureTransferDetails({
+                to: defaultERC20Gateway,
+                requestedAmount: permit.permitted.amount
             }),
-            ISignatureTransfer.SignatureTransferDetails({ to: defaultERC20Gateway, requestedAmount: inputAmount }),
             owner,
-            witness,
-            witnessTypeString,
+            // witness,
+            // witnessTypeString,
             permitSignature
         );
     }

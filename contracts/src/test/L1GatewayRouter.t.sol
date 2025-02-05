@@ -10,8 +10,10 @@ import { DSTestPlus } from "solmate/test/utils/DSTestPlus.sol";
 
 import { ITransparentUpgradeableProxy } from "@openzeppelin/contracts/proxy/transparent/TransparentUpgradeableProxy.sol";
 import { Math } from "@openzeppelin/contracts/utils/math/Math.sol";
+
 import { DeployPermit2 } from "@uniswap/permit2/test/utils/DeployPermit2.sol";
 import { ISignatureTransfer } from "@uniswap/permit2/src/interfaces/ISignatureTransfer.sol";
+import { PermitSignature } from "@uniswap/permit2/test/utils/PermitSignature.sol";
 
 import { L1ETHGateway } from "../L1/gateways/L1ETHGateway.sol";
 import { IL1GatewayRouter } from "../L1/gateways/IL1GatewayRouter.sol";
@@ -26,7 +28,7 @@ import { L1GatewayTestBase } from "./L1GatewayTestBase.t.sol";
 
 import { TransferReentrantToken } from "./mocks/tokens/TransferReentrantToken.sol";
 
-contract L1GatewayRouterTest is L1GatewayTestBase, DeployPermit2 {
+contract L1GatewayRouterTest is L1GatewayTestBase, DeployPermit2, PermitSignature {
     T1StandardERC20 private template;
     T1StandardERC20Factory private factory;
 
@@ -240,33 +242,55 @@ contract L1GatewayRouterTest is L1GatewayTestBase, DeployPermit2 {
         router.requestERC20(_sender, _token, _amount);
     }
 
-    function testSwapERC20() public {
-        address alice = address(3);
+    function testSwapERC20Complete() public {
+        uint256 alicePrivateKey = 0xa11ce;
+        address alice = hevm.addr(alicePrivateKey);
+
         uint256 providedRate = 2e18;
+        uint256 inputTokenAmount = 2e18;
+
+        aave.mint(alice, inputTokenAmount);
+
+        hevm.startPrank(alice);
+        aave.approve(permit2, type(uint256).max);
+        hevm.stopPrank();
 
         ISignatureTransfer.PermitTransferFrom memory permit = ISignatureTransfer.PermitTransferFrom({
-            permitted: ISignatureTransfer.TokenPermissions({ token: address(aave), amount: 2 }),
-            nonce: 1,
-            deadline: block.timestamp
+            permitted: ISignatureTransfer.TokenPermissions({ token: address(aave), amount: inputTokenAmount }),
+            nonce: 0,
+            deadline: block.timestamp + 1000
         });
+
+        // hevm.startPrank(address(router));
+        // console.log(msg.sender, address(this), address(router));
+        bytes memory sig = getCompactPermitTransferSignature(
+            permit, alicePrivateKey, ISignatureTransfer(permit2).DOMAIN_SEPARATOR(), address(router)
+        );
+        // hevm.stopPrank();
 
         uint256 outputTokenAmount =
             router.calculateOutputAmount(permit.permitted.token, permit.permitted.amount, address(dai), providedRate);
 
         l1StandardERC20Gateway.allowRouterToTransfer(address(dai), type(uint160).max, uint48(block.timestamp + 1000));
 
-        uint256 startBalanceFrom = dai.balanceOf(address(l1StandardERC20Gateway));
-        uint256 startBalanceTo = dai.balanceOf(alice);
+        uint256 inputStartBalanceFrom = aave.balanceOf(alice);
+        uint256 inputStartBalanceTo = aave.balanceOf(address(l1StandardERC20Gateway));
+        uint256 outputStartBalanceFrom = dai.balanceOf(address(l1StandardERC20Gateway));
+        uint256 outputStartBalanceTo = dai.balanceOf(alice);
 
         hevm.expectEmit(true, true, true, true);
         emit IL1GatewayRouter.Swap(
             alice, permit.permitted.token, address(dai), permit.permitted.amount, outputTokenAmount, providedRate
         );
 
-        router.swapERC20(permit, address(dai), providedRate, alice, bytes32(""), string(""), bytes(""));
+        router.swapERC20(permit, address(dai), providedRate, alice, bytes32(""), string(""), sig);
 
-        assertEq(dai.balanceOf(address(l1StandardERC20Gateway)), startBalanceFrom - outputTokenAmount);
-        assertEq(dai.balanceOf(alice), startBalanceTo + outputTokenAmount);
+        // Check input token balances after swap
+        assertEq(aave.balanceOf(alice), inputStartBalanceFrom - inputTokenAmount);
+        assertEq(aave.balanceOf(address(l1StandardERC20Gateway)), inputStartBalanceTo + inputTokenAmount);
+        // Check output token balances after swap
+        assertEq(dai.balanceOf(address(l1StandardERC20Gateway)), outputStartBalanceFrom - outputTokenAmount);
+        assertEq(dai.balanceOf(alice), outputStartBalanceTo + outputTokenAmount);
     }
 
     function testSwapERC20RevertInvalidOwner() public {
