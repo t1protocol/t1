@@ -36,3 +36,4 @@ Scripts to test the canonical bridge:
 - USDT
   - [Deposit USDT from L1->L2](../test/DepositUsdtFromL1ToL2.s.sol)
   - [Withdraw USDT from L2->L1](../test/WithdrawUsdtFromL2ToL1.s.sol)
+  - [Check L1 and L2 USDT balances](../test/LogUsdtBalances.s.sol)
