@@ -14,7 +14,7 @@ import { console } from "forge-std/console.sol";
 // solhint-disable state-visibility
 // solhint-disable var-name-mixedcase
 
-contract DepositWethFromL1ToL2 is Script {
+contract DepositUsdtFromL1ToL2 is Script {
     uint256 L1_DEPLOYER_PRIVATE_KEY = vm.envUint("L1_DEPLOYER_PRIVATE_KEY");
 
     address payable L1_STANDARD_ERC20_GATEWAY_PROXY_ADDR =
