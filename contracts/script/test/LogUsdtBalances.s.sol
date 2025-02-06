@@ -17,7 +17,6 @@ import { console } from "forge-std/console.sol";
 contract LogUsdtBalances is Script {
     uint256 L1_DEPLOYER_PRIVATE_KEY = vm.envUint("L1_DEPLOYER_PRIVATE_KEY");
 
-
     address payable L1_USDT_ADDR = payable(vm.envAddress("L1_USDT_ADDR"));
     address payable L2_USDT_ADDR = payable(vm.envAddress("L2_USDT_ADDR"));
 
@@ -27,14 +26,14 @@ contract LogUsdtBalances is Script {
         vm.createSelectFork(vm.rpcUrl("sepolia"));
         console.log(
             "[%s] currently has [%d] USDT on L1",
-            vm.toString(addr), T1StandardERC20(L1_USDT_ADDR).balanceOf(addr)
+            vm.toString(addr), T1StandardERC20(L1_USDT_ADDR).balanceOf(addr) / 10 ** 18
         );
 
         if (L2_USDT_ADDR != address(0)) {
             vm.createSelectFork(vm.rpcUrl("t1"));
             console.log(
                 "[%s] currently has [%d] USDT on L2",
-                vm.toString(addr), T1StandardERC20(L2_USDT_ADDR).balanceOf(addr)
+                vm.toString(addr), T1StandardERC20(L2_USDT_ADDR).balanceOf(addr) / 10 ** 18
             );
         } else {
             console.log(
