@@ -3,8 +3,6 @@ pragma solidity >=0.8.28;
 
 import { DSTestPlus } from "solmate/test/utils/DSTestPlus.sol";
 
-import { EIP712 } from "@openzeppelin/contracts/utils/cryptography/draft-EIP712.sol";
-import { ECDSA } from "@openzeppelin/contracts/utils/cryptography/ECDSA.sol";
 import { ISignatureTransfer } from "@uniswap/permit2/src/interfaces/ISignatureTransfer.sol";
 
 contract PermitSignature is DSTestPlus {

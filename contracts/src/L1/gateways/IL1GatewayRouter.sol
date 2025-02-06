@@ -36,14 +36,12 @@ interface IL1GatewayRouter is IL1ETHGateway, IL1ERC20Gateway {
     /// @param outputToken The address of the token received.
     /// @param inputAmount The amount of the input token swapped.
     /// @param outputAmount The amount of the output token received.
-    /// @param rate The rate provided for the swap.
     event Swap(
         address indexed sender,
         address indexed inputToken,
         address indexed outputToken,
         uint256 inputAmount,
-        uint256 outputAmount,
-        uint256 rate
+        uint256 outputAmount
     );
 
     /// @notice Emitted when the address of Permit2 is updated.
@@ -53,7 +51,7 @@ interface IL1GatewayRouter is IL1ETHGateway, IL1ERC20Gateway {
 
     /// @param permit The signed permit message for a single token transfer.
     /// @param outputToken The address of the token to receive.
-    /// @param rate The rate at which the user's swap is executed (scaled to 18 decimals).
+    /// @param outputAmount The output token amount
     /// @param owner The address of the user on whose behalf the swap is executed.
     /// @param witness Extra data to include when checking the user signature.
     /// @param witnessTypeString The EIP-712 type definition for remaining string stub of the typehash.
@@ -61,7 +59,7 @@ interface IL1GatewayRouter is IL1ETHGateway, IL1ERC20Gateway {
     struct SwapParams {
         ISignatureTransfer.PermitTransferFrom permit;
         address outputToken;
-        uint256 rate;
+        uint256 outputAmount;
         address owner;
         bytes32 witness;
         string witnessTypeString;
@@ -81,21 +79,6 @@ interface IL1GatewayRouter is IL1ETHGateway, IL1ERC20Gateway {
     /// @notice Return the current Allowance Transfer contract address
     function permit2() external view returns (address);
 
-    /// @notice Return output amount for the provided rate
-    /// @param inputToken The address of the token being swapped.
-    /// @param inputAmount The amount of the input token swapped.
-    /// @param outputToken The address of the token to receive.
-    /// @param rate The rate at which the user's swap is executed (scaled to 18 decimals).
-    function calculateOutputAmount(
-        address inputToken,
-        uint256 inputAmount,
-        address outputToken,
-        uint256 rate
-    )
-        external
-        view
-        returns (uint256 outputAmount);
-
     /**
      *
      * Public Mutating Functions *
@@ -111,8 +94,7 @@ interface IL1GatewayRouter is IL1ETHGateway, IL1ERC20Gateway {
     /// @notice Swaps ERC20 tokens on behalf of an user using reserves in the defaultERC20Gateway.
     /// @param params The swap parameters
     /// @dev The user provides an EIP-712 signature to authorize the swap.
-    /// @return outputAmount The amount of the output token received.
-    function swapERC20(SwapParams calldata params) external returns (uint256 outputAmount);
+    function swapERC20(SwapParams calldata params) external;
 
     /**
      *

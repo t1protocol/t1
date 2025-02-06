@@ -156,7 +156,7 @@ $ bun run lint
 Run the tests:
 
 ```sh
-$ bun runt test
+$ bun run test
 ```
 
 Generate test coverage and output result to the terminal:

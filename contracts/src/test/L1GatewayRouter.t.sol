@@ -2,14 +2,12 @@
 
 pragma solidity >=0.8.28;
 
-import { console } from "forge-std/console.sol";
 import { StdUtils } from "forge-std/StdUtils.sol";
 
 import { MockERC20 } from "solmate/test/utils/mocks/MockERC20.sol";
 import { DSTestPlus } from "solmate/test/utils/DSTestPlus.sol";
 
 import { ITransparentUpgradeableProxy } from "@openzeppelin/contracts/proxy/transparent/TransparentUpgradeableProxy.sol";
-import { Math } from "@openzeppelin/contracts/utils/math/Math.sol";
 
 import { DeployPermit2 } from "@uniswap/permit2/test/utils/DeployPermit2.sol";
 import { ISignatureTransfer } from "@uniswap/permit2/src/interfaces/ISignatureTransfer.sol";
@@ -195,49 +193,6 @@ contract L1GatewayRouterTest is L1GatewayTestBase, DeployPermit2, PermitSignatur
         router.finalizeWithdrawETH(address(0), address(0), 0, "");
     }
 
-    function testCalculateOutputAmountSameDecimals() public {
-        uint256 inputAmount = 1e18; // 1 DAI
-        uint256 rate = 2e18; // 2 AAVE per DAI
-
-        uint256 expectedOutput = (inputAmount * rate) / 1e18;
-        uint256 actualOutput = router.calculateOutputAmount(address(dai), inputAmount, address(aave), rate);
-
-        assertEq(actualOutput, expectedOutput, "Output amount incorrect for 18 -> 18 decimals");
-    }
-
-    function testCalculateOutputAmountUSDTtoAAVE() public {
-        uint256 inputAmount = 1e6; // 1 USDT
-        uint256 rate = 2e18; // 2 AAVE per USDT
-
-        uint256 expectedOutput = Math.mulDiv(inputAmount, rate * 1e18, 1e6 * 1e18);
-        uint256 actualOutput = router.calculateOutputAmount(address(usdt), inputAmount, address(aave), rate);
-
-        assertEq(actualOutput, expectedOutput, "Output amount incorrect for 6 -> 18 decimals");
-    }
-
-    function testCalculateOutputAmountAAVEtoUSDT() public {
-        uint256 inputAmount = 1e18; // 1 AAVE
-        uint256 rate = 2e18; // 2 USDT per AAVE
-
-        uint256 expectedOutput = Math.mulDiv(inputAmount, rate * 1e6, 1e18 * 1e18);
-        uint256 actualOutput = router.calculateOutputAmount(address(aave), inputAmount, address(usdt), rate);
-
-        assertEq(actualOutput, expectedOutput, "Output amount incorrect for 18 -> 6 decimals");
-    }
-
-    function testCalculateOutputAmountZeroInput() public {
-        hevm.expectRevert("Output amount must be > than 0");
-        router.calculateOutputAmount(address(aave), 0, address(usdt), 2e18);
-    }
-
-    function testCalculateOutputAmountInsufficientReserves() public {
-        uint256 inputAmount = 1000e18; // 1000 AAVE
-        uint256 rate = 10e20; // High rate to exceed reserves
-
-        hevm.expectRevert("Insufficient reserves");
-        router.calculateOutputAmount(address(aave), inputAmount, address(usdt), rate);
-    }
-
     function testRequestERC20(address _sender, address _token, uint256 _amount) public {
         hevm.expectRevert("Only in deposit context");
         router.requestERC20(_sender, _token, _amount);
@@ -247,7 +202,7 @@ contract L1GatewayRouterTest is L1GatewayTestBase, DeployPermit2, PermitSignatur
         uint256 alicePrivateKey = 0xa11ce;
         address alice = hevm.addr(alicePrivateKey);
 
-        uint256 rate = 2e18;
+        uint256 outputAmount = 2e18;
         uint256 inputTokenAmount = 2e18;
 
         aave.mint(alice, inputTokenAmount);
@@ -262,15 +217,9 @@ contract L1GatewayRouterTest is L1GatewayTestBase, DeployPermit2, PermitSignatur
             deadline: block.timestamp + 1000
         });
 
-        // hevm.startPrank(address(router));
-        // console.log(msg.sender, address(this), address(router));
         bytes memory sig = getPermitTransferSignature(
             permit, alicePrivateKey, ISignatureTransfer(permit2).DOMAIN_SEPARATOR(), address(router)
         );
-        // hevm.stopPrank();
-
-        uint256 outputTokenAmount =
-            router.calculateOutputAmount(permit.permitted.token, permit.permitted.amount, address(dai), rate);
 
         l1StandardERC20Gateway.allowRouterToTransfer(address(dai), type(uint160).max, uint48(block.timestamp + 1000));
 
@@ -280,14 +229,12 @@ contract L1GatewayRouterTest is L1GatewayTestBase, DeployPermit2, PermitSignatur
         uint256 outputStartBalanceTo = dai.balanceOf(alice);
 
         hevm.expectEmit(true, true, true, true);
-        emit IL1GatewayRouter.Swap(
-            alice, permit.permitted.token, address(dai), permit.permitted.amount, outputTokenAmount, rate
-        );
+        emit IL1GatewayRouter.Swap(alice, permit.permitted.token, address(dai), permit.permitted.amount, outputAmount);
 
         IL1GatewayRouter.SwapParams memory params = IL1GatewayRouter.SwapParams({
             permit: permit,
             outputToken: address(dai),
-            rate: rate,
+            outputAmount: outputAmount,
             owner: alice,
             witness: bytes32(""),
             witnessTypeString: string(""),
@@ -300,8 +247,8 @@ contract L1GatewayRouterTest is L1GatewayTestBase, DeployPermit2, PermitSignatur
         assertEq(aave.balanceOf(alice), inputStartBalanceFrom - inputTokenAmount);
         assertEq(aave.balanceOf(address(l1StandardERC20Gateway)), inputStartBalanceTo + inputTokenAmount);
         // Check output token balances after swap
-        assertEq(dai.balanceOf(address(l1StandardERC20Gateway)), outputStartBalanceFrom - outputTokenAmount);
-        assertEq(dai.balanceOf(alice), outputStartBalanceTo + outputTokenAmount);
+        assertEq(dai.balanceOf(address(l1StandardERC20Gateway)), outputStartBalanceFrom - outputAmount);
+        assertEq(dai.balanceOf(alice), outputStartBalanceTo + outputAmount);
     }
 
     function testSwapERC20RevertInvalidOwner() public {
@@ -314,7 +261,7 @@ contract L1GatewayRouterTest is L1GatewayTestBase, DeployPermit2, PermitSignatur
         IL1GatewayRouter.SwapParams memory params = IL1GatewayRouter.SwapParams({
             permit: permit,
             outputToken: address(aave),
-            rate: 1e18,
+            outputAmount: 1e18,
             owner: address(0),
             witness: bytes32(""),
             witnessTypeString: string(""),
@@ -335,7 +282,7 @@ contract L1GatewayRouterTest is L1GatewayTestBase, DeployPermit2, PermitSignatur
         IL1GatewayRouter.SwapParams memory params = IL1GatewayRouter.SwapParams({
             permit: permit,
             outputToken: address(aave),
-            rate: 1e18,
+            outputAmount: 1e18,
             owner: address(1),
             witness: bytes32(""),
             witnessTypeString: string(""),
@@ -356,7 +303,7 @@ contract L1GatewayRouterTest is L1GatewayTestBase, DeployPermit2, PermitSignatur
         IL1GatewayRouter.SwapParams memory params = IL1GatewayRouter.SwapParams({
             permit: permit,
             outputToken: address(0),
-            rate: 1e18,
+            outputAmount: 1e18,
             owner: address(1),
             witness: bytes32(""),
             witnessTypeString: string(""),
@@ -377,7 +324,7 @@ contract L1GatewayRouterTest is L1GatewayTestBase, DeployPermit2, PermitSignatur
         IL1GatewayRouter.SwapParams memory params = IL1GatewayRouter.SwapParams({
             permit: permit,
             outputToken: address(1),
-            rate: 1e18,
+            outputAmount: 1e18,
             owner: address(1),
             witness: bytes32(""),
             witnessTypeString: string(""),
@@ -398,7 +345,7 @@ contract L1GatewayRouterTest is L1GatewayTestBase, DeployPermit2, PermitSignatur
         IL1GatewayRouter.SwapParams memory params = IL1GatewayRouter.SwapParams({
             permit: permit,
             outputToken: address(aave),
-            rate: 1e18,
+            outputAmount: 1e18,
             owner: address(1),
             witness: bytes32(""),
             witnessTypeString: string(""),
@@ -419,14 +366,35 @@ contract L1GatewayRouterTest is L1GatewayTestBase, DeployPermit2, PermitSignatur
         IL1GatewayRouter.SwapParams memory params = IL1GatewayRouter.SwapParams({
             permit: permit,
             outputToken: address(aave),
-            rate: 0,
+            outputAmount: 0,
             owner: address(1),
             witness: bytes32(""),
             witnessTypeString: string(""),
             sig: bytes("")
         });
 
-        hevm.expectRevert("Rate must be > than 0");
+        hevm.expectRevert("Output amount must be > than 0");
+        router.swapERC20(params);
+    }
+
+    function testSwapERC20RevertInsufficientReserves() public {
+        ISignatureTransfer.PermitTransferFrom memory permit = ISignatureTransfer.PermitTransferFrom({
+            permitted: ISignatureTransfer.TokenPermissions({ token: address(usdt), amount: 1 }),
+            nonce: 1,
+            deadline: block.timestamp
+        });
+
+        IL1GatewayRouter.SwapParams memory params = IL1GatewayRouter.SwapParams({
+            permit: permit,
+            outputToken: address(aave),
+            outputAmount: 2e21,
+            owner: address(1),
+            witness: bytes32(""),
+            witnessTypeString: string(""),
+            sig: bytes("")
+        });
+
+        hevm.expectRevert("Insufficient reserves");
         router.swapERC20(params);
     }
 

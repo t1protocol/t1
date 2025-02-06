@@ -120,39 +120,6 @@ contract L1GatewayRouter is OwnableUpgradeable, IL1GatewayRouter {
         return _gateway;
     }
 
-    /// @inheritdoc IL1GatewayRouter
-    function calculateOutputAmount(
-        address inputToken,
-        uint256 inputAmount,
-        address outputToken,
-        uint256 rate
-    )
-        public
-        view
-        returns (uint256 outputAmount)
-    {
-        uint8 inputDecimals = IERC20MetadataUpgradeable(inputToken).decimals();
-        uint8 outputDecimals = IERC20MetadataUpgradeable(outputToken).decimals();
-
-        // Normalize `inputAmount` to match `outputToken` decimals
-        if (inputDecimals > outputDecimals) {
-            unchecked {
-                outputAmount = Math.mulDiv(inputAmount, rate, 1e18 * (10 ** (inputDecimals - outputDecimals)));
-            }
-        } else {
-            unchecked {
-                outputAmount = Math.mulDiv(inputAmount, rate * (10 ** (outputDecimals - inputDecimals)), 1e18);
-            }
-        }
-
-        require(outputAmount > 0, "Output amount must be > than 0");
-
-        // Validate the defaultERC20Gateway has enough reserves of the output token
-        uint256 outputTokenBalance = IERC20MetadataUpgradeable(outputToken).balanceOf(defaultERC20Gateway);
-
-        require(outputAmount < outputTokenBalance, "Insufficient reserves");
-    }
-
     /**
      *
      * Public Mutating Functions *
@@ -170,42 +137,43 @@ contract L1GatewayRouter is OwnableUpgradeable, IL1GatewayRouter {
     }
 
     /// @inheritdoc IL1GatewayRouter
-    function swapERC20(SwapParams calldata params) external returns (uint256 outputAmount) {
-        ISignatureTransfer.PermitTransferFrom memory permit_ = params.permit;
-        address inputToken = permit_.permitted.token;
-        uint256 inputAmount = permit_.permitted.amount;
+    function swapERC20(SwapParams calldata params) external {
+        ISignatureTransfer.PermitTransferFrom memory permit = params.permit;
+        address inputToken = permit.permitted.token;
+        uint256 inputAmount = permit.permitted.amount;
         address outputToken = params.outputToken;
-        uint256 rate = params.rate;
+        uint256 outputAmount = params.outputAmount;
         address owner = params.owner;
         // bytes32 witness = params.witness;
         // string calldata witnessTypeString = params.witnessTypeString;
-        bytes calldata sig = params.sig;
 
         require(inputToken != address(0), "Invalid input token address");
         require(outputToken != address(0), "Invalid output token address");
         require(inputToken != outputToken, "Cannot swap the same token");
         require(inputAmount > 0, "Input amount must be > than 0");
-        require(rate > 0, "Rate must be > than 0");
+        require(outputAmount > 0, "Output amount must be > than 0");
         require(owner != address(0), "Invalid owner address");
 
         // TODO decode and check owner,outputToken and expected outputTokenAmount from witness
 
-        outputAmount = calculateOutputAmount(inputToken, inputAmount, outputToken, rate);
+        // Validate the defaultERC20Gateway has enough reserves of the output token
+        uint256 outputTokenBalance = IERC20MetadataUpgradeable(outputToken).balanceOf(defaultERC20Gateway);
+        require(outputAmount <= outputTokenBalance, "Insufficient reserves");
 
         // Use Permit2 to validate and transfer input tokens from `owner` to the defaultERC20Gateway
         ISignatureTransfer(permit2).permitTransferFrom(
-            permit_,
+            permit,
             ISignatureTransfer.SignatureTransferDetails({ to: defaultERC20Gateway, requestedAmount: inputAmount }),
             owner,
             // witness,
             // witnessTypeString,
-            sig
+            params.sig
         );
 
         // Use AllowanceTransfer to transfer the output tokens from the defaultERC20Gateway to the `owner` address
         IAllowanceTransfer(permit2).transferFrom(defaultERC20Gateway, owner, uint160(outputAmount), outputToken);
 
-        emit Swap(owner, inputToken, outputToken, inputAmount, outputAmount, rate);
+        emit Swap(owner, inputToken, outputToken, inputAmount, outputAmount);
     }
 
     /**
