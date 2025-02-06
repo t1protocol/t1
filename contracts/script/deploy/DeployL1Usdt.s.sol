@@ -5,7 +5,6 @@ pragma solidity >=0.8.28;
 import { Script } from "forge-std/Script.sol";
 import { console } from "forge-std/console.sol";
 
-import { WrappedEther } from "../../src/L2/predeploys/WrappedEther.sol";
 import { Usdt } from "../../src/libraries/token/Usdt.sol";
 
 contract DeployL1Usdt is Script {
