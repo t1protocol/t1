@@ -25,7 +25,7 @@ contract L1GatewayRouter is OwnableUpgradeable, IL1GatewayRouter {
 
     /**
      *
-     * Variables *>
+     * Variables *
      *
      */
 
@@ -138,7 +138,7 @@ contract L1GatewayRouter is OwnableUpgradeable, IL1GatewayRouter {
 
     /// @inheritdoc IL1GatewayRouter
     function swapERC20(SwapParams calldata params) external {
-        ISignatureTransfer.PermitTransferFrom memory permit = params.permit;
+        ISignatureTransfer.PermitTransferFrom calldata permit = params.permit;
         address inputToken = permit.permitted.token;
         uint256 inputAmount = permit.permitted.amount;
         address outputToken = params.outputToken;

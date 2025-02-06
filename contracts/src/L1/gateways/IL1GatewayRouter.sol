@@ -49,9 +49,10 @@ interface IL1GatewayRouter is IL1ETHGateway, IL1ERC20Gateway {
     /// @param newPermit2 The address of the new Permit2.
     event SetPermit2(address indexed oldPermit2, address indexed newPermit2);
 
+    /// @notice Represents the necessary details for the swap
     /// @param permit The signed permit message for a single token transfer.
     /// @param outputToken The address of the token to receive.
-    /// @param outputAmount The output token amount
+    /// @param outputAmount The output token amount.
     /// @param owner The address of the user on whose behalf the swap is executed.
     /// @param witness Extra data to include when checking the user signature.
     /// @param witnessTypeString The EIP-712 type definition for remaining string stub of the typehash.
@@ -92,7 +93,7 @@ interface IL1GatewayRouter is IL1ETHGateway, IL1ERC20Gateway {
     function requestERC20(address sender, address token, uint256 amount) external returns (uint256);
 
     /// @notice Swaps ERC20 tokens on behalf of an user using reserves in the defaultERC20Gateway.
-    /// @param params The swap parameters
+    /// @param params The Struct that includes details for the swap.
     /// @dev The user provides an EIP-712 signature to authorize the swap.
     function swapERC20(SwapParams calldata params) external;
 
