@@ -2,11 +2,18 @@
 
 pragma solidity >=0.8.28;
 
+import { StdUtils } from "forge-std/StdUtils.sol";
+
 import { MockERC20 } from "solmate/test/utils/mocks/MockERC20.sol";
+import { DSTestPlus } from "solmate/test/utils/DSTestPlus.sol";
 
 import { ITransparentUpgradeableProxy } from "@openzeppelin/contracts/proxy/transparent/TransparentUpgradeableProxy.sol";
 
+import { DeployPermit2 } from "@uniswap/permit2/test/utils/DeployPermit2.sol";
+import { ISignatureTransfer } from "@uniswap/permit2/src/interfaces/ISignatureTransfer.sol";
+
 import { L1ETHGateway } from "../L1/gateways/L1ETHGateway.sol";
+import { IL1GatewayRouter } from "../L1/gateways/IL1GatewayRouter.sol";
 import { L1GatewayRouter } from "../L1/gateways/L1GatewayRouter.sol";
 import { L1StandardERC20Gateway } from "../L1/gateways/L1StandardERC20Gateway.sol";
 import { L2ETHGateway } from "../L2/gateways/L2ETHGateway.sol";
@@ -18,12 +25,9 @@ import { L1GatewayTestBase } from "./L1GatewayTestBase.t.sol";
 
 import { TransferReentrantToken } from "./mocks/tokens/TransferReentrantToken.sol";
 
-contract L1GatewayRouterTest is L1GatewayTestBase {
-    // from L1GatewayRouter
-    event SetETHGateway(address indexed oldETHGateway, address indexed newEthGateway);
-    event SetDefaultERC20Gateway(address indexed oldDefaultERC20Gateway, address indexed newDefaultERC20Gateway);
-    event SetERC20Gateway(address indexed token, address indexed oldGateway, address indexed newGateway);
+import { PermitSignature } from "./utils/PermitSignature.sol";
 
+contract L1GatewayRouterTest is L1GatewayTestBase, DeployPermit2, PermitSignature {
     T1StandardERC20 private template;
     T1StandardERC20Factory private factory;
 
@@ -35,12 +39,23 @@ contract L1GatewayRouterTest is L1GatewayTestBase {
 
     L1GatewayRouter private router;
     MockERC20 private l1Token;
+    MockERC20 private usdt;
+    MockERC20 private aave;
+    MockERC20 private dai;
+
+    address private permit2;
 
     function setUp() public {
         __L1GatewayTestBase_setUp();
 
+        // Deploy Permit2
+        permit2 = DeployPermit2.deployPermit2();
+
         // Deploy tokens
         l1Token = new MockERC20("Mock", "M", 18);
+        usdt = new MockERC20("Tether", "USDT", 6);
+        aave = new MockERC20("Aave coin", "AAVE", 18);
+        dai = new MockERC20("Dai Stablecoin", "DAI", 18);
 
         // Deploy L2 contracts
         template = new T1StandardERC20();
@@ -72,7 +87,11 @@ contract L1GatewayRouterTest is L1GatewayTestBase {
         // Initialize L1 contracts
         l1StandardERC20Gateway.initialize();
         l1ETHGateway.initialize();
-        router.initialize(address(l1ETHGateway), address(l1StandardERC20Gateway));
+        router.initialize(address(l1ETHGateway), address(l1StandardERC20Gateway), permit2);
+
+        aave.mint(address(l1StandardERC20Gateway), 1e21); // 1,000 AAVE
+        dai.mint(address(l1StandardERC20Gateway), 1e21); // 1,000 DAI
+        usdt.mint(address(l1StandardERC20Gateway), 1e12); // 1,000,000 USDT
     }
 
     function testOwnership() public {
@@ -88,7 +107,21 @@ contract L1GatewayRouterTest is L1GatewayTestBase {
         assertEq(address(l1StandardERC20Gateway), router.getERC20Gateway(address(l1Token)));
 
         hevm.expectRevert("Initializable: contract is already initialized");
-        router.initialize(address(l1ETHGateway), address(l1StandardERC20Gateway));
+        router.initialize(address(l1ETHGateway), address(l1StandardERC20Gateway), address(0));
+    }
+
+    function testSetEthGateway() public {
+        hevm.startPrank(address(1));
+        hevm.expectRevert("Ownable: caller is not the owner");
+        router.setETHGateway(address(2));
+        hevm.stopPrank();
+
+        // set by owner, should succeed
+        hevm.expectEmit(true, true, true, true);
+        emit IL1GatewayRouter.SetETHGateway(address(l1ETHGateway), address(2));
+
+        router.setETHGateway(address(2));
+        assertEq(address(2), router.ethGateway());
     }
 
     function testSetDefaultERC20Gateway() public {
@@ -102,13 +135,27 @@ contract L1GatewayRouterTest is L1GatewayTestBase {
 
         // set by owner, should succeed
         hevm.expectEmit(true, true, false, true);
-        emit SetDefaultERC20Gateway(address(0), address(l1StandardERC20Gateway));
+        emit IL1GatewayRouter.SetDefaultERC20Gateway(address(0), address(l1StandardERC20Gateway));
 
         assertEq(address(0), router.getERC20Gateway(address(l1Token)));
         assertEq(address(0), router.defaultERC20Gateway());
         router.setDefaultERC20Gateway(address(l1StandardERC20Gateway));
         assertEq(address(l1StandardERC20Gateway), router.getERC20Gateway(address(l1Token)));
         assertEq(address(l1StandardERC20Gateway), router.defaultERC20Gateway());
+    }
+
+    function testSetPermit2() public {
+        hevm.startPrank(address(1));
+        hevm.expectRevert("Ownable: caller is not the owner");
+        router.setPermit2(address(2));
+        hevm.stopPrank();
+
+        // set by owner, should succeed
+        hevm.expectEmit(true, true, true, true);
+        emit IL1GatewayRouter.SetPermit2(permit2, address(2));
+
+        router.setPermit2(address(2));
+        assertEq(address(2), router.permit2());
     }
 
     function testSetERC20Gateway() public {
@@ -129,7 +176,7 @@ contract L1GatewayRouterTest is L1GatewayTestBase {
         _gateways[0] = address(l1StandardERC20Gateway);
 
         hevm.expectEmit(true, true, true, true);
-        emit SetERC20Gateway(address(l1Token), address(0), address(l1StandardERC20Gateway));
+        emit IL1GatewayRouter.SetERC20Gateway(address(l1Token), address(0), address(l1StandardERC20Gateway));
 
         assertEq(address(0), router.getERC20Gateway(address(l1Token)));
         router.setERC20Gateway(_tokens, _gateways);
@@ -149,6 +196,206 @@ contract L1GatewayRouterTest is L1GatewayTestBase {
     function testRequestERC20(address _sender, address _token, uint256 _amount) public {
         hevm.expectRevert("Only in deposit context");
         router.requestERC20(_sender, _token, _amount);
+    }
+
+    function testSwapERC20Complete() public {
+        uint256 alicePrivateKey = 0xa11ce;
+        address alice = hevm.addr(alicePrivateKey);
+
+        uint256 outputAmount = 2e18;
+        uint256 inputTokenAmount = 2e18;
+
+        aave.mint(alice, inputTokenAmount);
+
+        hevm.startPrank(alice);
+        aave.approve(permit2, type(uint256).max);
+        hevm.stopPrank();
+
+        ISignatureTransfer.PermitTransferFrom memory permit = ISignatureTransfer.PermitTransferFrom({
+            permitted: ISignatureTransfer.TokenPermissions({ token: address(aave), amount: inputTokenAmount }),
+            nonce: 0,
+            deadline: block.timestamp + 1000
+        });
+
+        bytes memory sig = getPermitTransferSignature(
+            permit, alicePrivateKey, ISignatureTransfer(permit2).DOMAIN_SEPARATOR(), address(router)
+        );
+
+        l1StandardERC20Gateway.allowRouterToTransfer(address(dai), type(uint160).max, uint48(block.timestamp + 1000));
+
+        uint256 inputStartBalanceFrom = aave.balanceOf(alice);
+        uint256 inputStartBalanceTo = aave.balanceOf(address(l1StandardERC20Gateway));
+        uint256 outputStartBalanceFrom = dai.balanceOf(address(l1StandardERC20Gateway));
+        uint256 outputStartBalanceTo = dai.balanceOf(alice);
+
+        hevm.expectEmit(true, true, true, true);
+        emit IL1GatewayRouter.Swap(alice, permit.permitted.token, address(dai), permit.permitted.amount, outputAmount);
+
+        IL1GatewayRouter.SwapParams memory params = IL1GatewayRouter.SwapParams({
+            permit: permit,
+            outputToken: address(dai),
+            outputAmount: outputAmount,
+            owner: alice,
+            witness: bytes32(""),
+            witnessTypeString: string(""),
+            sig: sig
+        });
+
+        router.swapERC20(params);
+
+        // Check input token balances after swap
+        assertEq(aave.balanceOf(alice), inputStartBalanceFrom - inputTokenAmount);
+        assertEq(aave.balanceOf(address(l1StandardERC20Gateway)), inputStartBalanceTo + inputTokenAmount);
+        // Check output token balances after swap
+        assertEq(dai.balanceOf(address(l1StandardERC20Gateway)), outputStartBalanceFrom - outputAmount);
+        assertEq(dai.balanceOf(alice), outputStartBalanceTo + outputAmount);
+    }
+
+    function testSwapERC20RevertInvalidOwner() public {
+        ISignatureTransfer.PermitTransferFrom memory permit = ISignatureTransfer.PermitTransferFrom({
+            permitted: ISignatureTransfer.TokenPermissions({ token: address(usdt), amount: 1 }),
+            nonce: 1,
+            deadline: block.timestamp
+        });
+
+        IL1GatewayRouter.SwapParams memory params = IL1GatewayRouter.SwapParams({
+            permit: permit,
+            outputToken: address(aave),
+            outputAmount: 1e18,
+            owner: address(0),
+            witness: bytes32(""),
+            witnessTypeString: string(""),
+            sig: bytes("")
+        });
+
+        hevm.expectRevert("Invalid owner address");
+        router.swapERC20(params);
+    }
+
+    function testSwapERC20RevertInvalidInputToken() public {
+        ISignatureTransfer.PermitTransferFrom memory permit = ISignatureTransfer.PermitTransferFrom({
+            permitted: ISignatureTransfer.TokenPermissions({ token: address(0), amount: 1 }),
+            nonce: 1,
+            deadline: block.timestamp
+        });
+
+        IL1GatewayRouter.SwapParams memory params = IL1GatewayRouter.SwapParams({
+            permit: permit,
+            outputToken: address(aave),
+            outputAmount: 1e18,
+            owner: address(1),
+            witness: bytes32(""),
+            witnessTypeString: string(""),
+            sig: bytes("")
+        });
+
+        hevm.expectRevert("Invalid input token address");
+        router.swapERC20(params);
+    }
+
+    function testSwapERC20RevertInvalidOutputtToken() public {
+        ISignatureTransfer.PermitTransferFrom memory permit = ISignatureTransfer.PermitTransferFrom({
+            permitted: ISignatureTransfer.TokenPermissions({ token: address(1), amount: 1 }),
+            nonce: 1,
+            deadline: block.timestamp
+        });
+
+        IL1GatewayRouter.SwapParams memory params = IL1GatewayRouter.SwapParams({
+            permit: permit,
+            outputToken: address(0),
+            outputAmount: 1e18,
+            owner: address(1),
+            witness: bytes32(""),
+            witnessTypeString: string(""),
+            sig: bytes("")
+        });
+
+        hevm.expectRevert("Invalid output token address");
+        router.swapERC20(params);
+    }
+
+    function testSwapERC20RevertCannotSwapSameToken() public {
+        ISignatureTransfer.PermitTransferFrom memory permit = ISignatureTransfer.PermitTransferFrom({
+            permitted: ISignatureTransfer.TokenPermissions({ token: address(1), amount: 1 }),
+            nonce: 1,
+            deadline: block.timestamp
+        });
+
+        IL1GatewayRouter.SwapParams memory params = IL1GatewayRouter.SwapParams({
+            permit: permit,
+            outputToken: address(1),
+            outputAmount: 1e18,
+            owner: address(1),
+            witness: bytes32(""),
+            witnessTypeString: string(""),
+            sig: bytes("")
+        });
+
+        hevm.expectRevert("Cannot swap the same token");
+        router.swapERC20(params);
+    }
+
+    function testSwapERC20RevertInpuntAmountGreaterThan0() public {
+        ISignatureTransfer.PermitTransferFrom memory permit = ISignatureTransfer.PermitTransferFrom({
+            permitted: ISignatureTransfer.TokenPermissions({ token: address(2), amount: 0 }),
+            nonce: 1,
+            deadline: block.timestamp
+        });
+
+        IL1GatewayRouter.SwapParams memory params = IL1GatewayRouter.SwapParams({
+            permit: permit,
+            outputToken: address(aave),
+            outputAmount: 1e18,
+            owner: address(1),
+            witness: bytes32(""),
+            witnessTypeString: string(""),
+            sig: bytes("")
+        });
+
+        hevm.expectRevert("Input amount must be > than 0");
+        router.swapERC20(params);
+    }
+
+    function testSwapERC20RevertRateGreaterThan0() public {
+        ISignatureTransfer.PermitTransferFrom memory permit = ISignatureTransfer.PermitTransferFrom({
+            permitted: ISignatureTransfer.TokenPermissions({ token: address(1), amount: 1 }),
+            nonce: 1,
+            deadline: block.timestamp
+        });
+
+        IL1GatewayRouter.SwapParams memory params = IL1GatewayRouter.SwapParams({
+            permit: permit,
+            outputToken: address(aave),
+            outputAmount: 0,
+            owner: address(1),
+            witness: bytes32(""),
+            witnessTypeString: string(""),
+            sig: bytes("")
+        });
+
+        hevm.expectRevert("Output amount must be > than 0");
+        router.swapERC20(params);
+    }
+
+    function testSwapERC20RevertInsufficientReserves() public {
+        ISignatureTransfer.PermitTransferFrom memory permit = ISignatureTransfer.PermitTransferFrom({
+            permitted: ISignatureTransfer.TokenPermissions({ token: address(usdt), amount: 1 }),
+            nonce: 1,
+            deadline: block.timestamp
+        });
+
+        IL1GatewayRouter.SwapParams memory params = IL1GatewayRouter.SwapParams({
+            permit: permit,
+            outputToken: address(aave),
+            outputAmount: 2e21,
+            owner: address(1),
+            witness: bytes32(""),
+            witnessTypeString: string(""),
+            sig: bytes("")
+        });
+
+        hevm.expectRevert("Insufficient reserves");
+        router.swapERC20(params);
     }
 
     function testReentrant() public {
@@ -177,5 +424,19 @@ contract L1GatewayRouterTest is L1GatewayTestBase {
         );
         hevm.expectRevert("Only not in context");
         router.depositERC20(address(reentrantToken), 1, 0);
+    }
+
+    // Override to prefer StdUtils bouns()
+    function bound(
+        uint256 x,
+        uint256 min,
+        uint256 max
+    )
+        internal
+        pure
+        override(DSTestPlus, StdUtils)
+        returns (uint256)
+    {
+        return StdUtils.bound(x, min, max); // Explicitly choose StdUtils version
     }
 }
