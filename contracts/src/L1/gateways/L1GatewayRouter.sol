@@ -190,7 +190,7 @@ contract L1GatewayRouter is OwnableUpgradeable, IL1GatewayRouter {
 
         // TODO decode and check owner,outputToken and expected outputTokenAmount from witness
 
-        uint256 outputAmount_ = calculateOutputAmount(inputToken, inputAmount, outputToken, rate);
+        outputAmount = calculateOutputAmount(inputToken, inputAmount, outputToken, rate);
 
         // Use Permit2 to validate and transfer input tokens from `owner` to the defaultERC20Gateway
         ISignatureTransfer(permit2).permitTransferFrom(
@@ -203,11 +203,9 @@ contract L1GatewayRouter is OwnableUpgradeable, IL1GatewayRouter {
         );
 
         // Use AllowanceTransfer to transfer the output tokens from the defaultERC20Gateway to the `owner` address
-        IAllowanceTransfer(permit2).transferFrom(defaultERC20Gateway, owner, uint160(outputAmount_), outputToken);
+        IAllowanceTransfer(permit2).transferFrom(defaultERC20Gateway, owner, uint160(outputAmount), outputToken);
 
-        emit Swap(owner, inputToken, outputToken, inputAmount, outputAmount_, rate);
-
-        return outputAmount_;
+        emit Swap(owner, inputToken, outputToken, inputAmount, outputAmount, rate);
     }
 
     /**
