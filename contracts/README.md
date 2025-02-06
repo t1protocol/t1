@@ -39,9 +39,12 @@ contracts.
 - [Forge](https://github.com/foundry-rs/foundry/blob/master/forge): compile, test, fuzz, format, and deploy smart
   contracts
 - [Forge Std](https://github.com/foundry-rs/forge-std): collection of helpful contracts and utilities for testing
+- [Husky](https://github.com/typicode/husky): Git hooks made easy
+- [Openzeppelin](https://github.com/OpenZeppelin/openzeppelin-contracts): library for secure smart contract development
 - [Prettier](https://github.com/prettier/prettier): code formatter for non-Solidity files
 - [Solhint](https://github.com/protofire/solhint): linter for Solidity code
 - [Solmate](https://github.com/transmissions11/solmate): gas optimized building blocks
+- [Uniswap/permit2](https://github.com/Uniswap/permit2/): next generation token approvals mechanism
 
 ### Sensible Defaults
 
@@ -61,7 +64,7 @@ following files:
 ### GitHub Actions
 
 This project comes with GitHub Actions pre-configured. Your contracts will be linted and tested on every push and pull
-request made to the `develop` branch.
+request made to the `canary` branch.
 
 You can edit the CI script in [contracts.yml](../.github/workflows/contracts.yml).
 
@@ -99,7 +102,7 @@ This is a list of the most frequently needed commands.
 Build the contracts:
 
 ```sh
-$ forge build
+$ bun run build
 ```
 
 ### Clean
@@ -107,23 +110,7 @@ $ forge build
 Delete the build artifacts and cache directories:
 
 ```sh
-$ forge clean
-```
-
-### Compile
-
-Compile the contracts:
-
-```sh
-$ forge build
-```
-
-### Coverage
-
-Get a test coverage report:
-
-```sh
-$ forge coverage
+$ bun clean
 ```
 
 ### Deploy
@@ -145,7 +132,7 @@ For instructions on how to deploy to a testnet or mainnet, check out the
 Format the contracts:
 
 ```sh
-$ forge fmt
+$ bun format
 ```
 
 ### Gas Usage
@@ -164,25 +151,25 @@ Lint the contracts:
 $ bun run lint
 ```
 
-### Test
+### Test & Coverage
 
 Run the tests:
 
 ```sh
-$ forge test
+$ bun run test
 ```
 
 Generate test coverage and output result to the terminal:
 
 ```sh
-$ bun run test:coverage
+$ bun test:coverage
 ```
 
 Generate test coverage with lcov report (you'll have to open the `./coverage/index.html` file in your browser, to do so
 simply copy paste the path):
 
 ```sh
-$ bun run test:coverage:report
+$ bun test:coverage:report
 ```
 
 ## License

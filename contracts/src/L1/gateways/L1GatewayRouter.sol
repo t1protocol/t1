@@ -4,7 +4,12 @@ pragma solidity >=0.8.28;
 
 import { OwnableUpgradeable } from "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
 import { IERC20Upgradeable } from "@openzeppelin/contracts-upgradeable/token/ERC20/IERC20Upgradeable.sol";
+import { IERC20MetadataUpgradeable } from
+    "@openzeppelin/contracts-upgradeable/token/ERC20/extensions/IERC20MetadataUpgradeable.sol";
+import { Math } from "@openzeppelin/contracts/utils/math/Math.sol";
 import { SafeERC20Upgradeable } from "@openzeppelin/contracts-upgradeable/token/ERC20/utils/SafeERC20Upgradeable.sol";
+import { IAllowanceTransfer } from "@uniswap/permit2/src/interfaces/IAllowanceTransfer.sol";
+import { ISignatureTransfer } from "@uniswap/permit2/src/interfaces/ISignatureTransfer.sol";
 
 import { IL1ETHGateway } from "./IL1ETHGateway.sol";
 import { IL1ERC20Gateway } from "./IL1ERC20Gateway.sol";
@@ -14,7 +19,7 @@ import { IL1GatewayRouter } from "./IL1GatewayRouter.sol";
 /// @notice The `L1GatewayRouter` is the main entry for depositing Ether and ERC20 tokens.
 /// All deposited tokens are routed to corresponding gateways.
 /// @dev One can also use this contract to query L1/L2 token address mapping.
-/// In the future, ERC-721 and ERC-1155 tokens will be added to the router too.
+/// It also includes a new functionality for swapping ERC20 tokens using `Permit2`.
 contract L1GatewayRouter is OwnableUpgradeable, IL1GatewayRouter {
     using SafeERC20Upgradeable for IERC20Upgradeable;
 
@@ -36,6 +41,9 @@ contract L1GatewayRouter is OwnableUpgradeable, IL1GatewayRouter {
 
     /// @notice The address of gateway in current execution context.
     address public gatewayInContext;
+
+    /// @notice The Permit2 contract.
+    address public permit2;
 
     /**
      *
@@ -64,7 +72,8 @@ contract L1GatewayRouter is OwnableUpgradeable, IL1GatewayRouter {
     /// @notice Initialize the storage of L1GatewayRouter.
     /// @param _ethGateway The address of L1ETHGateway contract.
     /// @param _defaultERC20Gateway The address of default ERC20 Gateway contract.
-    function initialize(address _ethGateway, address _defaultERC20Gateway) external initializer {
+    /// @param _permit2 The address of the Permit2 contract.
+    function initialize(address _ethGateway, address _defaultERC20Gateway, address _permit2) external initializer {
         OwnableUpgradeable.__Ownable_init();
 
         // it can be zero during initialization
@@ -77,6 +86,12 @@ contract L1GatewayRouter is OwnableUpgradeable, IL1GatewayRouter {
         if (_ethGateway != address(0)) {
             ethGateway = _ethGateway;
             emit SetETHGateway(address(0), _ethGateway);
+        }
+
+        // it can be zero during initialization
+        if (_permit2 != address(0)) {
+            permit2 = _permit2;
+            emit SetPermit2(address(0), _permit2);
         }
     }
 
@@ -119,6 +134,48 @@ contract L1GatewayRouter is OwnableUpgradeable, IL1GatewayRouter {
         IERC20Upgradeable(_token).safeTransferFrom(_sender, _caller, _amount);
         _amount = IERC20Upgradeable(_token).balanceOf(_caller) - _balance;
         return _amount;
+    }
+
+    /// @inheritdoc IL1GatewayRouter
+    function swapERC20(SwapParams calldata params) external {
+        require(params.permit.permitted.token != address(0), "Invalid input token address");
+        require(params.outputToken != address(0), "Invalid output token address");
+        require(params.permit.permitted.token != params.outputToken, "Cannot swap the same token");
+        require(params.permit.permitted.amount > 0, "Input amount must be > than 0");
+        require(params.outputAmount > 0, "Output amount must be > than 0");
+        require(params.owner != address(0), "Invalid owner address");
+
+        // TODO decode and check owner,outputToken and expected outputTokenAmount from witness
+
+        // Validate the defaultERC20Gateway has enough reserves of the output token
+        uint256 outputTokenBalance = IERC20MetadataUpgradeable(params.outputToken).balanceOf(defaultERC20Gateway);
+        require(params.outputAmount <= outputTokenBalance, "Insufficient reserves");
+
+        // Use Permit2 to validate and transfer input tokens from `owner` to the defaultERC20Gateway
+        ISignatureTransfer(permit2).permitTransferFrom(
+            params.permit,
+            ISignatureTransfer.SignatureTransferDetails({
+                to: defaultERC20Gateway,
+                requestedAmount: params.permit.permitted.amount
+            }),
+            params.owner,
+            // params.witness,
+            // params.witnessTypeString,
+            params.sig
+        );
+
+        // Use AllowanceTransfer to transfer the output tokens from the defaultERC20Gateway to the `owner` address
+        IAllowanceTransfer(permit2).transferFrom(
+            defaultERC20Gateway, params.owner, uint160(params.outputAmount), params.outputToken
+        );
+
+        emit Swap(
+            params.owner,
+            params.permit.permitted.token,
+            params.outputToken,
+            params.permit.permitted.amount,
+            params.outputAmount
+        );
     }
 
     /**
@@ -256,5 +313,13 @@ contract L1GatewayRouter is OwnableUpgradeable, IL1GatewayRouter {
 
             emit SetERC20Gateway(_tokens[i], _oldGateway, _gateways[i]);
         }
+    }
+
+    /// @inheritdoc IL1GatewayRouter
+    function setPermit2(address _newPermit2) external onlyOwner {
+        address _oldPermit2 = permit2;
+        permit2 = _newPermit2;
+
+        emit SetPermit2(_oldPermit2, _newPermit2);
     }
 }

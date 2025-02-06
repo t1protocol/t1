@@ -685,13 +685,13 @@ contract T1Chain is OwnableUpgradeable, PausableUpgradeable, IT1Chain {
     }
 
     /// @dev Internal function to do common checks after actual batch finalization.
-    /// @param _totalL1MessagesPoppedOverall The total number of L1 messages popped after current batch.
+    /// @param /*_totalL1MessagesPoppedOverall*/ The total number of L1 messages popped after current batch.
     /// @param _batchIndex The index of current batch.
     /// @param _batchHash The hash of current batch.
     /// @param _postStateRoot The state root after current batch.
     /// @param _withdrawRoot The withdraw trie root after current batch.
     function _afterFinalizeBatch(
-        uint256 _totalL1MessagesPoppedOverall,
+        uint256, /*_totalL1MessagesPoppedOverall*/
         uint256 _batchIndex,
         bytes32 _batchHash,
         bytes32 _postStateRoot,
