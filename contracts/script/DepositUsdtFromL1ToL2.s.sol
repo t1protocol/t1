@@ -40,6 +40,8 @@ contract DepositUsdtFromL1ToL2 is Script {
 
         vm.stopBroadcast();
 
+        vm.sleep(30_000); // wait 30 sec for xchain transaction to be processed
+
         logBalances(vm.addr(L1_DEPLOYER_PRIVATE_KEY), l2usdtAddress);
     }
 
