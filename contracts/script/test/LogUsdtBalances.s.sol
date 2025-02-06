@@ -25,15 +25,15 @@ contract LogUsdtBalances is Script {
 
         vm.createSelectFork(vm.rpcUrl("sepolia"));
         console.log(
-            "[%s] currently has [%d] USDT on L1",
-            vm.toString(addr), T1StandardERC20(L1_USDT_ADDR).balanceOf(addr) / 10 ** 18
+            "[%s] currently has [%18e] USDT on L1",
+            vm.toString(addr), T1StandardERC20(L1_USDT_ADDR).balanceOf(addr)
         );
 
         if (L2_USDT_ADDR != address(0)) {
             vm.createSelectFork(vm.rpcUrl("t1"));
             console.log(
-                "[%s] currently has [%d] USDT on L2",
-                vm.toString(addr), T1StandardERC20(L2_USDT_ADDR).balanceOf(addr) / 10 ** 18
+                "[%s] currently has [%18e] USDT on L2",
+                vm.toString(addr), T1StandardERC20(L2_USDT_ADDR).balanceOf(addr)
             );
         } else {
             console.log(
