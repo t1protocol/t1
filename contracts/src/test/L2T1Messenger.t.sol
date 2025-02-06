@@ -3,7 +3,6 @@
 pragma solidity >=0.8.28;
 
 import { DSTestPlus } from "solmate/test/utils/DSTestPlus.sol";
-import { console } from "forge-std/console.sol";
 import { ERC1967Proxy } from "@openzeppelin/contracts/proxy/ERC1967/ERC1967Proxy.sol";
 
 import { L1GasPriceOracle } from "../L2/predeploys/L1GasPriceOracle.sol";
