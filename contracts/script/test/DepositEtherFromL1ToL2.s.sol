@@ -16,6 +16,7 @@ contract DepositEtherFromL1ToL2 is Script {
     address L1_ETH_GATEWAY_PROXY_ADDR = vm.envAddress("L1_ETH_GATEWAY_PROXY_ADDR");
 
     function run() external {
+        vm.createSelectFork(vm.rpcUrl("sepolia"));
         vm.startBroadcast(L1_DEPLOYER_PRIVATE_KEY);
 
         uint256 gasLimit = 1_000_000;

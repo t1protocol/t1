@@ -18,6 +18,7 @@ contract DepositWethFromL2ToL2 is Script {
     address payable L2_WETH_ADDR = payable(vm.envAddress("L2_WETH_ADDR"));
 
     function run() external {
+        vm.createSelectFork(vm.rpcUrl("t1"));
         vm.startBroadcast(L2_DEPLOYER_PRIVATE_KEY);
 
         uint256 gasLimit = 1_000_000;

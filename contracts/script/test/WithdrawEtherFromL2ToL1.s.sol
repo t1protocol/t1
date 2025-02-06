@@ -16,6 +16,7 @@ contract WithdrawEtherFromL2ToL1 is Script {
     address L2_ETH_GATEWAY_PROXY_ADDR = vm.envAddress("L2_ETH_GATEWAY_PROXY_ADDR");
 
     function run() external {
+        vm.createSelectFork(vm.rpcUrl("t1"));
         vm.startBroadcast(L2_DEPLOYER_PRIVATE_KEY);
 
         uint256 gasLimit = 1_000_000;
