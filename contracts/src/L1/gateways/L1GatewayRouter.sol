@@ -138,42 +138,44 @@ contract L1GatewayRouter is OwnableUpgradeable, IL1GatewayRouter {
 
     /// @inheritdoc IL1GatewayRouter
     function swapERC20(SwapParams calldata params) external {
-        ISignatureTransfer.PermitTransferFrom calldata permit = params.permit;
-        address inputToken = permit.permitted.token;
-        uint256 inputAmount = permit.permitted.amount;
-        address outputToken = params.outputToken;
-        uint256 outputAmount = params.outputAmount;
-        address owner = params.owner;
-        // bytes32 witness = params.witness;
-        // string calldata witnessTypeString = params.witnessTypeString;
-
-        require(inputToken != address(0), "Invalid input token address");
-        require(outputToken != address(0), "Invalid output token address");
-        require(inputToken != outputToken, "Cannot swap the same token");
-        require(inputAmount > 0, "Input amount must be > than 0");
-        require(outputAmount > 0, "Output amount must be > than 0");
-        require(owner != address(0), "Invalid owner address");
+        require(params.permit.permitted.token != address(0), "Invalid input token address");
+        require(params.outputToken != address(0), "Invalid output token address");
+        require(params.permit.permitted.token != params.outputToken, "Cannot swap the same token");
+        require(params.permit.permitted.amount > 0, "Input amount must be > than 0");
+        require(params.outputAmount > 0, "Output amount must be > than 0");
+        require(params.owner != address(0), "Invalid owner address");
 
         // TODO decode and check owner,outputToken and expected outputTokenAmount from witness
 
         // Validate the defaultERC20Gateway has enough reserves of the output token
-        uint256 outputTokenBalance = IERC20MetadataUpgradeable(outputToken).balanceOf(defaultERC20Gateway);
-        require(outputAmount <= outputTokenBalance, "Insufficient reserves");
+        uint256 outputTokenBalance = IERC20MetadataUpgradeable(params.outputToken).balanceOf(defaultERC20Gateway);
+        require(params.outputAmount <= outputTokenBalance, "Insufficient reserves");
 
         // Use Permit2 to validate and transfer input tokens from `owner` to the defaultERC20Gateway
         ISignatureTransfer(permit2).permitTransferFrom(
-            permit,
-            ISignatureTransfer.SignatureTransferDetails({ to: defaultERC20Gateway, requestedAmount: inputAmount }),
-            owner,
-            // witness,
-            // witnessTypeString,
+            params.permit,
+            ISignatureTransfer.SignatureTransferDetails({
+                to: defaultERC20Gateway,
+                requestedAmount: params.permit.permitted.amount
+            }),
+            params.owner,
+            // params.witness,
+            // params.witnessTypeString,
             params.sig
         );
 
         // Use AllowanceTransfer to transfer the output tokens from the defaultERC20Gateway to the `owner` address
-        IAllowanceTransfer(permit2).transferFrom(defaultERC20Gateway, owner, uint160(outputAmount), outputToken);
+        IAllowanceTransfer(permit2).transferFrom(
+            defaultERC20Gateway, params.owner, uint160(params.outputAmount), params.outputToken
+        );
 
-        emit Swap(owner, inputToken, outputToken, inputAmount, outputAmount);
+        emit Swap(
+            params.owner,
+            params.permit.permitted.token,
+            params.outputToken,
+            params.permit.permitted.amount,
+            params.outputAmount
+        );
     }
 
     /**
