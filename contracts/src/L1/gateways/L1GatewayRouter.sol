@@ -2,6 +2,8 @@
 
 pragma solidity >=0.8.28;
 
+import { console } from "forge-std/console.sol";
+
 import { OwnableUpgradeable } from "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
 import { IERC20Upgradeable } from "@openzeppelin/contracts-upgradeable/token/ERC20/IERC20Upgradeable.sol";
 import { IERC20MetadataUpgradeable } from
@@ -145,22 +147,22 @@ contract L1GatewayRouter is OwnableUpgradeable, IL1GatewayRouter {
         require(params.outputAmount > 0, "Output amount must be > than 0");
         require(params.owner != address(0), "Invalid owner address");
 
-        // TODO decode and check owner,outputToken and expected outputTokenAmount from witness
+        // TODO decode and check expected outputTokenAmount from witness
 
         // Validate the defaultERC20Gateway has enough reserves of the output token
         uint256 outputTokenBalance = IERC20MetadataUpgradeable(params.outputToken).balanceOf(defaultERC20Gateway);
         require(params.outputAmount <= outputTokenBalance, "Insufficient reserves");
 
         // Use Permit2 to validate and transfer input tokens from `owner` to the defaultERC20Gateway
-        ISignatureTransfer(permit2).permitTransferFrom(
+        ISignatureTransfer(permit2).permitWitnessTransferFrom(
             params.permit,
             ISignatureTransfer.SignatureTransferDetails({
                 to: defaultERC20Gateway,
                 requestedAmount: params.permit.permitted.amount
             }),
             params.owner,
-            // params.witness,
-            // params.witnessTypeString,
+            params.witness,
+            params.witnessTypeString,
             params.sig
         );
 

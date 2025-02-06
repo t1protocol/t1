@@ -45,6 +45,18 @@ contract L1GatewayRouterTest is L1GatewayTestBase, DeployPermit2, PermitSignatur
 
     address private permit2;
 
+    struct MockWitness {
+        uint256 minAmounOut;
+    }
+
+    string private constant WITNESS_TYPE_STRING =
+        "MockWitness witness)MockWitness(uint256 minAmounOut)TokenPermissions(address token,uint256 amount)";
+
+    bytes32 private constant FULL_EXAMPLE_WITNESS_TYPEHASH = keccak256(
+        // solhint-disable-next-line max-line-length
+        "PermitWitnessTransferFrom(TokenPermissions permitted,address spender,uint256 nonce,uint256 deadline,MockWitness witness)MockWitness(uint256 minAmounOut)TokenPermissions(address token,uint256 amount)"
+    );
+
     function setUp() public {
         __L1GatewayTestBase_setUp();
 
@@ -198,7 +210,7 @@ contract L1GatewayRouterTest is L1GatewayTestBase, DeployPermit2, PermitSignatur
         router.requestERC20(_sender, _token, _amount);
     }
 
-    function testSwapERC20Complete() public {
+    function testSwapERC20WithWitness() public {
         uint256 alicePrivateKey = 0xa11ce;
         address alice = hevm.addr(alicePrivateKey);
 
@@ -217,8 +229,15 @@ contract L1GatewayRouterTest is L1GatewayTestBase, DeployPermit2, PermitSignatur
             deadline: block.timestamp + 1000
         });
 
-        bytes memory sig = getPermitTransferSignature(
-            permit, alicePrivateKey, ISignatureTransfer(permit2).DOMAIN_SEPARATOR(), address(router)
+        MockWitness memory witnessData = MockWitness(10_000_000);
+        bytes32 witness = keccak256(abi.encode(witnessData));
+        bytes memory sig = getPermitWitnessTransferSignature(
+            permit,
+            alicePrivateKey,
+            FULL_EXAMPLE_WITNESS_TYPEHASH,
+            witness,
+            ISignatureTransfer(permit2).DOMAIN_SEPARATOR(),
+            address(router)
         );
 
         l1StandardERC20Gateway.allowRouterToTransfer(address(dai), type(uint160).max, uint48(block.timestamp + 1000));
@@ -236,8 +255,8 @@ contract L1GatewayRouterTest is L1GatewayTestBase, DeployPermit2, PermitSignatur
             outputToken: address(dai),
             outputAmount: outputAmount,
             owner: alice,
-            witness: bytes32(""),
-            witnessTypeString: string(""),
+            witness: witness,
+            witnessTypeString: WITNESS_TYPE_STRING,
             sig: sig
         });
 
