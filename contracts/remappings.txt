@@ -1,5 +1,4 @@
 @openzeppelin/=node_modules/@openzeppelin/
-openzeppelin-contracts/=node_modules/@openzeppelin/
 @uniswap/=node_modules/@uniswap/
 forge-std/=node_modules/forge-std/src/
 solmate/=node_modules/solmate/src/

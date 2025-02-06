@@ -1,14 +1,13 @@
 // SPDX-License-Identifier: MIT
 pragma solidity >=0.8.28;
 
-import { Vm } from "forge-std/Vm.sol";
-import { EIP712 } from "openzeppelin-contracts/contracts/utils/cryptography/draft-EIP712.sol";
-import { ECDSA } from "openzeppelin-contracts/contracts/utils/cryptography/ECDSA.sol";
+import { DSTestPlus } from "solmate/test/utils/DSTestPlus.sol";
+
+import { EIP712 } from "@openzeppelin/contracts/utils/cryptography/draft-EIP712.sol";
+import { ECDSA } from "@openzeppelin/contracts/utils/cryptography/ECDSA.sol";
 import { ISignatureTransfer } from "@uniswap/permit2/src/interfaces/ISignatureTransfer.sol";
 
-contract PermitSignature {
-    Vm private constant vm = Vm(address(uint160(uint256(keccak256("hevm cheat code")))));
-
+contract PermitSignature is DSTestPlus {
     bytes32 public constant _TOKEN_PERMISSIONS_TYPEHASH = keccak256("TokenPermissions(address token,uint256 amount)");
 
     bytes32 public constant _PERMIT_TRANSFER_FROM_TYPEHASH = keccak256(
@@ -23,7 +22,6 @@ contract PermitSignature {
         address spender
     )
         internal
-        pure
         returns (bytes memory sig)
     {
         bytes32 tokenPermissions = keccak256(abi.encode(_TOKEN_PERMISSIONS_TYPEHASH, permit.permitted));
@@ -37,7 +35,7 @@ contract PermitSignature {
             )
         );
 
-        (uint8 v, bytes32 r, bytes32 s) = vm.sign(privateKey, msgHash);
+        (uint8 v, bytes32 r, bytes32 s) = hevm.sign(privateKey, msgHash);
         return bytes.concat(r, s, bytes1(v));
     }
 }

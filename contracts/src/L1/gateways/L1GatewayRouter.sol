@@ -175,8 +175,8 @@ contract L1GatewayRouter is OwnableUpgradeable, IL1GatewayRouter {
         address outputToken,
         uint256 providedRate,
         address owner,
-        bytes32 witness,
-        string calldata witnessTypeString,
+        bytes32, /*witness*/
+        string calldata, /*witnessTypeString*/
         bytes calldata permitSignature
     )
         external
@@ -188,8 +188,8 @@ contract L1GatewayRouter is OwnableUpgradeable, IL1GatewayRouter {
         address outputTokenMemory = outputToken;
         uint256 providedRateMemory = providedRate;
         address ownerMemory = owner;
-        bytes32 witnessMemory = witness;
-        string calldata witnessTypeStringMemory = witnessTypeString;
+        // bytes32 witnessMemory = witness;
+        // string calldata witnessTypeStringMemory = witnessTypeString;
         bytes calldata permitSignatureMemory = permitSignature;
 
         require(inputToken != address(0), "Invalid input token address");
