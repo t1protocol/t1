@@ -13,7 +13,7 @@ import { L2StandardERC20Gateway } from "../src/L2/gateways/L2StandardERC20Gatewa
 // solhint-disable var-name-mixedcase
 
 contract DepositWethFromL1ToL2 is Script {
-    uint256 L2_DEPLOYER_PRIVATE_KEY = vm.envUint("L2_DEPLOYER_PRIVATE_KEY");
+    uint256 L1_DEPLOYER_PRIVATE_KEY = vm.envUint("L1_DEPLOYER_PRIVATE_KEY");
 
     address payable L2_STANDARD_ERC20_GATEWAY_PROXY_ADDR =
         payable(vm.envAddress("L2_STANDARD_ERC20_GATEWAY_PROXY_ADDR"));
@@ -21,7 +21,7 @@ contract DepositWethFromL1ToL2 is Script {
     address payable L2_USDT_ADDR = payable(vm.envAddress("L2_USDT_ADDR"));
 
     function run() external {
-        vm.startBroadcast(L2_DEPLOYER_PRIVATE_KEY);
+        vm.startBroadcast(L1_DEPLOYER_PRIVATE_KEY);
 
         uint256 gasLimit = 1_000_000;
 

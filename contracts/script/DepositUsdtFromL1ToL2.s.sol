@@ -21,8 +21,11 @@ contract DepositUsdtFromL1ToL2 is Script {
         payable(vm.envAddress("L1_STANDARD_ERC20_GATEWAY_PROXY_ADDR"));
 
     address payable L1_USDT_ADDR = payable(vm.envAddress("L1_USDT_ADDR"));
+    address payable L2_USDT_ADDR = payable(vm.envAddress("L2_USDT_ADDR"));
 
     function run() external {
+        logBalances(vm.addr(L1_DEPLOYER_PRIVATE_KEY), L2_USDT_ADDR);
+
         vm.startBroadcast(L1_DEPLOYER_PRIVATE_KEY);
 
         uint256 gasLimit = 1_000_000;
@@ -36,9 +39,28 @@ contract DepositUsdtFromL1ToL2 is Script {
         logAddress("L2_USDT_ADDR", l2usdtAddress);
 
         vm.stopBroadcast();
+
+        logBalances(vm.addr(L1_DEPLOYER_PRIVATE_KEY), l2usdtAddress);
     }
 
     function logAddress(string memory name, address addr) internal pure {
         console.log(string(abi.encodePacked(name, "=", vm.toString(address(addr)))));
+    }
+
+    function logBalances(address addr, address l2usdtAddr) internal {
+        vm.createSelectFork(vm.rpcUrl("sepolia"));
+        console.log(
+            "[%s] currently has [%d] USDT on L1",
+            vm.toString(addr), T1StandardERC20(L1_USDT_ADDR).balanceOf(addr)
+        );
+
+        if (l2usdtAddr != address(0))
+        vm.createSelectFork(vm.rpcUrl("t1"));
+        console.log(
+            "[%s] currently has [%d] USDT on L2",
+            vm.toString(addr), T1StandardERC20(l2usdtAddr).balanceOf(addr)
+        );
+
+        vm.createSelectFork(vm.rpcUrl("sepolia"));
     }
 }
