@@ -2,11 +2,11 @@
 
 pragma solidity >=0.8.28;
 
-import { L1WETHGateway } from "../src/L1/gateways/L1WETHGateway.sol";
+import { L1WETHGateway } from "../../src/L1/gateways/L1WETHGateway.sol";
 import { Script } from "forge-std/Script.sol";
-import { WrappedEther } from "../src/L2/predeploys/WrappedEther.sol";
-import { T1StandardERC20 } from "../src/libraries/token/T1StandardERC20.sol";
-import { L2StandardERC20Gateway } from "../src/L2/gateways/L2StandardERC20Gateway.sol";
+import { WrappedEther } from "../../src/L2/predeploys/WrappedEther.sol";
+import { T1StandardERC20 } from "../../src/libraries/token/T1StandardERC20.sol";
+import { L2StandardERC20Gateway } from "../../src/L2/gateways/L2StandardERC20Gateway.sol";
 
 // solhint-disable max-states-count
 // solhint-disable state-visibility

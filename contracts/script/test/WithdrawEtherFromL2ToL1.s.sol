@@ -4,7 +4,7 @@ pragma solidity >=0.8.28;
 
 import { ProxyAdmin } from "@openzeppelin/contracts/proxy/transparent/ProxyAdmin.sol";
 import { Script } from "forge-std/Script.sol";
-import { L2ETHGateway } from "../src/L2/gateways/L2ETHGateway.sol";
+import { L2ETHGateway } from "../../src/L2/gateways/L2ETHGateway.sol";
 
 // solhint-disable max-states-count
 // solhint-disable state-visibility

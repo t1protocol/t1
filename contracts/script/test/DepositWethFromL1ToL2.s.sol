@@ -2,9 +2,9 @@
 
 pragma solidity >=0.8.28;
 
-import { L1WETHGateway } from "../src/L1/gateways/L1WETHGateway.sol";
+import { L1WETHGateway } from "../../src/L1/gateways/L1WETHGateway.sol";
 import { Script } from "forge-std/Script.sol";
-import { WrappedEther } from "../src/L2/predeploys/WrappedEther.sol";
+import { WrappedEther } from "../../src/L2/predeploys/WrappedEther.sol";
 
 // solhint-disable max-states-count
 // solhint-disable state-visibility
