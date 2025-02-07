@@ -17,8 +17,7 @@ import { console } from "forge-std/console.sol";
 contract DepositUsdtFromL1ToL2 is Script {
     uint256 L1_DEPLOYER_PRIVATE_KEY = vm.envUint("L1_DEPLOYER_PRIVATE_KEY");
 
-    address L1_STANDARD_ERC20_GATEWAY_PROXY_ADDR =
-        vm.envAddress("L1_STANDARD_ERC20_GATEWAY_PROXY_ADDR");
+    address L1_STANDARD_ERC20_GATEWAY_PROXY_ADDR = vm.envAddress("L1_STANDARD_ERC20_GATEWAY_PROXY_ADDR");
 
     address payable L1_USDT_ADDR = payable(vm.envAddress("L1_USDT_ADDR"));
 

@@ -13,7 +13,6 @@ contract Usdt is ERC20 {
     }
 }
 
-
 contract DeployL1Usdt is Script {
     function run() external {
         uint256 L1_DEPLOYER_PRIVATE_KEY = vm.envUint("L1_DEPLOYER_PRIVATE_KEY");
