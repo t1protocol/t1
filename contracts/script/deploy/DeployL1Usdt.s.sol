@@ -5,7 +5,14 @@ pragma solidity >=0.8.28;
 import { Script } from "forge-std/Script.sol";
 import { console } from "forge-std/console.sol";
 
-import { Usdt } from "../../src/libraries/token/Usdt.sol";
+import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
+
+contract Usdt is ERC20 {
+    constructor(uint256 initialSupply) ERC20("USDT", "USDT") {
+        _mint(msg.sender, initialSupply);
+    }
+}
+
 
 contract DeployL1Usdt is Script {
     function run() external {
