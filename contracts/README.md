@@ -31,6 +31,7 @@ contracts.
 │   └── <a href="./src/test/">test</a>: Unit tests in solidity
 ├── <a href="./foundry.toml">foundry.toml</a>: Foundry configuration
 ├── <a href="./remappings.txt">remappings.txt</a>: Foundry dependency mappings
+└── <a href="./deployments">deployments</a>: Metadata from previous deployments
 ...
 </pre>
 
@@ -126,6 +127,27 @@ For this script to work, you need to have a `MNEMONIC` environment variable set 
 
 For instructions on how to deploy to a testnet or mainnet, check out the
 [Solidity Scripting](https://book.getfoundry.sh/tutorials/solidity-scripting.html) tutorial.
+
+After deploying contracts, add a new json file to the [deployments](./deployments/) directory. At minimum, it should
+include the following:
+
+```json
+{
+  "metadata": {
+    "version": "chainN",
+    "date": "00-00-2025",
+    "by": "<your name>",
+    "from_machine": "name of VM or local machine",
+    "from_branch": "canary",
+    "from_commit": "a7e7dae0dd90aa4091ba034e820ac224213d8a30",
+    "RPC_URL_L2": "https://rpc.devnet.t1protocol.com",
+    "RPC_URL_L1": "https://sepolia.infura.io/v3/6de3d4cd043143e896aeebafa0b23f56"
+  },
+  "addresses": {
+    "CONTRACT_NAME": "0x0000000000000000000000000000000000000001"
+  }
+}
+```
 
 ### Format
 
