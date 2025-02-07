@@ -49,6 +49,11 @@ interface IL1GatewayRouter is IL1ETHGateway, IL1ERC20Gateway {
     /// @param newPermit2 The address of the new Permit2.
     event SetPermit2(address indexed oldPermit2, address indexed newPermit2);
 
+    /// @notice Emitted when the market maker is updated.
+    /// @param oldMM The address of the old market maker.
+    /// @param newMM The address of the new market maker.
+    event SetMM(address indexed oldMM, address indexed newMM);
+
     /// @notice Represents the necessary details for the swap
     /// @param permit The signed permit message for a single token transfer.
     /// @param owner The address of the user on whose behalf the swap is executed.

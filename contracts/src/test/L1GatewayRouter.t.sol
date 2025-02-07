@@ -167,6 +167,20 @@ contract L1GatewayRouterTest is L1GatewayTestBase, DeployPermit2, PermitSignatur
         assertEq(address(2), router.permit2());
     }
 
+    function testSetMM() public {
+        hevm.startPrank(address(1));
+        hevm.expectRevert("Ownable: caller is not the owner");
+        router.setMM(address(2));
+        hevm.stopPrank();
+
+        // set by owner, should succeed
+        hevm.expectEmit(true, true, true, true);
+        emit IL1GatewayRouter.SetMM(0xb4c79daB8f259C7Aee6E5b2Aa729821864227e84, address(2));
+
+        router.setMM(address(2));
+        assertEq(address(2), router.marketMaker());
+    }
+
     function testSetERC20Gateway() public {
         router.setDefaultERC20Gateway(address(0));
 

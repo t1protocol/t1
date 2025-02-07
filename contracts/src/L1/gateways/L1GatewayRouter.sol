@@ -342,6 +342,6 @@ contract L1GatewayRouter is OwnableUpgradeable, IL1GatewayRouter {
         address _oldMM = marketMaker;
         marketMaker = _newMM;
 
-        emit SetPermit2(_oldMM, _newMM);
+        emit SetMM(_oldMM, _newMM);
     }
 }
