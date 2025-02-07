@@ -6,7 +6,6 @@ import { OwnableUpgradeable } from "@openzeppelin/contracts-upgradeable/access/O
 import { IERC20Upgradeable } from "@openzeppelin/contracts-upgradeable/token/ERC20/IERC20Upgradeable.sol";
 import { IERC20MetadataUpgradeable } from
     "@openzeppelin/contracts-upgradeable/token/ERC20/extensions/IERC20MetadataUpgradeable.sol";
-import { Math } from "@openzeppelin/contracts/utils/math/Math.sol";
 import { SafeERC20Upgradeable } from "@openzeppelin/contracts-upgradeable/token/ERC20/utils/SafeERC20Upgradeable.sol";
 import { IAllowanceTransfer } from "@uniswap/permit2/src/interfaces/IAllowanceTransfer.sol";
 import { ISignatureTransfer } from "@uniswap/permit2/src/interfaces/ISignatureTransfer.sol";
@@ -45,6 +44,9 @@ contract L1GatewayRouter is OwnableUpgradeable, IL1GatewayRouter {
     /// @notice The Permit2 contract.
     address public permit2;
 
+    /// @notice The address of the market maker.
+    address public marketMaker;
+
     /**
      *
      * Function Modifiers *
@@ -57,6 +59,14 @@ contract L1GatewayRouter is OwnableUpgradeable, IL1GatewayRouter {
 
     modifier onlyInContext() {
         require(_msgSender() == gatewayInContext, "Only in deposit context");
+        _;
+    }
+
+    /**
+     * @dev Throws if called by any account other than the market maker.
+     */
+    modifier onlyMM() {
+        require(_msgSender() == marketMaker, "Only the market maker");
         _;
     }
 
@@ -137,7 +147,7 @@ contract L1GatewayRouter is OwnableUpgradeable, IL1GatewayRouter {
     }
 
     /// @inheritdoc IL1GatewayRouter
-    function swapERC20(SwapParams calldata params) external {
+    function swapERC20(SwapParams calldata params) external onlyMM {
         require(params.permit.permitted.token != address(0), "Invalid input token address");
         require(params.outputToken != address(0), "Invalid output token address");
         require(params.permit.permitted.token != params.outputToken, "Cannot swap the same token");
@@ -145,22 +155,26 @@ contract L1GatewayRouter is OwnableUpgradeable, IL1GatewayRouter {
         require(params.outputAmount > 0, "Output amount must be > than 0");
         require(params.owner != address(0), "Invalid owner address");
 
-        // TODO decode and check owner,outputToken and expected outputTokenAmount from witness
-
         // Validate the defaultERC20Gateway has enough reserves of the output token
         uint256 outputTokenBalance = IERC20MetadataUpgradeable(params.outputToken).balanceOf(defaultERC20Gateway);
         require(params.outputAmount <= outputTokenBalance, "Insufficient reserves");
 
+        // Validate the final output amount is >= to the owner's expectations
+        require(params.outputAmount >= params.minAmountOut, "Owner expects more output tokens");
+
+        // Encoded witness data to be included when checking the user signature
+        bytes32 witness = keccak256(abi.encode(params.minAmountOut));
+
         // Use Permit2 to validate and transfer input tokens from `owner` to the defaultERC20Gateway
-        ISignatureTransfer(permit2).permitTransferFrom(
+        ISignatureTransfer(permit2).permitWitnessTransferFrom(
             params.permit,
             ISignatureTransfer.SignatureTransferDetails({
                 to: defaultERC20Gateway,
                 requestedAmount: params.permit.permitted.amount
             }),
             params.owner,
-            // params.witness,
-            // params.witnessTypeString,
+            witness,
+            params.witnessTypeString,
             params.sig
         );
 
@@ -321,5 +335,13 @@ contract L1GatewayRouter is OwnableUpgradeable, IL1GatewayRouter {
         permit2 = _newPermit2;
 
         emit SetPermit2(_oldPermit2, _newPermit2);
+    }
+
+    /// @inheritdoc IL1GatewayRouter
+    function setMM(address _newMM) external onlyOwner {
+        address _oldMM = marketMaker;
+        marketMaker = _newMM;
+
+        emit SetMM(_oldMM, _newMM);
     }
 }

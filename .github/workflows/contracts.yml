@@ -61,7 +61,7 @@ jobs:
 
       - name: "Build the contracts and print their size"
         working-directory: "contracts"
-        run: "forge build --sizes"
+        run: "bun run build -- --sizes"
 
       - name: "Add build summary"
         run: |
@@ -97,7 +97,7 @@ jobs:
 
       - name: "Run the tests"
         working-directory: "contracts"
-        run: "forge test"
+        run: "bun run test"
 
       - name: "Add test summary"
         run: |

@@ -49,20 +49,25 @@ interface IL1GatewayRouter is IL1ETHGateway, IL1ERC20Gateway {
     /// @param newPermit2 The address of the new Permit2.
     event SetPermit2(address indexed oldPermit2, address indexed newPermit2);
 
+    /// @notice Emitted when the market maker is updated.
+    /// @param oldMM The address of the old market maker.
+    /// @param newMM The address of the new market maker.
+    event SetMM(address indexed oldMM, address indexed newMM);
+
     /// @notice Represents the necessary details for the swap
     /// @param permit The signed permit message for a single token transfer.
-    /// @param outputToken The address of the token to receive.
-    /// @param outputAmount The output token amount.
     /// @param owner The address of the user on whose behalf the swap is executed.
-    /// @param witness Extra data to include when checking the user signature.
+    /// @param outputToken The address of the token to receive.
+    /// @param minAmountout The minimum expected output token amount by the owner.
+    /// @param outputAmount The output token amount.
     /// @param witnessTypeString The EIP-712 type definition for remaining string stub of the typehash.
     /// @param sig The EIP-712 signature authorizing the transfer from the owner via Permit2.
     struct SwapParams {
         ISignatureTransfer.PermitTransferFrom permit;
-        address outputToken;
-        uint256 outputAmount;
         address owner;
-        bytes32 witness;
+        address outputToken;
+        uint256 minAmountOut;
+        uint256 outputAmount;
         string witnessTypeString;
         bytes sig;
     }
@@ -123,4 +128,9 @@ interface IL1GatewayRouter is IL1ETHGateway, IL1ERC20Gateway {
     /// @dev This function should only be called by contract owner.
     /// @param _newPermit2 The address to update.
     function setPermit2(address _newPermit2) external;
+
+    /// @notice Update the address of the market maker.
+    /// @dev This function should only be called by contract owner.
+    /// @param _newMM The address to update.
+    function setMM(address _newMM) external;
 }
