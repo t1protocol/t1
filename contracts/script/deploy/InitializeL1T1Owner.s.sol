@@ -7,15 +7,15 @@ import { Script } from "forge-std/Script.sol";
 import { Ownable } from "@openzeppelin/contracts/access/Ownable.sol";
 import { ProxyAdmin } from "@openzeppelin/contracts/proxy/transparent/ProxyAdmin.sol";
 
-import { L1T1Messenger } from "../src/L1/L1T1Messenger.sol";
-import { L1GatewayRouter } from "../src/L1/gateways/L1GatewayRouter.sol";
-import { L1MessageQueue } from "../src/L1/rollup/L1MessageQueue.sol";
-import { T1MessengerBase } from "../src/libraries/T1MessengerBase.sol";
-import { L2GasPriceOracle } from "../src/L1/rollup/L2GasPriceOracle.sol";
-import { MultipleVersionRollupVerifier } from "../src/L1/rollup/MultipleVersionRollupVerifier.sol";
-import { T1Chain } from "../src/L1/rollup/T1Chain.sol";
-import { T1Owner } from "../src/misc/T1Owner.sol";
-import { Whitelist } from "../src/L2/predeploys/Whitelist.sol";
+import { L1T1Messenger } from "../../src/L1/L1T1Messenger.sol";
+import { L1GatewayRouter } from "../../src/L1/gateways/L1GatewayRouter.sol";
+import { L1MessageQueue } from "../../src/L1/rollup/L1MessageQueue.sol";
+import { T1MessengerBase } from "../../src/libraries/T1MessengerBase.sol";
+import { L2GasPriceOracle } from "../../src/L1/rollup/L2GasPriceOracle.sol";
+import { MultipleVersionRollupVerifier } from "../../src/L1/rollup/MultipleVersionRollupVerifier.sol";
+import { T1Chain } from "../../src/L1/rollup/T1Chain.sol";
+import { T1Owner } from "../../src/misc/T1Owner.sol";
+import { Whitelist } from "../../src/L2/predeploys/Whitelist.sol";
 
 // solhint-disable max-states-count
 // solhint-disable state-visibility

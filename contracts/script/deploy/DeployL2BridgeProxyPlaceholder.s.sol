@@ -10,7 +10,7 @@ import { console } from "forge-std/console.sol";
 import { ProxyAdmin } from "@openzeppelin/contracts/proxy/transparent/ProxyAdmin.sol";
 import { TransparentUpgradeableProxy } from "@openzeppelin/contracts/proxy/transparent/TransparentUpgradeableProxy.sol";
 
-import { EmptyContract } from "../src/misc/EmptyContract.sol";
+import { EmptyContract } from "../../src/misc/EmptyContract.sol";
 
 // solhint-disable state-visibility
 // solhint-disable var-name-mixedcase

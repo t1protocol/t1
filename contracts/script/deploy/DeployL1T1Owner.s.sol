@@ -7,7 +7,7 @@ import { console } from "forge-std/console.sol";
 
 import { TimelockController } from "@openzeppelin/contracts/governance/TimelockController.sol";
 
-import { T1Owner } from "../src/misc/T1Owner.sol";
+import { T1Owner } from "../../src/misc/T1Owner.sol";
 
 // solhint-disable state-visibility
 // solhint-disable var-name-mixedcase
