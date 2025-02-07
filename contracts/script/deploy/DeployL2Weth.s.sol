@@ -5,7 +5,7 @@ pragma solidity >=0.8.28;
 import { Script } from "forge-std/Script.sol";
 import { console } from "forge-std/console.sol";
 
-import { WrappedEther } from "../src/L2/predeploys/WrappedEther.sol";
+import { WrappedEther } from "../../src/L2/predeploys/WrappedEther.sol";
 
 contract DeployL2Weth is Script {
     function run() external {

@@ -7,14 +7,14 @@ import { Script } from "forge-std/Script.sol";
 import { ProxyAdmin } from "@openzeppelin/contracts/proxy/transparent/ProxyAdmin.sol";
 import { ITransparentUpgradeableProxy } from "@openzeppelin/contracts/proxy/transparent/TransparentUpgradeableProxy.sol";
 
-import { L1ETHGateway } from "../src/L1/gateways/L1ETHGateway.sol";
-import { L1GatewayRouter } from "../src/L1/gateways/L1GatewayRouter.sol";
-import { L1T1Messenger } from "../src/L1/L1T1Messenger.sol";
-import { L1StandardERC20Gateway } from "../src/L1/gateways/L1StandardERC20Gateway.sol";
-import { L1WETHGateway } from "../src/L1/gateways/L1WETHGateway.sol";
-import { T1Chain } from "../src/L1/rollup/T1Chain.sol";
-import { L1MessageQueueWithGasPriceOracle } from "../src/L1/rollup/L1MessageQueueWithGasPriceOracle.sol";
-import { L2GasPriceOracle } from "../src/L1/rollup/L2GasPriceOracle.sol";
+import { L1ETHGateway } from "../../src/L1/gateways/L1ETHGateway.sol";
+import { L1GatewayRouter } from "../../src/L1/gateways/L1GatewayRouter.sol";
+import { L1T1Messenger } from "../../src/L1/L1T1Messenger.sol";
+import { L1StandardERC20Gateway } from "../../src/L1/gateways/L1StandardERC20Gateway.sol";
+import { L1WETHGateway } from "../../src/L1/gateways/L1WETHGateway.sol";
+import { T1Chain } from "../../src/L1/rollup/T1Chain.sol";
+import { L1MessageQueueWithGasPriceOracle } from "../../src/L1/rollup/L1MessageQueueWithGasPriceOracle.sol";
+import { L2GasPriceOracle } from "../../src/L1/rollup/L2GasPriceOracle.sol";
 
 // solhint-disable max-states-count
 // solhint-disable state-visibility

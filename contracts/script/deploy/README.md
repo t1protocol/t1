@@ -28,5 +28,12 @@ The magical deploy order is as follows:
 Scripts to test the canonical bridge:
 
 - ETH
-  - [Deposit Ether from L1->L2](DepositEtherFromL1ToL2.s.sol)
-  - [Withdraw Ether from L2->L1](WithdrawEtherFromL2ToL1.s.sol)
+  - [Deposit Ether from L1->L2](../test/DepositEtherFromL1ToL2.s.sol)
+  - [Withdraw Ether from L2->L1](../test/WithdrawEtherFromL2ToL1.s.sol)
+- WETH
+  - [Deposit WETH from L1->L2](../test/DepositWethFromL1ToL2.s.sol)
+  - [Withdraw WETH from L2->L1](../test/WithdrawWethFromL2ToL1.s.sol)
+- USDT
+  - [Deposit USDT from L1->L2](../test/DepositUsdtFromL1ToL2.s.sol)
+  - [Withdraw USDT from L2->L1](../test/WithdrawUsdtFromL2ToL1.s.sol)
+  - [Check L1 and L2 USDT balances](../test/LogUsdtBalances.s.sol)
