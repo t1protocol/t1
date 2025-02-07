@@ -2,13 +2,10 @@
 
 pragma solidity >=0.8.28;
 
-import { console } from "forge-std/console.sol";
-
 import { OwnableUpgradeable } from "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
 import { IERC20Upgradeable } from "@openzeppelin/contracts-upgradeable/token/ERC20/IERC20Upgradeable.sol";
 import { IERC20MetadataUpgradeable } from
     "@openzeppelin/contracts-upgradeable/token/ERC20/extensions/IERC20MetadataUpgradeable.sol";
-import { Math } from "@openzeppelin/contracts/utils/math/Math.sol";
 import { SafeERC20Upgradeable } from "@openzeppelin/contracts-upgradeable/token/ERC20/utils/SafeERC20Upgradeable.sol";
 import { IAllowanceTransfer } from "@uniswap/permit2/src/interfaces/IAllowanceTransfer.sol";
 import { ISignatureTransfer } from "@uniswap/permit2/src/interfaces/ISignatureTransfer.sol";
@@ -147,11 +144,15 @@ contract L1GatewayRouter is OwnableUpgradeable, IL1GatewayRouter {
         require(params.outputAmount > 0, "Output amount must be > than 0");
         require(params.owner != address(0), "Invalid owner address");
 
-        // TODO decode and check expected outputTokenAmount from witness
-
         // Validate the defaultERC20Gateway has enough reserves of the output token
         uint256 outputTokenBalance = IERC20MetadataUpgradeable(params.outputToken).balanceOf(defaultERC20Gateway);
         require(params.outputAmount <= outputTokenBalance, "Insufficient reserves");
+
+        // Validate the final output amount is more or equal to the owner's expectation
+        require(params.outputAmount >= params.minAmountOut, "Owner expects more output tokens");
+
+        /// Encode witness data to include when checking the user signature.
+        bytes32 witness = keccak256(abi.encode(params.minAmountOut));
 
         // Use Permit2 to validate and transfer input tokens from `owner` to the defaultERC20Gateway
         ISignatureTransfer(permit2).permitWitnessTransferFrom(
@@ -161,7 +162,7 @@ contract L1GatewayRouter is OwnableUpgradeable, IL1GatewayRouter {
                 requestedAmount: params.permit.permitted.amount
             }),
             params.owner,
-            params.witness,
+            witness,
             params.witnessTypeString,
             params.sig
         );

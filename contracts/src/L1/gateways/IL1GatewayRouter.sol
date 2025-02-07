@@ -51,18 +51,18 @@ interface IL1GatewayRouter is IL1ETHGateway, IL1ERC20Gateway {
 
     /// @notice Represents the necessary details for the swap
     /// @param permit The signed permit message for a single token transfer.
-    /// @param outputToken The address of the token to receive.
-    /// @param outputAmount The output token amount.
     /// @param owner The address of the user on whose behalf the swap is executed.
-    /// @param witness Extra data to include when checking the user signature.
+    /// @param outputToken The address of the token to receive.
+    /// @param minAmountout The minimum expected output token amount by the owner.
+    /// @param outputAmount The output token amount.
     /// @param witnessTypeString The EIP-712 type definition for remaining string stub of the typehash.
     /// @param sig The EIP-712 signature authorizing the transfer from the owner via Permit2.
     struct SwapParams {
         ISignatureTransfer.PermitTransferFrom permit;
-        address outputToken;
-        uint256 outputAmount;
         address owner;
-        bytes32 witness;
+        address outputToken;
+        uint256 minAmountOut;
+        uint256 outputAmount;
         string witnessTypeString;
         bytes sig;
     }
