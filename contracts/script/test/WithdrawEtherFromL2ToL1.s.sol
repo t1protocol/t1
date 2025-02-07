@@ -3,7 +3,7 @@
 pragma solidity >=0.8.28;
 
 import { Script } from "forge-std/Script.sol";
-import { L2ETHGateway } from "../src/L2/gateways/L2ETHGateway.sol";
+import { L2ETHGateway } from "../../src/L2/gateways/L2ETHGateway.sol";
 
 // solhint-disable max-states-count
 // solhint-disable state-visibility
@@ -15,6 +15,7 @@ contract WithdrawEtherFromL2ToL1 is Script {
     address L2_ETH_GATEWAY_PROXY_ADDR = vm.envAddress("L2_ETH_GATEWAY_PROXY_ADDR");
 
     function run() external {
+        vm.createSelectFork(vm.rpcUrl("t1"));
         vm.startBroadcast(L2_DEPLOYER_PRIVATE_KEY);
 
         uint256 gasLimit = 1_000_000;

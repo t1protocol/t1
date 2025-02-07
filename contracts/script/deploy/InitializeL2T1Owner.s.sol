@@ -7,11 +7,11 @@ import { Script } from "forge-std/Script.sol";
 import { Ownable } from "@openzeppelin/contracts/access/Ownable.sol";
 import { ProxyAdmin } from "@openzeppelin/contracts/proxy/transparent/ProxyAdmin.sol";
 
-import { L2GatewayRouter } from "../src/L2/gateways/L2GatewayRouter.sol";
-import { T1MessengerBase } from "../src/libraries/T1MessengerBase.sol";
-import { L1GasPriceOracle } from "../src/L2/predeploys/L1GasPriceOracle.sol";
-import { Whitelist } from "../src/L2/predeploys/Whitelist.sol";
-import { T1Owner } from "../src/misc/T1Owner.sol";
+import { L2GatewayRouter } from "../../src/L2/gateways/L2GatewayRouter.sol";
+import { T1MessengerBase } from "../../src/libraries/T1MessengerBase.sol";
+import { L1GasPriceOracle } from "../../src/L2/predeploys/L1GasPriceOracle.sol";
+import { Whitelist } from "../../src/L2/predeploys/Whitelist.sol";
+import { T1Owner } from "../../src/misc/T1Owner.sol";
 
 // solhint-disable max-states-count
 // solhint-disable state-visibility
