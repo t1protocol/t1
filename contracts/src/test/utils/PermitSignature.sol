@@ -8,14 +8,11 @@ import { ISignatureTransfer } from "@uniswap/permit2/src/interfaces/ISignatureTr
 contract PermitSignature is DSTestPlus {
     bytes32 public constant _TOKEN_PERMISSIONS_TYPEHASH = keccak256("TokenPermissions(address token,uint256 amount)");
 
-    bytes32 public constant _PERMIT_TRANSFER_FROM_TYPEHASH = keccak256(
-        // solhint-disable-next-line max-line-length
-        "PermitTransferFrom(TokenPermissions permitted,address spender,uint256 nonce,uint256 deadline)TokenPermissions(address token,uint256 amount)"
-    );
-
-    function getPermitTransferSignature(
+    function getPermitWitnessTransferSignature(
         ISignatureTransfer.PermitTransferFrom memory permit,
         uint256 privateKey,
+        bytes32 typehash,
+        bytes32 witness,
         bytes32 domainSeparator,
         address spender
     )
@@ -23,13 +20,12 @@ contract PermitSignature is DSTestPlus {
         returns (bytes memory sig)
     {
         bytes32 tokenPermissions = keccak256(abi.encode(_TOKEN_PERMISSIONS_TYPEHASH, permit.permitted));
+
         bytes32 msgHash = keccak256(
             abi.encodePacked(
                 "\x19\x01",
                 domainSeparator,
-                keccak256(
-                    abi.encode(_PERMIT_TRANSFER_FROM_TYPEHASH, tokenPermissions, spender, permit.nonce, permit.deadline)
-                )
+                keccak256(abi.encode(typehash, tokenPermissions, spender, permit.nonce, permit.deadline, witness))
             )
         );
 
