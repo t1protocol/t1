@@ -123,4 +123,9 @@ interface IL1GatewayRouter is IL1ETHGateway, IL1ERC20Gateway {
     /// @dev This function should only be called by contract owner.
     /// @param _newPermit2 The address to update.
     function setPermit2(address _newPermit2) external;
+
+    /// @notice Update the address of the market maker.
+    /// @dev This function should only be called by contract owner.
+    /// @param _newMM The address to update.
+    function setMM(address _newMM) external;
 }

@@ -44,6 +44,9 @@ contract L1GatewayRouter is OwnableUpgradeable, IL1GatewayRouter {
     /// @notice The Permit2 contract.
     address public permit2;
 
+    /// @notice The address of the market maker.
+    address public marketMaker;
+
     /**
      *
      * Function Modifiers *
@@ -56,6 +59,14 @@ contract L1GatewayRouter is OwnableUpgradeable, IL1GatewayRouter {
 
     modifier onlyInContext() {
         require(_msgSender() == gatewayInContext, "Only in deposit context");
+        _;
+    }
+
+    /**
+     * @dev Throws if called by any account other than the market maker.
+     */
+    modifier onlyMM() {
+        require(_msgSender() == marketMaker, "Only the market maker");
         _;
     }
 
@@ -136,7 +147,7 @@ contract L1GatewayRouter is OwnableUpgradeable, IL1GatewayRouter {
     }
 
     /// @inheritdoc IL1GatewayRouter
-    function swapERC20(SwapParams calldata params) external {
+    function swapERC20(SwapParams calldata params) external onlyMM {
         require(params.permit.permitted.token != address(0), "Invalid input token address");
         require(params.outputToken != address(0), "Invalid output token address");
         require(params.permit.permitted.token != params.outputToken, "Cannot swap the same token");
@@ -324,5 +335,13 @@ contract L1GatewayRouter is OwnableUpgradeable, IL1GatewayRouter {
         permit2 = _newPermit2;
 
         emit SetPermit2(_oldPermit2, _newPermit2);
+    }
+
+    /// @inheritdoc IL1GatewayRouter
+    function setMM(address _newMM) external onlyOwner {
+        address _oldMM = marketMaker;
+        marketMaker = _newMM;
+
+        emit SetPermit2(_oldMM, _newMM);
     }
 }

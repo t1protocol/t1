@@ -99,6 +99,8 @@ contract L1GatewayRouterTest is L1GatewayTestBase, DeployPermit2, PermitSignatur
         aave.mint(address(l1StandardERC20Gateway), 1e21); // 1,000 AAVE
         dai.mint(address(l1StandardERC20Gateway), 1e21); // 1,000 DAI
         usdt.mint(address(l1StandardERC20Gateway), 1e12); // 1,000,000 USDT
+
+        router.setMM(address(this));
     }
 
     function testOwnership() public {
@@ -263,6 +265,28 @@ contract L1GatewayRouterTest is L1GatewayTestBase, DeployPermit2, PermitSignatur
         // Check output token balances after swap
         assertEq(dai.balanceOf(address(l1StandardERC20Gateway)), outputStartBalanceFrom - outputAmount);
         assertEq(dai.balanceOf(alice), outputStartBalanceTo + outputAmount);
+    }
+
+    function testSwapERC20RevertInvalidCaller() public {
+        ISignatureTransfer.PermitTransferFrom memory permit = ISignatureTransfer.PermitTransferFrom({
+            permitted: ISignatureTransfer.TokenPermissions({ token: address(usdt), amount: 1 }),
+            nonce: 1,
+            deadline: block.timestamp
+        });
+
+        IL1GatewayRouter.SwapParams memory params = IL1GatewayRouter.SwapParams({
+            permit: permit,
+            owner: address(0),
+            outputToken: address(aave),
+            minAmountOut: 1e18,
+            outputAmount: 1e18,
+            witnessTypeString: string(""),
+            sig: bytes("")
+        });
+
+        hevm.prank(address(1));
+        hevm.expectRevert("Only the market maker");
+        router.swapERC20(params);
     }
 
     function testSwapERC20RevertInvalidOwner() public {
