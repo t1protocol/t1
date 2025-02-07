@@ -61,7 +61,7 @@ jobs:
 
       - name: "Build the contracts and print their size"
         working-directory: "contracts"
-        run: "bun run build"
+        run: "bun run build -- --sizes"
 
       - name: "Add build summary"
         run: |
