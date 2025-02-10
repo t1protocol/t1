@@ -32,6 +32,8 @@ contract T1ChainTest is DSTestPlus {
     event FinalizeBatch(uint256 indexed batchIndex, bytes32 indexed batchHash, bytes32 stateRoot, bytes32 withdrawRoot);
     event RevertBatch(uint256 indexed batchIndex, bytes32 indexed batchHash);
 
+    event ValidSignerUpdated(address indexed oldSigner, address indexed newSigner);
+
     ProxyAdmin internal admin;
     EmptyContract private placeholder;
 
@@ -1731,5 +1733,42 @@ contract T1ChainTest is DSTestPlus {
 
         hevm.expectRevert(bytes("Pausable: paused"));
         rollup.finalizeBatchWithProof(dummyRoot, sig);
+    }
+
+    function testSetValidSigner_Success() external {
+        // By default, 'address(this)' is the contract that calls setUp(), and is the owner if the contract
+        // used OwnableUpgradeable.__Ownable_init(). If not, adjust the "owner" identity as appropriate.
+
+        // Initially, validSigner is presumably address(0). Let's verify.
+        assertEq(rollup.validSigner(), address(0));
+
+        // We define a new signer:
+        address newSigner = address(0x12345);
+
+        // Expect the ValidSignerUpdated event:
+        hevm.expectEmit(true, true, false, true);
+        emit ValidSignerUpdated(address(0), newSigner);
+
+        // Call setValidSigner
+        rollup.setValidSigner(newSigner);
+
+        // Check that validSigner has been updated
+        assertEq(rollup.validSigner(), newSigner);
+    }
+
+    function testSetValidSigner_ZeroAddressReverts() external {
+        // Attempt to set to zero address
+        hevm.expectRevert(T1Chain.ErrorZeroAddress.selector);
+        rollup.setValidSigner(address(0));
+    }
+
+    function testSetValidSigner_NotOwnerReverts() external {
+        // Another address, not the owner
+        address nonOwner = address(0x9999);
+
+        hevm.startPrank(nonOwner);
+        hevm.expectRevert(bytes("Ownable: caller is not the owner"));
+        rollup.setValidSigner(address(0x12345));
+        hevm.stopPrank();
     }
 }
