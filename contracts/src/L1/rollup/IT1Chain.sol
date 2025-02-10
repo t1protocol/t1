@@ -43,6 +43,11 @@ interface IT1Chain {
     /// @param newMaxNumTxInChunk The new value of `maxNumTxInChunk`.
     event UpdateMaxNumTxInChunk(uint256 oldMaxNumTxInChunk, uint256 newMaxNumTxInChunk);
 
+    /// @notice Emitted when the valid signer address is updated.
+    /// @param oldSigner The old valid signer
+    /// @param newSigner The new valid signer
+    event ValidSignerUpdated(address indexed oldSigner, address indexed newSigner);
+
     /**
      *
      * Public View Functions *
@@ -118,7 +123,7 @@ interface IT1Chain {
     /// @notice t1 batch finalization
     ///
     /// @param withdrawRoot The withdraw trie root of current batch.
-    function finalizeBatchWithProof(bytes32 withdrawRoot) external;
+    function finalizeBatchWithProof(bytes32 withdrawRoot, bytes calldata signature) external;
 
     /// @notice Finalize a committed batch (with blob) on layer 1.
     ///
