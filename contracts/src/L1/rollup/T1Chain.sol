@@ -80,6 +80,12 @@ contract T1Chain is OwnableUpgradeable, PausableUpgradeable, IT1Chain {
     /// @dev Thrown when the bitmap length is incorrect.
     error ErrorIncorrectBitmapLength();
 
+    /// @dev Thrown when the signature length is incorrect.
+    error ErrorIncorrectSignatureLength();
+
+    /// @dev Thrown when the signer is not a valid signer
+    error ErrorIncorrectSigner(address signer, address validSigner);
+
     /// @dev Thrown when the last message is skipped.
     error ErrorLastL1MessageSkipped();
 
@@ -166,11 +172,6 @@ contract T1Chain is OwnableUpgradeable, PausableUpgradeable, IT1Chain {
     address public validSigner;
 
     /**
-     * @notice Emitted when the valid signer address is changed.
-     */
-    event ValidSignerUpdated(address indexed oldSigner, address indexed newSigner);
-
-    /**
      *
      * Function Modifiers *
      *
@@ -218,18 +219,6 @@ contract T1Chain is OwnableUpgradeable, PausableUpgradeable, IT1Chain {
         maxNumTxInChunk = _maxNumTxInChunk;
 
         emit UpdateMaxNumTxInChunk(0, _maxNumTxInChunk);
-    }
-
-    /**
-     * @notice Sets or updates the valid signer address for `finalizeBatchWithProof`.
-     * @dev Only owner can call this. Check nonzero to prevent mistakes.
-     * @param _newSigner The new valid signer address.
-     */
-    function setValidSigner(address _newSigner) external onlyOwner {
-        if (_newSigner == address(0)) revert ErrorZeroAddress();
-        address oldSigner = validSigner;
-        validSigner = _newSigner;
-        emit ValidSignerUpdated(oldSigner, _newSigner);
     }
 
     /**
@@ -473,7 +462,7 @@ contract T1Chain is OwnableUpgradeable, PausableUpgradeable, IT1Chain {
         //        _afterFinalizeBatch(_totalL1MessagesPoppedOverall, _batchIndex, _batchHash, _postStateRoot,
         // _withdrawRoot);
         // Basic sanity check
-        require(signature.length == 65, "Invalid signature length");
+        if (signature.length != 65) revert ErrorIncorrectSignatureLength();
 
         // Hash the message with the standard Ethereum Signed Message prefix
         bytes32 ethSignedMessageHash = _withdrawRoot.toEthSignedMessageHash();
@@ -482,7 +471,9 @@ contract T1Chain is OwnableUpgradeable, PausableUpgradeable, IT1Chain {
         address signer = ethSignedMessageHash.recover(signature);
 
         // Verify that the recovered signer matches our stored validSigner
-        require(signer == validSigner, "Invalid signature");
+        if (signer != validSigner) {
+            revert ErrorIncorrectSigner(signer, validSigner);
+        }
 
         // Now that the signature is verified, perform your internal logic
         _afterFinalizeBatch(0, 1, "", "", _withdrawRoot);
@@ -661,6 +652,18 @@ contract T1Chain is OwnableUpgradeable, PausableUpgradeable, IT1Chain {
         } else {
             _unpause();
         }
+    }
+
+    /**
+     * @notice Sets or updates the valid signer address for `finalizeBatchWithProof`.
+     * @dev Only owner can call this. Check nonzero to prevent mistakes.
+     * @param _newSigner The new valid signer address.
+     */
+    function setValidSigner(address _newSigner) external onlyOwner {
+        if (_newSigner == address(0)) revert ErrorZeroAddress();
+        address oldSigner = validSigner;
+        validSigner = _newSigner;
+        emit ValidSignerUpdated(oldSigner, _newSigner);
     }
 
     /**

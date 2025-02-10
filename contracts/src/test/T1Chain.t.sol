@@ -1670,7 +1670,7 @@ contract T1ChainTest is DSTestPlus {
         bytes32 dummyRoot = keccak256(abi.encode("dummyRoot"));
         bytes memory invalidSig = new bytes(64); // 64 bytes, not 65
 
-        hevm.expectRevert(bytes("Invalid signature length"));
+        hevm.expectRevert(T1Chain.ErrorIncorrectSignatureLength.selector);
         rollup.finalizeBatchWithProof(dummyRoot, invalidSig);
     }
 
@@ -1682,12 +1682,20 @@ contract T1ChainTest is DSTestPlus {
      */
     function testFinalizeBatchWithProof_WrongSigner() external {
         bytes32 dummyRoot = keccak256(abi.encode("dummyRoot"));
-        // Sign with NON_SIGNER_KEY
         bytes memory sig = _signWithdrawRoot(NON_SIGNER_KEY, dummyRoot);
 
-        // The contract should revert with "Invalid signature"
-        // because ecrecover(...) won't match rollup.validSigner
-        hevm.expectRevert(bytes("Invalid signature"));
+        // The address recovered by ecrecover(...) will be this one:
+        address expectedBadSigner = hevm.addr(NON_SIGNER_KEY);
+
+        // If we haven't set validSigner yet, rollup.validSigner() should be address(0)
+        address expectedValidSigner = rollup.validSigner();
+
+        // Now we provide the entire revert data:
+        hevm.expectRevert(
+            abi.encodeWithSelector(T1Chain.ErrorIncorrectSigner.selector, expectedBadSigner, expectedValidSigner)
+        );
+
+        // This call should revert with `ErrorIncorrectSigner(badSigner, validSigner)`
         rollup.finalizeBatchWithProof(dummyRoot, sig);
     }
 

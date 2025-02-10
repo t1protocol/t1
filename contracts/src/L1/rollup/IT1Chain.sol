@@ -43,6 +43,11 @@ interface IT1Chain {
     /// @param newMaxNumTxInChunk The new value of `maxNumTxInChunk`.
     event UpdateMaxNumTxInChunk(uint256 oldMaxNumTxInChunk, uint256 newMaxNumTxInChunk);
 
+    /// @notice Emitted when the valid signer address is updated.
+    /// @param oldSigner The old valid signer
+    /// @param newSigner The new valid signer
+    event ValidSignerUpdated(address indexed oldSigner, address indexed newSigner);
+
     /**
      *
      * Public View Functions *
