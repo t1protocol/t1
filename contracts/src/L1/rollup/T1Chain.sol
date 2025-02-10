@@ -4,6 +4,7 @@ pragma solidity >=0.8.28;
 
 import { OwnableUpgradeable } from "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
 import { PausableUpgradeable } from "@openzeppelin/contracts-upgradeable/security/PausableUpgradeable.sol";
+import { ECDSAUpgradeable } from "@openzeppelin/contracts-upgradeable/utils/cryptography/ECDSAUpgradeable.sol";
 
 import { IL1MessageQueue } from "./IL1MessageQueue.sol";
 import { IT1Chain } from "./IT1Chain.sol";
@@ -20,6 +21,8 @@ import { IRollupVerifier } from "../../libraries/verifier/IRollupVerifier.sol";
 /// @title T1Chain
 /// @notice This contract maintains data for the T1 rollup.
 contract T1Chain is OwnableUpgradeable, PausableUpgradeable, IT1Chain {
+    using ECDSAUpgradeable for bytes32;
+
     /**
      *
      * Errors *
@@ -158,6 +161,16 @@ contract T1Chain is OwnableUpgradeable, PausableUpgradeable, IT1Chain {
     mapping(uint256 => bytes32) public override withdrawRoots;
 
     /**
+     * @notice The address authorized to sign `withdrawRoot` (or any data to be proven).
+     */
+    address public validSigner;
+
+    /**
+     * @notice Emitted when the valid signer address is changed.
+     */
+    event ValidSignerUpdated(address indexed oldSigner, address indexed newSigner);
+
+    /**
      *
      * Function Modifiers *
      *
@@ -205,6 +218,18 @@ contract T1Chain is OwnableUpgradeable, PausableUpgradeable, IT1Chain {
         maxNumTxInChunk = _maxNumTxInChunk;
 
         emit UpdateMaxNumTxInChunk(0, _maxNumTxInChunk);
+    }
+
+    /**
+     * @notice Sets or updates the valid signer address for `finalizeBatchWithProof`.
+     * @dev Only owner can call this. Check nonzero to prevent mistakes.
+     * @param _newSigner The new valid signer address.
+     */
+    function setValidSigner(address _newSigner) external onlyOwner {
+        if (_newSigner == address(0)) revert ErrorZeroAddress();
+        address oldSigner = validSigner;
+        validSigner = _newSigner;
+        emit ValidSignerUpdated(oldSigner, _newSigner);
     }
 
     /**
@@ -420,7 +445,8 @@ contract T1Chain is OwnableUpgradeable, PausableUpgradeable, IT1Chain {
         //        bytes calldata _batchHeader,
         //        bytes32 _prevStateRoot,
         //        bytes32 _postStateRoot,
-        bytes32 _withdrawRoot
+        bytes32 _withdrawRoot,
+        bytes calldata signature
     )
         //        bytes calldata _aggrProof
         external
@@ -446,6 +472,19 @@ contract T1Chain is OwnableUpgradeable, PausableUpgradeable, IT1Chain {
 
         //        _afterFinalizeBatch(_totalL1MessagesPoppedOverall, _batchIndex, _batchHash, _postStateRoot,
         // _withdrawRoot);
+        // Basic sanity check
+        require(signature.length == 65, "Invalid signature length");
+
+        // Hash the message with the standard Ethereum Signed Message prefix
+        bytes32 ethSignedMessageHash = _withdrawRoot.toEthSignedMessageHash();
+
+        // Recover the signer from the signature
+        address signer = ethSignedMessageHash.recover(signature);
+
+        // Verify that the recovered signer matches our stored validSigner
+        require(signer == validSigner, "Invalid signature");
+
+        // Now that the signature is verified, perform your internal logic
         _afterFinalizeBatch(0, 1, "", "", _withdrawRoot);
     }
 

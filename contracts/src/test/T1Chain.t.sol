@@ -1641,4 +1641,87 @@ contract T1ChainTest is DSTestPlus {
         TransparentUpgradeableProxy proxy = new TransparentUpgradeableProxy(_logic, address(admin), new bytes(0));
         return address(proxy);
     }
+
+    // Example private keys for signing in Foundry tests.
+    // We can use any arbitrary 32-byte values, but we keep them consistent for deterministic tests.
+    uint256 private constant VALID_SIGNER_KEY = 0xA11CE;
+    uint256 private constant NON_SIGNER_KEY = 0xBEEF;
+
+    /**
+     * @dev Signs a 32-byte "withdraw root" with the standard
+     *      `"\x19Ethereum Signed Message:\n32"` prefix to match on-chain logic.
+     *      This matches what T1Chain does internally with `toEthSignedMessageHash`.
+     */
+    function _signWithdrawRoot(uint256 privKey, bytes32 root) internal returns (bytes memory sig) {
+        // 1) Reproduce the prefixing: keccak256("\x19Ethereum Signed Message:\n32", root)
+        bytes32 ethSignedMsg = keccak256(abi.encodePacked("\x19Ethereum Signed Message:\n32", root));
+
+        // 2) Foundry cheatcode: hevm.sign(privateKey, hash) -> (v,r,s)
+        (uint8 v, bytes32 r, bytes32 s) = hevm.sign(privKey, ethSignedMsg);
+
+        // 3) Pack [r, s, v] into a 65-byte signature
+        sig = abi.encodePacked(r, s, v);
+    }
+
+    /**
+     * @notice Tests that calling finalizeBatchWithProof with an invalid signature length reverts.
+     */
+    function testFinalizeBatchWithProof_InvalidSignatureLength() external {
+        bytes32 dummyRoot = keccak256(abi.encode("dummyRoot"));
+        bytes memory invalidSig = new bytes(64); // 64 bytes, not 65
+
+        hevm.expectRevert(bytes("Invalid signature length"));
+        rollup.finalizeBatchWithProof(dummyRoot, invalidSig);
+    }
+
+    /**
+     * @notice Tests that finalizeBatchWithProof reverts if the signature was made by the wrong key.
+     * @dev This assumes requiring `ecrecover(...) == validSigner`.
+     *      Make sure the contract has `address public validSigner;`
+     *      and that it's set to the signer address for a valid signature to pass.
+     */
+    function testFinalizeBatchWithProof_WrongSigner() external {
+        bytes32 dummyRoot = keccak256(abi.encode("dummyRoot"));
+        // Sign with NON_SIGNER_KEY
+        bytes memory sig = _signWithdrawRoot(NON_SIGNER_KEY, dummyRoot);
+
+        // The contract should revert with "Invalid signature"
+        // because ecrecover(...) won't match rollup.validSigner
+        hevm.expectRevert(bytes("Invalid signature"));
+        rollup.finalizeBatchWithProof(dummyRoot, sig);
+    }
+
+    /**
+     * @notice Tests a happy path with a correct signature from validSigner.
+     * @dev Call `function setValidSigner(address)` before this test
+     *      to set rollup.validSigner.
+     */
+    function testFinalizeBatchWithProof_Success() external {
+        address validSignerAddr = hevm.addr(VALID_SIGNER_KEY);
+        rollup.setValidSigner(validSignerAddr);
+
+        bytes32 withdrawRoot = keccak256(abi.encode("some withdrawRoot"));
+        // Sign with VALID_SIGNER_KEY to produce a valid signature
+        bytes memory sig = _signWithdrawRoot(VALID_SIGNER_KEY, withdrawRoot);
+
+        // Expect it to succeed
+        rollup.finalizeBatchWithProof(withdrawRoot, sig);
+
+        assertEq(rollup.lastFinalizedBatchIndex(), 1);
+        assertEq(rollup.withdrawRoots(1), withdrawRoot);
+    }
+
+    /**
+     * @notice Tests that finalizeBatchWithProof reverts when contract is paused.
+     */
+    function testFinalizeBatchWithProof_RevertWhenPaused() external {
+        // Pause the contract as the owner
+        rollup.setPause(true);
+
+        bytes32 dummyRoot = keccak256(abi.encode("dummyRoot"));
+        bytes memory sig = _signWithdrawRoot(VALID_SIGNER_KEY, dummyRoot);
+
+        hevm.expectRevert(bytes("Pausable: paused"));
+        rollup.finalizeBatchWithProof(dummyRoot, sig);
+    }
 }
