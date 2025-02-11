@@ -434,6 +434,40 @@ contract T1Chain is OwnableUpgradeable, PausableUpgradeable, IT1Chain {
         //        bytes calldata _batchHeader,
         //        bytes32 _prevStateRoot,
         //        bytes32 _postStateRoot,
+        bytes32 _withdrawRoot
+    )
+        //        bytes calldata _aggrProof
+        external
+        override
+        whenNotPaused
+    {
+        //    ) external override OnlyProver whenNotPaused {
+        //        (uint256 batchPtr, bytes32 _batchHash, uint256 _batchIndex) = _beforeFinalizeBatch(
+        //            _batchHeader,
+        //            _postStateRoot
+        //        );
+        //        // TODO: Diego to replace following with verifying TEE signature
+        //        // verify batch
+        //        IRollupVerifier(verifier).verifyAggregateProof(0, _batchIndex, _aggrProof, _publicInputHash);
+
+        // Pop finalized and non-skipped message from L1MessageQueue.
+        //        uint256 _totalL1MessagesPoppedOverall = BatchHeaderV0Codec.getTotalL1MessagePopped(batchPtr);
+        //        _popL1MessagesMemory(
+        //            BatchHeaderV0Codec.getSkippedBitmapPtr(batchPtr),
+        //            _totalL1MessagesPoppedOverall,
+        //            BatchHeaderV0Codec.getL1MessagePopped(batchPtr)
+        //        );
+
+        //        _afterFinalizeBatch(_totalL1MessagesPoppedOverall, _batchIndex, _batchHash, _postStateRoot,
+        // _withdrawRoot);
+        _afterFinalizeBatch(0, 1, "", "", _withdrawRoot);
+    }
+
+    /// @inheritdoc IT1Chain
+    function finalizeBatchWithProof(
+        //        bytes calldata _batchHeader,
+        //        bytes32 _prevStateRoot,
+        //        bytes32 _postStateRoot,
         bytes32 _withdrawRoot,
         bytes calldata signature
     )

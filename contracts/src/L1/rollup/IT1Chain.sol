@@ -123,6 +123,11 @@ interface IT1Chain {
     /// @notice t1 batch finalization
     ///
     /// @param withdrawRoot The withdraw trie root of current batch.
+    function finalizeBatchWithProof(bytes32 withdrawRoot) external;
+
+    /// @notice t1 batch finalization
+    ///
+    /// @param withdrawRoot The withdraw trie root of current batch.
     function finalizeBatchWithProof(bytes32 withdrawRoot, bytes calldata signature) external;
 
     /// @notice Finalize a committed batch (with blob) on layer 1.
