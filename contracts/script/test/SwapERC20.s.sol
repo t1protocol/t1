@@ -89,7 +89,8 @@ contract SwapERC20 is Script, PermitSignature {
 
         // Check if the market maker is set to this address
         if (IL1GatewayRouter(L1_GATEWAY_ROUTER_PROXY_ADDR).marketMaker() != address(this)) {
-            IL1GatewayRouter(L1_GATEWAY_ROUTER_PROXY_ADDR).setMM(address(this));
+            // IL1GatewayRouter(L1_GATEWAY_ROUTER_PROXY_ADDR).setMM(address(this));
+            revert("Signer is not the market maker in the router");
         }
 
         IL1GatewayRouter(L1_GATEWAY_ROUTER_PROXY_ADDR).swapERC20(params);
