@@ -17,16 +17,15 @@ import { PermitSignature } from "../../src/test/utils/PermitSignature.sol";
 // solhint-disable var-name-mixedcase
 
 contract SwapERC20 is Script, PermitSignature {
-    uint256 private L1_DEPLOYER_PRIVATE_KEY = vm.envUint("L1_DEPLOYER_PRIVATE_KEY");
     address private L1_GATEWAY_ROUTER_PROXY_ADDR = vm.envAddress("L1_GATEWAY_ROUTER_PROXY_ADDR");
     address private L1_STANDARD_ERC20_GATEWAY_PROXY_ADDR = vm.envAddress("L1_STANDARD_ERC20_GATEWAY_PROXY_ADDR");
     address private L1_WETH_ADDR = vm.envAddress("L1_WETH_ADDR");
     address private L1_USDT_ADDR = vm.envAddress("L1_USDT_ADDR");
     uint256 private ALICE_PRIVATE_KEY = vm.envUint("ALICE_PRIVATE_KEY");
     address private alice = vm.addr(ALICE_PRIVATE_KEY);
-    uint256 private outputAmount = 2e18;
-    uint256 private inputTokenAmount = 2e18;
-    uint256 private minAmountOut = 2e18;
+    uint256 private inputTokenAmount = 1e15; // WETH
+    uint256 private outputAmount = 10e18; // USDT
+    uint256 private minAmountOut = 1e18; // USDT
 
     string private constant WITNESS_TYPE_STRING = "uint256 minAmountOut)TokenPermissions(address token,uint256 amount)";
     bytes32 private constant FULL_EXAMPLE_WITNESS_TYPEHASH = keccak256(
@@ -36,7 +35,7 @@ contract SwapERC20 is Script, PermitSignature {
 
     function run() external {
         vm.createSelectFork(vm.rpcUrl("sepolia"));
-        vm.startBroadcast(L1_DEPLOYER_PRIVATE_KEY);
+        vm.startBroadcast(ALICE_PRIVATE_KEY);
 
         // Alice needs WETH to swap for USDT
         // Bridge should have USDT to swap for WETH
@@ -76,7 +75,7 @@ contract SwapERC20 is Script, PermitSignature {
 
         // Check if Alice has approved the permit2 to transfer WETH
         if (T1StandardERC20(L1_WETH_ADDR).allowance(alice, permit2) < inputTokenAmount) {
-            revert("Alice hasn't approved permit2 on WETH");
+            T1StandardERC20(L1_WETH_ADDR).approve(permit2, type(uint256).max);
         }
 
         // Check if the ERC20 gateway has approved the permit2 to transfer USDT
@@ -89,7 +88,6 @@ contract SwapERC20 is Script, PermitSignature {
 
         // Check if the market maker is set to this address
         if (IL1GatewayRouter(L1_GATEWAY_ROUTER_PROXY_ADDR).marketMaker() != address(this)) {
-            // IL1GatewayRouter(L1_GATEWAY_ROUTER_PROXY_ADDR).setMM(address(this));
             revert("Signer is not the market maker in the router");
         }
 
