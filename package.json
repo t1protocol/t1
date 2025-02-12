@@ -1,6 +1,6 @@
 {
   "name": "t1",
-  "version": "0.0.2",
+  "version": "0.0.3",
   "description": "A monorepo containing all major components of the t1 protocol",
   "repository": {
     "type": "git",
