@@ -3,16 +3,14 @@
 pragma solidity >=0.8.28;
 
 import { Script } from "forge-std/Script.sol";
-import { L1ETHGateway } from "../../src/L1/gateways/L1ETHGateway.sol";
 
-// solhint-disable max-states-count
-// solhint-disable state-visibility
+import { IL1GatewayRouter } from "../../src/L1/gateways/IL1GatewayRouter.sol";
+
 // solhint-disable var-name-mixedcase
 
 contract DepositEtherFromL1ToL2 is Script {
-    uint256 L1_DEPLOYER_PRIVATE_KEY = vm.envUint("L1_DEPLOYER_PRIVATE_KEY");
-
-    address L1_ETH_GATEWAY_PROXY_ADDR = vm.envAddress("L1_ETH_GATEWAY_PROXY_ADDR");
+    uint256 private L1_DEPLOYER_PRIVATE_KEY = vm.envUint("L1_DEPLOYER_PRIVATE_KEY");
+    address private L1_GATEWAY_ROUTER_PROXY_ADDR = vm.envAddress("L1_GATEWAY_ROUTER_PROXY_ADDR");
 
     function run() external {
         vm.createSelectFork(vm.rpcUrl("sepolia"));
@@ -20,7 +18,7 @@ contract DepositEtherFromL1ToL2 is Script {
 
         uint256 gasLimit = 1_000_000;
 
-        L1ETHGateway(L1_ETH_GATEWAY_PROXY_ADDR).depositETH{ value: 0.001 ether }(0.001 ether, gasLimit);
+        IL1GatewayRouter(L1_GATEWAY_ROUTER_PROXY_ADDR).depositETH{ value: 0.001 ether }(0.001 ether, gasLimit);
 
         vm.stopBroadcast();
     }

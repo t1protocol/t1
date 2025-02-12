@@ -1,4 +1,6 @@
-# Scripts README
+# README
+
+## Deploy
 
 There is a particular order the deployment scripts need to be ran in. There are multiple reasons for this:
 
@@ -23,17 +25,19 @@ The magical deploy order is as follows:
 10. [InitializeL1T1Owner.s.sol](./deploy/InitializeL1T1Owner.s.sol)
 11. [InitializeL2T1Owner.s.sol](./deploy/nitializeL2T1Owner.s.sol)
 
-## Testing
+## Test
 
-Scripts to test the canonical bridge:
+Scripts to test the canonical bridge functionalities:
 
-- ETH
+- Deposits
   - [Deposit Ether from L1->L2](./test/DepositEtherFromL1ToL2.s.sol)
-  - [Withdraw Ether from L2->L1](./test/WithdrawEtherFromL2ToL1.s.sol)
-- WETH
   - [Deposit WETH from L1->L2](./test/DepositWethFromL1ToL2.s.sol)
-  - [Withdraw WETH from L2->L1](./test/WithdrawWethFromL2ToL1.s.sol)
-- USDT
   - [Deposit USDT from L1->L2](./test/DepositUsdtFromL1ToL2.s.sol)
+- Witdrawals
+  - [Withdraw Ether from L2->L1](./test/WithdrawEtherFromL2ToL1.s.sol)
+  - [Withdraw WETH from L2->L1](./test/WithdrawWethFromL2ToL1.s.sol)
   - [Withdraw USDT from L2->L1](./test/WithdrawUsdtFromL2ToL1.s.sol)
+- Swaps
+  - [Swap ERC20s against bridge reserves](./test/swapERC20.s.sol)
+- Chore
   - [Check L1 and L2 USDT balances](./test/LogUsdtBalances.s.sol)
