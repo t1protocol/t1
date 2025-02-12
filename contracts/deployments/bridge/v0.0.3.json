@@ -10,10 +10,7 @@
     "RPC_URL_L1": "https://nameless-soft-pool.ethereum-sepolia.quiknode.pro/51620a47284422b29d5d979d3f16e1ffda7c49d8"
   },
   "addresses": {
-    "T1_L1_RPC": "https://nameless-soft-pool.ethereum-sepolia.quiknode.pro/51620a47284422b29d5d979d3f16e1ffda7c49d8",
     "T1_L2_RPC": "https://rpc.devnet.t1protocol.com",
-    "L1_DEPLOYER_PRIVATE_KEY": "0x0432ab94ebebf71cbbc9a764c0892571f9cb56f71ac615924dec80c3816ff000",
-    "L2_DEPLOYER_PRIVATE_KEY": "0x51b74a02bdc59fb8856664b5336b7705edb0a29449a487775898119915223acb",
     "CHAIN_ID_L2": "3151908",
     "L1_PLONK_VERIFIER_ADDR": "0x0000000000000000000000000000000000000001",
     "NETWORK": "devnet",
