@@ -2,13 +2,17 @@
 
 pragma solidity >=0.8.28;
 
+import { console } from "forge-std/console.sol";
 import { Script } from "forge-std/Script.sol";
 
 import { IL1GatewayRouter } from "../../src/L1/gateways/IL1GatewayRouter.sol";
+import { L1GatewayRouter } from "../../src/L1/gateways/L1GatewayRouter.sol";
+import { T1Owner } from "../../src/misc/T1Owner.sol";
 
 // solhint-disable var-name-mixedcase
 
 contract SwapERC20 is Script {
+    address private L1_SECURITY_COUNCIL_ADDR = vm.envAddress("L1_SECURITY_COUNCIL_ADDR");
     address private L1_GATEWAY_ROUTER_PROXY_ADDR = vm.envAddress("L1_GATEWAY_ROUTER_PROXY_ADDR");
     uint256 private L1_DEPLOYER_PRIVATE_KEY = vm.envUint("L1_DEPLOYER_PRIVATE_KEY");
     uint256 private ALICE_PRIVATE_KEY = vm.envUint("ALICE_PRIVATE_KEY");
@@ -20,7 +24,12 @@ contract SwapERC20 is Script {
 
         // Check if the market maker is set to this address
         if (IL1GatewayRouter(L1_GATEWAY_ROUTER_PROXY_ADDR).marketMaker() != filler) {
-            IL1GatewayRouter(L1_GATEWAY_ROUTER_PROXY_ADDR).setMM(filler);
+            T1Owner(payable(L1_SECURITY_COUNCIL_ADDR)).execute(
+                L1_GATEWAY_ROUTER_PROXY_ADDR,
+                0,
+                abi.encodeWithSelector(IL1GatewayRouter(L1_GATEWAY_ROUTER_PROXY_ADDR).setMM.selector, filler),
+                bytes32(0)
+            );
         }
         vm.stopBroadcast();
     }
