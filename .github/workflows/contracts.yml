@@ -13,7 +13,7 @@ on:
       - ready_for_review
   push:
     branches:
-      - "develop"
+      - "canary"
 
 jobs:
   lint:
@@ -27,7 +27,7 @@ jobs:
         uses: "foundry-rs/foundry-toolchain@v1"
 
       - name: "Install Bun"
-        uses: "oven-sh/setup-bun@v1"
+        uses: "oven-sh/setup-bun@v2"
 
       - name: "Install the Node.js dependencies"
         working-directory: "contracts"
@@ -53,7 +53,7 @@ jobs:
         uses: "foundry-rs/foundry-toolchain@v1"
 
       - name: "Install Bun"
-        uses: "oven-sh/setup-bun@v1"
+        uses: "oven-sh/setup-bun@v2"
 
       - name: "Install the Node.js dependencies"
         working-directory: "contracts"
@@ -80,7 +80,9 @@ jobs:
         uses: "foundry-rs/foundry-toolchain@v1"
 
       - name: "Install Bun"
-        uses: "oven-sh/setup-bun@v1"
+        uses: "oven-sh/setup-bun@v2"
+        with:
+          bun-version: 1.2.2
 
       - name: "Install the Node.js dependencies"
         working-directory: "contracts"
