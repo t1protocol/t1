@@ -2,16 +2,14 @@
 
 pragma solidity >=0.8.28;
 
-import { console } from "forge-std/console.sol";
 import { Script } from "forge-std/Script.sol";
 
 import { IL1GatewayRouter } from "../../src/L1/gateways/IL1GatewayRouter.sol";
-import { L1GatewayRouter } from "../../src/L1/gateways/L1GatewayRouter.sol";
 import { T1Owner } from "../../src/misc/T1Owner.sol";
 
 // solhint-disable var-name-mixedcase
 
-contract SwapERC20 is Script {
+contract SetMM is Script {
     address private L1_SECURITY_COUNCIL_ADDR = vm.envAddress("L1_SECURITY_COUNCIL_ADDR");
     address private L1_GATEWAY_ROUTER_PROXY_ADDR = vm.envAddress("L1_GATEWAY_ROUTER_PROXY_ADDR");
     uint256 private L1_DEPLOYER_PRIVATE_KEY = vm.envUint("L1_DEPLOYER_PRIVATE_KEY");
