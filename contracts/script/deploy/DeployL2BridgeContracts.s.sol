@@ -22,34 +22,33 @@ import { T1StandardERC20 } from "../../src/libraries/token/T1StandardERC20.sol";
 import { T1StandardERC20Factory } from "../../src/libraries/token/T1StandardERC20Factory.sol";
 
 // solhint-disable max-states-count
-// solhint-disable state-visibility
 // solhint-disable var-name-mixedcase
 
 contract DeployL2BridgeContracts is Script {
-    uint256 L2_DEPLOYER_PRIVATE_KEY = vm.envUint("L2_DEPLOYER_PRIVATE_KEY");
+    uint256 private L2_DEPLOYER_PRIVATE_KEY = vm.envUint("L2_DEPLOYER_PRIVATE_KEY");
 
-    address L2_PROXY_ADMIN_ADDR = vm.envAddress("L2_PROXY_ADMIN_ADDR");
+    address private L2_PROXY_ADMIN_ADDR = vm.envAddress("L2_PROXY_ADMIN_ADDR");
 
-    address L1_WETH_ADDR = vm.envAddress("L1_WETH_ADDR");
-    address L2_WETH_ADDR = vm.envAddress("L2_WETH_ADDR");
+    address private L1_WETH_ADDR = vm.envAddress("L1_WETH_ADDR");
+    address private L2_WETH_ADDR = vm.envAddress("L2_WETH_ADDR");
 
-    L1GasPriceOracle oracle;
-    L2MessageQueue queue;
-    ProxyAdmin proxyAdmin;
-    L2GatewayRouter router;
-    T1StandardERC20Factory factory;
+    L1GasPriceOracle private oracle;
+    L2MessageQueue private queue;
+    ProxyAdmin private proxyAdmin;
+    L2GatewayRouter private router;
+    T1StandardERC20Factory private factory;
 
-    address L2_T1_MESSENGER_PROXY_ADDR = vm.envAddress("L2_T1_MESSENGER_PROXY_ADDR");
+    address private L2_T1_MESSENGER_PROXY_ADDR = vm.envAddress("L2_T1_MESSENGER_PROXY_ADDR");
 
-    address L1_T1_MESSENGER_PROXY_ADDR = vm.envAddress("L1_T1_MESSENGER_PROXY_ADDR");
-    address L1_ETH_GATEWAY_PROXY_ADDR = vm.envAddress("L1_ETH_GATEWAY_PROXY_ADDR");
-    address L1_STANDARD_ERC20_GATEWAY_PROXY_ADDR = vm.envAddress("L1_STANDARD_ERC20_GATEWAY_PROXY_ADDR");
-    address L1_WETH_GATEWAY_PROXY_ADDR = vm.envAddress("L1_WETH_GATEWAY_PROXY_ADDR");
+    address private L1_T1_MESSENGER_PROXY_ADDR = vm.envAddress("L1_T1_MESSENGER_PROXY_ADDR");
+    address private L1_ETH_GATEWAY_PROXY_ADDR = vm.envAddress("L1_ETH_GATEWAY_PROXY_ADDR");
+    address private L1_STANDARD_ERC20_GATEWAY_PROXY_ADDR = vm.envAddress("L1_STANDARD_ERC20_GATEWAY_PROXY_ADDR");
+    address private L1_WETH_GATEWAY_PROXY_ADDR = vm.envAddress("L1_WETH_GATEWAY_PROXY_ADDR");
 
     // predeploy contracts
-    address L1_GAS_PRICE_ORACLE_PREDEPLOY_ADDR = vm.envOr("L1_GAS_PRICE_ORACLE_PREDEPLOY_ADDR", address(0));
-    address L2_MESSAGE_QUEUE_PREDEPLOY_ADDR = vm.envOr("L2_MESSAGE_QUEUE_PREDEPLOY_ADDR", address(0));
-    address L2_WHITELIST_PREDEPLOY_ADDR = vm.envOr("L2_WHITELIST_PREDEPLOY_ADDR", address(0));
+    address private L1_GAS_PRICE_ORACLE_PREDEPLOY_ADDR = vm.envOr("L1_GAS_PRICE_ORACLE_PREDEPLOY_ADDR", address(0));
+    address private L2_MESSAGE_QUEUE_PREDEPLOY_ADDR = vm.envOr("L2_MESSAGE_QUEUE_PREDEPLOY_ADDR", address(0));
+    address private L2_WHITELIST_PREDEPLOY_ADDR = vm.envOr("L2_WHITELIST_PREDEPLOY_ADDR", address(0));
 
     function run() external {
         proxyAdmin = ProxyAdmin(L2_PROXY_ADMIN_ADDR);

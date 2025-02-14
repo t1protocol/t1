@@ -85,6 +85,9 @@ interface IL1GatewayRouter is IL1ETHGateway, IL1ERC20Gateway {
     /// @notice Return the current Allowance Transfer contract address
     function permit2() external view returns (address);
 
+    /// @notice Return the current market maker address
+    function marketMaker() external view returns (address);
+
     /**
      *
      * Public Mutating Functions *

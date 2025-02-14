@@ -12,14 +12,13 @@ import { TransparentUpgradeableProxy } from "@openzeppelin/contracts/proxy/trans
 
 import { EmptyContract } from "../../src/misc/EmptyContract.sol";
 
-// solhint-disable state-visibility
 // solhint-disable var-name-mixedcase
 
 contract DeployL1BridgeProxyPlaceholder is Script {
-    uint256 L1_DEPLOYER_PRIVATE_KEY = vm.envUint("L1_DEPLOYER_PRIVATE_KEY");
+    uint256 private L1_DEPLOYER_PRIVATE_KEY = vm.envUint("L1_DEPLOYER_PRIVATE_KEY");
 
-    ProxyAdmin proxyAdmin;
-    EmptyContract placeholder;
+    ProxyAdmin private proxyAdmin;
+    EmptyContract private placeholder;
 
     function run() external {
         vm.startBroadcast(L1_DEPLOYER_PRIVATE_KEY);

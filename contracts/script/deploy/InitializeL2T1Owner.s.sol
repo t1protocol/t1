@@ -14,40 +14,39 @@ import { Whitelist } from "../../src/L2/predeploys/Whitelist.sol";
 import { T1Owner } from "../../src/misc/T1Owner.sol";
 
 // solhint-disable max-states-count
-// solhint-disable state-visibility
 // solhint-disable var-name-mixedcase
 
 contract InitializeL2T1Owner is Script {
-    uint256 L2_DEPLOYER_PRIVATE_KEY = vm.envUint("L2_DEPLOYER_PRIVATE_KEY");
+    uint256 private L2_DEPLOYER_PRIVATE_KEY = vm.envUint("L2_DEPLOYER_PRIVATE_KEY");
 
-    bytes32 constant SECURITY_COUNCIL_NO_DELAY_ROLE = keccak256("SECURITY_COUNCIL_NO_DELAY_ROLE");
-    bytes32 constant T1_MULTISIG_NO_DELAY_ROLE = keccak256("T1_MULTISIG_NO_DELAY_ROLE");
-    bytes32 constant EMERGENCY_MULTISIG_NO_DELAY_ROLE = keccak256("EMERGENCY_MULTISIG_NO_DELAY_ROLE");
+    bytes32 private constant SECURITY_COUNCIL_NO_DELAY_ROLE = keccak256("SECURITY_COUNCIL_NO_DELAY_ROLE");
+    bytes32 private constant T1_MULTISIG_NO_DELAY_ROLE = keccak256("T1_MULTISIG_NO_DELAY_ROLE");
+    bytes32 private constant EMERGENCY_MULTISIG_NO_DELAY_ROLE = keccak256("EMERGENCY_MULTISIG_NO_DELAY_ROLE");
 
-    bytes32 constant TIMELOCK_1DAY_DELAY_ROLE = keccak256("TIMELOCK_1DAY_DELAY_ROLE");
-    bytes32 constant TIMELOCK_7DAY_DELAY_ROLE = keccak256("TIMELOCK_7DAY_DELAY_ROLE");
+    bytes32 private constant TIMELOCK_1DAY_DELAY_ROLE = keccak256("TIMELOCK_1DAY_DELAY_ROLE");
+    bytes32 private constant TIMELOCK_7DAY_DELAY_ROLE = keccak256("TIMELOCK_7DAY_DELAY_ROLE");
 
-    address T1_MULTISIG_ADDR = vm.envAddress("L2_T1_MULTISIG_ADDR");
-    address SECURITY_COUNCIL_ADDR = vm.envAddress("L2_SECURITY_COUNCIL_ADDR");
-    address EMERGENCY_MULTISIG_ADDR = vm.envAddress("L2_EMERGENCY_MULTISIG_ADDR");
+    address private T1_MULTISIG_ADDR = vm.envAddress("L2_T1_MULTISIG_ADDR");
+    address private SECURITY_COUNCIL_ADDR = vm.envAddress("L2_SECURITY_COUNCIL_ADDR");
+    address private EMERGENCY_MULTISIG_ADDR = vm.envAddress("L2_EMERGENCY_MULTISIG_ADDR");
 
-    address L2_T1_OWNER_ADDR = vm.envAddress("L2_T1_OWNER_ADDR");
-    address L2_1D_TIMELOCK_ADDR = vm.envAddress("L2_1D_TIMELOCK_ADDR");
-    address L2_7D_TIMELOCK_ADDR = vm.envAddress("L2_7D_TIMELOCK_ADDR");
-    address L2_14D_TIMELOCK_ADDR = vm.envAddress("L2_14D_TIMELOCK_ADDR");
+    address private L2_T1_OWNER_ADDR = vm.envAddress("L2_T1_OWNER_ADDR");
+    address private L2_1D_TIMELOCK_ADDR = vm.envAddress("L2_1D_TIMELOCK_ADDR");
+    address private L2_7D_TIMELOCK_ADDR = vm.envAddress("L2_7D_TIMELOCK_ADDR");
+    address private L2_14D_TIMELOCK_ADDR = vm.envAddress("L2_14D_TIMELOCK_ADDR");
 
-    address L2_PROXY_ADMIN_ADDR = vm.envAddress("L2_PROXY_ADMIN_ADDR");
-    address L1_GAS_PRICE_ORACLE_ADDR = vm.envAddress("L1_GAS_PRICE_ORACLE_ADDR");
-    address L2_WHITELIST_ADDR = vm.envAddress("L2_WHITELIST_ADDR");
-    address L2_MESSAGE_QUEUE_ADDR = vm.envAddress("L2_MESSAGE_QUEUE_ADDR");
+    address private L2_PROXY_ADMIN_ADDR = vm.envAddress("L2_PROXY_ADMIN_ADDR");
+    address private L1_GAS_PRICE_ORACLE_ADDR = vm.envAddress("L1_GAS_PRICE_ORACLE_ADDR");
+    address private L2_WHITELIST_ADDR = vm.envAddress("L2_WHITELIST_ADDR");
+    address private L2_MESSAGE_QUEUE_ADDR = vm.envAddress("L2_MESSAGE_QUEUE_ADDR");
 
-    address L2_T1_MESSENGER_PROXY_ADDR = vm.envAddress("L2_T1_MESSENGER_PROXY_ADDR");
-    address L2_GATEWAY_ROUTER_PROXY_ADDR = vm.envAddress("L2_GATEWAY_ROUTER_PROXY_ADDR");
-    address L2_ETH_GATEWAY_PROXY_ADDR = vm.envAddress("L2_ETH_GATEWAY_PROXY_ADDR");
-    address L2_STANDARD_ERC20_GATEWAY_PROXY_ADDR = vm.envAddress("L2_STANDARD_ERC20_GATEWAY_PROXY_ADDR");
-    address L2_WETH_GATEWAY_PROXY_ADDR = vm.envAddress("L2_WETH_GATEWAY_PROXY_ADDR");
+    address private L2_T1_MESSENGER_PROXY_ADDR = vm.envAddress("L2_T1_MESSENGER_PROXY_ADDR");
+    address private L2_GATEWAY_ROUTER_PROXY_ADDR = vm.envAddress("L2_GATEWAY_ROUTER_PROXY_ADDR");
+    address private L2_ETH_GATEWAY_PROXY_ADDR = vm.envAddress("L2_ETH_GATEWAY_PROXY_ADDR");
+    address private L2_STANDARD_ERC20_GATEWAY_PROXY_ADDR = vm.envAddress("L2_STANDARD_ERC20_GATEWAY_PROXY_ADDR");
+    address private L2_WETH_GATEWAY_PROXY_ADDR = vm.envAddress("L2_WETH_GATEWAY_PROXY_ADDR");
 
-    T1Owner owner;
+    T1Owner private owner;
 
     function run() external {
         vm.startBroadcast(L2_DEPLOYER_PRIVATE_KEY);

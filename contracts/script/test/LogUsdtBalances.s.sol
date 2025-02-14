@@ -2,23 +2,17 @@
 
 pragma solidity >=0.8.28;
 
-import { L1WETHGateway } from "../../src/L1/gateways/L1WETHGateway.sol";
+import { console } from "forge-std/console.sol";
 import { Script } from "forge-std/Script.sol";
-import { WrappedEther } from "../../src/L2/predeploys/WrappedEther.sol";
-import { L1StandardERC20Gateway } from "../../src/L1/gateways/L1StandardERC20Gateway.sol";
+
 import { T1StandardERC20 } from "../../src/libraries/token/T1StandardERC20.sol";
 
-import { console } from "forge-std/console.sol";
-
-// solhint-disable max-states-count
-// solhint-disable state-visibility
 // solhint-disable var-name-mixedcase
 
 contract LogUsdtBalances is Script {
-    uint256 L1_DEPLOYER_PRIVATE_KEY = vm.envUint("L1_DEPLOYER_PRIVATE_KEY");
-
-    address payable L1_USDT_ADDR = payable(vm.envAddress("L1_USDT_ADDR"));
-    address payable L2_USDT_ADDR = payable(vm.envAddress("L2_USDT_ADDR"));
+    uint256 private L1_DEPLOYER_PRIVATE_KEY = vm.envUint("L1_DEPLOYER_PRIVATE_KEY");
+    address private L1_USDT_ADDR = vm.envAddress("L1_USDT_ADDR");
+    address private L2_USDT_ADDR = vm.envAddress("L2_USDT_ADDR");
 
     function run() external {
         address addr = vm.addr(L1_DEPLOYER_PRIVATE_KEY);

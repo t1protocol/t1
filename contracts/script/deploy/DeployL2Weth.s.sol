@@ -7,6 +7,8 @@ import { console } from "forge-std/console.sol";
 
 import { WrappedEther } from "../../src/L2/predeploys/WrappedEther.sol";
 
+// solhint-disable var-name-mixedcase
+
 contract DeployL2Weth is Script {
     function run() external {
         uint256 L2_DEPLOYER_PRIVATE_KEY = vm.envUint("L2_DEPLOYER_PRIVATE_KEY");

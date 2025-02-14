@@ -18,35 +18,34 @@ import { T1StandardERC20Factory } from "../../src/libraries/token/T1StandardERC2
 import { T1Constants } from "../../src/libraries/constants/T1Constants.sol";
 
 // solhint-disable max-states-count
-// solhint-disable state-visibility
 // solhint-disable var-name-mixedcase
 
 contract InitializeL2BridgeContracts is Script {
-    uint256 deployerPrivateKey = vm.envUint("L2_DEPLOYER_PRIVATE_KEY");
+    uint256 private deployerPrivateKey = vm.envUint("L2_DEPLOYER_PRIVATE_KEY");
 
-    address L2_WETH_ADDR = vm.envAddress("L2_WETH_ADDR");
-    address L2_PROXY_ADMIN_ADDR = vm.envAddress("L2_PROXY_ADMIN_ADDR");
+    address private L2_WETH_ADDR = vm.envAddress("L2_WETH_ADDR");
+    address private L2_PROXY_ADMIN_ADDR = vm.envAddress("L2_PROXY_ADMIN_ADDR");
 
-    address L1_T1_MESSENGER_PROXY_ADDR = vm.envAddress("L1_T1_MESSENGER_PROXY_ADDR");
-    address L1_GATEWAY_ROUTER_PROXY_ADDR = vm.envAddress("L1_GATEWAY_ROUTER_PROXY_ADDR");
-    address L1_ETH_GATEWAY_PROXY_ADDR = vm.envAddress("L1_ETH_GATEWAY_PROXY_ADDR");
-    address L1_STANDARD_ERC20_GATEWAY_PROXY_ADDR = vm.envAddress("L1_STANDARD_ERC20_GATEWAY_PROXY_ADDR");
+    address private L1_T1_MESSENGER_PROXY_ADDR = vm.envAddress("L1_T1_MESSENGER_PROXY_ADDR");
+    address private L1_GATEWAY_ROUTER_PROXY_ADDR = vm.envAddress("L1_GATEWAY_ROUTER_PROXY_ADDR");
+    address private L1_ETH_GATEWAY_PROXY_ADDR = vm.envAddress("L1_ETH_GATEWAY_PROXY_ADDR");
+    address private L1_STANDARD_ERC20_GATEWAY_PROXY_ADDR = vm.envAddress("L1_STANDARD_ERC20_GATEWAY_PROXY_ADDR");
 
-    address L1_GAS_PRICE_ORACLE_ADDR = vm.envAddress("L1_GAS_PRICE_ORACLE_ADDR");
-    address L2_WHITELIST_ADDR = vm.envAddress("L2_WHITELIST_ADDR");
-    address L2_MESSAGE_QUEUE_ADDR = vm.envAddress("L2_MESSAGE_QUEUE_ADDR");
+    address private L1_GAS_PRICE_ORACLE_ADDR = vm.envAddress("L1_GAS_PRICE_ORACLE_ADDR");
+    address private L2_WHITELIST_ADDR = vm.envAddress("L2_WHITELIST_ADDR");
+    address private L2_MESSAGE_QUEUE_ADDR = vm.envAddress("L2_MESSAGE_QUEUE_ADDR");
 
-    address L2_T1_MESSENGER_PROXY_ADDR = vm.envAddress("L2_T1_MESSENGER_PROXY_ADDR");
-    address L2_T1_MESSENGER_IMPLEMENTATION_ADDR = vm.envAddress("L2_T1_MESSENGER_IMPLEMENTATION_ADDR");
-    address L2_GATEWAY_ROUTER_PROXY_ADDR = vm.envAddress("L2_GATEWAY_ROUTER_PROXY_ADDR");
-    address L2_ETH_GATEWAY_PROXY_ADDR = vm.envAddress("L2_ETH_GATEWAY_PROXY_ADDR");
-    address L2_ETH_GATEWAY_IMPLEMENTATION_ADDR = vm.envAddress("L2_ETH_GATEWAY_IMPLEMENTATION_ADDR");
-    address L2_STANDARD_ERC20_GATEWAY_PROXY_ADDR = vm.envAddress("L2_STANDARD_ERC20_GATEWAY_PROXY_ADDR");
-    address L2_STANDARD_ERC20_GATEWAY_IMPLEMENTATION_ADDR =
+    address private L2_T1_MESSENGER_PROXY_ADDR = vm.envAddress("L2_T1_MESSENGER_PROXY_ADDR");
+    address private L2_T1_MESSENGER_IMPLEMENTATION_ADDR = vm.envAddress("L2_T1_MESSENGER_IMPLEMENTATION_ADDR");
+    address private L2_GATEWAY_ROUTER_PROXY_ADDR = vm.envAddress("L2_GATEWAY_ROUTER_PROXY_ADDR");
+    address private L2_ETH_GATEWAY_PROXY_ADDR = vm.envAddress("L2_ETH_GATEWAY_PROXY_ADDR");
+    address private L2_ETH_GATEWAY_IMPLEMENTATION_ADDR = vm.envAddress("L2_ETH_GATEWAY_IMPLEMENTATION_ADDR");
+    address private L2_STANDARD_ERC20_GATEWAY_PROXY_ADDR = vm.envAddress("L2_STANDARD_ERC20_GATEWAY_PROXY_ADDR");
+    address private L2_STANDARD_ERC20_GATEWAY_IMPLEMENTATION_ADDR =
         vm.envAddress("L2_STANDARD_ERC20_GATEWAY_IMPLEMENTATION_ADDR");
-    address L2_WETH_GATEWAY_PROXY_ADDR = vm.envAddress("L2_WETH_GATEWAY_PROXY_ADDR");
-    address L2_WETH_GATEWAY_IMPLEMENTATION_ADDR = vm.envAddress("L2_WETH_GATEWAY_IMPLEMENTATION_ADDR");
-    address L2_T1_STANDARD_ERC20_FACTORY_ADDR = vm.envAddress("L2_T1_STANDARD_ERC20_FACTORY_ADDR");
+    address private L2_WETH_GATEWAY_PROXY_ADDR = vm.envAddress("L2_WETH_GATEWAY_PROXY_ADDR");
+    address private L2_WETH_GATEWAY_IMPLEMENTATION_ADDR = vm.envAddress("L2_WETH_GATEWAY_IMPLEMENTATION_ADDR");
+    address private L2_T1_STANDARD_ERC20_FACTORY_ADDR = vm.envAddress("L2_T1_STANDARD_ERC20_FACTORY_ADDR");
 
     function run() external {
         ProxyAdmin proxyAdmin = ProxyAdmin(L2_PROXY_ADMIN_ADDR);
