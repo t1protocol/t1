@@ -7,15 +7,15 @@
     "url": "https://github.com/t1protocol"
   },
   "dependencies": {
-    "@openzeppelin/contracts": "^4.9.3",
-    "@openzeppelin/contracts-upgradeable": "^4.9.3",
+    "@openzeppelin/contracts": "4.9.3",
+    "@openzeppelin/contracts-upgradeable": "4.9.3",
     "@uniswap/permit2": "github:uniswap/permit2"
   },
   "devDependencies": {
     "ds-test": "github:dapphub/ds-test",
     "forge-std": "github:foundry-rs/forge-std#v1.9.4",
-    "husky": "^9.1.7",
-    "prettier": "^3.0.0",
+    "husky": "9.1.7",
+    "prettier": "3.0.0",
     "solhint": "3.6.2",
     "solmate": "6.8.0"
   },
