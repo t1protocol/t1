@@ -69,9 +69,10 @@ contract SwapERC20 is Script, PermitSignature {
         });
 
         // Check if Alice has enough WETH to swap
-        if (T1StandardERC20(L1_WETH_ADDR).balanceOf(alice) < inputTokenAmount) {
-            revert("Alice doesn't have enough WETH");
-        }
+        require(
+            T1StandardERC20(L1_WETH_ADDR).balanceOf(alice) >= inputTokenAmount,
+            "Alice doesn't have enough WETH"
+        );
 
         // Check if Alice has approved the permit2 to transfer WETH
         if (T1StandardERC20(L1_WETH_ADDR).allowance(alice, permit2) < inputTokenAmount) {
@@ -86,11 +87,17 @@ contract SwapERC20 is Script, PermitSignature {
             );
         }
 
-        // Check if the market maker is set to this address
-        if (IL1GatewayRouter(L1_GATEWAY_ROUTER_PROXY_ADDR).marketMaker() != address(this)) {
-            // Use SetMM script to set this address as the router's market maker
-            revert("Signer is not the market maker in the router");
-        }
+        // Check if the ERC20 gateway has enough USDT to swap
+        require(
+            T1StandardERC20(L1_USDT_ADDR).balanceOf(L1_STANDARD_ERC20_GATEWAY_PROXY_ADDR) >= minAmountOut,
+            "ERC20 gateway doesn't have enough USDT"
+        );
+
+        // Use SetMM script to set this address as the router's market maker
+        require(
+            IL1GatewayRouter(L1_GATEWAY_ROUTER_PROXY_ADDR).marketMaker() == address(this),
+            "Signer is not the market maker in the router"
+        );
 
         IL1GatewayRouter(L1_GATEWAY_ROUTER_PROXY_ADDR).swapERC20(params);
 
