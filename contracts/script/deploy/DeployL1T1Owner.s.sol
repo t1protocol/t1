@@ -9,19 +9,18 @@ import { TimelockController } from "@openzeppelin/contracts/governance/TimelockC
 
 import { T1Owner } from "../../src/misc/T1Owner.sol";
 
-// solhint-disable state-visibility
 // solhint-disable var-name-mixedcase
 
 contract DeployL1T1Owner is Script {
-    string NETWORK = vm.envString("NETWORK");
+    string private NETWORK = vm.envString("NETWORK");
 
-    uint256 L1_DEPLOYER_PRIVATE_KEY = vm.envUint("L1_DEPLOYER_PRIVATE_KEY");
+    uint256 private L1_DEPLOYER_PRIVATE_KEY = vm.envUint("L1_DEPLOYER_PRIVATE_KEY");
 
-    address T1_MULTISIG_ADDR = vm.envAddress("L1_T1_MULTISIG_ADDR");
+    address private T1_MULTISIG_ADDR = vm.envAddress("L1_T1_MULTISIG_ADDR");
 
-    address SECURITY_COUNCIL_ADDR = vm.envAddress("L1_SECURITY_COUNCIL_ADDR");
+    address private SECURITY_COUNCIL_ADDR = vm.envAddress("L1_SECURITY_COUNCIL_ADDR");
 
-    address L1_PROPOSAL_EXECUTOR_ADDR = vm.envAddress("L1_PROPOSAL_EXECUTOR_ADDR");
+    address private L1_PROPOSAL_EXECUTOR_ADDR = vm.envAddress("L1_PROPOSAL_EXECUTOR_ADDR");
 
     function run() external {
         vm.startBroadcast(L1_DEPLOYER_PRIVATE_KEY);

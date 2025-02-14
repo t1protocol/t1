@@ -7,8 +7,10 @@ import { console } from "forge-std/console.sol";
 
 import { WrappedEther } from "../../src/L2/predeploys/WrappedEther.sol";
 
+// solhint-disable var-name-mixedcase
+
 contract DeployL1Weth is Script {
-    address L1_WETH_ADDR = vm.envAddress("L1_WETH_ADDR");
+    address private L1_WETH_ADDR = vm.envAddress("L1_WETH_ADDR");
 
     function run() external {
         // deploy weth only if we're running a private L1 network

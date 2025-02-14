@@ -47,6 +47,7 @@ contract WithdrawTrieVerifierTest is DSTestPlus {
             hex"0000000000000000000000000000000000000000000000000000000000000003e90b7bceb6e7df5418fb78d8ee546e97c83a08bbccc01a0644d599ccd2a7c2e0";
 
         for (uint256 i = 0; i < 4; i++) {
+            // solhint-disable-next-line reason-string
             require(
                 WithdrawTrieVerifier.verifyMerkleProof(roots[i], hashes[i], nonces[i], proofs[i]) == true,
                 "WithdrawTrieVerifier: verifyMerkleProof failed"

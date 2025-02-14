@@ -3,16 +3,14 @@
 pragma solidity >=0.8.28;
 
 import { Script } from "forge-std/Script.sol";
-import { L2ETHGateway } from "../../src/L2/gateways/L2ETHGateway.sol";
 
-// solhint-disable max-states-count
-// solhint-disable state-visibility
+import { IL2GatewayRouter } from "../../src/L2/gateways/IL2GatewayRouter.sol";
+
 // solhint-disable var-name-mixedcase
 
 contract WithdrawEtherFromL2ToL1 is Script {
-    uint256 L2_DEPLOYER_PRIVATE_KEY = vm.envUint("L2_DEPLOYER_PRIVATE_KEY");
-
-    address L2_ETH_GATEWAY_PROXY_ADDR = vm.envAddress("L2_ETH_GATEWAY_PROXY_ADDR");
+    uint256 private L2_DEPLOYER_PRIVATE_KEY = vm.envUint("L2_DEPLOYER_PRIVATE_KEY");
+    address private L2_GATEWAY_ROUTER_PROXY_ADDR = vm.envAddress("L2_GATEWAY_ROUTER_PROXY_ADDR");
 
     function run() external {
         vm.createSelectFork(vm.rpcUrl("t1"));
@@ -20,7 +18,7 @@ contract WithdrawEtherFromL2ToL1 is Script {
 
         uint256 gasLimit = 1_000_000;
 
-        L2ETHGateway(L2_ETH_GATEWAY_PROXY_ADDR).withdrawETH{ value: 0.001 ether }(0.001 ether, gasLimit);
+        IL2GatewayRouter(L2_GATEWAY_ROUTER_PROXY_ADDR).withdrawETH{ value: 0.001 ether }(0.001 ether, gasLimit);
 
         vm.stopBroadcast();
     }
