@@ -69,10 +69,7 @@ contract SwapERC20 is Script, PermitSignature {
         });
 
         // Check if Alice has enough WETH to swap
-        require(
-            T1StandardERC20(L1_WETH_ADDR).balanceOf(alice) >= inputTokenAmount,
-            "Alice doesn't have enough WETH"
-        );
+        require(T1StandardERC20(L1_WETH_ADDR).balanceOf(alice) >= inputTokenAmount, "Alice doesn't have enough WETH");
 
         // Check if Alice has approved the permit2 to transfer WETH
         if (T1StandardERC20(L1_WETH_ADDR).allowance(alice, permit2) < inputTokenAmount) {
