@@ -25,10 +25,9 @@
   block_base_fee_per_gas = 0                                    # the base fee (in wei) in tests
   block_coinbase = '0x0000000000000000000000000000000000000000' # the address of `block.coinbase` in tests
   block_timestamp = 0                                           # the value of `block.timestamp` in tests
-  block_difficulty = 0                                          # the value of `block.difficulty` in tests]
+  block_difficulty = 0                                          # the value of `block.difficulty` in tests
 
 [profile.ci]
-  allow_internal_expect_revert = true
   fuzz_runs = 1000
 
 [fmt]
