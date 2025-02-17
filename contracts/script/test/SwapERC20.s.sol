@@ -45,7 +45,6 @@ contract SwapERC20 is Script, PermitSignature {
         IL1GatewayRouter.Witness memory witness = IL1GatewayRouter.Witness({
             direction: 0,
             priceAfterSlippage: 0,
-            validUntil: 0,
             outputTokenAddress: L1_USDT_ADDR,
             outputTokenAmount: outputTokenAmount
         });

@@ -374,7 +374,6 @@ contract L1GatewayRouterTest is L1GatewayTestBase, DeployPermit2, PermitSignatur
         IL1GatewayRouter.Witness memory witness = IL1GatewayRouter.Witness({
             direction: 0,
             priceAfterSlippage: 0,
-            validUntil: 0,
             outputTokenAddress: address(aave),
             outputTokenAmount: 1e21
         });

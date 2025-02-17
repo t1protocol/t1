@@ -57,13 +57,11 @@ interface IL1GatewayRouter is IL1ETHGateway, IL1ERC20Gateway {
     /// @notice Represents the extra details for the swap
     /// @param direction External swap direction (irrelevant for internal swaps)
     /// @param priceAfterSlippage External price after slippage (irrelevant for internal swaps)
-    /// @param validUntil External timestamp (irrelevant for internal swaps)
     /// @param outputTokenAddress Output token address
     /// @param outputTokenAmount Output token amount
     struct Witness {
         uint8 direction;
         uint256 priceAfterSlippage;
-        uint256 validUntil;
         address outputTokenAddress;
         uint256 outputTokenAmount;
     }
