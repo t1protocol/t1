@@ -11,6 +11,7 @@ import { WrappedEther } from "../../src/L2/predeploys/WrappedEther.sol";
 
 contract DepositWethFromL2ToL2 is Script {
     address private L2_GATEWAY_ROUTER_PROXY_ADDR = vm.envAddress("L2_GATEWAY_ROUTER_PROXY_ADDR");
+    address private L2_WETH_GATEWAY_PROXY_ADDR = vm.envAddress("L2_WETH_GATEWAY_PROXY_ADDR");
     address payable private L2_WETH_ADDR = payable(vm.envAddress("L2_WETH_ADDR"));
 
     function run(uint256 privKey) external {
@@ -19,7 +20,7 @@ contract DepositWethFromL2ToL2 is Script {
 
         uint256 gasLimit = 1_000_000;
 
-        WrappedEther(L2_WETH_ADDR).approve(L2_GATEWAY_ROUTER_PROXY_ADDR, 0.01 ether);
+        WrappedEther(L2_WETH_ADDR).approve(L2_WETH_GATEWAY_PROXY_ADDR, 0.01 ether);
 
         IL2GatewayRouter(L2_GATEWAY_ROUTER_PROXY_ADDR).withdrawERC20(L2_WETH_ADDR, 0.01 ether, gasLimit);
 
