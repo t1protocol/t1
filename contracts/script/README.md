@@ -44,4 +44,4 @@ Hint - Run them as such:
 - Swaps
   - [Swap ERC20s against bridge reserves](./test/SwapERC20.s.sol)
 - Chore
-  - [Check Alice balances on L1/L2](./test/LogAliceBalances.s.sol)
+  - [Check Alice balances on L1/L2](./test/LogBalances.s.sol)

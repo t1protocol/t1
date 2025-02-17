@@ -9,7 +9,7 @@ import { T1StandardERC20 } from "../../src/libraries/token/T1StandardERC20.sol";
 
 // solhint-disable var-name-mixedcase
 
-contract LogUsdtBalances is Script {
+contract LogBalances is Script {
 
     address private L1_USDT_ADDR = vm.envAddress("L1_USDT_ADDR");
     address private L2_USDT_ADDR = vm.envOr("L2_USDT_ADDR", address(0));
