@@ -29,6 +29,10 @@ The magical deploy order is as follows:
 
 Scripts to test the canonical bridge functionalities:
 
+Hint - Run them as such:
+`forge script script/test/LogAliceBalances.s.sol --sig "run(address)" <YOUR-ADDRESS>`
+`forge script script/test/DepositEtherFromL1ToL2.s.sol --sig "run(uint256)" <YOUR-PRIV-KEY>`
+
 - Deposits
   - [Deposit Ether from L1->L2](./test/DepositEtherFromL1ToL2.s.sol)
   - [Deposit WETH from L1->L2](./test/DepositWethFromL1ToL2.s.sol)
