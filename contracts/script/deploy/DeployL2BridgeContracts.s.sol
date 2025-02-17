@@ -7,6 +7,8 @@ pragma solidity >=0.8.28;
 import { Script } from "forge-std/Script.sol";
 import { console } from "forge-std/console.sol";
 
+import { DeploymentUtils } from "../lib/DeploymentUtils.sol";
+
 import { ProxyAdmin } from "@openzeppelin/contracts/proxy/transparent/ProxyAdmin.sol";
 import { TransparentUpgradeableProxy } from "@openzeppelin/contracts/proxy/transparent/TransparentUpgradeableProxy.sol";
 
@@ -24,7 +26,7 @@ import { T1StandardERC20Factory } from "../../src/libraries/token/T1StandardERC2
 // solhint-disable max-states-count
 // solhint-disable var-name-mixedcase
 
-contract DeployL2BridgeContracts is Script {
+contract DeployL2BridgeContracts is Script, DeploymentUtils {
     uint256 private L2_DEPLOYER_PRIVATE_KEY = vm.envUint("L2_DEPLOYER_PRIVATE_KEY");
 
     address private L2_PROXY_ADMIN_ADDR = vm.envAddress("L2_PROXY_ADMIN_ADDR");
@@ -51,6 +53,8 @@ contract DeployL2BridgeContracts is Script {
     address private L2_WHITELIST_PREDEPLOY_ADDR = vm.envOr("L2_WHITELIST_PREDEPLOY_ADDR", address(0));
 
     function run() external {
+        logStart("DeployL2BridgeContracts");
+
         proxyAdmin = ProxyAdmin(L2_PROXY_ADMIN_ADDR);
 
         vm.startBroadcast(L2_DEPLOYER_PRIVATE_KEY);
@@ -69,6 +73,8 @@ contract DeployL2BridgeContracts is Script {
         deployL2WETHGateway();
 
         vm.stopBroadcast();
+
+        logEnd("DeployL2BridgeContracts");
     }
 
     function deployL1GasPriceOracle() internal {
@@ -154,9 +160,5 @@ contract DeployL2BridgeContracts is Script {
         );
 
         logAddress("L2_WETH_GATEWAY_IMPLEMENTATION_ADDR", address(impl));
-    }
-
-    function logAddress(string memory name, address addr) internal pure {
-        console.log(string(abi.encodePacked(name, "=", vm.toString(address(addr)))));
     }
 }

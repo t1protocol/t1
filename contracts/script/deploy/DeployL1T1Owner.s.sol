@@ -5,13 +5,15 @@ pragma solidity >=0.8.28;
 import { Script } from "forge-std/Script.sol";
 import { console } from "forge-std/console.sol";
 
+import { DeploymentUtils } from "../lib/DeploymentUtils.sol";
+
 import { TimelockController } from "@openzeppelin/contracts/governance/TimelockController.sol";
 
 import { T1Owner } from "../../src/misc/T1Owner.sol";
 
 // solhint-disable var-name-mixedcase
 
-contract DeployL1T1Owner is Script {
+contract DeployL1T1Owner is Script, DeploymentUtils {
     string private NETWORK = vm.envString("NETWORK");
 
     uint256 private L1_DEPLOYER_PRIVATE_KEY = vm.envUint("L1_DEPLOYER_PRIVATE_KEY");
@@ -23,6 +25,8 @@ contract DeployL1T1Owner is Script {
     address private L1_PROPOSAL_EXECUTOR_ADDR = vm.envAddress("L1_PROPOSAL_EXECUTOR_ADDR");
 
     function run() external {
+        logStart("DeployL1T1Owner.s.sol");
+
         vm.startBroadcast(L1_DEPLOYER_PRIVATE_KEY);
 
         deployT1Owner();
@@ -40,6 +44,8 @@ contract DeployL1T1Owner is Script {
         }
 
         vm.stopBroadcast();
+
+        logEnd("DeployL1T1Owner.s.sol");
     }
 
     function deployT1Owner() internal {
@@ -58,9 +64,5 @@ contract DeployL1T1Owner is Script {
         TimelockController timelock = new TimelockController(delay, proposers, executors, SECURITY_COUNCIL_ADDR);
 
         logAddress(string(abi.encodePacked("L1_", label, "_TIMELOCK_ADDR")), address(timelock));
-    }
-
-    function logAddress(string memory name, address addr) internal pure {
-        console.log(string(abi.encodePacked(name, "=", vm.toString(address(addr)))));
     }
 }

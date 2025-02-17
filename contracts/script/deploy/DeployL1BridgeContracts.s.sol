@@ -7,6 +7,8 @@ pragma solidity >=0.8.28;
 import { Script } from "forge-std/Script.sol";
 import { console } from "forge-std/console.sol";
 
+import { DeploymentUtils } from "../lib/DeploymentUtils.sol";
+
 import { ProxyAdmin } from "@openzeppelin/contracts/proxy/transparent/ProxyAdmin.sol";
 import { TransparentUpgradeableProxy } from "@openzeppelin/contracts/proxy/transparent/TransparentUpgradeableProxy.sol";
 
@@ -25,7 +27,7 @@ import { ZkEvmVerifierV1 } from "../../src/libraries/verifier/ZkEvmVerifierV1.so
 // solhint-disable max-states-count
 // solhint-disable var-name-mixedcase
 
-contract DeployL1BridgeContracts is Script {
+contract DeployL1BridgeContracts is Script, DeploymentUtils {
     uint256 private L1_DEPLOYER_PRIVATE_KEY = vm.envUint("L1_DEPLOYER_PRIVATE_KEY");
 
     uint64 private CHAIN_ID_L2 = uint64(vm.envUint("CHAIN_ID_L2"));
@@ -54,6 +56,8 @@ contract DeployL1BridgeContracts is Script {
     L1GatewayRouter private router;
 
     function run() external {
+        logStart("DeployL1BridgeContracts.s.sol");
+
         proxyAdmin = ProxyAdmin(L1_PROXY_ADMIN_ADDR);
 
         vm.startBroadcast(L1_DEPLOYER_PRIVATE_KEY);
@@ -71,6 +75,8 @@ contract DeployL1BridgeContracts is Script {
         deployL1StandardERC20Gateway();
 
         vm.stopBroadcast();
+
+        logEnd("DeployL1BridgeContracts.s.sol");
     }
 
     function deployZkEvmVerifierV1() internal {
@@ -158,9 +164,5 @@ contract DeployL1BridgeContracts is Script {
         );
 
         logAddress("L1_WETH_GATEWAY_IMPLEMENTATION_ADDR", address(impl));
-    }
-
-    function logAddress(string memory name, address addr) internal pure {
-        console.log(string(abi.encodePacked(name, "=", vm.toString(address(addr)))));
     }
 }

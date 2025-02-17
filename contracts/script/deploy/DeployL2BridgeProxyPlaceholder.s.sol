@@ -7,6 +7,8 @@ pragma solidity >=0.8.28;
 import { Script } from "forge-std/Script.sol";
 import { console } from "forge-std/console.sol";
 
+import { DeploymentUtils } from "../lib/DeploymentUtils.sol";
+
 import { ProxyAdmin } from "@openzeppelin/contracts/proxy/transparent/ProxyAdmin.sol";
 import { TransparentUpgradeableProxy } from "@openzeppelin/contracts/proxy/transparent/TransparentUpgradeableProxy.sol";
 
@@ -14,13 +16,15 @@ import { EmptyContract } from "../../src/misc/EmptyContract.sol";
 
 // solhint-disable var-name-mixedcase
 
-contract DeployL2BridgeProxyPlaceholder is Script {
+contract DeployL2BridgeProxyPlaceholder is Script, DeploymentUtils {
     uint256 private L2_DEPLOYER_PRIVATE_KEY = vm.envUint("L2_DEPLOYER_PRIVATE_KEY");
 
     ProxyAdmin private proxyAdmin;
     EmptyContract private placeholder;
 
     function run() external {
+        logStart("DeployL2BridgeProxyPlaceholder");
+
         vm.startBroadcast(L2_DEPLOYER_PRIVATE_KEY);
 
         // upgradable
@@ -32,6 +36,8 @@ contract DeployL2BridgeProxyPlaceholder is Script {
         deployL2StandardERC20Gateway();
 
         vm.stopBroadcast();
+
+        logEnd("DeployL2BridgeProxyPlaceholder");
     }
 
     function deployProxyAdmin() internal {
@@ -73,9 +79,5 @@ contract DeployL2BridgeProxyPlaceholder is Script {
             new TransparentUpgradeableProxy(address(placeholder), address(proxyAdmin), new bytes(0));
 
         logAddress("L2_WETH_GATEWAY_PROXY_ADDR", address(proxy));
-    }
-
-    function logAddress(string memory name, address addr) internal pure {
-        console.log(string(abi.encodePacked(name, "=", vm.toString(address(addr)))));
     }
 }
