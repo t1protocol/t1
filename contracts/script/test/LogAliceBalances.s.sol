@@ -10,7 +10,6 @@ import { T1StandardERC20 } from "../../src/libraries/token/T1StandardERC20.sol";
 // solhint-disable var-name-mixedcase
 
 contract LogUsdtBalances is Script {
-    uint256 private ALICE_PRIVATE_KEY = vm.envUint("ALICE_PRIVATE_KEY");
 
     address private L1_USDT_ADDR = vm.envAddress("L1_USDT_ADDR");
     address private L2_USDT_ADDR = vm.envOr("L2_USDT_ADDR", address(0));
@@ -18,8 +17,7 @@ contract LogUsdtBalances is Script {
     address private L1_WETH_ADDR = vm.envAddress("L1_WETH_ADDR");
     address private L2_WETH_ADDR = vm.envAddress("L2_WETH_ADDR");
 
-    function run() external {
-        address addr = vm.addr(ALICE_PRIVATE_KEY);
+    function run(address addr) external {
 
         vm.createSelectFork(vm.rpcUrl("sepolia"));
         console.log(
