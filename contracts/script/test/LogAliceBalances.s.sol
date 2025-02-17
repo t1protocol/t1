@@ -13,7 +13,7 @@ contract LogUsdtBalances is Script {
     uint256 private ALICE_PRIVATE_KEY = vm.envUint("ALICE_PRIVATE_KEY");
 
     address private L1_USDT_ADDR = vm.envAddress("L1_USDT_ADDR");
-    address private L2_USDT_ADDR = vm.envAddress("L2_USDT_ADDR") ? vm.envAddress("L2_USDT_ADDR") : address(0);
+    address private L2_USDT_ADDR = vm.envOr("L2_USDT_ADDR", address(0));
 
     address private L1_WETH_ADDR = vm.envAddress("L1_WETH_ADDR");
     address private L2_WETH_ADDR = vm.envAddress("L2_WETH_ADDR");
