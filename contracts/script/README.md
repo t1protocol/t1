@@ -2,7 +2,8 @@
 
 ## Deploy
 
-You can use `./deploy.sh` in the `contracts` folder to automatically deploy all the contracts. Make sure to have the `.env` file clean from any previous deployments.
+You can use `./deploy.sh` in the `contracts` folder to automatically deploy all the contracts. Make sure to have the
+`.env` file clean from any previous deployments.
 
 There is a particular order the deployment scripts need to be ran in. There are multiple reasons for this:
 
