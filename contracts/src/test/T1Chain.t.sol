@@ -32,8 +32,6 @@ contract T1ChainTest is DSTestPlus {
     event FinalizeBatch(uint256 indexed batchIndex, bytes32 indexed batchHash, bytes32 stateRoot, bytes32 withdrawRoot);
     event RevertBatch(uint256 indexed batchIndex, bytes32 indexed batchHash);
 
-    event ValidSignerUpdated(address indexed oldSigner, address indexed newSigner);
-
     ProxyAdmin internal admin;
     EmptyContract private placeholder;
 
@@ -1678,9 +1676,6 @@ contract T1ChainTest is DSTestPlus {
 
     /**
      * @notice Tests that finalizeBatchWithProof reverts if the signature was made by the wrong key.
-     * @dev This assumes requiring `ecrecover(...) == validSigner`.
-     *      Make sure the contract has `address public validSigner;`
-     *      and that it's set to the signer address for a valid signature to pass.
      */
     function testFinalizeBatchWithProof_WrongSigner() external {
         bytes32 dummyRoot = keccak256(abi.encode("dummyRoot"));
@@ -1689,13 +1684,8 @@ contract T1ChainTest is DSTestPlus {
         // The address recovered by ecrecover(...) will be this one:
         address expectedBadSigner = hevm.addr(NON_SIGNER_KEY);
 
-        // If we haven't set validSigner yet, rollup.validSigner() should be address(0)
-        address expectedValidSigner = rollup.validSigner();
-
         // Now we provide the entire revert data:
-        hevm.expectRevert(
-            abi.encodeWithSelector(T1Chain.ErrorIncorrectSigner.selector, expectedBadSigner, expectedValidSigner)
-        );
+        hevm.expectRevert(abi.encodeWithSelector(T1Chain.ErrorIncorrectSigner.selector, expectedBadSigner));
 
         // This call should revert with `ErrorIncorrectSigner(badSigner, validSigner)`
         rollup.finalizeBatchWithProof(dummyRoot, sig);
@@ -1703,12 +1693,10 @@ contract T1ChainTest is DSTestPlus {
 
     /**
      * @notice Tests a happy path with a correct signature from validSigner.
-     * @dev Call `function setValidSigner(address)` before this test
-     *      to set rollup.validSigner.
      */
     function testFinalizeBatchWithProof_Success() external {
         address validSignerAddr = hevm.addr(VALID_SIGNER_KEY);
-        rollup.setValidSigner(validSignerAddr);
+        rollup.addProver(validSignerAddr);
 
         bytes32 withdrawRoot = keccak256(abi.encode("some withdrawRoot"));
         // Sign with VALID_SIGNER_KEY to produce a valid signature
@@ -1733,42 +1721,5 @@ contract T1ChainTest is DSTestPlus {
 
         hevm.expectRevert(bytes("Pausable: paused"));
         rollup.finalizeBatchWithProof(dummyRoot, sig);
-    }
-
-    function testSetValidSigner_Success() external {
-        // By default, 'address(this)' is the contract that calls setUp(), and is the owner if the contract
-        // used OwnableUpgradeable.__Ownable_init(). If not, adjust the "owner" identity as appropriate.
-
-        // Initially, validSigner is presumably address(0). Let's verify.
-        assertEq(rollup.validSigner(), address(0));
-
-        // We define a new signer:
-        address newSigner = address(0x12345);
-
-        // Expect the ValidSignerUpdated event:
-        hevm.expectEmit(true, true, false, true);
-        emit ValidSignerUpdated(address(0), newSigner);
-
-        // Call setValidSigner
-        rollup.setValidSigner(newSigner);
-
-        // Check that validSigner has been updated
-        assertEq(rollup.validSigner(), newSigner);
-    }
-
-    function testSetValidSigner_ZeroAddressReverts() external {
-        // Attempt to set to zero address
-        hevm.expectRevert(T1Chain.ErrorZeroAddress.selector);
-        rollup.setValidSigner(address(0));
-    }
-
-    function testSetValidSigner_NotOwnerReverts() external {
-        // Another address, not the owner
-        address nonOwner = address(0x9999);
-
-        hevm.startPrank(nonOwner);
-        hevm.expectRevert(bytes("Ownable: caller is not the owner"));
-        rollup.setValidSigner(address(0x12345));
-        hevm.stopPrank();
     }
 }

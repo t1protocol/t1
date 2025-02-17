@@ -83,8 +83,8 @@ contract T1Chain is OwnableUpgradeable, PausableUpgradeable, IT1Chain {
     /// @dev Thrown when the signature length is incorrect.
     error ErrorIncorrectSignatureLength();
 
-    /// @dev Thrown when the signer is not a valid signer
-    error ErrorIncorrectSigner(address signer, address validSigner);
+    /// @dev Thrown when the signer is not a prover
+    error ErrorIncorrectSigner(address signer);
 
     /// @dev Thrown when the last message is skipped.
     error ErrorLastL1MessageSkipped();
@@ -434,40 +434,6 @@ contract T1Chain is OwnableUpgradeable, PausableUpgradeable, IT1Chain {
         //        bytes calldata _batchHeader,
         //        bytes32 _prevStateRoot,
         //        bytes32 _postStateRoot,
-        bytes32 _withdrawRoot
-    )
-        //        bytes calldata _aggrProof
-        external
-        override
-        whenNotPaused
-    {
-        //    ) external override OnlyProver whenNotPaused {
-        //        (uint256 batchPtr, bytes32 _batchHash, uint256 _batchIndex) = _beforeFinalizeBatch(
-        //            _batchHeader,
-        //            _postStateRoot
-        //        );
-        //        // TODO: Diego to replace following with verifying TEE signature
-        //        // verify batch
-        //        IRollupVerifier(verifier).verifyAggregateProof(0, _batchIndex, _aggrProof, _publicInputHash);
-
-        // Pop finalized and non-skipped message from L1MessageQueue.
-        //        uint256 _totalL1MessagesPoppedOverall = BatchHeaderV0Codec.getTotalL1MessagePopped(batchPtr);
-        //        _popL1MessagesMemory(
-        //            BatchHeaderV0Codec.getSkippedBitmapPtr(batchPtr),
-        //            _totalL1MessagesPoppedOverall,
-        //            BatchHeaderV0Codec.getL1MessagePopped(batchPtr)
-        //        );
-
-        //        _afterFinalizeBatch(_totalL1MessagesPoppedOverall, _batchIndex, _batchHash, _postStateRoot,
-        // _withdrawRoot);
-        _afterFinalizeBatch(0, 1, "", "", _withdrawRoot);
-    }
-
-    /// @inheritdoc IT1Chain
-    function finalizeBatchWithProof(
-        //        bytes calldata _batchHeader,
-        //        bytes32 _prevStateRoot,
-        //        bytes32 _postStateRoot,
         bytes32 _withdrawRoot,
         bytes calldata signature
     )
@@ -505,8 +471,8 @@ contract T1Chain is OwnableUpgradeable, PausableUpgradeable, IT1Chain {
         address signer = ethSignedMessageHash.recover(signature);
 
         // Verify that the recovered signer matches our stored validSigner
-        if (signer != validSigner) {
-            revert ErrorIncorrectSigner(signer, validSigner);
+        if (!isProver[signer]) {
+            revert ErrorIncorrectSigner(signer);
         }
 
         // Now that the signature is verified, perform your internal logic
@@ -686,18 +652,6 @@ contract T1Chain is OwnableUpgradeable, PausableUpgradeable, IT1Chain {
         } else {
             _unpause();
         }
-    }
-
-    /**
-     * @notice Sets or updates the valid signer address for `finalizeBatchWithProof`.
-     * @dev Only owner can call this. Check nonzero to prevent mistakes.
-     * @param _newSigner The new valid signer address.
-     */
-    function setValidSigner(address _newSigner) external onlyOwner {
-        if (_newSigner == address(0)) revert ErrorZeroAddress();
-        address oldSigner = validSigner;
-        validSigner = _newSigner;
-        emit ValidSignerUpdated(oldSigner, _newSigner);
     }
 
     /**
