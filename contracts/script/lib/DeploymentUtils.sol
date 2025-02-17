@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: UNLICENSED
-pragma solidity ^0.8.0;
+pragma solidity >=0.8.28;
 
 import "forge-std/Script.sol";
 import "forge-std/console.sol";
@@ -35,13 +35,8 @@ abstract contract DeploymentUtils is Script {
      *      e.g.: L1_PROXY_ADMIN_ADDR=0x...
      */
     function logAddress(string memory name, address addr) internal {
-        // 1. Construct the line
         string memory line = string(abi.encodePacked(name, "=", vm.toString(addr)));
-        
-        // 2. Print to console
         console.log(line);
-        
-        // 3. Append to .env
         vm.writeLine(".env", line);
     }
 }
