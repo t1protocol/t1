@@ -13,6 +13,7 @@ import { IL1GatewayRouter } from "../../src/L1/gateways/IL1GatewayRouter.sol";
 import { IL1StandardERC20Gateway } from "../../src/L1/gateways/IL1StandardERC20Gateway.sol";
 import { T1StandardERC20 } from "../../src/libraries/token/T1StandardERC20.sol";
 import { PermitSignature } from "../../src/test/utils/PermitSignature.sol";
+import { T1Constants } from "../../src/libraries/constants/T1Constants.sol";
 
 // solhint-disable var-name-mixedcase
 
@@ -24,14 +25,7 @@ contract SwapERC20 is Script, PermitSignature {
     uint256 private ALICE_PRIVATE_KEY = vm.envUint("ALICE_PRIVATE_KEY");
     address private alice = vm.addr(ALICE_PRIVATE_KEY);
     uint256 private inputTokenAmount = 1e15; // WETH
-    uint256 private outputAmount = 10e18; // USDT
-    uint256 private minAmountOut = 1e18; // USDT
-
-    string private constant WITNESS_TYPE_STRING = "uint256 minAmountOut)TokenPermissions(address token,uint256 amount)";
-    bytes32 private constant FULL_EXAMPLE_WITNESS_TYPEHASH = keccak256(
-        // solhint-disable-next-line max-line-length
-        "PermitWitnessTransferFrom(TokenPermissions permitted,address spender,uint256 nonce,uint256 deadline,uint256 minAmountOut)TokenPermissions(address token,uint256 amount)"
-    );
+    uint256 private outputTokenAmount = 10e18; // USDT
 
     function run() external {
         vm.createSelectFork(vm.rpcUrl("sepolia"));
@@ -48,25 +42,26 @@ contract SwapERC20 is Script, PermitSignature {
             deadline: block.timestamp + 1000
         });
 
-        bytes32 witness = keccak256(abi.encode(minAmountOut));
+        IL1GatewayRouter.Witness memory witness = IL1GatewayRouter.Witness({
+            direction: 0,
+            priceAfterSlippage: 0,
+            validUntil: 0,
+            outputTokenAddress: L1_USDT_ADDR,
+            outputTokenAmount: outputTokenAmount
+        });
+
+        bytes32 witnessEncoded = keccak256(abi.encode(witness));
         bytes memory sig = getPermitWitnessTransferSignature(
             permit,
             ALICE_PRIVATE_KEY,
-            FULL_EXAMPLE_WITNESS_TYPEHASH,
-            witness,
+            T1Constants.FULL_WITNESS_TYPEHASH,
+            witnessEncoded,
             ISignatureTransfer(permit2).DOMAIN_SEPARATOR(),
             L1_GATEWAY_ROUTER_PROXY_ADDR
         );
 
-        IL1GatewayRouter.SwapParams memory params = IL1GatewayRouter.SwapParams({
-            permit: permit,
-            owner: alice,
-            outputToken: L1_USDT_ADDR,
-            minAmountOut: minAmountOut,
-            outputAmount: outputAmount,
-            witnessTypeString: WITNESS_TYPE_STRING,
-            sig: sig
-        });
+        IL1GatewayRouter.SwapParams memory params =
+            IL1GatewayRouter.SwapParams({ permit: permit, owner: alice, witness: witness, sig: sig });
 
         // Check if Alice has enough WETH to swap
         require(T1StandardERC20(L1_WETH_ADDR).balanceOf(alice) >= inputTokenAmount, "Alice doesn't have enough WETH");
@@ -78,7 +73,8 @@ contract SwapERC20 is Script, PermitSignature {
 
         // Check if the ERC20 gateway has approved the permit2 to transfer USDT
         // TODO include check allowance transfer to the router on USDT
-        if (T1StandardERC20(L1_USDT_ADDR).allowance(L1_STANDARD_ERC20_GATEWAY_PROXY_ADDR, permit2) < minAmountOut) {
+        if (T1StandardERC20(L1_USDT_ADDR).allowance(L1_STANDARD_ERC20_GATEWAY_PROXY_ADDR, permit2) < outputTokenAmount)
+        {
             IL1StandardERC20Gateway(L1_STANDARD_ERC20_GATEWAY_PROXY_ADDR).allowRouterToTransfer(
                 L1_USDT_ADDR, type(uint160).max, uint48(block.timestamp + 1000)
             );
@@ -86,7 +82,7 @@ contract SwapERC20 is Script, PermitSignature {
 
         // Check if the ERC20 gateway has enough USDT to swap
         require(
-            T1StandardERC20(L1_USDT_ADDR).balanceOf(L1_STANDARD_ERC20_GATEWAY_PROXY_ADDR) >= minAmountOut,
+            T1StandardERC20(L1_USDT_ADDR).balanceOf(L1_STANDARD_ERC20_GATEWAY_PROXY_ADDR) >= outputTokenAmount,
             "ERC20 gateway doesn't have enough USDT"
         );
 
