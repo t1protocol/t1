@@ -7,9 +7,11 @@
     "url": "https://github.com/t1protocol"
   },
   "dependencies": {
+    "@hyperlane-xyz/core": "^5.4.1",
     "@openzeppelin/contracts": "4.9.3",
     "@openzeppelin/contracts-upgradeable": "4.9.3",
-    "@uniswap/permit2": "github:uniswap/permit2"
+    "@uniswap/permit2": "github:uniswap/permit2",
+    "@bootnodedev/intents-framework-core": "github:BootNodeDev/intents-framework"
   },
   "devDependencies": {
     "ds-test": "github:dapphub/ds-test",
