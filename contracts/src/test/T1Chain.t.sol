@@ -1687,16 +1687,16 @@ contract T1ChainTest is DSTestPlus {
         // Now we provide the entire revert data:
         hevm.expectRevert(abi.encodeWithSelector(T1Chain.ErrorIncorrectSigner.selector, expectedBadSigner));
 
-        // This call should revert with `ErrorIncorrectSigner(badSigner, validSigner)`
+        // This call should revert with `ErrorIncorrectSigner(badSigner)`
         rollup.finalizeBatchWithProof(dummyRoot, sig);
     }
 
     /**
-     * @notice Tests a happy path with a correct signature from validSigner.
+     * @notice Tests a happy path with a correct signature from a prover.
      */
     function testFinalizeBatchWithProof_Success() external {
-        address validSignerAddr = hevm.addr(VALID_SIGNER_KEY);
-        rollup.addProver(validSignerAddr);
+        address proverAddr = hevm.addr(VALID_SIGNER_KEY);
+        rollup.addProver(proverAddr);
 
         bytes32 withdrawRoot = keccak256(abi.encode("some withdrawRoot"));
         // Sign with VALID_SIGNER_KEY to produce a valid signature

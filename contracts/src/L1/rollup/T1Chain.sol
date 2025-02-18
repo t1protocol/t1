@@ -165,17 +165,12 @@ contract T1Chain is OwnableUpgradeable, PausableUpgradeable, IT1Chain {
 
     /// @inheritdoc IT1Chain
     mapping(uint256 => bytes32) public override withdrawRoots;
-
-    /**
-     * @notice The address authorized to sign `withdrawRoot` (or any data to be proven).
-     */
-    address public validSigner;
-
     /**
      *
      * Function Modifiers *
      *
      */
+
     modifier OnlySequencer() {
         // @note In the decentralized mode, it should be only called by a list of validator.
         if (!isSequencer[_msgSender()]) revert ErrorCallerIsNotSequencer();
@@ -470,7 +465,7 @@ contract T1Chain is OwnableUpgradeable, PausableUpgradeable, IT1Chain {
         // Recover the signer from the signature
         address signer = ethSignedMessageHash.recover(signature);
 
-        // Verify that the recovered signer matches our stored validSigner
+        // Verify that the recovered signer matches a prover
         if (!isProver[signer]) {
             revert ErrorIncorrectSigner(signer);
         }
