@@ -9,11 +9,12 @@ import { IL2GatewayRouter } from "../../src/L2/gateways/IL2GatewayRouter.sol";
 // solhint-disable var-name-mixedcase
 
 contract WithdrawEtherFromL2ToL1 is Script {
+    uint256 private TEST_PRIVATE_KEY = vm.envUint("TEST_PRIVATE_KEY");
     address private L2_GATEWAY_ROUTER_PROXY_ADDR = vm.envAddress("L2_GATEWAY_ROUTER_PROXY_ADDR");
 
-    function run(uint256 privKey) external {
+    function run() external {
         vm.createSelectFork(vm.rpcUrl("t1"));
-        vm.startBroadcast(privKey);
+        vm.startBroadcast(TEST_PRIVATE_KEY);
 
         uint256 gasLimit = 1_000_000;
 
