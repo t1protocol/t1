@@ -10,13 +10,13 @@ import { WrappedEther } from "../../src/L2/predeploys/WrappedEther.sol";
 // solhint-disable var-name-mixedcase
 
 contract DepositWethFromL1ToL2 is Script {
-    uint256 private L1_DEPLOYER_PRIVATE_KEY = vm.envUint("L1_DEPLOYER_PRIVATE_KEY");
+    uint256 private TEST_PRIVATE_KEY = vm.envUint("TEST_PRIVATE_KEY");
     address private L1_GATEWAY_ROUTER_PROXY_ADDR = vm.envAddress("L1_GATEWAY_ROUTER_PROXY_ADDR");
     address payable private L1_WETH_ADDR = payable(vm.envAddress("L1_WETH_ADDR"));
 
     function run() external {
         vm.createSelectFork(vm.rpcUrl("sepolia"));
-        vm.startBroadcast(L1_DEPLOYER_PRIVATE_KEY);
+        vm.startBroadcast(TEST_PRIVATE_KEY);
 
         uint256 gasLimit = 1_000_000;
 
