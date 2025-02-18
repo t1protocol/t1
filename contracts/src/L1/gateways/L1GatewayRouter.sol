@@ -13,6 +13,7 @@ import { ISignatureTransfer } from "@uniswap/permit2/src/interfaces/ISignatureTr
 import { IL1ETHGateway } from "./IL1ETHGateway.sol";
 import { IL1ERC20Gateway } from "./IL1ERC20Gateway.sol";
 import { IL1GatewayRouter } from "./IL1GatewayRouter.sol";
+import { T1Constants } from "../../libraries/constants/T1Constants.sol";
 
 /// @title L1GatewayRouter
 /// @notice The `L1GatewayRouter` is the main entry for depositing Ether and ERC20 tokens.
@@ -36,7 +37,7 @@ contract L1GatewayRouter is OwnableUpgradeable, IL1GatewayRouter {
 
     /// @notice Mapping from ERC20 token address to corresponding L1ERC20Gateway.
     // solhint-disable-next-line var-name-mixedcase
-    mapping(address => address) public ERC20Gateway;
+    mapping(address erc20TokenAddress => address L1ERC20Gateway) public ERC20Gateway;
 
     /// @notice The address of gateway in current execution context.
     address public gatewayInContext;
@@ -149,21 +150,19 @@ contract L1GatewayRouter is OwnableUpgradeable, IL1GatewayRouter {
     /// @inheritdoc IL1GatewayRouter
     function swapERC20(SwapParams calldata params) external onlyMM {
         require(params.permit.permitted.token != address(0), "Invalid input token address");
-        require(params.outputToken != address(0), "Invalid output token address");
-        require(params.permit.permitted.token != params.outputToken, "Cannot swap the same token");
+        require(params.witness.outputTokenAddress != address(0), "Invalid output token address");
+        require(params.permit.permitted.token != params.witness.outputTokenAddress, "Cannot swap the same token");
         require(params.permit.permitted.amount > 0, "Input amount must be > than 0");
-        require(params.outputAmount > 0, "Output amount must be > than 0");
+        require(params.witness.outputTokenAmount > 0, "Output amount must be > than 0");
         require(params.owner != address(0), "Invalid owner address");
 
         // Validate the defaultERC20Gateway has enough reserves of the output token
-        uint256 outputTokenBalance = IERC20MetadataUpgradeable(params.outputToken).balanceOf(defaultERC20Gateway);
-        require(params.outputAmount <= outputTokenBalance, "Insufficient reserves");
-
-        // Validate the final output amount is >= to the owner's expectations
-        require(params.outputAmount >= params.minAmountOut, "Owner expects more output tokens");
+        uint256 outputTokenBalance =
+            IERC20MetadataUpgradeable(params.witness.outputTokenAddress).balanceOf(defaultERC20Gateway);
+        require(params.witness.outputTokenAmount <= outputTokenBalance, "Insufficient reserves");
 
         // Encoded witness data to be included when checking the user signature
-        bytes32 witness = keccak256(abi.encode(params.minAmountOut));
+        bytes32 witness = keccak256(abi.encode(params.witness));
 
         // Use Permit2 to validate and transfer input tokens from `owner` to the defaultERC20Gateway
         ISignatureTransfer(permit2).permitWitnessTransferFrom(
@@ -174,21 +173,24 @@ contract L1GatewayRouter is OwnableUpgradeable, IL1GatewayRouter {
             }),
             params.owner,
             witness,
-            params.witnessTypeString,
+            T1Constants.WITNESS_TYPE_STRING,
             params.sig
         );
 
         // Use AllowanceTransfer to transfer the output tokens from the defaultERC20Gateway to the `owner` address
         IAllowanceTransfer(permit2).transferFrom(
-            defaultERC20Gateway, params.owner, uint160(params.outputAmount), params.outputToken
+            defaultERC20Gateway,
+            params.owner,
+            uint160(params.witness.outputTokenAmount),
+            params.witness.outputTokenAddress
         );
 
         emit Swap(
             params.owner,
             params.permit.permitted.token,
-            params.outputToken,
+            params.witness.outputTokenAddress,
             params.permit.permitted.amount,
-            params.outputAmount
+            params.witness.outputTokenAmount
         );
     }
 
