@@ -113,12 +113,11 @@ contract InitializeL1T1Owner is Script {
         bytes4[] memory _selectors;
 
         // no delay, t1 multisig and emergency multisig
-        _selectors = new bytes4[](5);
+        _selectors = new bytes4[](4);
         _selectors[0] = T1Chain.revertBatch.selector;
         _selectors[1] = T1Chain.removeSequencer.selector;
         _selectors[2] = T1Chain.removeProver.selector;
         _selectors[3] = T1Chain.setPause.selector;
-        _selectors[4] = T1Chain.setValidSigner.selector;
         owner.updateAccess(L1_T1_CHAIN_PROXY_ADDR, _selectors, T1_MULTISIG_NO_DELAY_ROLE, true);
         owner.updateAccess(L1_T1_CHAIN_PROXY_ADDR, _selectors, EMERGENCY_MULTISIG_NO_DELAY_ROLE, true);
 
