@@ -25,8 +25,8 @@ contract SwapERC20 is Script, PermitSignature {
     address private L1_USDT_ADDR = vm.envAddress("L1_USDT_ADDR");
     uint256 private ALICE_PRIVATE_KEY = vm.envUint("ALICE_PRIVATE_KEY");
     address private alice = vm.addr(ALICE_PRIVATE_KEY);
-    uint256 private inputTokenAmount = 1e15; // WETH
-    uint256 private outputTokenAmount = 10e18; // USDT
+    uint256 private inputTokenAmount = 0.0001 ether; // WETH
+    uint256 private outputTokenAmount = 1 ether; // USDT
 
     function run() external {
         vm.createSelectFork(vm.rpcUrl("sepolia"));
@@ -86,9 +86,9 @@ contract SwapERC20 is Script, PermitSignature {
             "ERC20 gateway doesn't have enough USDT"
         );
 
-        // Use SetMM script to set this address as the router's market maker
+        // Use SetMM script to set alice as the router's market maker
         require(
-            IL1GatewayRouter(L1_GATEWAY_ROUTER_PROXY_ADDR).marketMaker() == address(this),
+            IL1GatewayRouter(L1_GATEWAY_ROUTER_PROXY_ADDR).marketMaker() == alice,
             "Signer is not the market maker in the router"
         );
 
