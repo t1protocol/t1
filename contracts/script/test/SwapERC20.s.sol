@@ -39,8 +39,8 @@ contract SwapERC20 is Script, PermitSignature {
 
         ISignatureTransfer.PermitTransferFrom memory permit = ISignatureTransfer.PermitTransferFrom({
             permitted: ISignatureTransfer.TokenPermissions({ token: L1_WETH_ADDR, amount: inputTokenAmount }),
-            nonce: 0,
-            deadline: block.timestamp + 1000
+            nonce: uint256(keccak256(abi.encodePacked(msg.sender, block.timestamp, block.prevrandao))),
+            deadline: block.timestamp + 10_000_000
         });
 
         IL1GatewayRouter.Witness memory witness = IL1GatewayRouter.Witness({
@@ -76,7 +76,7 @@ contract SwapERC20 is Script, PermitSignature {
         if (T1StandardERC20(L1_USDT_ADDR).allowance(L1_STANDARD_ERC20_GATEWAY_PROXY_ADDR, permit2) < outputTokenAmount)
         {
             IL1StandardERC20Gateway(L1_STANDARD_ERC20_GATEWAY_PROXY_ADDR).allowRouterToTransfer(
-                L1_USDT_ADDR, type(uint160).max, uint48(block.timestamp + 1000)
+                L1_USDT_ADDR, type(uint160).max, uint48(block.timestamp + 10_000_000)
             );
         }
 
