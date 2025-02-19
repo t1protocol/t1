@@ -25,12 +25,14 @@ contract SwapERC20 is Script, PermitSignature {
     address private L1_USDT_ADDR = vm.envAddress("L1_USDT_ADDR");
     uint256 private ALICE_PRIVATE_KEY = vm.envUint("ALICE_PRIVATE_KEY");
     address private alice = vm.addr(ALICE_PRIVATE_KEY);
+    uint256 private MARKET_MAKER_PRIVATE_KEY = vm.envUint("MARKET_MAKER_PRIVATE_KEY");
+    address private marketMaker = vm.addr(MARKET_MAKER_PRIVATE_KEY);
     uint256 private inputTokenAmount = 0.0001 ether; // WETH
     uint256 private outputTokenAmount = 1 ether; // USDT
 
     function run() external {
         vm.createSelectFork(vm.rpcUrl("sepolia"));
-        vm.startBroadcast(ALICE_PRIVATE_KEY);
+        vm.startBroadcast(MARKET_MAKER_PRIVATE_KEY);
 
         // Alice needs WETH to swap for USDT
         // Bridge should have USDT to swap for WETH
@@ -88,7 +90,7 @@ contract SwapERC20 is Script, PermitSignature {
 
         // Use SetMM script to set alice as the router's market maker
         require(
-            IL1GatewayRouter(L1_GATEWAY_ROUTER_PROXY_ADDR).marketMaker() == alice,
+            IL1GatewayRouter(L1_GATEWAY_ROUTER_PROXY_ADDR).marketMaker() == marketMaker,
             "Signer is not the market maker in the router"
         );
 

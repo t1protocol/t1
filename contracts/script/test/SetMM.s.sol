@@ -15,19 +15,19 @@ contract SetMM is Script {
 
     address private L1_GATEWAY_ROUTER_PROXY_ADDR = vm.envAddress("L1_GATEWAY_ROUTER_PROXY_ADDR");
     address private L1_T1_OWNER_ADDR = vm.envAddress("L1_T1_OWNER_ADDR");
-    uint256 private ALICE_PRIVATE_KEY = vm.envUint("ALICE_PRIVATE_KEY");
-    address private filler = vm.addr(ALICE_PRIVATE_KEY);
+    uint256 private L1_SECURITY_COUNCIL_PRIVATE_KEY = vm.envUint("L1_SECURITY_COUNCIL_PRIVATE_KEY");
+    address private newMarketMaker = vm.envAddress("MARKET_MAKER_ADDRESS");
 
     function run() external {
         vm.createSelectFork(vm.rpcUrl("sepolia"));
-        vm.startBroadcast(ALICE_PRIVATE_KEY);
+        vm.startBroadcast(L1_SECURITY_COUNCIL_PRIVATE_KEY);
 
         // Check if the market maker is set to this address
-        if (IL1GatewayRouter(L1_GATEWAY_ROUTER_PROXY_ADDR).marketMaker() != filler) {
+        if (IL1GatewayRouter(L1_GATEWAY_ROUTER_PROXY_ADDR).marketMaker() != newMarketMaker) {
             T1Owner(payable(L1_T1_OWNER_ADDR)).execute(
                 L1_GATEWAY_ROUTER_PROXY_ADDR,
                 0,
-                abi.encodeWithSelector(IL1GatewayRouter(L1_GATEWAY_ROUTER_PROXY_ADDR).setMM.selector, filler),
+                abi.encodeWithSelector(IL1GatewayRouter(L1_GATEWAY_ROUTER_PROXY_ADDR).setMM.selector, newMarketMaker),
                 SECURITY_COUNCIL_NO_DELAY_ROLE
             );
         }
