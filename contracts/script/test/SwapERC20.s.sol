@@ -16,6 +16,7 @@ import { PermitSignature } from "../../src/test/utils/PermitSignature.sol";
 import { T1Constants } from "../../src/libraries/constants/T1Constants.sol";
 
 // solhint-disable var-name-mixedcase
+// solhint-disable reason-string
 
 contract SwapERC20 is Script, PermitSignature {
     address private L1_GATEWAY_ROUTER_PROXY_ADDR = vm.envAddress("L1_GATEWAY_ROUTER_PROXY_ADDR");
