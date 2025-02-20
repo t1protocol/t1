@@ -74,7 +74,7 @@ contract SwapERC20 is Script, PermitSignature {
         }
 
         // Check if the ERC20 gateway has approved the permit2 to transfer USDT
-        // TODO include check allowance transfer to the router on USDT
+        // TODO - Check if allowance has expired
         if (T1StandardERC20(L1_USDT_ADDR).allowance(L1_STANDARD_ERC20_GATEWAY_PROXY_ADDR, permit2) < outputTokenAmount)
         {
             IL1StandardERC20Gateway(L1_STANDARD_ERC20_GATEWAY_PROXY_ADDR).allowRouterToTransfer(
