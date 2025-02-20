@@ -44,12 +44,12 @@ contract L1_t1_7683 is BasicSwap7683, OwnableUpgradeable {
      * @notice Initializes the t17683 contract with the specified Mailbox and PERMIT2 address.
      * @param _messenger The address of the _messenger contract.
      * @param _permit2 The address of the permit2 contract.
-     * @param _localDomain The local domain.
+     * @param localDomain_ The local domain.
      */
-    constructor(address _messenger, address _permit2, uint32 _localDomain) BasicSwap7683(_permit2) {
+    constructor(address _messenger, address _permit2, uint32 localDomain_) BasicSwap7683(_permit2) {
         messenger = IL1T1Messenger(_messenger);
-        localDomain = _localDomain;
-     }
+        localDomain = localDomain_;
+    }
 
     // ============ Initializers ============
 
@@ -59,6 +59,7 @@ contract L1_t1_7683 is BasicSwap7683, OwnableUpgradeable {
      * @param _interchainSecurityModule The address of the local ISM contract
      * @param _owner The address with owner privileges
      */
+     // TODO - add counterpart
     function initialize(address _customHook, address _interchainSecurityModule, address _owner) external initializer {
         // _MailboxClient_initialize(_customHook, _interchainSecurityModule, _owner);
     }
@@ -116,6 +117,21 @@ contract L1_t1_7683 is BasicSwap7683, OwnableUpgradeable {
                 _handleRefundOrder(_orderIds[i]);
             }
         }
+    }
+
+    /**
+     * @notice Handles an incoming message
+     * @param _origin The origin domain
+     * @param _sender The sender address
+     * @param _message The message
+     */
+    function handle(
+        uint32 _origin,
+        bytes32 _sender,
+        bytes calldata _message
+        // TODO - onlyMessenger
+    ) external payable {
+        _handle(_origin, _sender, _message);
     }
 
     /**

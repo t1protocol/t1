@@ -6,9 +6,11 @@ import { ReentrancyGuardUpgradeable } from "@openzeppelin/contracts-upgradeable/
 
 import { t1_7683Message } from "../libraries/7683/t1_7683Message.sol";
 import { BasicSwap7683 } from "@7683/BasicSwap7683.sol";
+import { TypeCasts } from "@hyperlane-xyz/libs/TypeCasts.sol";
 
 import { L2T1Messenger } from "../L2/L2T1Messenger.sol";
 import { IL2T1Messenger } from "../L2/IL2T1Messenger.sol";
+import { L1_t1_7683 } from "./L1_t1_7683.sol";
 
 /**
  * @title L2_t1_7683
@@ -27,6 +29,8 @@ contract L2_t1_7683 is BasicSwap7683, OwnableUpgradeable {
 
     IL2T1Messenger public immutable messenger;
 
+    address public counterpart;
+
     // ============ Public Storage ============
 
     // ============ Upgrade Gap ============
@@ -34,6 +38,8 @@ contract L2_t1_7683 is BasicSwap7683, OwnableUpgradeable {
     uint256[47] private __GAP;
 
     // ============ Events ============
+
+    event CounterpartSet(address counterpart);
 
     // ============ Errors ============
 
@@ -44,21 +50,23 @@ contract L2_t1_7683 is BasicSwap7683, OwnableUpgradeable {
      * @notice Initializes the t17683 contract with the specified Mailbox and PERMIT2 address.
      * @param _messenger The address of the _messenger contract.
      * @param _permit2 The address of the permit2 contract.
+     * @param localDomain_ The local domain.
      */
-    constructor(address _messenger, address _permit2) BasicSwap7683(_permit2) {
+    constructor(address _messenger, address _permit2, uint32 localDomain_) BasicSwap7683(_permit2) {
         messenger = IL2T1Messenger(_messenger);
-     }
+        localDomain = localDomain_;
+    }
 
     // ============ Initializers ============
 
     /**
      * @notice Initializes the contract
-     * @param _customHook used by the Router to set the hook to override with
-     * @param _interchainSecurityModule The address of the local ISM contract
-     * @param _owner The address with owner privileges
+     * @param _counterpart the counterpart contract on another chain
      */
-    function initialize(address _customHook, address _interchainSecurityModule, address _owner) external initializer {
-        // _MailboxClient_initialize(_customHook, _interchainSecurityModule, _owner);
+    function initialize(address _counterpart) external initializer {
+        counterpart = _counterpart;
+        emit CounterpartSet(counterpart);
+
     }
 
     // ============ Internal Functions ============
@@ -75,14 +83,20 @@ contract L2_t1_7683 is BasicSwap7683, OwnableUpgradeable {
         bytes32[] memory _orderIds,
         bytes[] memory _ordersFillerData
     ) internal override {
-        bytes memory message = abi.encode(true, _orderIds, _ordersFillerData);
+        bytes memory innerMessage = abi.encode(true, _orderIds, _ordersFillerData);
+
+        bytes memory outerMessage = abi.encodeWithSelector(
+            L1_t1_7683.handle.selector,
+            _originDomain,
+            TypeCasts.addressToBytes32(address(this)),
+            innerMessage
+        );
         messenger.sendMessage(
-            // TODO - where are we sending this?
-            address(0),
+            counterpart,
             0,
-            message,
+            outerMessage,
             DEFAULT_GAS_LIMIT,
-            uint64(_originDomain) // needs explicit cast
+            uint64(_originDomain)
         );
     }
 
@@ -115,6 +129,21 @@ contract L2_t1_7683 is BasicSwap7683, OwnableUpgradeable {
                 _handleRefundOrder(_orderIds[i]);
             }
         }
+    }
+
+    /**
+     * @notice Handles an incoming message
+     * @param _origin The origin domain
+     * @param _sender The sender address
+     * @param _message The message
+     */
+    function handle(
+        uint32 _origin,
+        bytes32 _sender,
+        bytes calldata _message
+        // TODO - onlyMessenger
+    ) external payable {
+        _handle(_origin, _sender, _message);
     }
 
     /**
