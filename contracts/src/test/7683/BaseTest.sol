@@ -12,6 +12,9 @@ import { TypeCasts } from "@hyperlane-xyz/libs/TypeCasts.sol";
 import { InterchainGasPaymaster } from "@hyperlane-xyz/hooks/igp/InterchainGasPaymaster.sol";
 import { IPermit2, ISignatureTransfer } from "@uniswap/permit2/src/interfaces/IPermit2.sol";
 
+import { ProxyAdmin } from "@openzeppelin/contracts/proxy/transparent/ProxyAdmin.sol";
+import { TransparentUpgradeableProxy } from "@openzeppelin/contracts/proxy/transparent/TransparentUpgradeableProxy.sol";
+
 import {
     GaslessCrossChainOrder,
     OnchainCrossChainOrder,
@@ -23,6 +26,7 @@ import {
 import { OrderData, OrderEncoder } from "@7683/libs/OrderEncoder.sol";
 
 import { Base7683 } from "@7683/Base7683.sol";
+import { EmptyContract } from "../../misc/EmptyContract.sol";
 
 event Open(bytes32 indexed orderId, ResolvedCrossChainOrder resolvedOrder);
 
@@ -61,7 +65,7 @@ contract BaseTest is Test, DeployPermit2 {
     uint256 internal vegetaPK;
     address internal counterpart = makeAddr("counterpart");
 
-    uint32 internal origin = 1;
+    uint32 internal origin = 11_155_111;
     uint32 internal destination = 2;
     uint256 internal amount = 100;
 
@@ -71,6 +75,21 @@ contract BaseTest is Test, DeployPermit2 {
 
     mapping(address => uint256) internal balanceId;
     address[] internal users;
+
+    ProxyAdmin internal admin;
+
+    EmptyContract private placeholder;
+
+    function __T1TestBase_setUp() internal {
+        admin = new ProxyAdmin();
+        placeholder = new EmptyContract();
+    }
+
+    function _deployProxy(address _logic) internal returns (address) {
+        if (_logic == address(0)) _logic = address(placeholder);
+        TransparentUpgradeableProxy proxy = new TransparentUpgradeableProxy(_logic, address(admin), new bytes(0));
+        return address(proxy);
+    }
 
     function setUp() public virtual {
         // forkId = vm.createSelectFork(vm.envString("MAINNET_RPC_URL"), 15986407);
