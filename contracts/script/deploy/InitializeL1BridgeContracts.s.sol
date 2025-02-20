@@ -21,7 +21,7 @@ import { L2GasPriceOracle } from "../../src/L1/rollup/L2GasPriceOracle.sol";
 
 contract InitializeL1BridgeContracts is Script {
     uint256 private L1_DEPLOYER_PRIVATE_KEY = vm.envUint("L1_DEPLOYER_PRIVATE_KEY");
-    address private L1_DEPLOYER_ADDRESS = vm.envAddress("L1_DEPLOYER_ADDRESS");
+    address private L1_POSTMAN_SIGNER_ADDRESS = vm.envAddress("L1_POSTMAN_SIGNER_ADDRESS");
 
     uint256 private CHAIN_ID_L2 = vm.envUint("CHAIN_ID_L2");
     uint256 private MAX_TX_IN_CHUNK = vm.envUint("MAX_TX_IN_CHUNK");
@@ -75,7 +75,7 @@ contract InitializeL1BridgeContracts is Script {
         T1Chain(L1_T1_CHAIN_PROXY_ADDR).addSequencer(L1_COMMIT_SENDER_ADDRESS);
         T1Chain(L1_T1_CHAIN_PROXY_ADDR).addProver(L1_FINALIZE_SENDER_ADDRESS);
 
-        T1Chain(L1_T1_CHAIN_PROXY_ADDR).addProver(L1_DEPLOYER_ADDRESS);
+        T1Chain(L1_T1_CHAIN_PROXY_ADDR).addProver(L1_POSTMAN_SIGNER_ADDRESS);
 
         // initialize L2GasPriceOracle
         L2GasPriceOracle(L2_GAS_PRICE_ORACLE_PROXY_ADDR).initialize(
