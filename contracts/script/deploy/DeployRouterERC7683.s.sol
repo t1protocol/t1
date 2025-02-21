@@ -46,7 +46,7 @@ contract RouterDeployScript is Script {
     function deployL2Router() external {
         uint256 deployerPk = vm.envUint("L2_DEPLOYER_PRIVATE_KEY");
         address l2Messenger = vm.envAddress("L2_T1_MESSENGER_PROXY_ADDR");
-        address L1_T1_7683_ADDRESS = vm.envAddress("L1_T1_7683_ADDRESS");
+        address L1_T1_7683_PROXY_ADDR = vm.envAddress("L1_T1_7683_PROXY_ADDR");
         address L2_PROXY_ADMIN_ADDR = vm.envAddress("L2_PROXY_ADMIN_ADDR");
 
         vm.startBroadcast(deployerPk);
@@ -64,10 +64,11 @@ contract RouterDeployScript is Script {
         TransparentUpgradeableProxy proxy = new TransparentUpgradeableProxy(
             address(implementation),
             address(proxyAdmin),
-            abi.encodeWithSelector(L2_t1_7683.initialize.selector, L1_T1_7683_ADDRESS)
+            abi.encodeWithSelector(L2_t1_7683.initialize.selector, L1_T1_7683_PROXY_ADDR)
         );
 
-        console2.log("L2_T1_7683_ADDRESS=", address(proxy));
+        console2.log("L2_T1_7683_IMPLEMENTATION_ADDR=", address(implementation));
+        console2.log("L2_T1_7683_PROXY_ADDR=", address(proxy));
 
         vm.stopBroadcast();
     }
