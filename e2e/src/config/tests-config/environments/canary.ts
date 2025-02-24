@@ -2,6 +2,9 @@ import { ethers } from "ethers";
 import { EnvironmentBasedAccountManager } from "../accounts/environment-based-account-manager";
 import { Config } from "../types";
 import Account from "../accounts/account";
+import * as dotenv from "dotenv";
+
+dotenv.config();
 
 const L1_RPC_URL = new URL(`https://sepolia.infura.io/v3/${process.env.INFURA_PROJECT_ID}`);
 const L2_RPC_URL = new URL("https://rpc.devnet.t1protocol.com");
@@ -38,9 +41,9 @@ const config: Config = {
   L2: {
     rpcUrl: L2_RPC_URL,
     chainId: L2_CHAIN_ID,
-    l2t1messengerContractAddress: "0x30622442E5421C49A8F89e871Bf37D55f8755B0E",
-    standardErc20gatewayContractAddress: "0x840e8C42dF441df6431343F6FCc18869fDC9C917",
-    l2usdtAddress: "",
+    l2t1messengerContractAddress: "0x805DA25653A36d60b3739006906Ad82557a0A044",
+    standardErc20gatewayContractAddress: "0xFA80E171524dB33BABC686e73501f1125190264e",
+    l2usdtAddress: "0x337bE36E710f7af68E1fD3DDd48070Cecc5Bb136",
     accountManager: new EnvironmentBasedAccountManager(
       new ethers.JsonRpcProvider(L2_RPC_URL.toString()),
       L2_WHALE_ACCOUNTS,

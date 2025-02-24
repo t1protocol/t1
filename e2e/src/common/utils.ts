@@ -9,6 +9,10 @@ export function etherToWei(amount: string): bigint {
   return ethers.parseEther(amount.toString());
 }
 
+export function weiToEther(amount: string) : string {
+  return ethers.formatEther(amount.toString());
+}
+
 export function readJsonFile(filePath: string): unknown {
   const data = fs.readFileSync(filePath, "utf8");
   return JSON.parse(data);
@@ -96,12 +100,10 @@ export async function waitForEvents<
   criteria?: (events: TypedEventLog<TEvent>[]) => Promise<TypedEventLog<TEvent>[]>,
 ): Promise<TypedEventLog<TEvent>[]> {
   let events = await getEvents(contract, eventFilter, fromBlock, toBlock, criteria);
-
   while (events.length === 0) {
     events = await getEvents(contract, eventFilter, fromBlock, toBlock, criteria);
     await wait(pollingInterval);
   }
-
   return events;
 }
 
