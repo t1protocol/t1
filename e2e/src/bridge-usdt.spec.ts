@@ -8,7 +8,7 @@ const l2AccountManager = config.getL2AccountManager();
 const bridgeAmountUsdt = ethers.parseEther("100");
 
 describe("Bridge USDT L1 -> L2 and L2 -> L1", () => {
-  it.concurrent("Bridge USDT from L1 to L2", async () => {
+  it("Bridge USDT from L1 to L2", async () => {
     const l1account = l1AccountManager.getWallet(l1AccountManager.selectWhaleAccount(0).account);
 
     const t1L2messengerContract = config.gett1L2messengerContract();
@@ -67,16 +67,13 @@ describe("Bridge USDT L1 -> L2 and L2 -> L1", () => {
     );
     expect(depositFinalized).not.toBeNull();
 
-    console.log(`Message relayed on L2 : ${JSON.stringify(relayedMessageEvent)}.`);
-    console.log(`Token deposited on  L2 : ${JSON.stringify(depositFinalized)}.`);
-
     const l2usdtBalanceAfterTest = await l2usdtContract.balanceOf(l1account.address);
     console.log(`Token balance of L2 account after deposit is [${weiToEther(l2usdtBalanceAfterTest.toString())}]`);
 
     expect(l2usdtBalanceAfterTest).toEqual(initiall2TokenBalance + bridgeAmountUsdt);
   });
 
-  it.concurrent("Bridge USDT from L2 to L1", async () => {
+  it("Bridge USDT from L2 to L1", async () => {
     const l2account = l2AccountManager.getWallet(l2AccountManager.selectWhaleAccount(0).account);
 
     const t1l1messengerContract = config.gett1l1messengerContract();
@@ -129,9 +126,6 @@ describe("Bridge USDT L1 -> L2 and L2 -> L1", () => {
         "latest"
     );
     expect(withdrawFinalized).not.toBeNull();
-
-    console.log(`Message relayed on L1 : ${JSON.stringify(relayedMessageEvent)}.`);
-    console.log(`Token deposited on  L1 : ${JSON.stringify(withdrawFinalized)}.`);
 
     const l1usdtBalanceAfterTest = await l1usdtContract.balanceOf(l2account.address);
     console.log(`Token balance of L1 account after withdraw is [${weiToEther(l1usdtBalanceAfterTest.toString())}]`);
