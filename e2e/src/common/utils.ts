@@ -1,8 +1,5 @@
-import * as fs from "fs";
-import {AbstractSigner, BaseContract, BlockTag, ethers, TransactionReceipt, TransactionRequest, Wallet} from "ethers";
-import path from "path";
+import {BlockTag, ethers} from "ethers";
 import {TypedContractEvent, TypedDeferredTopicFilter, TypedEventLog} from "../typechain/common";
-import {MessageEvent} from "./types";
 import {L1StandardERC20Gateway, L1T1Messenger, L2StandardERC20Gateway, L2T1Messenger} from "../typechain";
 
 export function etherToWei(amount: string): bigint {
@@ -13,57 +10,7 @@ export function weiToEther(amount: string) : string {
   return ethers.formatEther(amount.toString());
 }
 
-export function readJsonFile(filePath: string): unknown {
-  const data = fs.readFileSync(filePath, "utf8");
-  return JSON.parse(data);
-}
-
 export const wait = (timeout: number) => new Promise((resolve) => setTimeout(resolve, timeout));
-
-export function increaseDate(currentDate: Date, seconds: number): Date {
-  const newDate = new Date(currentDate.getTime());
-  newDate.setSeconds(newDate.getSeconds() + seconds);
-  return newDate;
-}
-
-export const subtractSecondsToDate = (date: Date, seconds: number): Date => {
-  const dateCopy = new Date(date);
-  dateCopy.setSeconds(date.getSeconds() - seconds);
-  return dateCopy;
-};
-
-export function getWallet(privateKey: string, provider: ethers.JsonRpcProvider) {
-  return new ethers.Wallet(privateKey, provider);
-}
-
-export function encodeFunctionCall(contractInterface: ethers.Interface, functionName: string, args: unknown[]) {
-  return contractInterface.encodeFunctionData(functionName, args);
-}
-
-export const generateKeccak256 = (types: string[], values: unknown[], packed?: boolean) =>
-  ethers.keccak256(encodeData(types, values, packed));
-
-export const encodeData = (types: string[], values: unknown[], packed?: boolean) => {
-  if (packed) {
-    return ethers.solidityPacked(types, values);
-  }
-  return ethers.AbiCoder.defaultAbiCoder().encode(types, values);
-};
-
-export async function getTransactionHash(txRequest: TransactionRequest, signer: Wallet): Promise<string> {
-  const rawTransaction = await signer.populateTransaction(txRequest);
-  const signature = await signer.signTransaction(rawTransaction);
-  return ethers.keccak256(signature);
-}
-
-export async function getBlockByNumberOrBlockTag(rpcUrl: URL, blockTag: BlockTag): Promise<ethers.Block | null> {
-  const provider = new ethers.JsonRpcProvider(rpcUrl.href);
-  try {
-    return await provider.getBlock(blockTag);
-  } catch (error) {
-    return null;
-  }
-}
 
 export async function getEvents<
   TContract extends L1T1Messenger | L2T1Messenger | L1StandardERC20Gateway | L2StandardERC20Gateway,
@@ -107,107 +54,3 @@ export async function waitForEvents<
   return events;
 }
 
-export function getFiles(directory: string, fileRegex: RegExp[]): string[] {
-  const files = fs.readdirSync(directory, { withFileTypes: true });
-  const filteredFiles = files.filter((file) => fileRegex.map((regex) => regex.test(file.name)).includes(true));
-  return filteredFiles.map((file) => fs.readFileSync(path.join(directory, file.name), "utf-8"));
-}
-
-export async function waitForFile(
-  directory: string,
-  regex: RegExp,
-  pollingInterval: number,
-  timeout: number,
-  criteria?: (fileName: string) => boolean,
-): Promise<string> {
-  const endTime = Date.now() + timeout;
-
-  while (Date.now() < endTime) {
-    try {
-      const files = fs.readdirSync(directory);
-
-      for (const file of files) {
-        if (regex.test(file) && (!criteria || criteria(file))) {
-          const filePath = path.join(directory, file);
-          return fs.readFileSync(filePath, "utf-8");
-        }
-      }
-    } catch (err) {
-      throw new Error(`Error reading directory: ${(err as Error).message}`);
-    }
-
-    await new Promise((resolve) => setTimeout(resolve, pollingInterval));
-  }
-
-  throw new Error("File check timed out");
-}
-
-export async function sendTransactionsToGenerateTrafficWithInterval(
-  signer: AbstractSigner,
-  pollingInterval: number = 1_000,
-) {
-  const { maxPriorityFeePerGas, maxFeePerGas } = await signer.provider!.getFeeData();
-  const transactionRequest = {
-    to: await signer.getAddress(),
-    value: etherToWei("0.000001"),
-    maxPriorityFeePerGas: maxPriorityFeePerGas,
-    maxFeePerGas: maxFeePerGas,
-  };
-
-  let timeoutId: NodeJS.Timeout | null = null;
-  let isRunning = true;
-
-  const sendTransaction = async () => {
-    if (!isRunning) return;
-
-    try {
-      const tx = await signer.sendTransaction(transactionRequest);
-      await tx.wait();
-    } catch (error) {
-      console.error("Error sending transaction:", error);
-    } finally {
-      if (isRunning) {
-        timeoutId = setTimeout(sendTransaction, pollingInterval);
-      }
-    }
-  };
-
-  const stop = () => {
-    isRunning = false;
-    if (timeoutId) {
-      clearTimeout(timeoutId);
-      timeoutId = null;
-    }
-    console.log("Transaction loop stopped.");
-  };
-
-  sendTransaction();
-
-  return stop;
-}
-
-export function getMessageSentEventFromLogs<T extends BaseContract>(
-  contract: T,
-  receipts: TransactionReceipt[],
-): MessageEvent[] {
-  return receipts
-    .flatMap((receipt) => receipt.logs)
-    .filter((log) => log.topics[0] === "0xe856c2b8bd4eb0027ce32eeaf595c21b0b6b4644b326e5b7bd80a1cf8db72e6c")
-    .map((log) => {
-      const logDescription = contract.interface.parseLog(log);
-      if (!logDescription) {
-        throw new Error("Invalid log description");
-      }
-      const { args } = logDescription;
-      return {
-        from: args._from,
-        to: args._to,
-        fee: args._fee,
-        value: args._value,
-        messageNumber: args._nonce,
-        calldata: args._calldata,
-        messageHash: args._messageHash,
-        blockNumber: log.blockNumber,
-      };
-    });
-}

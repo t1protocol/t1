@@ -8,7 +8,6 @@ export type BaseConfig = {
 
 export type L1Config = BaseConfig & {
   l1t1messengerContractAddress: string;
-  l1proxyAdminAddress: string;
   standardErc20gatewayContractAddress: string;
   l1usdtAddress: string;
 };

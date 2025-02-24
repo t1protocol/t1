@@ -29,7 +29,6 @@ const config: Config = {
     rpcUrl: L1_RPC_URL,
     chainId: L1_CHAIN_ID,
     l1t1messengerContractAddress: "0x30622442E5421C49A8F89e871Bf37D55f8755B0E",
-    l1proxyAdminAddress: "0x7f17cFe7bb890b222557Ee0d5f69DD87C6B5d17a",
     standardErc20gatewayContractAddress: "0x840e8C42dF441df6431343F6FCc18869fDC9C917",
     l1usdtAddress: "0x30E9b6B0d161cBd5Ff8cf904Ff4FA43Ce66AC346",
     accountManager: new EnvironmentBasedAccountManager(
