@@ -205,5 +205,6 @@ contract InitializeL1T1Owner is Script {
         _selectors[1] = L1GatewayRouter.setMM.selector;
         owner.updateAccess(L1_GATEWAY_ROUTER_PROXY_ADDR, _selectors, T1_MULTISIG_NO_DELAY_ROLE, true);
         owner.updateAccess(L1_GATEWAY_ROUTER_PROXY_ADDR, _selectors, EMERGENCY_MULTISIG_NO_DELAY_ROLE, true);
+        owner.updateAccess(L1_GATEWAY_ROUTER_PROXY_ADDR, _selectors, SECURITY_COUNCIL_NO_DELAY_ROLE, true);
     }
 }
