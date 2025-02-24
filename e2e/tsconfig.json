@@ -1,0 +1,22 @@
+{
+  "compilerOptions": {
+    "types": ["node", "jest"],
+    "removeComments": true,
+    "esModuleInterop": true,
+    "emitDecoratorMetadata": true,
+    "experimentalDecorators": true,
+    "target": "es2021",
+    "baseUrl": "./",
+    "outDir": "./dist",
+    "moduleResolution": "node",
+    "isolatedModules": true,
+    "noFallthroughCasesInSwitch": true,
+    "strictPropertyInitialization": false,
+  },
+  "references": [
+    {
+      "path": "../sdk"
+    }
+  ],
+  "exclude": ["node_modules", "dist"],
+}
