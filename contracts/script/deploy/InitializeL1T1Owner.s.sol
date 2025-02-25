@@ -141,6 +141,11 @@ contract InitializeL1T1Owner is Script {
         _selectors[0] = L1MessageQueue.updateGasOracle.selector;
         _selectors[1] = L1MessageQueue.updateMaxGasLimit.selector;
         owner.updateAccess(L1_MESSAGE_QUEUE_PROXY_ADDR, _selectors, TIMELOCK_1DAY_DELAY_ROLE, true);
+
+        // no delay, security council
+        _selectors = new bytes4[](1);
+        _selectors[0] = L1MessageQueueWithGasPriceOracle.setL2BaseFee.selector;
+        owner.updateAccess(L1_MESSAGE_QUEUE_PROXY_ADDR, _selectors, SECURITY_COUNCIL_NO_DELAY_ROLE, true);
     }
 
     function configL1T1Messenger() internal {
