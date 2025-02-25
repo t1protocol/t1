@@ -59,7 +59,7 @@ contract L1_t1_7683 is BasicSwap7683, OwnableUpgradeable {
      * @param _interchainSecurityModule The address of the local ISM contract
      * @param _owner The address with owner privileges
      */
-     // TODO - add counterpart
+    // TODO - add counterpart
     function initialize(address _customHook, address _interchainSecurityModule, address _owner) external initializer {
         // _MailboxClient_initialize(_customHook, _interchainSecurityModule, _owner);
     }
@@ -77,7 +77,10 @@ contract L1_t1_7683 is BasicSwap7683, OwnableUpgradeable {
         uint32 _originDomain,
         bytes32[] memory _orderIds,
         bytes[] memory _ordersFillerData
-    ) internal override {
+    )
+        internal
+        override
+    {
         bytes memory message = abi.encode(true, _orderIds, _ordersFillerData);
         messenger.sendMessage(
             // TODO - where are we sending this?
@@ -105,10 +108,9 @@ contract L1_t1_7683 is BasicSwap7683, OwnableUpgradeable {
      * _sender The address of the sender on the origin domain (unused in this implementation).
      * @param _message The encoded message received via t1.
      */
-     // TODO - virtual override
+    // TODO - virtual override
     function _handle(uint32, bytes32, bytes calldata _message) internal {
-        (bool _settle, bytes32[] memory _orderIds, bytes[] memory _ordersFillerData) =
-            t1_7683Message.decode(_message);
+        (bool _settle, bytes32[] memory _orderIds, bytes[] memory _ordersFillerData) = t1_7683Message.decode(_message);
 
         for (uint256 i = 0; i < _orderIds.length; i++) {
             if (_settle) {
@@ -129,8 +131,11 @@ contract L1_t1_7683 is BasicSwap7683, OwnableUpgradeable {
         uint32 _origin,
         bytes32 _sender,
         bytes calldata _message
+    )
         // TODO - onlyMessenger
-    ) external payable {
+        external
+        payable
+    {
         _handle(_origin, _sender, _message);
     }
 

@@ -66,7 +66,6 @@ contract L2_t1_7683 is BasicSwap7683, OwnableUpgradeable {
     function initialize(address _counterpart) external initializer {
         counterpart = _counterpart;
         emit CounterpartSet(counterpart);
-
     }
 
     // ============ Internal Functions ============
@@ -82,22 +81,16 @@ contract L2_t1_7683 is BasicSwap7683, OwnableUpgradeable {
         uint32 _originDomain,
         bytes32[] memory _orderIds,
         bytes[] memory _ordersFillerData
-    ) internal override {
+    )
+        internal
+        override
+    {
         bytes memory innerMessage = abi.encode(true, _orderIds, _ordersFillerData);
 
         bytes memory outerMessage = abi.encodeWithSelector(
-            L1_t1_7683.handle.selector,
-            _originDomain,
-            TypeCasts.addressToBytes32(address(this)),
-            innerMessage
+            L1_t1_7683.handle.selector, _originDomain, TypeCasts.addressToBytes32(address(this)), innerMessage
         );
-        messenger.sendMessage(
-            counterpart,
-            0,
-            outerMessage,
-            DEFAULT_GAS_LIMIT,
-            uint64(_originDomain)
-        );
+        messenger.sendMessage(counterpart, 0, outerMessage, DEFAULT_GAS_LIMIT, uint64(_originDomain));
     }
 
     /**
@@ -117,10 +110,9 @@ contract L2_t1_7683 is BasicSwap7683, OwnableUpgradeable {
      * _sender The address of the sender on the origin domain (unused in this implementation).
      * @param _message The encoded message received via t1.
      */
-     // TODO - virtual override
+    // TODO - virtual override
     function _handle(uint32, bytes32, bytes calldata _message) internal {
-        (bool _settle, bytes32[] memory _orderIds, bytes[] memory _ordersFillerData) =
-            t1_7683Message.decode(_message);
+        (bool _settle, bytes32[] memory _orderIds, bytes[] memory _ordersFillerData) = t1_7683Message.decode(_message);
 
         for (uint256 i = 0; i < _orderIds.length; i++) {
             if (_settle) {
@@ -141,8 +133,11 @@ contract L2_t1_7683 is BasicSwap7683, OwnableUpgradeable {
         uint32 _origin,
         bytes32 _sender,
         bytes calldata _message
+    )
         // TODO - onlyMessenger
-    ) external payable {
+        external
+        payable
+    {
         _handle(_origin, _sender, _message);
     }
 

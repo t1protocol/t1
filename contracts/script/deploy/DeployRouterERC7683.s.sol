@@ -11,7 +11,7 @@ import { L2_t1_7683 } from "../../src/7683/L2_t1_7683.sol";
 import { T1Constants } from "../../src/libraries/constants/T1Constants.sol";
 
 contract RouterDeployScript is Script {
-    uint32 constant ORIGIN_CHAIN = uint32(T1Constants.L1_CHAIN_ID);     // Sepolia
+    uint32 constant ORIGIN_CHAIN = uint32(T1Constants.L1_CHAIN_ID); // Sepolia
     uint32 constant DESTINATION_CHAIN = 3_151_908; // t1 devnet
     ProxyAdmin private proxyAdmin;
 

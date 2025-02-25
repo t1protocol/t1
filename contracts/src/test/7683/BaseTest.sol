@@ -311,22 +311,40 @@ contract BaseTest is Test, DeployPermit2 {
         view
     {
         assertEq(resolvedOrder.maxSpent.length, 1, "resolvedOrder.maxSpent.length");
-        assertEq(resolvedOrder.maxSpent[0].token, TypeCasts.addressToBytes32(address(_outputToken)), "resolvedOrder.maxSpent[0].token");
+        assertEq(
+            resolvedOrder.maxSpent[0].token,
+            TypeCasts.addressToBytes32(address(_outputToken)),
+            "resolvedOrder.maxSpent[0].token"
+        );
         assertEq(resolvedOrder.maxSpent[0].amount, amount, "resolvedOrder.maxSpent[0].amount");
         assertEq(resolvedOrder.maxSpent[0].recipient, _recipient, "resolvedOrder.maxSpent[0].recipient");
         assertEq(resolvedOrder.maxSpent[0].chainId, destination, "resolvedOrder.maxSpent[0].chainId");
 
         assertEq(resolvedOrder.minReceived.length, 1, "resolvedOrder.minReceived.length");
-        assertEq(resolvedOrder.minReceived[0].token, TypeCasts.addressToBytes32(address(_inputToken)), "resolvedOrder.minReceived[0].token");
+        assertEq(
+            resolvedOrder.minReceived[0].token,
+            TypeCasts.addressToBytes32(address(_inputToken)),
+            "resolvedOrder.minReceived[0].token"
+        );
         assertEq(resolvedOrder.minReceived[0].amount, amount, "resolvedOrder.minReceived[0].amount");
         assertEq(resolvedOrder.minReceived[0].recipient, bytes32(0), "resolvedOrder.minReceived[0].recipient");
         assertEq(resolvedOrder.minReceived[0].chainId, origin, "resolvedOrder.minReceived[0].chainId");
 
         assertEq(resolvedOrder.fillInstructions.length, 1, "resolvedOrder.fillInstructions.length");
-        assertEq(resolvedOrder.fillInstructions[0].destinationChainId, destination, "resolvedOrder.fillInstructions[0].destinationChainId");
-        assertEq(resolvedOrder.fillInstructions[0].destinationSettler, _destinationSettler, "resolvedOrder.fillInstructions[0].destinationSettler");
+        assertEq(
+            resolvedOrder.fillInstructions[0].destinationChainId,
+            destination,
+            "resolvedOrder.fillInstructions[0].destinationChainId"
+        );
+        assertEq(
+            resolvedOrder.fillInstructions[0].destinationSettler,
+            _destinationSettler,
+            "resolvedOrder.fillInstructions[0].destinationSettler"
+        );
 
-        assertEq(resolvedOrder.fillInstructions[0].originData, orderData, "resolvedOrder.fillInstructions[0].originData");
+        assertEq(
+            resolvedOrder.fillInstructions[0].originData, orderData, "resolvedOrder.fillInstructions[0].originData"
+        );
 
         assertEq(resolvedOrder.user, _user, "resolvedOrder.user");
         assertEq(resolvedOrder.originChainId, _originChainId, "resolvedOrder.originChainId");
@@ -335,8 +353,7 @@ contract BaseTest is Test, DeployPermit2 {
     }
 
     function _orderDataById(bytes32 orderId) internal view returns (bytes memory orderData) {
-        (,orderData) =
-            abi.decode(_base7683.openOrders(orderId), (bytes32, bytes));
+        (, orderData) = abi.decode(_base7683.openOrders(orderId), (bytes32, bytes));
     }
 
     function _assertOpenOrder(

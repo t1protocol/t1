@@ -84,6 +84,7 @@ contract AliceSetupScript is Script {
 contract SolverFillScript is Script {
     uint32 public constant ORIGIN_CHAIN = 11_155_111; // Sepolia
     uint32 public constant DESTINATION_CHAIN = 3_151_908; // t1 devnet
+
     function run() external {
         // TODO - make this not alice
         uint256 solverPk = vm.envUint("ALICE_PRIVATE_KEY");
@@ -113,12 +114,16 @@ contract SolverFillScript is Script {
             originDomain: ORIGIN_CHAIN,
             destinationDomain: DESTINATION_CHAIN,
             destinationSettler: TypeCasts.addressToBytes32(vm.envAddress("L2_T1_7683_PROXY_ADDR")),
-            fillDeadline: uint32(1740169380),
+            fillDeadline: uint32(1_740_169_380),
             data: new bytes(0)
         });
 
         bytes memory encodedOrderData = OrderEncoder.encode(orderData);
-        OnchainCrossChainOrder memory onchainCrossChainOrder = OnchainCrossChainOrder({ fillDeadline: orderData.fillDeadline, orderDataType:  OrderEncoder.orderDataType(), orderData: encodedOrderData });
+        OnchainCrossChainOrder memory onchainCrossChainOrder = OnchainCrossChainOrder({
+            fillDeadline: orderData.fillDeadline,
+            orderDataType: OrderEncoder.orderDataType(),
+            orderData: encodedOrderData
+        });
         ResolvedCrossChainOrder memory resolvedOrder = l2Router.resolve(onchainCrossChainOrder);
 
         // Approve output tokens

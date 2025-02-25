@@ -4,7 +4,10 @@ pragma solidity ^0.8.25;
 import { Test, Vm } from "forge-std/Test.sol";
 import { console2 } from "forge-std/console2.sol";
 
-import { TransparentUpgradeableProxy, ITransparentUpgradeableProxy } from "@openzeppelin/contracts/proxy/transparent/TransparentUpgradeableProxy.sol";
+import {
+    TransparentUpgradeableProxy,
+    ITransparentUpgradeableProxy
+} from "@openzeppelin/contracts/proxy/transparent/TransparentUpgradeableProxy.sol";
 import { Address } from "@openzeppelin/contracts/utils/Address.sol";
 import { ERC20 } from "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 
@@ -84,7 +87,13 @@ contract t1BasicSwapE2E is BaseTest {
         return L1_t1_7683(address(proxy));
     }
 
-    function _deployProxiedDestinationRouter(IL2T1Messenger _messenger, address _counterpart) internal returns (L2_t1_7683) {
+    function _deployProxiedDestinationRouter(
+        IL2T1Messenger _messenger,
+        address _counterpart
+    )
+        internal
+        returns (L2_t1_7683)
+    {
         L2_t1_7683 implementation = new L2_t1_7683(address(_messenger), permit2, destination);
 
         TransparentUpgradeableProxy proxy = new TransparentUpgradeableProxy(
@@ -269,8 +278,16 @@ contract t1BasicSwapE2E is BaseTest {
 
         uint256[] memory balancesAfterFill = _balances(outputToken);
 
-        assertEq(balancesAfterFill[balanceId[vegeta]], balancesBeforeFill[balanceId[vegeta]] - amount, "vegeta balance after fill");
-        assertEq(balancesAfterFill[balanceId[karpincho]], balancesBeforeFill[balanceId[karpincho]] + amount, "karpincho balance after fill");
+        assertEq(
+            balancesAfterFill[balanceId[vegeta]],
+            balancesBeforeFill[balanceId[vegeta]] - amount,
+            "vegeta balance after fill"
+        );
+        assertEq(
+            balancesAfterFill[balanceId[karpincho]],
+            balancesBeforeFill[balanceId[karpincho]] + amount,
+            "karpincho balance after fill"
+        );
 
         // settle
         bytes32[] memory orderIds = new bytes32[](1);
@@ -291,7 +308,11 @@ contract t1BasicSwapE2E is BaseTest {
         uint256[] memory balancesAfterSettle = _balances(inputToken);
 
         assertEq(destinationRouter.orderStatus(orderId), destinationRouter.FILLED());
-        assertEq(balancesAfterSettle[balanceId[vegeta]], balancesBeforeSettle[balanceId[vegeta]] + amount, "vegeta balance after settle");
+        assertEq(
+            balancesAfterSettle[balanceId[vegeta]],
+            balancesBeforeSettle[balanceId[vegeta]] + amount,
+            "vegeta balance after settle"
+        );
         assertEq(
             balancesAfterSettle[balanceId[address(originRouter)]],
             balancesBeforeSettle[balanceId[address(originRouter)]] - amount,
@@ -307,10 +328,7 @@ contract t1BasicSwapE2E is BaseTest {
         bytes memory innerMessage = abi.encode(true, orderIds, ordersFillerData);
 
         bytes memory outerMessage = abi.encodeWithSelector(
-            L1_t1_7683.handle.selector,
-            origin,
-            TypeCasts.addressToBytes32(address(destinationRouter)),
-            innerMessage
+            L1_t1_7683.handle.selector, origin, TypeCasts.addressToBytes32(address(destinationRouter)), innerMessage
         );
 
         // hash 0xcca132db240c06c148d210ceda18701a38e863e5ab2ed4638b15b6c7b30a08ae
@@ -320,12 +338,7 @@ contract t1BasicSwapE2E is BaseTest {
         address to = address(originRouter);
 
         bytes memory xDomainCalldata = abi.encodeWithSignature(
-            "relayMessage(address,address,uint256,uint256,bytes)",
-            from,
-            to,
-            msgValue,
-            nonce,
-            outerMessage
+            "relayMessage(address,address,uint256,uint256,bytes)", from, to, msgValue, nonce, outerMessage
         );
 
         bytes32 withdrawRoot = keccak256(xDomainCalldata);
