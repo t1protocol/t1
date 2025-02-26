@@ -32,7 +32,7 @@ contract MockT1Messenger is IT1Messenger {
         }
     }
 
-     function sendMessage(
+    function sendMessage(
         address target,
         uint256 value,
         bytes calldata message,
@@ -40,7 +40,8 @@ contract MockT1Messenger is IT1Messenger {
         uint64 destChainId
     )
         external
-        payable {}
+        payable
+    { }
 
     function sendMessage(
         address target,
@@ -51,5 +52,6 @@ contract MockT1Messenger is IT1Messenger {
         address callbackAddress
     )
         external
-        payable {}
+        payable
+    { }
 }

@@ -64,11 +64,15 @@ contract L1T1MessengerTest is L1GatewayTestBase {
 
         // Insufficient msg.value
         hevm.expectRevert("Insufficient msg.value");
-        l1Messenger.sendMessage(address(0), 1, new bytes(0), DEFAULT_GAS_LIMIT, T1Constants.T1_DEVNET_CHAIN_ID, refundAddress);
+        l1Messenger.sendMessage(
+            address(0), 1, new bytes(0), DEFAULT_GAS_LIMIT, T1Constants.T1_DEVNET_CHAIN_ID, refundAddress
+        );
 
         // refund exceed fee
         uint256 balanceBefore = refundAddress.balance;
-        l1Messenger.sendMessage{ value: 1 + exceedValue }(address(0), 1, new bytes(0), DEFAULT_GAS_LIMIT, T1Constants.T1_DEVNET_CHAIN_ID, refundAddress);
+        l1Messenger.sendMessage{ value: 1 + exceedValue }(
+            address(0), 1, new bytes(0), DEFAULT_GAS_LIMIT, T1Constants.T1_DEVNET_CHAIN_ID, refundAddress
+        );
         assertEq(balanceBefore + exceedValue, refundAddress.balance);
     }
 
@@ -83,7 +87,9 @@ contract L1T1MessengerTest is L1GatewayTestBase {
         l1Messenger.updateMaxReplayTimes(0);
 
         // append a message
-        l1Messenger.sendMessage{ value: 100 }(address(0), 100, new bytes(0), DEFAULT_GAS_LIMIT, T1Constants.T1_DEVNET_CHAIN_ID, refundAddress);
+        l1Messenger.sendMessage{ value: 100 }(
+            address(0), 100, new bytes(0), DEFAULT_GAS_LIMIT, T1Constants.T1_DEVNET_CHAIN_ID, refundAddress
+        );
 
         // Provided message has not been enqueued
         hevm.expectRevert("Provided message has not been enqueued");
@@ -118,7 +124,9 @@ contract L1T1MessengerTest is L1GatewayTestBase {
         // 2. replay 3 times
         messageQueue.setL2BaseFee(0);
         l1Messenger.updateMaxReplayTimes(100);
-        l1Messenger.sendMessage{ value: 100 }(address(0), 100, new bytes(0), DEFAULT_GAS_LIMIT, T1Constants.T1_DEVNET_CHAIN_ID, refundAddress);
+        l1Messenger.sendMessage{ value: 100 }(
+            address(0), 100, new bytes(0), DEFAULT_GAS_LIMIT, T1Constants.T1_DEVNET_CHAIN_ID, refundAddress
+        );
         bytes32 hash = keccak256(
             abi.encodeWithSignature(
                 "relayMessage(address,address,uint256,uint256,bytes)", address(this), address(0), 100, 2, new bytes(0)
@@ -168,7 +176,9 @@ contract L1T1MessengerTest is L1GatewayTestBase {
         hevm.expectRevert("Pausable: paused");
         l1Messenger.sendMessage(address(0), 0, new bytes(0), DEFAULT_GAS_LIMIT, T1Constants.T1_DEVNET_CHAIN_ID);
         hevm.expectRevert("Pausable: paused");
-        l1Messenger.sendMessage(address(0), 0, new bytes(0), DEFAULT_GAS_LIMIT, T1Constants.T1_DEVNET_CHAIN_ID, address(0));
+        l1Messenger.sendMessage(
+            address(0), 0, new bytes(0), DEFAULT_GAS_LIMIT, T1Constants.T1_DEVNET_CHAIN_ID, address(0)
+        );
         hevm.expectRevert("Pausable: paused");
         IL1T1Messenger.L2MessageProof memory _proof;
         l1Messenger.relayMessageWithProof(address(0), address(0), 0, 0, new bytes(0), _proof);
@@ -194,21 +204,29 @@ contract L1T1MessengerTest is L1GatewayTestBase {
         //   32B nonce
         //   message byte array (32B offset + 32B length + bytes (padding to multiple of 32))
         // So the intrinsic gas must be greater than 21000 + 16 * 228 = 24648
-        l1Messenger.sendMessage{ value: _fee + value }(address(0), value, hex"0011220033", 24_648, T1Constants.T1_DEVNET_CHAIN_ID);
+        l1Messenger.sendMessage{ value: _fee + value }(
+            address(0), value, hex"0011220033", 24_648, T1Constants.T1_DEVNET_CHAIN_ID
+        );
 
         // insufficient intrinsic gas
         hevm.expectRevert("Insufficient gas limit, must be above intrinsic gas");
-        l1Messenger.sendMessage{ value: _fee + value }(address(0), 1, hex"0011220033", 24_647, T1Constants.T1_DEVNET_CHAIN_ID);
+        l1Messenger.sendMessage{ value: _fee + value }(
+            address(0), 1, hex"0011220033", 24_647, T1Constants.T1_DEVNET_CHAIN_ID
+        );
 
         // gas limit exceeds the max value
         uint256 gasLimit = 100_000_000;
         _fee = messageQueue.l2BaseFee() * gasLimit;
         hevm.expectRevert("Gas limit must not exceed maxGasLimit");
-        l1Messenger.sendMessage{ value: _fee + value }(address(0), value, hex"0011220033", gasLimit, T1Constants.T1_DEVNET_CHAIN_ID);
+        l1Messenger.sendMessage{ value: _fee + value }(
+            address(0), value, hex"0011220033", gasLimit, T1Constants.T1_DEVNET_CHAIN_ID
+        );
 
         // update max gas limit
         messageQueue.updateMaxGasLimit(gasLimit);
-        l1Messenger.sendMessage{ value: _fee + value }(address(0), value, hex"0011220033", gasLimit, T1Constants.T1_DEVNET_CHAIN_ID);
+        l1Messenger.sendMessage{ value: _fee + value }(
+            address(0), value, hex"0011220033", gasLimit, T1Constants.T1_DEVNET_CHAIN_ID
+        );
     }
 
     function testDropMessage() external {

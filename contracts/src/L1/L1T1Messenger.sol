@@ -393,14 +393,7 @@ contract L1T1Messenger is T1MessengerBase, IL1T1Messenger {
         messageSendTimestamp[_xDomainCalldataHash] = block.timestamp;
 
         emit SentMessage(
-            _msgSender(),
-            _to,
-            _value,
-            _messageNonce,
-            _gasLimit,
-            _message,
-            _destChainId,
-            _xDomainCalldataHash
+            _msgSender(), _to, _value, _messageNonce, _gasLimit, _message, _destChainId, _xDomainCalldataHash
         );
 
         // refund fee to `_callbackAddress`

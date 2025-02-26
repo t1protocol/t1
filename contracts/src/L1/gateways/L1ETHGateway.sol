@@ -160,7 +160,9 @@ contract L1ETHGateway is T1GatewayBase, IL1ETHGateway, IMessageDropCallback {
         // 2. Generate message passed to L1T1Messenger.
         bytes memory _message = abi.encodeCall(IL2ETHGateway.finalizeDepositETH, (_from, _to, _amount, _data));
 
-        IL1T1Messenger(messenger).sendMessage{ value: msg.value }(counterpart, _amount, _message, _gasLimit, T1Constants.T1_DEVNET_CHAIN_ID, _from);
+        IL1T1Messenger(messenger).sendMessage{ value: msg.value }(
+            counterpart, _amount, _message, _gasLimit, T1Constants.T1_DEVNET_CHAIN_ID, _from
+        );
 
         emit DepositETH(_from, _to, _amount, _data);
     }

@@ -112,9 +112,7 @@ contract L2T1MessengerTest is DSTestPlus {
         /// only to cover gas fees on destination chain
         uint256 _value = l2BaseFee * gasLimit;
         assertEq(l2Messenger.nextL2MessageNonce(), 2);
-        l2Messenger.sendMessage{ value: _value }(
-            address(0), 0, new bytes(0), gasLimit, ARB_CHAIN_ID, callbackAddress
-        );
+        l2Messenger.sendMessage{ value: _value }(address(0), 0, new bytes(0), gasLimit, ARB_CHAIN_ID, callbackAddress);
 
         // failure case - 1 wei short
         uint256 _valueMinusOne = _value - 1;
