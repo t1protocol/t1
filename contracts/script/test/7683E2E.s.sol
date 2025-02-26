@@ -14,17 +14,16 @@ import {
     Output,
     FillInstruction
 } from "@7683/ERC7683/IERC7683.sol";
-import { L1_t1_7683 } from "../../src/7683/L1_t1_7683.sol";
-import { L2_t1_7683 } from "../../src/7683/L2_t1_7683.sol";
+import { t1_7683 } from "../../src/7683/t1_7683.sol";
 
 // Step 1: Setup Alice's account, sign and relay intent
 contract AliceSetupScript is Script {
     uint32 public constant ORIGIN_CHAIN = 11_155_111; // Sepolia
     uint32 public constant DESTINATION_CHAIN = 3_151_908; // t1 devnet
-    L1_t1_7683 public L1_ROUTER;
+    t1_7683 public L1_ROUTER;
 
     function run() external {
-        L1_ROUTER = L1_t1_7683(vm.envAddress("L1_T1_7683_PROXY_ADDR"));
+        L1_ROUTER = t1_7683(vm.envAddress("t1_7683_PROXY_ADDR"));
         // Load Alice's private key from env
         uint256 alicePk = vm.envUint("ALICE_PRIVATE_KEY");
         address alice = vm.addr(alicePk);
@@ -48,7 +47,7 @@ contract AliceSetupScript is Script {
             senderNonce: 5,
             originDomain: ORIGIN_CHAIN,
             destinationDomain: DESTINATION_CHAIN,
-            destinationSettler: TypeCasts.addressToBytes32(vm.envAddress("L2_T1_7683_PROXY_ADDR")),
+            destinationSettler: TypeCasts.addressToBytes32(vm.envAddress("t1_7683_PROXY_ADDR")),
             fillDeadline: uint32(block.timestamp + 24 hours),
             data: new bytes(0)
         });
@@ -99,8 +98,8 @@ contract SolverFillScript is Script {
         vm.startBroadcast(solverPk);
 
         // Get order details
-        L1_t1_7683 l1Router = L1_t1_7683(vm.envAddress("L1_T1_7683_PROXY_ADDR"));
-        L2_t1_7683 l2Router = L2_t1_7683(vm.envAddress("L2_T1_7683_PROXY_ADDR"));
+        t1_7683 l1Router = t1_7683(vm.envAddress("t1_7683_PROXY_ADDR"));
+        t1_7683 l2Router = t1_7683(vm.envAddress("t1_7683_PROXY_ADDR"));
         bytes32 orderId = hex"0b034c1a9f4122ef479330e7a02b355263bcd90802e1415ee83a52f3d0d6cb12";
 
         OrderData memory orderData = OrderData({
@@ -113,7 +112,7 @@ contract SolverFillScript is Script {
             senderNonce: 5,
             originDomain: ORIGIN_CHAIN,
             destinationDomain: DESTINATION_CHAIN,
-            destinationSettler: TypeCasts.addressToBytes32(vm.envAddress("L2_T1_7683_PROXY_ADDR")),
+            destinationSettler: TypeCasts.addressToBytes32(vm.envAddress("t1_7683_PROXY_ADDR")),
             fillDeadline: uint32(1_740_169_380),
             data: new bytes(0)
         });
@@ -147,7 +146,7 @@ contract SettlementScript is Script {
 
         vm.startBroadcast(settlerPk);
 
-        L2_t1_7683 l2Router = L2_t1_7683(vm.envAddress("L2_T1_7683_PROXY_ADDR"));
+        t1_7683 l2Router = t1_7683(vm.envAddress("t1_7683_PROXY_ADDR"));
 
         // Prepare order IDs and filler data for batch settlement
         bytes32[] memory orderIds = new bytes32[](1);

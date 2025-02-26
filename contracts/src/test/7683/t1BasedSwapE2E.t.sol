@@ -28,8 +28,7 @@ import {
     FillInstruction
 } from "@7683/ERC7683/IERC7683.sol";
 
-import { L1_t1_7683 } from "../../7683/L1_t1_7683.sol";
-import { L2_t1_7683 } from "../../7683/L2_t1_7683.sol";
+import { t1_7683 } from "../../7683/t1_7683.sol";
 import { L1MessageQueue } from "../../L1/rollup/L1MessageQueue.sol";
 import { L2MessageQueue } from "../../L2/predeploys/L2MessageQueue.sol";
 import { L1MessageQueueWithGasPriceOracle } from "../../L1/rollup/L1MessageQueueWithGasPriceOracle.sol";
@@ -60,8 +59,8 @@ contract t1BasicSwapE2E is BaseTest {
 
     TestInterchainGasPaymaster internal igp;
 
-    L1_t1_7683 internal originRouter;
-    L2_t1_7683 internal destinationRouter;
+    t1_7683 internal originRouter;
+    t1_7683 internal destinationRouter;
 
     bytes32 internal originRouterB32;
     bytes32 internal destinationRouterB32;
@@ -75,16 +74,16 @@ contract t1BasicSwapE2E is BaseTest {
     address internal sender = makeAddr("sender");
     address internal feeVault;
 
-    function _deployProxiedOriginRouter(IL1T1Messenger _messenger, address _owner) internal returns (L1_t1_7683) {
-        L1_t1_7683 implementation = new L1_t1_7683(address(_messenger), permit2, origin);
+    function _deployProxiedOriginRouter(IL1T1Messenger _messenger, address _owner) internal returns (t1_7683) {
+        t1_7683 implementation = new t1_7683(address(_messenger), permit2, origin);
 
         TransparentUpgradeableProxy proxy = new TransparentUpgradeableProxy(
             address(implementation),
             address(admin),
-            abi.encodeWithSelector(L1_t1_7683.initialize.selector, address(0), address(0), _owner)
+            abi.encodeWithSelector(t1_7683.initialize.selector, address(0), address(0), _owner)
         );
 
-        return L1_t1_7683(address(proxy));
+        return t1_7683(address(proxy));
     }
 
     function _deployProxiedDestinationRouter(
@@ -92,17 +91,17 @@ contract t1BasicSwapE2E is BaseTest {
         address _counterpart
     )
         internal
-        returns (L2_t1_7683)
+        returns (t1_7683)
     {
-        L2_t1_7683 implementation = new L2_t1_7683(address(_messenger), permit2, destination);
+        t1_7683 implementation = new t1_7683(address(_messenger), permit2, destination);
 
         TransparentUpgradeableProxy proxy = new TransparentUpgradeableProxy(
             address(implementation),
             address(admin),
-            abi.encodeWithSelector(L2_t1_7683.initialize.selector, _counterpart)
+            abi.encodeWithSelector(t1_7683.initialize.selector, _counterpart)
         );
 
-        return L2_t1_7683(address(proxy));
+        return t1_7683(address(proxy));
     }
 
     function labelAccounts() internal {
@@ -328,7 +327,7 @@ contract t1BasicSwapE2E is BaseTest {
         bytes memory innerMessage = abi.encode(true, orderIds, ordersFillerData);
 
         bytes memory outerMessage = abi.encodeWithSelector(
-            L1_t1_7683.handle.selector, origin, TypeCasts.addressToBytes32(address(destinationRouter)), innerMessage
+            t1_7683.handle.selector, origin, TypeCasts.addressToBytes32(address(destinationRouter)), innerMessage
         );
 
         // hash 0xcca132db240c06c148d210ceda18701a38e863e5ab2ed4638b15b6c7b30a08ae
