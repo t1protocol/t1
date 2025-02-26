@@ -97,13 +97,12 @@ contract L2T1MessengerTest is DSTestPlus {
 
         // succeed normally
         uint256 balanceBefore = callbackAddress.balance;
-        uint256 nonce =
-            l2Messenger.sendMessage{ value: 1 }(address(0), 1, new bytes(0), 21_000, ARB_CHAIN_ID, callbackAddress);
-        assertEq(nonce, 0);
+        assertEq(l2Messenger.nextL2MessageNonce(), 0);
+        l2Messenger.sendMessage{ value: 1 }(address(0), 1, new bytes(0), 21_000, ARB_CHAIN_ID, callbackAddress);
         assertEq(balanceBefore, callbackAddress.balance);
 
-        nonce = l2Messenger.sendMessage{ value: 1 }(address(0), 1, new bytes(0), 21_000, ARB_CHAIN_ID, callbackAddress);
-        assertEq(nonce, 1);
+        assertEq(l2Messenger.nextL2MessageNonce(), 1);
+        l2Messenger.sendMessage{ value: 1 }(address(0), 1, new bytes(0), 21_000, ARB_CHAIN_ID, callbackAddress);
 
         // 0.1 gwei = 100000000 wei
         uint256 l2BaseFee = 100_000_000;
@@ -112,15 +111,15 @@ contract L2T1MessengerTest is DSTestPlus {
 
         /// only to cover gas fees on destination chain
         uint256 _value = l2BaseFee * gasLimit;
-        nonce = l2Messenger.sendMessage{ value: _value }(
+        assertEq(l2Messenger.nextL2MessageNonce(), 2);
+        l2Messenger.sendMessage{ value: _value }(
             address(0), 0, new bytes(0), gasLimit, ARB_CHAIN_ID, callbackAddress
         );
-        assertEq(nonce, 2);
 
         // failure case - 1 wei short
         uint256 _valueMinusOne = _value - 1;
         hevm.expectRevert(abi.encodeWithSelector(L2T1Messenger.InsufficientMsgValue.selector, _value));
-        nonce = l2Messenger.sendMessage{ value: _valueMinusOne }(
+        l2Messenger.sendMessage{ value: _valueMinusOne }(
             address(0), 0, new bytes(0), gasLimit, ARB_CHAIN_ID, callbackAddress
         );
     }
