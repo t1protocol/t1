@@ -96,9 +96,7 @@ contract t1BasicSwapE2E is BaseTest {
         t1_7683 implementation = new t1_7683(address(_messenger), permit2, destination);
 
         TransparentUpgradeableProxy proxy = new TransparentUpgradeableProxy(
-            address(implementation),
-            address(admin),
-            abi.encodeWithSelector(t1_7683.initialize.selector, _counterpart)
+            address(implementation), address(admin), abi.encodeWithSelector(t1_7683.initialize.selector, _counterpart)
         );
 
         return t1_7683(address(proxy));

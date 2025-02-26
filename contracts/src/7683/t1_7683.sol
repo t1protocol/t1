@@ -62,7 +62,7 @@ contract t1_7683 is BasicSwap7683, OwnableUpgradeable {
     }
     // ============ Initializers ============
 
-        /**
+    /**
      * @notice Initializes the contract
      * @param _counterpart the counterpart contract on another chain
      */
@@ -133,15 +133,7 @@ contract t1_7683 is BasicSwap7683, OwnableUpgradeable {
      * @param _sender The sender address
      * @param _message The message
      */
-    function handle(
-        uint32 _origin,
-        bytes32 _sender,
-        bytes calldata _message
-    )
-        onlyMessenger
-        external
-        payable
-    {
+    function handle(uint32 _origin, bytes32 _sender, bytes calldata _message) external payable onlyMessenger {
         _handle(_origin, _sender, _message);
     }
 
