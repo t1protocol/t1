@@ -295,7 +295,7 @@ contract t1BasicSwapE2E is BaseTest {
         vm.expectEmit(false, false, false, true, address(destinationRouter));
         emit Settle(orderIds, ordersFillerData);
 
-        destinationRouter.settle{ value: gasPaymentQuote }(orderIds);
+        destinationRouter.settle(orderIds);
 
         vm.stopPrank();
 
@@ -382,7 +382,7 @@ contract t1BasicSwapE2E is BaseTest {
         vm.expectEmit(false, false, false, true, address(destinationRouter));
         emit Settle(orderIds, ordersFillerData);
 
-        destinationRouter.settle{ value: gasPaymentQuote }(orderIds);
+        destinationRouter.settle(orderIds);
 
         vm.stopPrank();
 
@@ -476,7 +476,7 @@ contract t1BasicSwapE2E is BaseTest {
         vm.expectEmit(false, false, false, true, address(destinationRouter));
         emit Settle(orderIds, ordersFillerData);
 
-        destinationRouter.settle{ value: gasPaymentQuote }(orderIds);
+        destinationRouter.settle(orderIds);
 
         vm.stopPrank();
 
@@ -537,7 +537,7 @@ contract t1BasicSwapE2E is BaseTest {
         OnchainCrossChainOrder[] memory orders = new OnchainCrossChainOrder[](1);
         orders[0] = order;
 
-        destinationRouter.refund{ value: gasPaymentQuote }(orders);
+        destinationRouter.refund(orders);
 
         assertEq(destinationRouter.orderStatus(orderId), destinationRouter.UNKNOWN());
 
@@ -604,7 +604,7 @@ contract t1BasicSwapE2E is BaseTest {
         OnchainCrossChainOrder[] memory orders = new OnchainCrossChainOrder[](1);
         orders[0] = order;
 
-        destinationRouter.refund{ value: gasPaymentQuote }(orders);
+        destinationRouter.refund(orders);
 
         vm.stopPrank();
 
@@ -681,7 +681,7 @@ contract t1BasicSwapE2E is BaseTest {
         GaslessCrossChainOrder[] memory orders = new GaslessCrossChainOrder[](1);
         orders[0] = order;
 
-        destinationRouter.refund{ value: gasPaymentQuote }(orders);
+        destinationRouter.refund(orders);
 
         vm.stopPrank();
 
