@@ -53,11 +53,13 @@ forge script ./script/deploy/DeployRouterERC7683.s.sol:RouterDeployScript --sig 
 After deploying the routers, you will need to initialize them by running the following commands:
 
 Initialize L1 Router:
+
 ```bash
 forge script ./script/deploy/DeployRouterERC7683.s.sol:RouterDeployScript --sig "initializeL1Router()" --rpc-url $T1_L1_RPC --broadcast
 ```
 
 Initialize L2 Router:
+
 ```bash
 forge script ./script/deploy/DeployRouterERC7683.s.sol:RouterDeployScript --sig "initializeL2Router()" --rpc-url $T1_L2_RPC --broadcast
 ```
