@@ -8,7 +8,7 @@ import { t1_7683Message } from "../libraries/7683/t1_7683Message.sol";
 import { BasicSwap7683 } from "./BasicSwap7683.sol";
 import { TypeCasts } from "@hyperlane-xyz/libs/TypeCasts.sol";
 
-import { IL2T1Messenger } from "../L2/IL2T1Messenger.sol";
+import { IT1Messenger } from "../libraries/IT1Messenger.sol";
 
 /**
  * @title t1_7683
@@ -25,7 +25,7 @@ contract t1_7683 is BasicSwap7683, OwnableUpgradeable {
 
     uint32 public immutable localDomain;
 
-    IL2T1Messenger public immutable messenger;
+    IT1Messenger public immutable messenger;
 
     address public counterpart;
 
@@ -59,7 +59,7 @@ contract t1_7683 is BasicSwap7683, OwnableUpgradeable {
      * @param localDomain_ The local domain.
      */
     constructor(address _messenger, address _permit2, uint32 localDomain_) BasicSwap7683(_permit2) {
-        messenger = IL2T1Messenger(_messenger);
+        messenger = IT1Messenger(_messenger);
         localDomain = localDomain_;
     }
     // ============ Initializers ============
