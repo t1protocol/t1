@@ -42,6 +42,8 @@ contract t1_7683 is BasicSwap7683, OwnableUpgradeable {
 
     error FunctionNotImplemented(string functionName);
 
+    error EthNotAllowed();
+
     // ============ Modifiers ============
 
     modifier onlyMessenger() {
@@ -87,6 +89,7 @@ contract t1_7683 is BasicSwap7683, OwnableUpgradeable {
         internal
         override
     {
+        if (msg.value != 0) revert EthNotAllowed();
         bytes memory innerMessage = t1_7683Message.encodeSettle(_orderIds, _ordersFillerData);
         bytes memory outerMessage = abi.encodeWithSelector(
             t1_7683.handle.selector, _originDomain, TypeCasts.addressToBytes32(address(this)), innerMessage
@@ -101,6 +104,7 @@ contract t1_7683 is BasicSwap7683, OwnableUpgradeable {
      * @param _orderIds The IDs of the orders to refund.
      */
     function _dispatchRefund(uint32 _originDomain, bytes32[] memory _orderIds) internal override {
+        if (msg.value != 0) revert EthNotAllowed();
         bytes memory innerMessage = t1_7683Message.encodeRefund(_orderIds);
         bytes memory outerMessage = abi.encodeWithSelector(
             t1_7683.handle.selector, _originDomain, TypeCasts.addressToBytes32(address(this)), innerMessage
