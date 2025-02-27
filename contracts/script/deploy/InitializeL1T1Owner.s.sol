@@ -13,6 +13,7 @@ import { L1MessageQueue } from "../../src/L1/rollup/L1MessageQueue.sol";
 import { T1MessengerBase } from "../../src/libraries/T1MessengerBase.sol";
 import { L2GasPriceOracle } from "../../src/L1/rollup/L2GasPriceOracle.sol";
 import { MultipleVersionRollupVerifier } from "../../src/L1/rollup/MultipleVersionRollupVerifier.sol";
+import { L1MessageQueueWithGasPriceOracle } from "../../src/L1/rollup/L1MessageQueueWithGasPriceOracle.sol";
 import { T1Chain } from "../../src/L1/rollup/T1Chain.sol";
 import { T1Owner } from "../../src/misc/T1Owner.sol";
 import { Whitelist } from "../../src/L2/predeploys/Whitelist.sol";
@@ -113,12 +114,11 @@ contract InitializeL1T1Owner is Script {
         bytes4[] memory _selectors;
 
         // no delay, t1 multisig and emergency multisig
-        _selectors = new bytes4[](5);
+        _selectors = new bytes4[](4);
         _selectors[0] = T1Chain.revertBatch.selector;
         _selectors[1] = T1Chain.removeSequencer.selector;
         _selectors[2] = T1Chain.removeProver.selector;
         _selectors[3] = T1Chain.setPause.selector;
-        _selectors[4] = T1Chain.setValidSigner.selector;
         owner.updateAccess(L1_T1_CHAIN_PROXY_ADDR, _selectors, T1_MULTISIG_NO_DELAY_ROLE, true);
         owner.updateAccess(L1_T1_CHAIN_PROXY_ADDR, _selectors, EMERGENCY_MULTISIG_NO_DELAY_ROLE, true);
 
@@ -142,6 +142,11 @@ contract InitializeL1T1Owner is Script {
         _selectors[0] = L1MessageQueue.updateGasOracle.selector;
         _selectors[1] = L1MessageQueue.updateMaxGasLimit.selector;
         owner.updateAccess(L1_MESSAGE_QUEUE_PROXY_ADDR, _selectors, TIMELOCK_1DAY_DELAY_ROLE, true);
+
+        // no delay, security council
+        _selectors = new bytes4[](1);
+        _selectors[0] = L1MessageQueueWithGasPriceOracle.setL2BaseFee.selector;
+        owner.updateAccess(L1_MESSAGE_QUEUE_PROXY_ADDR, _selectors, SECURITY_COUNCIL_NO_DELAY_ROLE, true);
     }
 
     function configL1T1Messenger() internal {
@@ -206,5 +211,6 @@ contract InitializeL1T1Owner is Script {
         _selectors[1] = L1GatewayRouter.setMM.selector;
         owner.updateAccess(L1_GATEWAY_ROUTER_PROXY_ADDR, _selectors, T1_MULTISIG_NO_DELAY_ROLE, true);
         owner.updateAccess(L1_GATEWAY_ROUTER_PROXY_ADDR, _selectors, EMERGENCY_MULTISIG_NO_DELAY_ROLE, true);
+        owner.updateAccess(L1_GATEWAY_ROUTER_PROXY_ADDR, _selectors, SECURITY_COUNCIL_NO_DELAY_ROLE, true);
     }
 }

@@ -27,6 +27,10 @@
   block_timestamp = 0                                           # the value of `block.timestamp` in tests
   block_difficulty = 0                                          # the value of `block.difficulty` in tests
 
+[[profile.default.fs_permissions]]
+  path = ".env"
+  access = "write"
+
 [profile.ci]
   fuzz_runs = 1000
 
