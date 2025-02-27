@@ -8,6 +8,7 @@ import { IL1ETHGateway } from "./IL1ETHGateway.sol";
 
 import { IMessageDropCallback } from "../../libraries/callbacks/IMessageDropCallback.sol";
 import { T1GatewayBase } from "../../libraries/gateway/T1GatewayBase.sol";
+import { T1Constants } from "../../libraries/constants/T1Constants.sol";
 
 // solhint-disable avoid-low-level-calls
 
@@ -159,7 +160,9 @@ contract L1ETHGateway is T1GatewayBase, IL1ETHGateway, IMessageDropCallback {
         // 2. Generate message passed to L1T1Messenger.
         bytes memory _message = abi.encodeCall(IL2ETHGateway.finalizeDepositETH, (_from, _to, _amount, _data));
 
-        IL1T1Messenger(messenger).sendMessage{ value: msg.value }(counterpart, _amount, _message, _gasLimit, _from);
+        IL1T1Messenger(messenger).sendMessage{ value: msg.value }(
+            counterpart, _amount, _message, _gasLimit, T1Constants.T1_DEVNET_CHAIN_ID, _from
+        );
 
         emit DepositETH(_from, _to, _amount, _data);
     }

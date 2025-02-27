@@ -5,6 +5,7 @@ pragma solidity >=0.8.28;
 import { IL2T1Messenger } from "./IL2T1Messenger.sol";
 import { L2MessageQueue } from "./predeploys/L2MessageQueue.sol";
 
+import { IT1Messenger } from "../libraries/IT1Messenger.sol";
 import { T1Constants } from "../libraries/constants/T1Constants.sol";
 import { AddressAliasHelper } from "../libraries/common/AddressAliasHelper.sol";
 import { T1MessengerBase } from "../libraries/T1MessengerBase.sol";
@@ -64,11 +65,11 @@ contract L2T1Messenger is T1MessengerBase, IL2T1Messenger {
     /// executed.
     mapping(bytes32 => bool) public isL1MessageExecuted;
 
+    /// @notice The next nonce to be assigned to an L2 -> L2 message
+    uint256 public nextL2MessageNonce;
+
     /// @notice Maps chain ID to true, if the chain is supported.
     mapping(uint64 chainId => bool isSupported) private _isSupportedDest;
-
-    /// @notice The next nonce to be assigned to an L2 -> L2 message
-    uint256 private _nextL2MessageNonce;
 
     /// @dev The storage slots used by previous versions of this contract.
     uint256[2] private __used;
@@ -101,7 +102,7 @@ contract L2T1Messenger is T1MessengerBase, IL2T1Messenger {
      *
      */
 
-    /// @inheritdoc IL2T1Messenger
+    /// @inheritdoc IT1Messenger
     function sendMessage(
         address _to,
         uint256 _value,
@@ -113,12 +114,11 @@ contract L2T1Messenger is T1MessengerBase, IL2T1Messenger {
         payable
         override
         whenNotPaused
-        returns (uint256 nonce)
     {
-        nonce = _sendMessage(_to, _value, _message, _gasLimit, _destChainId, _msgSender());
+        _sendMessage(_to, _value, _message, _gasLimit, _destChainId, _msgSender());
     }
 
-    /// @inheritdoc IL2T1Messenger
+    /// @inheritdoc IT1Messenger
     function sendMessage(
         address _to,
         uint256 _value,
@@ -131,9 +131,8 @@ contract L2T1Messenger is T1MessengerBase, IL2T1Messenger {
         payable
         override
         whenNotPaused
-        returns (uint256 nonce)
     {
-        nonce = _sendMessage(_to, _value, _message, _gasLimit, _destChainId, _callbackAddress);
+        _sendMessage(_to, _value, _message, _gasLimit, _destChainId, _callbackAddress);
     }
 
     /// @inheritdoc IL2T1Messenger
@@ -228,9 +227,9 @@ contract L2T1Messenger is T1MessengerBase, IL2T1Messenger {
                 if (!_success) revert FailedToDeductFee();
             }
 
-            _nonce = _nextL2MessageNonce;
+            _nonce = nextL2MessageNonce;
             unchecked {
-                _nextL2MessageNonce += 1;
+                nextL2MessageNonce += 1;
             }
         }
         bytes32 _xDomainCalldataHash =

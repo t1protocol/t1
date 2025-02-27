@@ -54,4 +54,44 @@ interface IT1Messenger {
 
     /// @notice Return the sender of a cross domain message.
     function xDomainMessageSender() external view returns (address);
+
+    /**
+     *
+     * Public Mutating Functions *
+     *
+     */
+
+    /// @notice Send cross chain message from t1 to L2 or t1 to L1.
+    /// @param target The address of account who receive the message.
+    /// @param value The amount of ether passed when call target contract.
+    /// @param message The content of the message.
+    /// @param gasLimit Gas limit required to complete the message relay on corresponding chain.
+    /// @param destChainId The ID of the chain for which the message is bound.
+    function sendMessage(
+        address target,
+        uint256 value,
+        bytes calldata message,
+        uint256 gasLimit,
+        uint64 destChainId
+    )
+        external
+        payable;
+
+    /// @notice Send cross chain message from t1 to L2 or t1 to L1.
+    /// @param target The address of account who receive the message.
+    /// @param value The amount of ether passed when call target contract.
+    /// @param message The content of the message.
+    /// @param gasLimit Gas limit required to complete the message relay on corresponding chain.
+    /// @param destChainId The ID of the chain for which the message is bound.
+    /// @param callbackAddress The address of account who will receive the callback and the refunded fee.
+    function sendMessage(
+        address target,
+        uint256 value,
+        bytes calldata message,
+        uint256 gasLimit,
+        uint64 destChainId,
+        address callbackAddress
+    )
+        external
+        payable;
 }
