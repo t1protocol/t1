@@ -5,6 +5,8 @@ pragma solidity >=0.8.28;
 import { IT1Chain } from "./rollup/IT1Chain.sol";
 import { IL1MessageQueue } from "./rollup/IL1MessageQueue.sol";
 import { IL1T1Messenger } from "./IL1T1Messenger.sol";
+
+import { IT1Messenger } from "../libraries/IT1Messenger.sol";
 import { T1Constants } from "../libraries/constants/T1Constants.sol";
 import { T1MessengerBase } from "../libraries/T1MessengerBase.sol";
 import { WithdrawTrieVerifier } from "../libraries/verifier/WithdrawTrieVerifier.sol";
@@ -123,35 +125,37 @@ contract L1T1Messenger is T1MessengerBase, IL1T1Messenger {
      *
      */
 
-    /// @inheritdoc IL1T1Messenger
-    function sendMessage(
-        address _to,
-        uint256 _value,
-        bytes memory _message,
-        uint256 _gasLimit
-    )
-        external
-        payable
-        override
-        whenNotPaused
-    {
-        _sendMessage(_to, _value, _message, _gasLimit, _msgSender());
-    }
-
-    /// @inheritdoc IL1T1Messenger
+    /// @inheritdoc IT1Messenger
     function sendMessage(
         address _to,
         uint256 _value,
         bytes calldata _message,
         uint256 _gasLimit,
-        address _refundAddress
+        uint64 _destChainId
     )
         external
         payable
         override
         whenNotPaused
     {
-        _sendMessage(_to, _value, _message, _gasLimit, _refundAddress);
+        _sendMessage(_to, _value, _message, _gasLimit, _destChainId, _msgSender());
+    }
+
+    /// @inheritdoc IT1Messenger
+    function sendMessage(
+        address _to,
+        uint256 _value,
+        bytes calldata _message,
+        uint256 _gasLimit,
+        uint64 _destChainId,
+        address _callbackAddress
+    )
+        external
+        payable
+        override
+        whenNotPaused
+    {
+        _sendMessage(_to, _value, _message, _gasLimit, _destChainId, _callbackAddress);
     }
 
     /// @inheritdoc IL1T1Messenger
@@ -348,12 +352,20 @@ contract L1T1Messenger is T1MessengerBase, IL1T1Messenger {
      * Internal Functions *
      *
      */
+    /// @dev Internal function to send cross domain message.
+    /// @param _to The address of account who receive the message.
+    /// @param _value The amount of ether passed when call target contract.
+    /// @param _message The content of the message.
+    /// @param _gasLimit Optional gas limit to complete the message relay on corresponding chain.
+    /// @param _destChainId The chain ID for which the message is bound.
+    /// @param _callbackAddress The address of account who will receive the callback and refunded fee.
     function _sendMessage(
         address _to,
         uint256 _value,
         bytes memory _message,
         uint256 _gasLimit,
-        address _refundAddress
+        uint64 _destChainId,
+        address _callbackAddress
     )
         internal
         nonReentrant
@@ -381,21 +393,14 @@ contract L1T1Messenger is T1MessengerBase, IL1T1Messenger {
         messageSendTimestamp[_xDomainCalldataHash] = block.timestamp;
 
         emit SentMessage(
-            _msgSender(),
-            _to,
-            _value,
-            _messageNonce,
-            _gasLimit,
-            _message,
-            T1Constants.T1_DEVNET_CHAIN_ID,
-            _xDomainCalldataHash
+            _msgSender(), _to, _value, _messageNonce, _gasLimit, _message, _destChainId, _xDomainCalldataHash
         );
 
-        // refund fee to `_refundAddress`
+        // refund fee to `_callbackAddress`
         unchecked {
             uint256 _refund = msg.value - _fee - _value;
             if (_refund > 0) {
-                (bool _success,) = _refundAddress.call{ value: _refund }("");
+                (bool _success,) = _callbackAddress.call{ value: _refund }("");
                 require(_success, "Failed to refund the fee");
             }
         }

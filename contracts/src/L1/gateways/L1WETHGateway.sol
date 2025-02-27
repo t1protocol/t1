@@ -7,6 +7,7 @@ import { IL2ERC20Gateway } from "../../L2/gateways/IL2ERC20Gateway.sol";
 import { IL1T1Messenger } from "../IL1T1Messenger.sol";
 import { IL1ERC20Gateway } from "./IL1ERC20Gateway.sol";
 
+import { T1Constants } from "../../libraries/constants/T1Constants.sol";
 import { T1GatewayBase } from "../../libraries/gateway/T1GatewayBase.sol";
 import { L1ERC20Gateway } from "./L1ERC20Gateway.sol";
 
@@ -144,7 +145,7 @@ contract L1WETHGateway is L1ERC20Gateway {
 
         // 3. Send message to L1T1Messenger.
         IL1T1Messenger(messenger).sendMessage{ value: _amount + msg.value }(
-            counterpart, _amount, _message, _gasLimit, _from
+            counterpart, _amount, _message, _gasLimit, T1Constants.T1_DEVNET_CHAIN_ID, _from
         );
 
         emit DepositERC20(_token, l2WETH, _from, _to, _amount, _data);

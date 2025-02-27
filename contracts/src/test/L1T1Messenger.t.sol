@@ -6,6 +6,8 @@ import { IL1T1Messenger } from "../L1/L1T1Messenger.sol";
 
 import { L1GatewayTestBase } from "./L1GatewayTestBase.t.sol";
 
+import { T1Constants } from "../libraries/constants/T1Constants.sol";
+
 contract L1T1MessengerTest is L1GatewayTestBase {
     event OnDropMessageCalled(bytes);
     event UpdateMaxReplayTimes(uint256 oldMaxReplayTimes, uint256 newMaxReplayTimes);
@@ -62,11 +64,15 @@ contract L1T1MessengerTest is L1GatewayTestBase {
 
         // Insufficient msg.value
         hevm.expectRevert("Insufficient msg.value");
-        l1Messenger.sendMessage(address(0), 1, new bytes(0), DEFAULT_GAS_LIMIT, refundAddress);
+        l1Messenger.sendMessage(
+            address(0), 1, new bytes(0), DEFAULT_GAS_LIMIT, T1Constants.T1_DEVNET_CHAIN_ID, refundAddress
+        );
 
         // refund exceed fee
         uint256 balanceBefore = refundAddress.balance;
-        l1Messenger.sendMessage{ value: 1 + exceedValue }(address(0), 1, new bytes(0), DEFAULT_GAS_LIMIT, refundAddress);
+        l1Messenger.sendMessage{ value: 1 + exceedValue }(
+            address(0), 1, new bytes(0), DEFAULT_GAS_LIMIT, T1Constants.T1_DEVNET_CHAIN_ID, refundAddress
+        );
         assertEq(balanceBefore + exceedValue, refundAddress.balance);
     }
 
@@ -81,7 +87,9 @@ contract L1T1MessengerTest is L1GatewayTestBase {
         l1Messenger.updateMaxReplayTimes(0);
 
         // append a message
-        l1Messenger.sendMessage{ value: 100 }(address(0), 100, new bytes(0), DEFAULT_GAS_LIMIT, refundAddress);
+        l1Messenger.sendMessage{ value: 100 }(
+            address(0), 100, new bytes(0), DEFAULT_GAS_LIMIT, T1Constants.T1_DEVNET_CHAIN_ID, refundAddress
+        );
 
         // Provided message has not been enqueued
         hevm.expectRevert("Provided message has not been enqueued");
@@ -116,7 +124,9 @@ contract L1T1MessengerTest is L1GatewayTestBase {
         // 2. replay 3 times
         messageQueue.setL2BaseFee(0);
         l1Messenger.updateMaxReplayTimes(100);
-        l1Messenger.sendMessage{ value: 100 }(address(0), 100, new bytes(0), DEFAULT_GAS_LIMIT, refundAddress);
+        l1Messenger.sendMessage{ value: 100 }(
+            address(0), 100, new bytes(0), DEFAULT_GAS_LIMIT, T1Constants.T1_DEVNET_CHAIN_ID, refundAddress
+        );
         bytes32 hash = keccak256(
             abi.encodeWithSignature(
                 "relayMessage(address,address,uint256,uint256,bytes)", address(this), address(0), 100, 2, new bytes(0)
@@ -164,9 +174,11 @@ contract L1T1MessengerTest is L1GatewayTestBase {
         assertBoolEq(true, l1Messenger.paused());
 
         hevm.expectRevert("Pausable: paused");
-        l1Messenger.sendMessage(address(0), 0, new bytes(0), DEFAULT_GAS_LIMIT);
+        l1Messenger.sendMessage(address(0), 0, new bytes(0), DEFAULT_GAS_LIMIT, T1Constants.T1_DEVNET_CHAIN_ID);
         hevm.expectRevert("Pausable: paused");
-        l1Messenger.sendMessage(address(0), 0, new bytes(0), DEFAULT_GAS_LIMIT, address(0));
+        l1Messenger.sendMessage(
+            address(0), 0, new bytes(0), DEFAULT_GAS_LIMIT, T1Constants.T1_DEVNET_CHAIN_ID, address(0)
+        );
         hevm.expectRevert("Pausable: paused");
         IL1T1Messenger.L2MessageProof memory _proof;
         l1Messenger.relayMessageWithProof(address(0), address(0), 0, 0, new bytes(0), _proof);
@@ -192,21 +204,29 @@ contract L1T1MessengerTest is L1GatewayTestBase {
         //   32B nonce
         //   message byte array (32B offset + 32B length + bytes (padding to multiple of 32))
         // So the intrinsic gas must be greater than 21000 + 16 * 228 = 24648
-        l1Messenger.sendMessage{ value: _fee + value }(address(0), value, hex"0011220033", 24_648);
+        l1Messenger.sendMessage{ value: _fee + value }(
+            address(0), value, hex"0011220033", 24_648, T1Constants.T1_DEVNET_CHAIN_ID
+        );
 
         // insufficient intrinsic gas
         hevm.expectRevert("Insufficient gas limit, must be above intrinsic gas");
-        l1Messenger.sendMessage{ value: _fee + value }(address(0), 1, hex"0011220033", 24_647);
+        l1Messenger.sendMessage{ value: _fee + value }(
+            address(0), 1, hex"0011220033", 24_647, T1Constants.T1_DEVNET_CHAIN_ID
+        );
 
         // gas limit exceeds the max value
         uint256 gasLimit = 100_000_000;
         _fee = messageQueue.l2BaseFee() * gasLimit;
         hevm.expectRevert("Gas limit must not exceed maxGasLimit");
-        l1Messenger.sendMessage{ value: _fee + value }(address(0), value, hex"0011220033", gasLimit);
+        l1Messenger.sendMessage{ value: _fee + value }(
+            address(0), value, hex"0011220033", gasLimit, T1Constants.T1_DEVNET_CHAIN_ID
+        );
 
         // update max gas limit
         messageQueue.updateMaxGasLimit(gasLimit);
-        l1Messenger.sendMessage{ value: _fee + value }(address(0), value, hex"0011220033", gasLimit);
+        l1Messenger.sendMessage{ value: _fee + value }(
+            address(0), value, hex"0011220033", gasLimit, T1Constants.T1_DEVNET_CHAIN_ID
+        );
     }
 
     function testDropMessage() external {
@@ -215,7 +235,7 @@ contract L1T1MessengerTest is L1GatewayTestBase {
         l1Messenger.dropMessage(address(0), address(0), 0, 0, new bytes(0));
 
         // send one message with nonce 0
-        l1Messenger.sendMessage(address(0), 0, new bytes(0), DEFAULT_GAS_LIMIT);
+        l1Messenger.sendMessage(address(0), 0, new bytes(0), DEFAULT_GAS_LIMIT, T1Constants.T1_DEVNET_CHAIN_ID);
         assertEq(messageQueue.nextCrossDomainMessageIndex(), 1);
 
         // drop pending message, revert
@@ -248,7 +268,7 @@ contract L1T1MessengerTest is L1GatewayTestBase {
         }
 
         // send one message with nonce 2 and replay 3 times
-        l1Messenger.sendMessage(address(0), 0, new bytes(0), DEFAULT_GAS_LIMIT);
+        l1Messenger.sendMessage(address(0), 0, new bytes(0), DEFAULT_GAS_LIMIT, T1Constants.T1_DEVNET_CHAIN_ID);
         assertEq(messageQueue.nextCrossDomainMessageIndex(), 3);
         for (uint256 i = 0; i < 3; i++) {
             l1Messenger.replayMessage(address(this), address(0), 0, 2, new bytes(0), DEFAULT_GAS_LIMIT, address(0));
@@ -272,7 +292,7 @@ contract L1T1MessengerTest is L1GatewayTestBase {
         l1Messenger.dropMessage(address(this), address(0), 0, 2, new bytes(0));
 
         // send one message with nonce 6 and replay 4 times
-        l1Messenger.sendMessage(address(0), 0, new bytes(0), DEFAULT_GAS_LIMIT);
+        l1Messenger.sendMessage(address(0), 0, new bytes(0), DEFAULT_GAS_LIMIT, T1Constants.T1_DEVNET_CHAIN_ID);
         for (uint256 i = 0; i < 4; i++) {
             l1Messenger.replayMessage(address(this), address(0), 0, 6, new bytes(0), DEFAULT_GAS_LIMIT, address(0));
         }
@@ -444,6 +464,68 @@ contract L1T1MessengerTest is L1GatewayTestBase {
             hex"8eaac8a30000000000000000000000008943545177806ed17b9f23f0a21ee5948ecaa7760000000000000000000000008943545177806ed17b9f23f0a21ee5948ecaa77600000000000000000000000000000000000000000000000000038d7ea4c6800000000000000000000000000000000000000000000000000000000000000000800000000000000000000000000000000000000000000000000000000000000000";
         address from = address(0x454A310f46C8d9403ba6F6c514aD3fDE1ad97a5E);
         address to = address(0x8260eca2072D01c561ea8Cc7e9ba504e10A00ddC);
+        // does not revert
+        l1Messenger.relayMessageWithProof(from, to, msgValue, nonce, message, messageProof);
+    }
+
+    function testRelayMessageWithProofNonce24() external {
+        rollup.addProver(address(0));
+        bytes memory batchHeader1 = generateBatchHeader();
+        assertBoolEq(rollup.isBatchFinalized(1), false);
+        bytes32 withdrawRoot = 0x4aaf9c53c8bb853fdcd7ad6eb8e1636e980c4ae9291cf917b0498287eeb72f3f;
+        hevm.startPrank(address(0));
+        rollup.finalizeBundleWithProof(batchHeader1, bytes32(uint256(2)), withdrawRoot, new bytes(0));
+
+        hevm.stopPrank();
+        assertBoolEq(rollup.isBatchFinalized(1), true);
+
+        bytes32 withdrawRootBatch1 = rollup.withdrawRoots(1);
+        assertEq(withdrawRoot, withdrawRootBatch1, "withdraw root");
+
+        bytes memory proof =
+        // solhint-disable-next-line max-line-length
+         hex"";
+        IL1T1Messenger.L2MessageProof memory messageProof =
+            IL1T1Messenger.L2MessageProof({ batchIndex: 1, merkleProof: proof });
+        // hash f527187db10d953f02ec890a9d325af97abfcf3ee8fc4d3e388c3a38c8905065
+        uint256 nonce = 24;
+        uint256 msgValue = 100_000_000_000_000;
+        bytes memory message =
+        // solhint-disable-next-line max-line-length
+         hex"";
+        address from = address(0x82a5B34bEa21E55C2e6adA0d4f811EBf3A547640);
+        address to = address(0x82a5B34bEa21E55C2e6adA0d4f811EBf3A547640);
+        // does not revert
+        l1Messenger.relayMessageWithProof(from, to, msgValue, nonce, message, messageProof);
+    }
+
+    function testRelayMessageWithProofNonce26() external {
+        rollup.addProver(address(0));
+        bytes memory batchHeader1 = generateBatchHeader();
+        assertBoolEq(rollup.isBatchFinalized(1), false);
+        bytes32 withdrawRoot = 0xc498724949b0861f080e041b4a169b630166289662c41fb537dbf642229d4d76;
+        hevm.startPrank(address(0));
+        rollup.finalizeBundleWithProof(batchHeader1, bytes32(uint256(2)), withdrawRoot, new bytes(0));
+
+        hevm.stopPrank();
+        assertBoolEq(rollup.isBatchFinalized(1), true);
+
+        bytes32 withdrawRootBatch1 = rollup.withdrawRoots(1);
+        assertEq(withdrawRoot, withdrawRootBatch1, "withdraw root");
+
+        bytes memory proof =
+        // solhint-disable-next-line max-line-length
+         hex"130cef0bc21be7263033e5b153601dcb98684296fc29cfe5e41173b6b18ee6bf";
+        IL1T1Messenger.L2MessageProof memory messageProof =
+            IL1T1Messenger.L2MessageProof({ batchIndex: 1, merkleProof: proof });
+        // hash
+        uint256 nonce = 26;
+        uint256 msgValue = 100_000_000_000_000;
+        bytes memory message =
+        // solhint-disable-next-line max-line-length
+         hex"";
+        address from = address(0x82a5B34bEa21E55C2e6adA0d4f811EBf3A547640);
+        address to = address(0x82a5B34bEa21E55C2e6adA0d4f811EBf3A547640);
         // does not revert
         l1Messenger.relayMessageWithProof(from, to, msgValue, nonce, message, messageProof);
     }
