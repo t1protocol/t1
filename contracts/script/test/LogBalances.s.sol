@@ -9,21 +9,33 @@ import { T1StandardERC20 } from "../../src/libraries/token/T1StandardERC20.sol";
 
 // solhint-disable var-name-mixedcase
 
-contract LogUsdtBalances is Script {
-    uint256 private L1_DEPLOYER_PRIVATE_KEY = vm.envUint("L1_DEPLOYER_PRIVATE_KEY");
+contract LogBalances is Script {
+    uint256 private TEST_PRIVATE_KEY = vm.envUint("TEST_PRIVATE_KEY");
+
     address private L1_USDT_ADDR = vm.envAddress("L1_USDT_ADDR");
-    address private L2_USDT_ADDR = vm.envAddress("L2_USDT_ADDR");
+    address private L2_USDT_ADDR = vm.envOr("L2_USDT_ADDR", address(0));
+
+    address private L1_WETH_ADDR = vm.envAddress("L1_WETH_ADDR");
+    address private L2_WETH_ADDR = vm.envAddress("L2_WETH_ADDR");
 
     function run() external {
-        address addr = vm.addr(L1_DEPLOYER_PRIVATE_KEY);
-
+        address addr = vm.addr(TEST_PRIVATE_KEY);
         vm.createSelectFork(vm.rpcUrl("sepolia"));
+
+        console.log("[%s] currently has [%18e] ETH on L1", vm.toString(addr), addr.balance);
+        console.log(
+            "[%s] currently has [%18e] WETH on L1", vm.toString(addr), T1StandardERC20(L1_WETH_ADDR).balanceOf(addr)
+        );
         console.log(
             "[%s] currently has [%18e] USDT on L1", vm.toString(addr), T1StandardERC20(L1_USDT_ADDR).balanceOf(addr)
         );
 
+        vm.createSelectFork(vm.rpcUrl("t1"));
+        console.log("[%s] currently has [%18e] ETH on L2", vm.toString(addr), addr.balance);
+        console.log(
+            "[%s] currently has [%18e] WETH on L2", vm.toString(addr), T1StandardERC20(L2_WETH_ADDR).balanceOf(addr)
+        );
         if (L2_USDT_ADDR != address(0)) {
-            vm.createSelectFork(vm.rpcUrl("t1"));
             console.log(
                 "[%s] currently has [%18e] USDT on L2", vm.toString(addr), T1StandardERC20(L2_USDT_ADDR).balanceOf(addr)
             );
