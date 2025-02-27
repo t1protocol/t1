@@ -13,6 +13,7 @@ import { IL1ERC20Gateway } from "./IL1ERC20Gateway.sol";
 import { IL1StandardERC20Gateway } from "./IL1StandardERC20Gateway.sol";
 import { IL1GatewayRouter } from "../../L1/gateways/IL1GatewayRouter.sol";
 
+import { T1Constants } from "../../libraries/constants/T1Constants.sol";
 import { T1GatewayBase } from "../../libraries/gateway/T1GatewayBase.sol";
 import { L1ERC20Gateway } from "./L1ERC20Gateway.sol";
 
@@ -199,7 +200,9 @@ contract L1StandardERC20Gateway is L1ERC20Gateway, IL1StandardERC20Gateway {
             abi.encodeCall(IL2ERC20Gateway.finalizeDepositERC20, (_token, _l2Token, _from, _to, _amount, _l2Data));
 
         // 3. Send message to L1T1Messenger.
-        IL1T1Messenger(messenger).sendMessage{ value: msg.value }(counterpart, 0, _message, _gasLimit, _from);
+        IL1T1Messenger(messenger).sendMessage{ value: msg.value }(
+            counterpart, 0, _message, _gasLimit, T1Constants.T1_DEVNET_CHAIN_ID, _from
+        );
 
         emit DepositERC20(_token, _l2Token, _from, _to, _amount, _data);
     }

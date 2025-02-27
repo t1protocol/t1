@@ -31,4 +31,27 @@ contract MockT1Messenger is IT1Messenger {
             }
         }
     }
+
+    function sendMessage(
+        address target,
+        uint256 value,
+        bytes calldata message,
+        uint256 gasLimit,
+        uint64 destChainId
+    )
+        external
+        payable
+    { }
+
+    function sendMessage(
+        address target,
+        uint256 value,
+        bytes calldata message,
+        uint256 gasLimit,
+        uint64 destChainId,
+        address callbackAddress
+    )
+        external
+        payable
+    { }
 }
