@@ -21,11 +21,11 @@ import {
     ResolvedCrossChainOrder,
     Output,
     FillInstruction
-} from "@7683/ERC7683/IERC7683.sol";
+} from "../../7683/IERC7683.sol";
 
-import { OrderData, OrderEncoder } from "@7683/libs/OrderEncoder.sol";
+import { OrderData, OrderEncoder } from "../../7683/libs/OrderEncoder.sol";
 
-import { Base7683 } from "@7683/Base7683.sol";
+import { Base7683 } from "../../7683/Base7683.sol";
 import { EmptyContract } from "../../misc/EmptyContract.sol";
 
 event Open(bytes32 indexed orderId, ResolvedCrossChainOrder resolvedOrder);

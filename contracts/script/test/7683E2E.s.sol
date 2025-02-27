@@ -6,14 +6,14 @@ import { console2 } from "forge-std/console2.sol";
 import { ERC20 } from "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 import { IPermit2 } from "@uniswap/permit2/src/interfaces/IPermit2.sol";
 import { TypeCasts } from "@hyperlane-xyz/libs/TypeCasts.sol";
-import { OrderData, OrderEncoder } from "@7683/libs/OrderEncoder.sol";
+import { OrderData, OrderEncoder } from "../../src/7683/libs/OrderEncoder.sol";
 import {
     GaslessCrossChainOrder,
     OnchainCrossChainOrder,
     ResolvedCrossChainOrder,
     Output,
     FillInstruction
-} from "@7683/ERC7683/IERC7683.sol";
+} from "../../src/7683/IERC7683.sol";
 import { t1_7683 } from "../../src/7683/t1_7683.sol";
 
 // Step 1: Setup Alice's account, sign and relay intent

@@ -5,7 +5,7 @@ import { OwnableUpgradeable } from "@openzeppelin/contracts-upgradeable/access/O
 import { ReentrancyGuardUpgradeable } from "@openzeppelin/contracts-upgradeable/security/ReentrancyGuardUpgradeable.sol";
 
 import { t1_7683Message } from "../libraries/7683/t1_7683Message.sol";
-import { BasicSwap7683 } from "@7683/BasicSwap7683.sol";
+import { BasicSwap7683 } from "./BasicSwap7683.sol";
 import { TypeCasts } from "@hyperlane-xyz/libs/TypeCasts.sol";
 
 import { IL2T1Messenger } from "../L2/IL2T1Messenger.sol";
