@@ -148,7 +148,8 @@ abstract contract Base7683 is IOriginSettler, IDestinationSettler {
         if (_order.originSettler != address(this)) revert InvalidGaslessOrderSettler();
         if (_order.originChainId != _localDomain()) revert InvalidGaslessOrderOrigin();
 
-        (ResolvedCrossChainOrder memory resolvedOrder, bytes32 orderId, uint256 nonce) = _resolveOrder(_order, _originFillerData);
+        (ResolvedCrossChainOrder memory resolvedOrder, bytes32 orderId, uint256 nonce) =
+            _resolveOrder(_order, _originFillerData);
 
         openOrders[orderId] = abi.encode(_order.orderDataType, _order.orderData);
         orderStatus[orderId] = OPENED;
@@ -416,7 +417,10 @@ abstract contract Base7683 is IOriginSettler, IDestinationSettler {
      * @return _orderId The unique identifier for the order.
      * @return _nonce The nonce associated with the order.
      */
-    function _resolveOrder(GaslessCrossChainOrder memory _order, bytes calldata _originFillerData)
+    function _resolveOrder(
+        GaslessCrossChainOrder memory _order,
+        bytes calldata _originFillerData
+    )
         internal
         view
         virtual

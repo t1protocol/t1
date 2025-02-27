@@ -134,7 +134,7 @@ abstract contract BasicSwap7683 is Base7683 {
         // check if the order is opened to ensure it belongs to this domain, skip otherwise
         if (orderStatus[_orderId] != OPENED) return;
 
-        (,bytes memory _orderData) = abi.decode(openOrders[_orderId], (bytes32, bytes));
+        (, bytes memory _orderData) = abi.decode(openOrders[_orderId], (bytes32, bytes));
         OrderData memory orderData = OrderEncoder.decode(_orderData);
 
         orderStatus[_orderId] = SETTLED;
@@ -160,7 +160,7 @@ abstract contract BasicSwap7683 is Base7683 {
         // check if the order is opened to ensure it belongs to this domain, skip otherwise
         if (orderStatus[_orderId] != OPENED) return;
 
-        (,bytes memory _orderData) = abi.decode(openOrders[_orderId], (bytes32, bytes));
+        (, bytes memory _orderData) = abi.decode(openOrders[_orderId], (bytes32, bytes));
         OrderData memory orderData = OrderEncoder.decode(_orderData);
 
         orderStatus[_orderId] = REFUNDED;
@@ -215,7 +215,10 @@ abstract contract BasicSwap7683 is Base7683 {
      * @return The order ID.
      * @return The order nonce.
      */
-    function _resolveOrder(GaslessCrossChainOrder memory _order, bytes calldata)
+    function _resolveOrder(
+        GaslessCrossChainOrder memory _order,
+        bytes calldata
+    )
         internal
         view
         virtual
