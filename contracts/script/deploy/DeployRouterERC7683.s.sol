@@ -9,7 +9,7 @@ import { TransparentUpgradeableProxy } from "@openzeppelin/contracts/proxy/trans
 import { t1_7683 } from "../../src/7683/t1_7683.sol";
 import { T1Constants } from "../../src/libraries/constants/T1Constants.sol";
 
-contract RouterDeployScript is Script {
+contract DeployRouterERC7683 is Script {
     uint32 constant ORIGIN_CHAIN = uint32(T1Constants.L1_CHAIN_ID); // Sepolia
     uint32 constant DESTINATION_CHAIN = uint32(T1Constants.T1_DEVNET_CHAIN_ID); // t1 devnet
     ProxyAdmin private proxyAdmin;
@@ -31,13 +31,23 @@ contract RouterDeployScript is Script {
         );
 
         // Deploy and initialize proxy
-        TransparentUpgradeableProxy proxy = new TransparentUpgradeableProxy(
-            address(implementation),
-            address(proxyAdmin),
-            abi.encodeWithSelector(t1_7683.initialize.selector, address(0), address(0), msg.sender)
-        );
+        TransparentUpgradeableProxy proxy =
+            new TransparentUpgradeableProxy(address(implementation), address(proxyAdmin), new bytes(0));
 
-        console2.log("t1_7683_ADDRESS=", address(proxy));
+        console2.log("L1_t1_7683_IMPLEMENTATION_ADDR=", address(implementation));
+        console2.log("L1_t1_7683_PROXY_ADDR=", address(proxy));
+
+        vm.stopBroadcast();
+    }
+
+    function initializeL1Router() external {
+        uint256 deployerPk = vm.envUint("L1_DEPLOYER_PRIVATE_KEY");
+        address L1_t1_7683_PROXY_ADDR = vm.envAddress("L1_t1_7683_PROXY_ADDR");
+        address L2_t1_7683_PROXY_ADDR = vm.envAddress("L2_t1_7683_PROXY_ADDR");
+
+        vm.startBroadcast(deployerPk);
+
+        t1_7683(L1_t1_7683_PROXY_ADDR).initialize(L2_t1_7683_PROXY_ADDR);
 
         vm.stopBroadcast();
     }
@@ -45,7 +55,7 @@ contract RouterDeployScript is Script {
     function deployL2Router() external {
         uint256 deployerPk = vm.envUint("L2_DEPLOYER_PRIVATE_KEY");
         address l2Messenger = vm.envAddress("L2_T1_MESSENGER_PROXY_ADDR");
-        address t1_7683_PROXY_ADDR = vm.envAddress("t1_7683_PROXY_ADDR");
+        address L1_t1_7683_PROXY_ADDR = vm.envAddress("L1_t1_7683_PROXY_ADDR");
         address L2_PROXY_ADMIN_ADDR = vm.envAddress("L2_PROXY_ADMIN_ADDR");
 
         vm.startBroadcast(deployerPk);
@@ -60,14 +70,23 @@ contract RouterDeployScript is Script {
         );
 
         // Deploy and initialize proxy
-        TransparentUpgradeableProxy proxy = new TransparentUpgradeableProxy(
-            address(implementation),
-            address(proxyAdmin),
-            abi.encodeWithSelector(t1_7683.initialize.selector, t1_7683_PROXY_ADDR)
-        );
+        TransparentUpgradeableProxy proxy =
+            new TransparentUpgradeableProxy(address(implementation), address(proxyAdmin), new bytes(0));
 
-        console2.log("t1_7683_IMPLEMENTATION_ADDR=", address(implementation));
-        console2.log("t1_7683_PROXY_ADDR=", address(proxy));
+        console2.log("L2_t1_7683_IMPLEMENTATION_ADDR=", address(implementation));
+        console2.log("L2_t1_7683_PROXY_ADDR=", address(proxy));
+
+        vm.stopBroadcast();
+    }
+
+    function initializeL2Router() external {
+        uint256 deployerPk = vm.envUint("L1_DEPLOYER_PRIVATE_KEY");
+        address L1_t1_7683_PROXY_ADDR = vm.envAddress("L1_t1_7683_PROXY_ADDR");
+        address L2_t1_7683_PROXY_ADDR = vm.envAddress("L2_t1_7683_PROXY_ADDR");
+
+        vm.startBroadcast(deployerPk);
+
+        t1_7683(L2_t1_7683_PROXY_ADDR).initialize(L1_t1_7683_PROXY_ADDR);
 
         vm.stopBroadcast();
     }
