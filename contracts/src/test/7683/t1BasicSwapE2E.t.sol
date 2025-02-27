@@ -300,7 +300,7 @@ contract t1BasicSwapE2E is BaseTest {
         vm.stopPrank();
 
         uint256[] memory balancesBeforeSettle = _balances(inputToken);
-        handleRelayMessage(orderIds, ordersFillerData);
+        handleRelayMessage(orderIds, ordersFillerData, true);
 
         uint256[] memory balancesAfterSettle = _balances(inputToken);
 
@@ -317,12 +317,399 @@ contract t1BasicSwapE2E is BaseTest {
         );
     }
 
-    function handleRelayMessage(bytes32[] memory orderIds, bytes[] memory ordersFillerData) internal {
+    function test_native_open_fill_settle() public {
+        // open
+        OrderData memory orderData = _prepareOrderData();
+        orderData.inputToken = TypeCasts.addressToBytes32(address(0));
+        orderData.outputToken = TypeCasts.addressToBytes32(address(0));
+        OnchainCrossChainOrder memory order =
+            _prepareOnchainOrder(OrderEncoder.encode(orderData), orderData.fillDeadline, OrderEncoder.orderDataType());
+
+        vm.startPrank(kakaroto);
+
+        uint256[] memory balancesBeforeOpen = _balances();
+
+        vm.recordLogs();
+        originRouter.open{ value: amount }(order);
+
+        (bytes32 orderId, ResolvedCrossChainOrder memory resolvedOrder) = _getOrderIDFromLogs();
+
+        _assertResolvedOrder(
+            resolvedOrder,
+            order.orderData,
+            kakaroto,
+            orderData.fillDeadline,
+            type(uint32).max,
+            address(destinationRouter).addressToBytes32(),
+            address(destinationRouter).addressToBytes32(),
+            origin,
+            address(0),
+            address(0)
+        );
+
+        _assertOpenOrder(orderId, kakaroto, order.orderData, balancesBeforeOpen, kakaroto, true);
+
+        // fill
+        vm.startPrank(vegeta);
+
+        uint256[] memory balancesBeforeFill = _balances();
+
+        bytes memory fillerData = abi.encode(TypeCasts.addressToBytes32(vegeta));
+
+        vm.expectEmit(false, false, false, true, address(destinationRouter));
+        emit Filled(orderId, resolvedOrder.fillInstructions[0].originData, fillerData);
+
+        destinationRouter.fill{ value: amount }(orderId, resolvedOrder.fillInstructions[0].originData, fillerData);
+
+        assertEq(destinationRouter.orderStatus(orderId), destinationRouter.FILLED());
+
+        (bytes memory _originData, bytes memory _fillerData) = destinationRouter.filledOrders(orderId);
+
+        assertEq(_originData, resolvedOrder.fillInstructions[0].originData);
+        assertEq(_fillerData, fillerData);
+
+        uint256[] memory balancesAfterFill = _balances();
+
+        assertEq(balancesAfterFill[balanceId[vegeta]], balancesBeforeFill[balanceId[vegeta]] - amount);
+        assertEq(balancesAfterFill[balanceId[karpincho]], balancesBeforeFill[balanceId[karpincho]] + amount);
+
+        // settle
+        bytes32[] memory orderIds = new bytes32[](1);
+        orderIds[0] = orderId;
+        bytes[] memory ordersFillerData = new bytes[](1);
+        ordersFillerData[0] = fillerData;
+
+        vm.expectEmit(false, false, false, true, address(destinationRouter));
+        emit Settle(orderIds, ordersFillerData);
+
+        destinationRouter.settle{ value: gasPaymentQuote }(orderIds);
+
+        vm.stopPrank();
+
+        uint256[] memory balancesBeforeSettle = _balances();
+
+        handleRelayMessage(orderIds, ordersFillerData, true);
+
+        uint256[] memory balancesAfterSettle = _balances();
+
+        assertEq(destinationRouter.orderStatus(orderId), destinationRouter.FILLED());
+        assertEq(balancesAfterSettle[balanceId[vegeta]], balancesBeforeSettle[balanceId[vegeta]] + amount);
+        assertEq(
+            balancesAfterSettle[balanceId[address(originRouter)]],
+            balancesBeforeSettle[balanceId[address(originRouter)]] - amount
+        );
+    }
+
+    function test_openFor_fill_settle() public {
+        // open
+        uint256 permitNonce = 0;
+        OrderData memory orderData = _prepareOrderData();
+
+        uint32 openDeadline = uint32(block.timestamp + 10);
+
+        GaslessCrossChainOrder memory order =
+            _prepareGaslessOrder(OrderEncoder.encode(orderData), permitNonce, openDeadline, orderData.fillDeadline);
+
+        vm.prank(kakaroto);
+        inputToken.approve(permit2, type(uint256).max);
+
+        bytes32 witness = originRouter.witnessHash(originRouter.resolveFor(order, new bytes(0)));
+        bytes memory sig = _getSignature(
+            address(originRouter), witness, address(inputToken), permitNonce, amount, openDeadline, kakarotoPK
+        );
+
+        vm.startPrank(vegeta);
+
+        uint256[] memory balancesBeforeOpen = _balances();
+
+        vm.recordLogs();
+        originRouter.openFor(order, sig, new bytes(0));
+
+        (bytes32 orderId, ResolvedCrossChainOrder memory resolvedOrder) = _getOrderIDFromLogs();
+
+        _assertResolvedOrder(
+            resolvedOrder,
+            order.orderData,
+            kakaroto,
+            orderData.fillDeadline,
+            openDeadline,
+            address(destinationRouter).addressToBytes32(),
+            address(destinationRouter).addressToBytes32(),
+            origin,
+            address(inputToken),
+            address(outputToken)
+        );
+
+        _assertOpenOrder(orderId, kakaroto, order.orderData, balancesBeforeOpen, kakaroto);
+
+        // fill
+        vm.startPrank(vegeta);
+        outputToken.approve(address(destinationRouter), amount);
+
+        uint256[] memory balancesBeforeFill = _balances(outputToken);
+
+        bytes memory fillerData = abi.encode(TypeCasts.addressToBytes32(vegeta));
+
+        vm.expectEmit(false, false, false, true, address(destinationRouter));
+        emit Filled(orderId, resolvedOrder.fillInstructions[0].originData, fillerData);
+
+        destinationRouter.fill(orderId, resolvedOrder.fillInstructions[0].originData, fillerData);
+
+        assertEq(destinationRouter.orderStatus(orderId), destinationRouter.FILLED());
+
+        (bytes memory _originData, bytes memory _fillerData) = destinationRouter.filledOrders(orderId);
+
+        assertEq(_originData, resolvedOrder.fillInstructions[0].originData);
+        assertEq(_fillerData, fillerData);
+
+        uint256[] memory balancesAfterFill = _balances(outputToken);
+
+        assertEq(balancesAfterFill[balanceId[vegeta]], balancesBeforeFill[balanceId[vegeta]] - amount);
+        assertEq(balancesAfterFill[balanceId[karpincho]], balancesBeforeFill[balanceId[karpincho]] + amount);
+
+        // settle
+        bytes32[] memory orderIds = new bytes32[](1);
+        orderIds[0] = orderId;
+        bytes[] memory ordersFillerData = new bytes[](1);
+        ordersFillerData[0] = fillerData;
+
+        vm.expectEmit(false, false, false, true, address(destinationRouter));
+        emit Settle(orderIds, ordersFillerData);
+
+        destinationRouter.settle{ value: gasPaymentQuote }(orderIds);
+
+        vm.stopPrank();
+
+        uint256[] memory balancesBeforeSettle = _balances(inputToken);
+
+        handleRelayMessage(orderIds, ordersFillerData, true);
+
+        uint256[] memory balancesAfterSettle = _balances(inputToken);
+
+        assertEq(destinationRouter.orderStatus(orderId), destinationRouter.FILLED());
+        assertEq(balancesAfterSettle[balanceId[vegeta]], balancesBeforeSettle[balanceId[vegeta]] + amount);
+        assertEq(
+            balancesAfterSettle[balanceId[address(originRouter)]],
+            balancesBeforeSettle[balanceId[address(originRouter)]] - amount
+        );
+    }
+
+    function test_open_refund() public {
+        // open
+        OrderData memory orderData = _prepareOrderData();
+        OnchainCrossChainOrder memory order =
+            _prepareOnchainOrder(OrderEncoder.encode(orderData), orderData.fillDeadline, OrderEncoder.orderDataType());
+
+        vm.startPrank(kakaroto);
+        inputToken.approve(address(originRouter), amount);
+
+        uint256[] memory balancesBeforeOpen = _balances(inputToken);
+
+        vm.recordLogs();
+        originRouter.open(order);
+
+        (bytes32 orderId, ResolvedCrossChainOrder memory resolvedOrder) = _getOrderIDFromLogs();
+
+        _assertResolvedOrder(
+            resolvedOrder,
+            order.orderData,
+            kakaroto,
+            orderData.fillDeadline,
+            type(uint32).max,
+            address(destinationRouter).addressToBytes32(),
+            address(destinationRouter).addressToBytes32(),
+            origin,
+            address(inputToken),
+            address(outputToken)
+        );
+
+        _assertOpenOrder(orderId, kakaroto, order.orderData, balancesBeforeOpen, kakaroto);
+
+        // refund
+        vm.warp(orderData.fillDeadline + 1);
+
+        bytes32[] memory orderIds = new bytes32[](1);
+        orderIds[0] = orderId;
+
+        vm.expectEmit(false, false, false, true);
+        emit Refund(orderIds);
+
+        OnchainCrossChainOrder[] memory orders = new OnchainCrossChainOrder[](1);
+        orders[0] = order;
+
+        destinationRouter.refund{ value: gasPaymentQuote }(orders);
+
+        assertEq(destinationRouter.orderStatus(orderId), destinationRouter.UNKNOWN());
+
+        uint256[] memory balancesBeforeRefund = _balances(inputToken);
+
+        vm.stopPrank();
+
+        bytes[] memory emptyOrdersFillerData = new bytes[](1);
+        emptyOrdersFillerData[0] = hex"";
+
+        handleRelayMessage(orderIds, emptyOrdersFillerData, false);
+
+        uint256[] memory balancesAfterRefund = _balances(inputToken);
+
+        assertEq(originRouter.orderStatus(orderId), originRouter.REFUNDED());
+        assertEq(
+            balancesAfterRefund[balanceId[address(originRouter)]],
+            balancesBeforeRefund[balanceId[address(originRouter)]] - amount
+        );
+        assertEq(balancesAfterRefund[balanceId[kakaroto]], balancesBeforeRefund[balanceId[kakaroto]] + amount);
+    }
+
+    function test_native_open_refund() public {
+        // open
+        OrderData memory orderData = _prepareOrderData();
+        orderData.inputToken = TypeCasts.addressToBytes32(address(0));
+        orderData.outputToken = TypeCasts.addressToBytes32(address(0));
+        OnchainCrossChainOrder memory order =
+            _prepareOnchainOrder(OrderEncoder.encode(orderData), orderData.fillDeadline, OrderEncoder.orderDataType());
+
+        vm.startPrank(kakaroto);
+
+        uint256[] memory balancesBeforeOpen = _balances();
+
+        vm.recordLogs();
+        originRouter.open{ value: amount }(order);
+
+        (bytes32 orderId, ResolvedCrossChainOrder memory resolvedOrder) = _getOrderIDFromLogs();
+
+        _assertResolvedOrder(
+            resolvedOrder,
+            order.orderData,
+            kakaroto,
+            orderData.fillDeadline,
+            type(uint32).max,
+            address(destinationRouter).addressToBytes32(),
+            address(destinationRouter).addressToBytes32(),
+            origin,
+            address(0),
+            address(0)
+        );
+
+        _assertOpenOrder(orderId, kakaroto, order.orderData, balancesBeforeOpen, kakaroto, true);
+
+        // refund
+        vm.warp(orderData.fillDeadline + 1);
+
+        bytes32[] memory orderIds = new bytes32[](1);
+        orderIds[0] = orderId;
+
+        vm.expectEmit(false, false, false, true);
+        emit Refund(orderIds);
+
+        OnchainCrossChainOrder[] memory orders = new OnchainCrossChainOrder[](1);
+        orders[0] = order;
+
+        destinationRouter.refund{ value: gasPaymentQuote }(orders);
+
+        vm.stopPrank();
+
+        assertEq(destinationRouter.orderStatus(orderId), destinationRouter.UNKNOWN());
+
+        uint256[] memory balancesBeforeRefund = _balances();
+
+        bytes[] memory emptyOrdersFillerData = new bytes[](1);
+        emptyOrdersFillerData[0] = hex"";
+
+        handleRelayMessage(orderIds, emptyOrdersFillerData, false);
+
+        uint256[] memory balancesAfterRefund = _balances();
+
+        assertEq(originRouter.orderStatus(orderId), originRouter.REFUNDED());
+        assertEq(
+            balancesAfterRefund[balanceId[address(originRouter)]],
+            balancesBeforeRefund[balanceId[address(originRouter)]] - amount
+        );
+        assertEq(balancesAfterRefund[balanceId[kakaroto]], balancesBeforeRefund[balanceId[kakaroto]] + amount);
+    }
+
+    function test_openFor_refund() public {
+        // open
+        uint256 permitNonce = 0;
+        OrderData memory orderData = _prepareOrderData();
+
+        uint32 openDeadline = uint32(block.timestamp + 10);
+
+        GaslessCrossChainOrder memory order =
+            _prepareGaslessOrder(OrderEncoder.encode(orderData), permitNonce, openDeadline, orderData.fillDeadline);
+
+        vm.prank(kakaroto);
+        inputToken.approve(permit2, type(uint256).max);
+
+        bytes32 witness = originRouter.witnessHash(originRouter.resolveFor(order, new bytes(0)));
+        bytes memory sig = _getSignature(
+            address(originRouter), witness, address(inputToken), permitNonce, amount, openDeadline, kakarotoPK
+        );
+
+        vm.startPrank(vegeta);
+
+        uint256[] memory balancesBeforeOpen = _balances();
+
+        vm.recordLogs();
+        originRouter.openFor(order, sig, new bytes(0));
+
+        (bytes32 orderId, ResolvedCrossChainOrder memory resolvedOrder) = _getOrderIDFromLogs();
+
+        _assertResolvedOrder(
+            resolvedOrder,
+            order.orderData,
+            kakaroto,
+            orderData.fillDeadline,
+            openDeadline,
+            address(destinationRouter).addressToBytes32(),
+            address(destinationRouter).addressToBytes32(),
+            origin,
+            address(inputToken),
+            address(outputToken)
+        );
+
+        _assertOpenOrder(orderId, kakaroto, order.orderData, balancesBeforeOpen, kakaroto);
+
+        // refund
+        vm.warp(orderData.fillDeadline + 1);
+
+        bytes32[] memory orderIds = new bytes32[](1);
+        orderIds[0] = orderId;
+
+        vm.expectEmit(false, false, false, true);
+        emit Refund(orderIds);
+
+        GaslessCrossChainOrder[] memory orders = new GaslessCrossChainOrder[](1);
+        orders[0] = order;
+
+        destinationRouter.refund{ value: gasPaymentQuote }(orders);
+
+        vm.stopPrank();
+
+        assertEq(destinationRouter.orderStatus(orderId), destinationRouter.UNKNOWN());
+
+        uint256[] memory balancesBeforeRefund = _balances(inputToken);
+
+        bytes[] memory emptyOrdersFillerData = new bytes[](1);
+        emptyOrdersFillerData[0] = hex"";
+
+        handleRelayMessage(orderIds, emptyOrdersFillerData, false);
+
+        uint256[] memory balancesAfterRefund = _balances(inputToken);
+
+        assertEq(originRouter.orderStatus(orderId), originRouter.REFUNDED());
+        assertEq(
+            balancesAfterRefund[balanceId[address(originRouter)]],
+            balancesBeforeRefund[balanceId[address(originRouter)]] - amount
+        );
+        assertEq(balancesAfterRefund[balanceId[kakaroto]], balancesBeforeRefund[balanceId[kakaroto]] + amount);
+    }
+
+    function handleRelayMessage(bytes32[] memory orderIds, bytes[] memory ordersFillerData, bool isSettle) internal {
         rollup.addProver(address(0));
         bytes memory batchHeader1 = generateBatchHeader();
         assertEq(rollup.isBatchFinalized(1), false);
 
-        bytes memory innerMessage = abi.encode(true, orderIds, ordersFillerData);
+        bytes memory innerMessage = abi.encode(isSettle, orderIds, ordersFillerData);
 
         bytes memory outerMessage = abi.encodeWithSelector(
             t1_7683.handle.selector, origin, TypeCasts.addressToBytes32(address(destinationRouter)), innerMessage
