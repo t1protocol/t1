@@ -25,6 +25,40 @@ The magical deploy order is as follows:
 10. [InitializeL1T1Owner.s.sol](./deploy/InitializeL1T1Owner.s.sol)
 11. [InitializeL2T1Owner.s.sol](./deploy/nitializeL2T1Owner.s.sol)
 
+## Deploy 7683 Contract
+
+To deploy the 7683 contract, follow these steps:
+
+### Deploy L1 Router
+
+First, deploy the L1 router by running the following command:
+
+```bash
+forge script ./script/deploy/DeployRouterERC7683.s.sol:RouterDeployScript --sig "deployL1Router()" --rpc-url $T1_L1_RPC --broadcast --verify --verifier etherscan --verifier-url https://api-sepolia.etherscan.io/api --etherscan-api-key SDDHW92M9NVRP8ZWP1WI5KHHHHTXR662AR
+```
+
+### Deploy L2 Router
+
+Next, deploy the L2 router with the following command:
+
+```bash
+forge script ./script/deploy/DeployRouterERC7683.s.sol:RouterDeployScript --sig "deployL2Router()" --rpc-url $T1_L2_RPC --broadcast --verify --verifier blockscout --verifier-url https://explorer.devnet.t1protocol.com/api
+```
+
+### Initialize Functions
+
+After deploying the routers, you will need to initialize them by running the following commands:
+
+Initialize L1 Router:
+```bash
+forge script ./script/deploy/DeployRouterERC7683.s.sol:RouterDeployScript --sig "initializeL1Router()" --rpc-url $T1_L1_RPC --broadcast
+```
+
+Initialize L2 Router:
+```bash
+forge script ./script/deploy/DeployRouterERC7683.s.sol:RouterDeployScript --sig "initializeL2Router()" --rpc-url $T1_L2_RPC --broadcast
+```
+
 ## Test
 
 Scripts to test the canonical bridge functionalities:
