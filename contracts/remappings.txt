@@ -1,6 +1,5 @@
 @openzeppelin/=node_modules/@openzeppelin/
 @uniswap/=node_modules/@uniswap/
-@7683/=node_modules/@bootnodedev/intents-framework-core/solidity/src/
 @hyperlane-xyz/=node_modules/@hyperlane-xyz/core/contracts/
 forge-std/=node_modules/forge-std/src/
 solmate/=node_modules/solmate/src/
