@@ -30,44 +30,6 @@ interface IL2T1Messenger is IT1Messenger {
      *
      */
 
-    /// @notice Send cross chain message from t1 to L2 or t1 to L1.
-    /// @param target The address of account who receive the message.
-    /// @param value The amount of ether passed when call target contract.
-    /// @param message The content of the message.
-    /// @param gasLimit Gas limit required to complete the message relay on corresponding chain.
-    /// @param destChainId The ID of the chain for which the message is bound.
-    /// @return nonce The unique ID assigned to this request
-    function sendMessage(
-        address target,
-        uint256 value,
-        bytes calldata message,
-        uint256 gasLimit,
-        uint64 destChainId
-    )
-        external
-        payable
-        returns (uint256 nonce);
-
-    /// @notice Send cross chain message from t1 to L2 or t1 to L1.
-    /// @param target The address of account who receive the message.
-    /// @param value The amount of ether passed when call target contract.
-    /// @param message The content of the message.
-    /// @param gasLimit Gas limit required to complete the message relay on corresponding chain.
-    /// @param destChainId The ID of the chain for which the message is bound.
-    /// @param callbackAddress The address of account who will receive the callback and the refunded fee.
-    /// @return nonce The unique ID assigned to this request
-    function sendMessage(
-        address target,
-        uint256 value,
-        bytes calldata message,
-        uint256 gasLimit,
-        uint64 destChainId,
-        address callbackAddress
-    )
-        external
-        payable
-        returns (uint256 nonce);
-
     /// @notice execute L1 => L2 message
     /// @dev Make sure this is only called by privileged accounts.
     /// @param from The address of the sender of the message.
