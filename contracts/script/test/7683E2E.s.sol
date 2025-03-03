@@ -27,7 +27,7 @@ contract AliceSetupScript is Script {
     function run() external {
         L1_ROUTER = t1_7683(vm.envAddress("L1_t1_7683_PROXY_ADDR"));
         // Load Alice's private key from env
-        uint256 alicePk = vm.envUint("ALICE_PRIVATE_KEY");
+        uint256 alicePk = vm.envUint("TEST_PRIVATE_KEY");
         address alice = vm.addr(alicePk);
 
         // Start broadcasting as Alice
@@ -85,10 +85,10 @@ contract AliceSetupScript is Script {
 contract SolverFillScript is Script {
     function run() external {
         // TODO - make this not alice
-        uint256 solverPk = vm.envUint("ALICE_PRIVATE_KEY");
+        uint256 solverPk = vm.envUint("TEST_PRIVATE_KEY");
         address solver = vm.addr(solverPk);
 
-        uint256 alicePk = vm.envUint("ALICE_PRIVATE_KEY");
+        uint256 alicePk = vm.envUint("TEST_PRIVATE_KEY");
         address alice = vm.addr(alicePk);
 
         ERC20 inputToken = ERC20(vm.envAddress("L1_USDT_ADDR"));
@@ -140,7 +140,7 @@ contract SolverFillScript is Script {
 // Step 3: Settlement and Relay
 contract SettlementScript is Script {
     function run() external {
-        uint256 settlerPk = vm.envUint("ALICE_PRIVATE_KEY");
+        uint256 settlerPk = vm.envUint("TEST_PRIVATE_KEY");
 
         vm.startBroadcast(settlerPk);
 
