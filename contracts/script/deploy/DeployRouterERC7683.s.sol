@@ -15,6 +15,7 @@ contract DeployRouterERC7683 is Script {
     ProxyAdmin private proxyAdmin;
 
     function deployL1Router() external {
+        vm.createSelectFork(vm.rpcUrl("sepolia"));
         uint256 deployerPk = vm.envUint("L1_DEPLOYER_PRIVATE_KEY");
         address l1Messenger = vm.envAddress("L1_T1_MESSENGER_PROXY_ADDR");
         address L1_PROXY_ADMIN_ADDR = vm.envAddress("L1_PROXY_ADMIN_ADDR");
@@ -41,6 +42,7 @@ contract DeployRouterERC7683 is Script {
     }
 
     function initializeL1Router() external {
+        vm.createSelectFork(vm.rpcUrl("sepolia"));
         uint256 deployerPk = vm.envUint("L1_DEPLOYER_PRIVATE_KEY");
         address L1_t1_7683_PROXY_ADDR = vm.envAddress("L1_t1_7683_PROXY_ADDR");
         address L2_t1_7683_PROXY_ADDR = vm.envAddress("L2_t1_7683_PROXY_ADDR");
@@ -53,6 +55,7 @@ contract DeployRouterERC7683 is Script {
     }
 
     function deployL2Router() external {
+        vm.createSelectFork(vm.rpcUrl("t1"));
         uint256 deployerPk = vm.envUint("L2_DEPLOYER_PRIVATE_KEY");
         address l2Messenger = vm.envAddress("L2_T1_MESSENGER_PROXY_ADDR");
         address L1_t1_7683_PROXY_ADDR = vm.envAddress("L1_t1_7683_PROXY_ADDR");
@@ -80,6 +83,7 @@ contract DeployRouterERC7683 is Script {
     }
 
     function initializeL2Router() external {
+        vm.createSelectFork(vm.rpcUrl("t1"));
         uint256 deployerPk = vm.envUint("L1_DEPLOYER_PRIVATE_KEY");
         address L1_t1_7683_PROXY_ADDR = vm.envAddress("L1_t1_7683_PROXY_ADDR");
         address L2_t1_7683_PROXY_ADDR = vm.envAddress("L2_t1_7683_PROXY_ADDR");
