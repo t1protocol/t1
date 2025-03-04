@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: MIT
 
-pragma solidity >=0.8.28;
+pragma solidity ^0.8.25;
 
 import { BatchHeaderV0Codec } from "../libraries/codec/BatchHeaderV0Codec.sol";
 import { BatchHeaderV1Codec } from "../libraries/codec/BatchHeaderV1Codec.sol";

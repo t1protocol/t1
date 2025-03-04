@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: MIT
 
-pragma solidity >=0.8.28;
+pragma solidity ^0.8.25;
 
 import { IZkEvmVerifierV1, IZkEvmVerifierV2 } from "../../libraries/verifier/IZkEvmVerifier.sol";
 
