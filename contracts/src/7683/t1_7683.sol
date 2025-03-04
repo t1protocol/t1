@@ -117,7 +117,6 @@ contract t1_7683 is BasicSwap7683, OwnableUpgradeable {
     /// @param _message The encoded message received via t1
     function _handle(uint32, bytes32, bytes calldata _message) internal {
         (bool _settle, bytes32[] memory _orderIds, bytes[] memory _ordersFillerData) = t1_7683Message.decode(_message);
-        console2.log("_settle", _settle);
 
         for (uint256 i = 0; i < _orderIds.length; i++) {
             if (_settle) {
