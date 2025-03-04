@@ -80,3 +80,33 @@ Scripts to test the canonical bridge functionalities:
   - [Swap ERC20s against bridge reserves](./test/SwapERC20.s.sol)
 - Chore
   - [Check Alice balances on L1/L2](./test/LogBalances.s.sol)
+
+## Running Scripts for 7683E2E
+
+
+Ensure that the following environment variables are set:
+- `TEST_PRIVATE_KEY`: Alice's private key for signing the transaction.
+- `L1_USDT_ADDR`: Address of the USDT token on L1.
+- `L2_USDT_ADDR`: Address of the USDT token on L2.
+- `L1_t1_7683_PROXY_ADDR`: Address of the L1 t1_7683 proxy.
+- `L2_t1_7683_PROXY_ADDR`: Address of the L2 t1_7683 proxy.
+
+To execute the scripts defined in `7683E2E.s.sol`, follow these steps:
+
+1. Setup Alice's Account
+
+```bash
+forge script ./script/test/7683E2E.s.sol:AliceSetupScript --rpc-url $T1_L1_RPC --broadcast
+```
+
+2. Solver Fills on L2
+
+```bash
+forge script ./script/test/7683E2E.s.sol:SolverFillScript --rpc-url $T1_L2_RPC --broadcast
+```
+
+3. Settlement and Relay
+
+```bash
+forge script ./script/test/7683E2E.s.sol:SettlementScript --rpc-url $T1_L2_RPC --broadcast
+```
