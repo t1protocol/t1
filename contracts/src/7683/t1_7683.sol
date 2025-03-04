@@ -1,11 +1,10 @@
 // SPDX-License-Identifier: MIT
-pragma solidity >=0.8.28;
+pragma solidity ^0.8.25;
 
 import { OwnableUpgradeable } from "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
 import { ReentrancyGuardUpgradeable } from "@openzeppelin/contracts-upgradeable/security/ReentrancyGuardUpgradeable.sol";
-
-import { t1_7683Message } from "../libraries/7683/t1_7683Message.sol";
-import { BasicSwap7683 } from "./BasicSwap7683.sol";
+import { Hyperlane7683Message } from "intents-framework/libs/Hyperlane7683Message.sol";
+import { BasicSwap7683 } from "intents-framework/BasicSwap7683.sol";
 import { TypeCasts } from "@hyperlane-xyz/libs/TypeCasts.sol";
 
 import { IT1Messenger } from "../libraries/IT1Messenger.sol";
@@ -77,7 +76,7 @@ contract t1_7683 is BasicSwap7683, OwnableUpgradeable {
     // ============ Internal Functions ============
 
     /// @notice Dispatches a settlement message to the specified domain.
-    /// @dev Encodes the settle message using t1_7683Message and dispatches it via the GasRouter.
+    /// @dev Encodes the settle message using Hyperlane7683Message and dispatches it via the GasRouter.
     /// @param _originDomain The domain to which the settlement message is sent.
     /// @param _orderIds The IDs of the orders to settle.
     /// @param _ordersFillerData The filler data for the orders.
@@ -90,7 +89,7 @@ contract t1_7683 is BasicSwap7683, OwnableUpgradeable {
         override
     {
         if (msg.value != 0) revert EthNotAllowed();
-        bytes memory innerMessage = t1_7683Message.encodeSettle(_orderIds, _ordersFillerData);
+        bytes memory innerMessage = Hyperlane7683Message.encodeSettle(_orderIds, _ordersFillerData);
         bytes memory outerMessage = abi.encodeWithSelector(
             t1_7683.handle.selector, _originDomain, TypeCasts.addressToBytes32(address(this)), innerMessage
         );
@@ -98,12 +97,12 @@ contract t1_7683 is BasicSwap7683, OwnableUpgradeable {
     }
 
     /// @notice Dispatches a refund message to the specified domain.
-    /// @dev Encodes the refund message using t1_7683Message and dispatches it via the GasRouter.
+    /// @dev Encodes the refund message using Hyperlane7683Message and dispatches it via the GasRouter.
     /// @param _originDomain The domain to which the refund message is sent.
     /// @param _orderIds The IDs of the orders to refund.
     function _dispatchRefund(uint32 _originDomain, bytes32[] memory _orderIds) internal override {
         if (msg.value != 0) revert EthNotAllowed();
-        bytes memory innerMessage = t1_7683Message.encodeRefund(_orderIds);
+        bytes memory innerMessage = Hyperlane7683Message.encodeRefund(_orderIds);
         bytes memory outerMessage = abi.encodeWithSelector(
             t1_7683.handle.selector, _originDomain, TypeCasts.addressToBytes32(address(this)), innerMessage
         );
@@ -116,7 +115,8 @@ contract t1_7683 is BasicSwap7683, OwnableUpgradeable {
     /// @dev _sender The address of the sender on the origin domain (unused in this implementation)
     /// @param _message The encoded message received via t1
     function _handle(uint32, bytes32, bytes calldata _message) internal {
-        (bool _settle, bytes32[] memory _orderIds, bytes[] memory _ordersFillerData) = t1_7683Message.decode(_message);
+        (bool _settle, bytes32[] memory _orderIds, bytes[] memory _ordersFillerData) =
+            Hyperlane7683Message.decode(_message);
 
         for (uint256 i = 0; i < _orderIds.length; i++) {
             if (_settle) {

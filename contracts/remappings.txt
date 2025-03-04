@@ -1,6 +1,7 @@
 @openzeppelin/=node_modules/@openzeppelin/
 @uniswap/=node_modules/@uniswap/
 @hyperlane-xyz/=node_modules/@hyperlane-xyz/core/contracts/
+intents-framework/=node_modules/intents-framework/src/
 forge-std/=node_modules/forge-std/src/
 solmate/=node_modules/solmate/src/
 ds-test/=node_modules/ds-test/src/

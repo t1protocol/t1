@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-pragma solidity 0.8.28;
+pragma solidity ^0.8.25;
 
 import { Test, Vm } from "forge-std/Test.sol";
 import { console2 } from "forge-std/console2.sol";
@@ -18,24 +18,23 @@ import { TypeCasts } from "@hyperlane-xyz/libs/TypeCasts.sol";
 import { IPostDispatchHook } from "@hyperlane-xyz/interfaces/hooks/IPostDispatchHook.sol";
 
 import { BaseTest, TestInterchainGasPaymaster } from "./BaseTest.sol";
-import { Base7683 } from "../../7683/Base7683.sol";
-import { OrderData, OrderEncoder } from "../../7683/libs/OrderEncoder.sol";
+import { Base7683 } from "intents-framework/Base7683.sol";
+import { OrderData, OrderEncoder } from "intents-framework/libs/OrderEncoder.sol";
 import {
     GaslessCrossChainOrder,
     OnchainCrossChainOrder,
     ResolvedCrossChainOrder,
     Output,
     FillInstruction
-} from "../../7683/IERC7683.sol";
+} from "intents-framework/ERC7683/IERC7683.sol";
 
 import { t1_7683 } from "../../7683/t1_7683.sol";
-import { L1MessageQueue } from "../../L1/rollup/L1MessageQueue.sol";
+import { IL1MessageQueue } from "../../L1/rollup/IL1MessageQueue.sol";
 import { L2MessageQueue } from "../../L2/predeploys/L2MessageQueue.sol";
-import { L1MessageQueueWithGasPriceOracle } from "../../L1/rollup/L1MessageQueueWithGasPriceOracle.sol";
+import { IL1MessageQueueWithGasPriceOracle } from "../../L1/rollup/IL1MessageQueueWithGasPriceOracle.sol";
 import { L1T1Messenger } from "../../L1/L1T1Messenger.sol";
 import { IL1T1Messenger } from "../../L1/IL1T1Messenger.sol";
 import { L2T1Messenger } from "../../L2/L2T1Messenger.sol";
-import { IL2T1Messenger } from "../../L2/IL2T1Messenger.sol";
 import { T1ChainMockBlob } from "../../mocks/T1ChainMockBlob.sol";
 import { MockRollupVerifier } from "../mocks/MockRollupVerifier.sol";
 
@@ -52,9 +51,9 @@ contract t1BasicSwapE2E is BaseTest {
 
     L1T1Messenger internal l1t1Messenger;
     L2T1Messenger internal l2t1Messenger;
-    T1ChainMockBlob internal rollup;
-    L1MessageQueue internal messageQueue;
+    IL1MessageQueue internal messageQueue;
     L2MessageQueue internal l2MessageQueue;
+    T1ChainMockBlob internal rollup;
     MockRollupVerifier internal verifier;
 
     TestInterchainGasPaymaster internal igp;
@@ -74,7 +73,7 @@ contract t1BasicSwapE2E is BaseTest {
     address internal sender = makeAddr("sender");
     address internal feeVault;
 
-    function _deployProxiedOriginRouter(IL1T1Messenger _messenger, address _owner) internal returns (t1_7683) {
+    function _deployProxiedOriginRouter(L1T1Messenger _messenger, address _owner) internal returns (t1_7683) {
         t1_7683 implementation = new t1_7683(address(_messenger), permit2, origin);
 
         TransparentUpgradeableProxy proxy = new TransparentUpgradeableProxy(
@@ -87,7 +86,7 @@ contract t1BasicSwapE2E is BaseTest {
     }
 
     function _deployProxiedDestinationRouter(
-        IL2T1Messenger _messenger,
+        L2T1Messenger _messenger,
         address _counterpart
     )
         internal
@@ -124,7 +123,7 @@ contract t1BasicSwapE2E is BaseTest {
 
         l1t1Messenger = L1T1Messenger(payable(_deployProxy(address(0))));
         rollup = T1ChainMockBlob(_deployProxy(address(0)));
-        messageQueue = L1MessageQueue(_deployProxy(address(0)));
+        messageQueue = IL1MessageQueue(_deployProxy(address(0)));
         l2MessageQueue = new L2MessageQueue(address(this));
         l2t1Messenger = L2T1Messenger(payable(_deployProxy(address(0))));
 
