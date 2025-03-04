@@ -14,7 +14,7 @@ library T1Constants {
     uint64 internal constant L1_CHAIN_ID = 11_155_111;
 
     /// @notice Chain ID of the T1 devnet
-    uint64 internal constant T1_DEVNET_CHAIN_ID = 3_151_908;
+    uint64 internal constant T1_DEVNET_CHAIN_ID = 299_792;
 
     /// @notice The EIP-712 type definition for remaining string stub of the typehash.
     string internal constant WITNESS_TYPE_STRING =

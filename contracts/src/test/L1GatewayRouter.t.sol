@@ -46,6 +46,8 @@ contract L1GatewayRouterTest is L1GatewayTestBase, DeployPermit2, PermitSignatur
 
     address private permit2;
 
+    error InvalidSigner();
+
     function setUp() public {
         __L1GatewayTestBase_setUp();
 
@@ -270,6 +272,26 @@ contract L1GatewayRouterTest is L1GatewayTestBase, DeployPermit2, PermitSignatur
         // Check output token balances after swap
         assertEq(aave.balanceOf(address(l1StandardERC20Gateway)), outputStartBalanceFrom - outputTokenAmount);
         assertEq(aave.balanceOf(alice), outputStartBalanceTo + outputTokenAmount);
+    }
+
+    function testSwapERC20RevertInvalidSigner() public {
+        bytes32 wrongOrderedFullWitnessTypeHash = keccak256(
+            // solhint-disable-next-line max-line-length
+            "PermitWitnessTransferFrom(TokenPermissions permitted,address spender,uint256 nonce,uint256 deadline,Witness witness)Witness(uint8 direction,uint256 priceAfterSlippage,address outputTokenAddress,uint256 outputTokenAmount)TokenPermissions(address token,uint256 amount)"
+        );
+
+        IL1GatewayRouter.SwapParams memory params = defaultWitnessAndSwapParams();
+        params.sig = getPermitWitnessTransferSignature(
+            params.permit,
+            0xa11ce,
+            wrongOrderedFullWitnessTypeHash,
+            keccak256(abi.encode(params.witness)),
+            ISignatureTransfer(permit2).DOMAIN_SEPARATOR(),
+            address(router)
+        );
+
+        hevm.expectRevert(InvalidSigner.selector);
+        router.swapERC20(params);
     }
 
     function testSwapERC20RevertInvalidCaller() public {
