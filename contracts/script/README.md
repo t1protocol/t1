@@ -28,6 +28,42 @@ The magical deploy order is as follows:
 10. [InitializeL1T1Owner.s.sol](./deploy/InitializeL1T1Owner.s.sol)
 11. [InitializeL2T1Owner.s.sol](./deploy/InitializeL2T1Owner.s.sol)
 
+## Deploy 7683 Contract
+
+To deploy the 7683 contract, follow these steps:
+
+### Deploy L1 Router
+
+First, deploy the L1 router by running the following command:
+
+```bash
+forge script ./script/deploy/DeployRouterERC7683.s.sol:RouterDeployScript --sig "deployL1Router()" --rpc-url $T1_L1_RPC --broadcast --verify --verifier etherscan --verifier-url https://api-sepolia.etherscan.io/api --etherscan-api-key XXXXXX
+```
+
+### Deploy L2 Router
+
+Next, deploy the L2 router with the following command:
+
+```bash
+forge script ./script/deploy/DeployRouterERC7683.s.sol:RouterDeployScript --sig "deployL2Router()" --rpc-url $T1_L2_RPC --broadcast --verify --verifier blockscout --verifier-url https://explorer.devnet.t1protocol.com/api
+```
+
+### Initialize Functions
+
+After deploying the routers, you will need to initialize them by running the following commands:
+
+Initialize L1 Router:
+
+```bash
+forge script ./script/deploy/DeployRouterERC7683.s.sol:RouterDeployScript --sig "initializeL1Router()" --rpc-url $T1_L1_RPC --broadcast
+```
+
+Initialize L2 Router:
+
+```bash
+forge script ./script/deploy/DeployRouterERC7683.s.sol:RouterDeployScript --sig "initializeL2Router()" --rpc-url $T1_L2_RPC --broadcast
+```
+
 ## Test
 
 Scripts to test the canonical bridge functionalities:
@@ -44,3 +80,33 @@ Scripts to test the canonical bridge functionalities:
   - [Swap ERC20s against bridge reserves](./test/SwapERC20.s.sol)
 - Chore
   - [Check Alice balances on L1/L2](./test/LogBalances.s.sol)
+
+## Running Scripts for 7683E2E
+
+Ensure that the following environment variables are set:
+
+- `TEST_PRIVATE_KEY`: Alice's private key for signing the transaction.
+- `L1_USDT_ADDR`: Address of the USDT token on L1.
+- `L2_USDT_ADDR`: Address of the USDT token on L2.
+- `L1_t1_7683_PROXY_ADDR`: Address of the L1 t1_7683 proxy.
+- `L2_t1_7683_PROXY_ADDR`: Address of the L2 t1_7683 proxy.
+
+To execute the scripts defined in `7683E2E.s.sol`, follow these steps:
+
+1. Setup Alice's Account
+
+```bash
+forge script ./script/test/7683E2E.s.sol:AliceSetupScript --rpc-url $T1_L1_RPC --broadcast
+```
+
+2. Solver Fills on L2
+
+```bash
+forge script ./script/test/7683E2E.s.sol:SolverFillScript --rpc-url $T1_L2_RPC --broadcast
+```
+
+3. Settlement and Relay
+
+```bash
+forge script ./script/test/7683E2E.s.sol:SettlementScript --rpc-url $T1_L2_RPC --broadcast
+```

@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: MIT
 
-pragma solidity >=0.8.28;
+pragma solidity ^0.8.25;
 
 // Functions needed on top of the ERC20 standard to be compliant with the T1 bridge
 interface IT1ERC20Extension {

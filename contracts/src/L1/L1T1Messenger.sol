@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: MIT
 
-pragma solidity >=0.8.28;
+pragma solidity ^0.8.25;
 
 import { IT1Chain } from "./rollup/IT1Chain.sol";
 import { IL1MessageQueue } from "./rollup/IL1MessageQueue.sol";
