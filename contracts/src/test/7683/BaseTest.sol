@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-pragma solidity 0.8.28;
+pragma solidity ^0.8.25;
 
 import { Test, Vm } from "forge-std/Test.sol";
 import { console2 } from "forge-std/console2.sol";
@@ -21,11 +21,11 @@ import {
     ResolvedCrossChainOrder,
     Output,
     FillInstruction
-} from "../../7683/IERC7683.sol";
+} from "intents-framework/ERC7683/IERC7683.sol";
 
-import { OrderData, OrderEncoder } from "../../7683/libs/OrderEncoder.sol";
+import { OrderData, OrderEncoder } from "intents-framework/libs/OrderEncoder.sol";
 
-import { Base7683 } from "../../7683/Base7683.sol";
+import { Base7683 } from "intents-framework/Base7683.sol";
 import { EmptyContract } from "../../misc/EmptyContract.sol";
 
 event Open(bytes32 indexed orderId, ResolvedCrossChainOrder resolvedOrder);

@@ -1,19 +1,19 @@
 // SPDX-License-Identifier: MIT
-pragma solidity 0.8.28;
+pragma solidity ^0.8.25;
 
 import { Script } from "forge-std/Script.sol";
 import { console2 } from "forge-std/console2.sol";
 import { ERC20 } from "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 import { IPermit2 } from "@uniswap/permit2/src/interfaces/IPermit2.sol";
 import { TypeCasts } from "@hyperlane-xyz/libs/TypeCasts.sol";
-import { OrderData, OrderEncoder } from "../../src/7683/libs/OrderEncoder.sol";
+import { OrderData, OrderEncoder } from "intents-framework/libs/OrderEncoder.sol";
 import {
     GaslessCrossChainOrder,
     OnchainCrossChainOrder,
     ResolvedCrossChainOrder,
     Output,
     FillInstruction
-} from "../../src/7683/IERC7683.sol";
+} from "intents-framework/ERC7683/IERC7683.sol";
 import { t1_7683 } from "../../src/7683/t1_7683.sol";
 import { T1Constants } from "../../src/libraries/constants/T1Constants.sol";
 
