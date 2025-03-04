@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: UNLICENSED
+// SPDX-License-Identifier: MIT
 pragma solidity >=0.8.28;
 
 import { OwnableUpgradeable } from "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
@@ -17,8 +17,6 @@ import { IT1Messenger } from "../libraries/IT1Messenger.sol";
  * @dev It integrates with the t1 protocol for cross-chain communication.
  */
 contract t1_7683 is BasicSwap7683, OwnableUpgradeable {
-    // ============ Libraries ============
-
     // ============ Constants ============
 
     uint32 internal constant DEFAULT_GAS_LIMIT = 1_000_000;
@@ -62,7 +60,7 @@ contract t1_7683 is BasicSwap7683, OwnableUpgradeable {
         messenger = IT1Messenger(_messenger);
         localDomain = localDomain_;
     }
-    // ============ Initializers ============
+    // ============ External Functions ============
 
     /**
      * @notice Initializes the contract
@@ -70,6 +68,16 @@ contract t1_7683 is BasicSwap7683, OwnableUpgradeable {
      */
     function initialize(address _counterpart) external initializer {
         counterpart = _counterpart;
+    }
+
+    /**
+     * @notice Handles an incoming message
+     * @param _origin The origin domain
+     * @param _sender The sender address
+     * @param _message The message
+     */
+    function handle(uint32 _origin, bytes32 _sender, bytes calldata _message) external payable onlyMessenger {
+        _handle(_origin, _sender, _message);
     }
 
     // ============ Internal Functions ============
@@ -129,16 +137,6 @@ contract t1_7683 is BasicSwap7683, OwnableUpgradeable {
                 _handleRefundOrder(_orderIds[i]);
             }
         }
-    }
-
-    /**
-     * @notice Handles an incoming message
-     * @param _origin The origin domain
-     * @param _sender The sender address
-     * @param _message The message
-     */
-    function handle(uint32 _origin, bytes32 _sender, bytes calldata _message) external payable onlyMessenger {
-        _handle(_origin, _sender, _message);
     }
 
     /**
