@@ -58,7 +58,6 @@ contract DeployRouterERC7683 is Script {
         vm.createSelectFork(vm.rpcUrl("t1"));
         uint256 deployerPk = vm.envUint("L2_DEPLOYER_PRIVATE_KEY");
         address l2Messenger = vm.envAddress("L2_T1_MESSENGER_PROXY_ADDR");
-        address L1_t1_7683_PROXY_ADDR = vm.envAddress("L1_t1_7683_PROXY_ADDR");
         address L2_PROXY_ADMIN_ADDR = vm.envAddress("L2_PROXY_ADMIN_ADDR");
 
         vm.startBroadcast(deployerPk);
