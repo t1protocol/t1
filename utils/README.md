@@ -1,6 +1,6 @@
 # Utils
 
-This folder contains utility scripts. , it has the `generate_wallets.sh` script, which generates Ethereum wallets and optionally appends them to our `genesis.json`.
+This folder contains utility scripts. 
 
 ### 1. `generate_wallets.sh`
 
