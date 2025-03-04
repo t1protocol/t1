@@ -83,8 +83,8 @@ Scripts to test the canonical bridge functionalities:
 
 ## Running Scripts for 7683E2E
 
-
 Ensure that the following environment variables are set:
+
 - `TEST_PRIVATE_KEY`: Alice's private key for signing the transaction.
 - `L1_USDT_ADDR`: Address of the USDT token on L1.
 - `L2_USDT_ADDR`: Address of the USDT token on L2.
