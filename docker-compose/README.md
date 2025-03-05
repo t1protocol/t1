@@ -4,12 +4,15 @@
 
 2. Generate the JWT secret:  
    Use the provided script to create a secure JWT secret.
+   ```bash
+   ./docker-compose/reth/generate-jwt.sh
+   ```
 
-3. Configure the environment file:  
+4. Configure the environment file:  
    - Use `env.tmp` as a template to create your `.env` file.  
    - Ensure all required variables are correctly populated.
 
-4. Start the application:  
+5. Start the application:  
    Run the following command to start the services using Docker Compose:  
    ```bash
    docker compose --env-file ./reth/env.tmp --profile reth up -d
@@ -23,7 +26,7 @@
    docker compose --profile reth down -v
    ```
 
-5. If you want to run your node with Blockscout
+6. If you want to run your node with Blockscout
    ```
    docker compose --env-file ./reth/env.tmp --profile reth --profile blockscout up -d
    ```
