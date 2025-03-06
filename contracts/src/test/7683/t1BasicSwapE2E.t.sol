@@ -117,7 +117,7 @@ contract t1BasicSwapE2E is BaseTest {
         vm.label(address(destinationRouter), "destinationRouter");
     }
 
-    function setUp() public override {
+    function setUp() public virtual override {
         super.setUp();
         __T1TestBase_setUp();
 

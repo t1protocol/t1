@@ -186,6 +186,10 @@ contract L2T1Messenger is T1MessengerBase, IL2T1Messenger {
         return _isSupportedDest[chainId_];
     }
 
+    function getXDomainMessageSender() external view returns (address) {
+        return xDomainMessageSender;
+    }
+
     /**
      *
      * Internal Functions *
