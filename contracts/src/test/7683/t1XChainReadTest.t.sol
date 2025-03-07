@@ -5,14 +5,18 @@ import { Test, Vm } from "forge-std/Test.sol";
 import { console2 } from "forge-std/console2.sol";
 
 import { TypeCasts } from "@hyperlane-xyz/libs/TypeCasts.sol";
-import { T1XChainRead, IT1XChainReadCallback } from "../../libraries/x-chain/T1XChainRead.sol";
+import {
+    TransparentUpgradeableProxy,
+    ITransparentUpgradeableProxy
+} from "@openzeppelin/contracts/proxy/transparent/TransparentUpgradeableProxy.sol";
+import { OrderData, OrderEncoder } from "intents-framework/libs/OrderEncoder.sol";
 
+import { T1XChainRead, IT1XChainReadCallback } from "../../libraries/x-chain/T1XChainRead.sol";
 import { t1BasicSwapE2E } from "./t1BasicSwapE2E.t.sol";
 import { IL1T1Messenger } from "../../L1/IL1T1Messenger.sol";
 import { L1T1Messenger } from "../../L1/L1T1Messenger.sol";
 import { L2T1Messenger } from "../../L2/L2T1Messenger.sol";
 import { T1ChainMockBlob } from "../../mocks/T1ChainMockBlob.sol";
-import { OrderData, OrderEncoder } from "intents-framework/libs/OrderEncoder.sol";
 
 contract TargetContract {
     uint256 public value;
@@ -67,8 +71,17 @@ contract T1XChainReadTest is t1BasicSwapE2E {
         callbackContract = new CallbackContract();
 
         // Deploy T1XChainRead on both chains
-        originReader = new T1XChainRead(address(l1t1Messenger), origin);
-        destinationReader = new T1XChainRead(address(l2t1Messenger), destination);
+        originReader = T1XChainRead(payable(_deployProxy(address(0))));
+        admin.upgrade(
+            ITransparentUpgradeableProxy(address(originReader)),
+            address(new T1XChainRead(address(l1t1Messenger), origin))
+        );
+
+        destinationReader = T1XChainRead(payable(_deployProxy(address(0))));
+        admin.upgrade(
+            ITransparentUpgradeableProxy(address(destinationReader)),
+            address(new T1XChainRead(address(l2t1Messenger), destination))
+        );
 
         // Initialize with counterparts
         originReader.initialize(address(destinationReader));
