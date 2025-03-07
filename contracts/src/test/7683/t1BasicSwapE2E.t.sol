@@ -128,10 +128,7 @@ contract t1BasicSwapE2E is BaseTest {
         l1t1Messenger = L1T1Messenger(payable(_deployProxy(address(0))));
         rollup = T1ChainMockBlob(_deployProxy(address(0)));
         messageQueue = L1MessageQueue(_deployProxy(address(0)));
-        admin.upgrade(
-            ITransparentUpgradeableProxy(address(messageQueue)),
-            address(new L1MessageQueue())
-        );
+        admin.upgrade(ITransparentUpgradeableProxy(address(messageQueue)), address(new L1MessageQueue()));
         uint256 maxGasLimit = 5_000_000;
         messageQueue.initialize(address(0), maxGasLimit);
         l2MessageQueue = new L2MessageQueue(address(this));
