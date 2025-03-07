@@ -347,10 +347,6 @@ contract L1T1Messenger is T1MessengerBase, IL1T1Messenger {
         emit UpdateMaxReplayTimes(_oldMaxReplayTimes, _newMaxReplayTimes);
     }
 
-    function getXDomainMessageSender() external view returns (address) {
-        return xDomainMessageSender;
-    }
-
     /**
      *
      * Internal Functions *
