@@ -30,10 +30,6 @@ contract TargetContract {
         value = _value;
     }
 
-    function getValue() external view returns (uint256) {
-        return value;
-    }
-
     function setValue(uint256 _value) external {
         value = _value;
     }
@@ -90,7 +86,7 @@ contract T1XChainReadTest is t1BasicSwapE2E {
 
     function test_crossChainRead_getValue() public {
         // Create the calldata for reading the value
-        bytes memory callData = abi.encodeWithSelector(TargetContract.getValue.selector);
+        bytes memory callData = abi.encodeWithSignature("value()");
 
         // Request a cross-chain read
         bytes32 requestId = originReader.requestRead(destination, address(tc), callData, address(callbackContract));
@@ -110,7 +106,7 @@ contract T1XChainReadTest is t1BasicSwapE2E {
             vm.startPrank(address(l2t1Messenger));
             vm.mockCall(
                 address(l2t1Messenger),
-                abi.encodeWithSelector(L2T1Messenger.getXDomainMessageSender.selector),
+                abi.encodeWithSignature("xDomainMessageSender()"),
                 abi.encode(address(originReader))
             );
 
@@ -134,7 +130,7 @@ contract T1XChainReadTest is t1BasicSwapE2E {
             vm.startPrank(address(l1t1Messenger));
             vm.mockCall(
                 address(l1t1Messenger),
-                abi.encodeWithSelector(L1T1Messenger.getXDomainMessageSender.selector),
+                abi.encodeWithSignature("xDomainMessageSender()"),
                 abi.encode(address(destinationReader))
             );
 
@@ -172,7 +168,7 @@ contract T1XChainReadTest is t1BasicSwapE2E {
             vm.startPrank(address(l2t1Messenger));
             vm.mockCall(
                 address(l2t1Messenger),
-                abi.encodeWithSelector(L2T1Messenger.getXDomainMessageSender.selector),
+                abi.encodeWithSignature("xDomainMessageSender()"),
                 abi.encode(address(originReader))
             );
 
@@ -188,7 +184,7 @@ contract T1XChainReadTest is t1BasicSwapE2E {
             vm.startPrank(address(l1t1Messenger));
             vm.mockCall(
                 address(l1t1Messenger),
-                abi.encodeWithSelector(L1T1Messenger.getXDomainMessageSender.selector),
+                abi.encodeWithSignature("xDomainMessageSender()"),
                 abi.encode(address(destinationReader))
             );
 
