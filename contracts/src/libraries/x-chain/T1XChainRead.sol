@@ -188,28 +188,22 @@ contract T1XChainRead is OwnableUpgradeable, ReentrancyGuardUpgradeable {
         nonReentrant
         returns (bytes32 requestId)
     {
-        // Verify callback implements the required interface
         if (callback.code.length == 0) revert InvalidCallback();
 
-        // Generate a unique request ID
         requestId = keccak256(
             abi.encodePacked(
                 block.chainid, destinationDomain, targetContract, callData, callback, block.timestamp, msg.sender
             )
         );
 
-        // Store the callback address
         callbacks[requestId] = callback;
 
-        // Encode the read request message
         bytes memory message = T1Message.encodeRead(requestId, targetContract, callData);
 
-        // Encode the outer message for the messenger
         bytes memory outerMessage = abi.encodeWithSelector(
             T1XChainRead.handle.selector, localDomain, TypeCasts.addressToBytes32(address(this)), message
         );
 
-        // Send the cross-chain message
         messenger.sendMessage(
             counterpart,
             0, // No value transfer
@@ -232,17 +226,13 @@ contract T1XChainRead is OwnableUpgradeable, ReentrancyGuardUpgradeable {
     function handle(uint32 _origin, bytes32 _sender, bytes calldata _message) external onlyMessenger {
         address senderAddress = TypeCasts.bytes32ToAddress(_sender);
 
-        // Verify the message is from our counterpart
         if (senderAddress != counterpart) revert OnlyCounterpart();
 
-        // Decode the message
         (bool isRequest, bytes32 requestId, bytes memory data) = T1Message.decode(_message);
 
         if (isRequest) {
-            // This is a read request
             _handleReadRequest(requestId, data, _origin);
         } else {
-            // This is a read response
             _handleReadResponse(requestId, data);
         }
     }
@@ -265,32 +255,22 @@ contract T1XChainRead is OwnableUpgradeable, ReentrancyGuardUpgradeable {
      * @param origin Domain identifier of the origin chain where request came from
      */
     function _handleReadRequest(bytes32 requestId, bytes memory data, uint32 origin) internal {
-        // Decode the request data
         (address targetContract, bytes memory callData) = abi.decode(data, (address, bytes));
 
-        // Execute the static call
-        (bool success, bytes memory result) = targetContract.staticcall(callData);
+        (, bytes memory result) = targetContract.staticcall(callData);
 
-        // Even if the call fails, we want to return the result/error
-
-        // Encode the response
         bytes memory responseMessage = T1Message.encodeReadResult(requestId, result);
 
-        // Encode the outer message
         bytes memory outerMessage = abi.encodeWithSelector(
             T1XChainRead.handle.selector, localDomain, TypeCasts.addressToBytes32(address(this)), responseMessage
         );
 
-        // Get the origin domain from the message sender
-        uint32 originDomain = origin;
-
-        // Send the response back
         messenger.sendMessage(
             counterpart,
             0, // No value transfer
             outerMessage,
             DEFAULT_GAS_LIMIT,
-            uint64(originDomain)
+            uint64(origin)
         );
     }
 
@@ -300,15 +280,12 @@ contract T1XChainRead is OwnableUpgradeable, ReentrancyGuardUpgradeable {
      * @param result The result data from the read operation
      */
     function _handleReadResponse(bytes32 requestId, bytes memory result) internal {
-        // Get the callback address
         address callback = callbacks[requestId];
 
         // If there's a valid callback, forward the result
         if (callback != address(0)) {
-            // Clean up storage
             delete callbacks[requestId];
 
-            // Call the callback
             IT1XChainReadCallback(callback).onT1XChainReadResult(requestId, result);
         }
 
