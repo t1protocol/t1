@@ -162,7 +162,7 @@ contract L1GatewayRouter is OwnableUpgradeable, IL1GatewayRouter {
         require(params.witness.outputTokenAmount <= outputTokenBalance, "Insufficient reserves");
 
         // Encoded witness data to be included when checking the user signature
-        bytes32 witness = keccak256(abi.encode(params.witness));
+        bytes32 witness = keccak256(abi.encode(T1Constants.WITNESS_TYPEHASH, params.witness));
 
         // Use Permit2 to validate and transfer input tokens from `owner` to the defaultERC20Gateway
         ISignatureTransfer(permit2).permitWitnessTransferFrom(

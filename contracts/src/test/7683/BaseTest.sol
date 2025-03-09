@@ -208,7 +208,7 @@ contract BaseTest is Test, DeployPermit2 {
 
     bytes32 constant _TOKEN_PERMISSIONS_TYPEHASH = keccak256("TokenPermissions(address token,uint256 amount)");
 
-    bytes32 constant FULL_WITNESS_TYPEHASH = keccak256(
+    bytes32 constant FULL_PERMITWITNESSTRANSFERFROM_TYPEHASH = keccak256(
         // solhint-disable-next-line max-line-length
         "PermitWitnessTransferFrom(TokenPermissions permitted,address spender,uint256 nonce,uint256 deadline,ResolvedCrossChainOrder witness)ResolvedCrossChainOrder(address user, uint64 originChainId, uint32 openDeadline, uint32 fillDeadline, Output[] maxSpent, Output[] minReceived, FillInstruction[] fillInstructions)Output(bytes32 token, uint256 amount, bytes32 recipient, uint64 chainId)FillInstruction(uint64 destinationChainId, bytes32 destinationSettler, bytes originData)"
     );
