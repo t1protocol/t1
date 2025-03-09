@@ -235,11 +235,12 @@ contract L1GatewayRouterTest is L1GatewayTestBase, DeployPermit2, PermitSignatur
         params.permit.permitted.amount = inputTokenAmount;
         params.witness.outputTokenAmount = outputTokenAmount;
 
-        bytes32 witnessEncoded = keccak256(abi.encode(params.witness));
+        bytes32 witnessEncoded = keccak256(abi.encode(T1Constants.WITNESS_TYPEHASH, params.witness));
+
         bytes memory sig = getPermitWitnessTransferSignature(
             params.permit,
             alicePrivateKey,
-            T1Constants.FULL_WITNESS_TYPEHASH,
+            T1Constants.FULL_PERMITWITNESSTRANSFERFROM_TYPEHASH,
             witnessEncoded,
             ISignatureTransfer(permit2).DOMAIN_SEPARATOR(),
             address(router)
