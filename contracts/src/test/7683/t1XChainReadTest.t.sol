@@ -367,7 +367,12 @@ contract T1XChainReadTest is t1BasicSwapE2E {
             // Construct the read request calldata
             bytes memory callData = abi.encodeWithSelector(l2_t1_7683_pull_based.getFilledOrderStatus.selector, orderId);
             bytes memory readMessage = T1Message.encodeRead(requestId, address(l2_t1_7683_pull_based), callData);
-            bytes memory handleMessage = abi.encodeWithSelector(destinationReader.handle.selector, origin, TypeCasts.addressToBytes32(address(originReader)), readMessage);
+            bytes memory handleMessage = abi.encodeWithSelector(
+                destinationReader.handle.selector,
+                origin,
+                TypeCasts.addressToBytes32(address(originReader)),
+                readMessage
+            );
             l2t1Messenger.relayMessage(vegeta, address(destinationReader), 0, 0, handleMessage);
         }
 
