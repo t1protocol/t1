@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: MIT
 
-pragma solidity >=0.8.28;
+pragma solidity ^0.8.25;
 
 import { IL2T1Messenger } from "./IL2T1Messenger.sol";
 import { L2MessageQueue } from "./predeploys/L2MessageQueue.sol";

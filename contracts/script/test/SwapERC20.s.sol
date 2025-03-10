@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: UNLICENSED
 
-pragma solidity >=0.8.28;
+pragma solidity ^0.8.25;
 
 import { Script } from "forge-std/Script.sol";
 import { StdUtils } from "forge-std/StdUtils.sol";
@@ -52,11 +52,12 @@ contract SwapERC20 is Script, PermitSignature {
             outputTokenAmount: outputTokenAmount
         });
 
-        bytes32 witnessEncoded = keccak256(abi.encode(witness));
+        bytes32 witnessEncoded = keccak256(abi.encode(T1Constants.WITNESS_TYPEHASH, witness));
+
         bytes memory sig = getPermitWitnessTransferSignature(
             permit,
             ALICE_PRIVATE_KEY,
-            T1Constants.FULL_WITNESS_TYPEHASH,
+            T1Constants.FULL_PERMITWITNESSTRANSFERFROM_TYPEHASH,
             witnessEncoded,
             ISignatureTransfer(permit2).DOMAIN_SEPARATOR(),
             L1_GATEWAY_ROUTER_PROXY_ADDR

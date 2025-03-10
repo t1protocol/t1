@@ -1,16 +1,16 @@
 [package]
 name = "t1-reth"
-version = "0.0.3"
+version = "0.0.4"
 edition = "2021"
 
 [dependencies]
 # reth
-reth = { git = "https://github.com/paradigmxyz/reth.git", tag = "v1.1.5" }
-reth-exex = { git = "https://github.com/paradigmxyz/reth.git", tag = "v1.1.5" }
-reth-node-api = { git = "https://github.com/paradigmxyz/reth.git", tag = "v1.1.5" }
-reth-node-ethereum = { git = "https://github.com/paradigmxyz/reth.git", tag = "v1.1.5" }
-reth-tracing = { git = "https://github.com/paradigmxyz/reth.git", tag = "v1.1.5" }
-reth-execution-types = { git = "https://github.com/paradigmxyz/reth.git", tag = "v1.1.5" }
+reth = { git = "https://github.com/paradigmxyz/reth.git", tag = "v1.2.1" }
+reth-exex = { git = "https://github.com/paradigmxyz/reth.git", tag = "v1.2.1" }
+reth-node-api = { git = "https://github.com/paradigmxyz/reth.git", tag = "v1.2.1" }
+reth-node-ethereum = { git = "https://github.com/paradigmxyz/reth.git", tag = "v1.2.1" }
+reth-tracing = { git = "https://github.com/paradigmxyz/reth.git", tag = "v1.2.1" }
+reth-execution-types = { git = "https://github.com/paradigmxyz/reth.git", tag = "v1.2.1" }
 
 # misc
 eyre = "0.6"
@@ -20,5 +20,5 @@ futures = "0.3"
 
 [dev-dependencies]
 # testing
-reth-exex-test-utils = { git = "https://github.com/paradigmxyz/reth.git", tag = "v1.1.5" }
+reth-exex-test-utils = { git = "https://github.com/paradigmxyz/reth.git", tag = "v1.2.1" }
 tokio = "1.43"

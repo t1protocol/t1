@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: MIT
 
-pragma solidity >=0.8.28;
+pragma solidity ^0.8.25;
 
 library T1Constants {
     /// @notice The address of default cross chain message sender.
@@ -16,14 +16,20 @@ library T1Constants {
     /// @notice Chain ID of the T1 devnet
     uint64 internal constant T1_DEVNET_CHAIN_ID = 299_792;
 
-    /// @notice The EIP-712 type definition for remaining string stub of the typehash.
+    /// @notice The EIP-712 type string for the remaining after the witness.
     string internal constant WITNESS_TYPE_STRING =
     // solhint-disable-next-line max-line-length
         "Witness witness)TokenPermissions(address token,uint256 amount)Witness(uint8 direction,uint256 priceAfterSlippage,address outputTokenAddress,uint256 outputTokenAmount)";
 
-    /// @notice The full EIP-712 type definition for the witness the typehash.
-    bytes32 internal constant FULL_WITNESS_TYPEHASH = keccak256(
+    /// @notice The full EIP-712 type definition for the PermitWitnessTransferFrom typehash.
+    bytes32 internal constant FULL_PERMITWITNESSTRANSFERFROM_TYPEHASH = keccak256(
         // solhint-disable-next-line max-line-length
         "PermitWitnessTransferFrom(TokenPermissions permitted,address spender,uint256 nonce,uint256 deadline,Witness witness)TokenPermissions(address token,uint256 amount)Witness(uint8 direction,uint256 priceAfterSlippage,address outputTokenAddress,uint256 outputTokenAmount)"
+    );
+
+    /// @notice The EIP-712 type definition for the witness typehash.
+    bytes32 internal constant WITNESS_TYPEHASH = keccak256(
+        // solhint-disable-next-line max-line-length
+        "Witness(uint8 direction,uint256 priceAfterSlippage,address outputTokenAddress,uint256 outputTokenAmount)"
     );
 }

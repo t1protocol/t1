@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: MIT
 
-pragma solidity >=0.8.28;
+pragma solidity ^0.8.25;
 
 interface IT1StandardERC20Factory {
     /// @notice Emitted when a l2 token is deployed.
