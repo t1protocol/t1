@@ -136,7 +136,6 @@ contract t1_7683_PullBased is BasicSwap7683, OwnableUpgradeable, IT1XChainReadCa
         // Request the cross-chain read
         requestId = xChainRead.requestRead(destinationDomain, destinationSettler, callData, address(this));
 
-        // Store the mapping
         readRequestToOrderId[requestId] = orderId;
 
         emit SettlementVerificationRequested(orderId, requestId);
@@ -153,13 +152,11 @@ contract t1_7683_PullBased is BasicSwap7683, OwnableUpgradeable, IT1XChainReadCa
         // Ensure we have a valid order
         if (orderId == bytes32(0)) return;
 
-        // Clean up storage
         delete readRequestToOrderId[requestId];
 
         // Check if the order is FILLED based on result length
         bool isSettled = (result.length != 0);
 
-        // Store the verification result
         orderVerified[orderId] = isSettled;
 
         // process the settlement if verified
@@ -177,7 +174,7 @@ contract t1_7683_PullBased is BasicSwap7683, OwnableUpgradeable, IT1XChainReadCa
             bytes32[] memory _orderIds = new bytes32[](1);
             _orderIds[0] = orderId;
 
-            bytes[] memory _ordersFillerData = new bytes[](1); // Initialize with size 1
+            bytes[] memory _ordersFillerData = new bytes[](1);
             _ordersFillerData[0] = filledOrder.fillerData;
             orderStatus = Hyperlane7683Message.encodeSettle(_orderIds, _ordersFillerData);
         }
@@ -185,9 +182,8 @@ contract t1_7683_PullBased is BasicSwap7683, OwnableUpgradeable, IT1XChainReadCa
     }
 
     // ============ Internal Functions ============
-    // TODO - remove
-    /// @notice Dispatches a settlement message to the specified domain.
-    /// @dev Encodes the settle message using Hyperlane7683Message and dispatches it via the GasRouter.
+
+    /// @notice Not implemented
     /// @param _originDomain The domain to which the settlement message is sent.
     /// @param _orderIds The IDs of the orders to settle.
     /// @param _ordersFillerData The filler data for the orders.
@@ -199,26 +195,14 @@ contract t1_7683_PullBased is BasicSwap7683, OwnableUpgradeable, IT1XChainReadCa
         internal
         override
     {
-        if (msg.value != 0) revert EthNotAllowed();
-        bytes memory innerMessage = Hyperlane7683Message.encodeSettle(_orderIds, _ordersFillerData);
-        bytes memory outerMessage = abi.encodeWithSelector(
-            t1_7683_PullBased.handle.selector, _originDomain, TypeCasts.addressToBytes32(address(this)), innerMessage
-        );
-        messenger.sendMessage(counterpart, 0, outerMessage, DEFAULT_GAS_LIMIT, uint64(_originDomain));
+        revert FunctionNotImplemented("_dispatchSettle");
     }
 
-    // TODO - remove
-    /// @notice Dispatches a refund message to the specified domain.
-    /// @dev Encodes the refund message using Hyperlane7683Message and dispatches it via the GasRouter.
+    /// @notice Not implemented
     /// @param _originDomain The domain to which the refund message is sent.
     /// @param _orderIds The IDs of the orders to refund.
     function _dispatchRefund(uint32 _originDomain, bytes32[] memory _orderIds) internal override {
-        if (msg.value != 0) revert EthNotAllowed();
-        bytes memory innerMessage = Hyperlane7683Message.encodeRefund(_orderIds);
-        bytes memory outerMessage = abi.encodeWithSelector(
-            t1_7683_PullBased.handle.selector, _originDomain, TypeCasts.addressToBytes32(address(this)), innerMessage
-        );
-        messenger.sendMessage(counterpart, 0, outerMessage, DEFAULT_GAS_LIMIT, uint64(_originDomain));
+        revert FunctionNotImplemented("_dispatchRefund");
     }
 
     /// @notice Handles incoming messages
