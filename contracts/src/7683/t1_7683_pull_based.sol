@@ -8,7 +8,8 @@ import { BasicSwap7683 } from "intents-framework/BasicSwap7683.sol";
 import { TypeCasts } from "@hyperlane-xyz/libs/TypeCasts.sol";
 
 import { IT1Messenger } from "../libraries/IT1Messenger.sol";
-import { T1XChainRead, IT1XChainReadCallback } from "../libraries/x-chain/T1XChainRead.sol";
+import { T1XChainRead } from "../libraries/x-chain/T1XChainRead.sol";
+import { IT1XChainReadCallback } from "../libraries/x-chain/IT1XChainReadCallback.sol";
 
 /**
  * @title t1_7683_PullBased
@@ -76,8 +77,6 @@ contract t1_7683_PullBased is BasicSwap7683, OwnableUpgradeable, IT1XChainReadCa
         if (msg.sender != address(xChainRead)) revert OnlyXChainRead();
         _;
     }
-
-    // ============ Constructor ============
 
     /// @notice Initializes the contract with the specified dependencies
     /// @param _messenger The address of the messenger contract
