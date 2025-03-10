@@ -10,6 +10,14 @@ import {
     ITransparentUpgradeableProxy
 } from "@openzeppelin/contracts/proxy/transparent/TransparentUpgradeableProxy.sol";
 import { OrderData, OrderEncoder } from "intents-framework/libs/OrderEncoder.sol";
+import {
+    GaslessCrossChainOrder,
+    OnchainCrossChainOrder,
+    ResolvedCrossChainOrder,
+    Output,
+    FillInstruction
+} from "intents-framework/ERC7683/IERC7683.sol";
+import { Base7683 } from "intents-framework/Base7683.sol";
 
 import { T1XChainRead, IT1XChainReadCallback } from "../../libraries/x-chain/T1XChainRead.sol";
 import { t1BasicSwapE2E } from "./t1BasicSwapE2E.t.sol";
@@ -17,6 +25,7 @@ import { IL1T1Messenger } from "../../L1/IL1T1Messenger.sol";
 import { L1T1Messenger } from "../../L1/L1T1Messenger.sol";
 import { L2T1Messenger } from "../../L2/L2T1Messenger.sol";
 import { T1ChainMockBlob } from "../../mocks/T1ChainMockBlob.sol";
+import { t1_7683_PullBased } from "../../7683/t1_7683_pull_based.sol";
 
 contract TargetContract {
     uint256 public value;
@@ -52,10 +61,14 @@ contract CallbackContract is IT1XChainReadCallback {
 }
 
 contract T1XChainReadTest is t1BasicSwapE2E {
+    using TypeCasts for address;
+
     T1XChainRead internal originReader;
     T1XChainRead internal destinationReader;
     TargetContract internal tc;
     CallbackContract internal callbackContract;
+    t1_7683_PullBased internal l1_t1_7683_pull_based;
+    t1_7683_PullBased internal l2_t1_7683_pull_based;
 
     function setUp() public virtual override {
         super.setUp();
@@ -82,6 +95,25 @@ contract T1XChainReadTest is t1BasicSwapE2E {
         // Initialize with counterparts
         originReader.initialize(address(destinationReader));
         destinationReader.initialize(address(originReader));
+
+        l1_t1_7683_pull_based = t1_7683_PullBased(payable(_deployProxy(address(0))));
+        l2_t1_7683_pull_based = t1_7683_PullBased(payable(_deployProxy(address(0))));
+        admin.upgrade(
+            ITransparentUpgradeableProxy(address(l1_t1_7683_pull_based)),
+            address(new t1_7683_PullBased(address(l1t1Messenger),
+            address(0),
+            address(originReader),
+            uint32(origin)))
+        );
+        admin.upgrade(
+            ITransparentUpgradeableProxy(address(l2_t1_7683_pull_based)),
+            address(new t1_7683_PullBased(address(l2t1Messenger),
+            address(0),
+            address(destinationReader),
+            uint32(destination)))
+        );
+        l1_t1_7683_pull_based.initialize(address(l2_t1_7683_pull_based));
+        l2_t1_7683_pull_based.initialize(address(l1_t1_7683_pull_based));
     }
 
     function test_crossChainRead_getValue() public {
@@ -195,6 +227,338 @@ contract T1XChainReadTest is t1BasicSwapE2E {
         // Verify the order status was correctly read
         bool orderFilled = abi.decode(callbackContract.lastResult(), (bool));
         assertTrue(orderFilled);
+    }
+
+    function test_settlementVerification_7683() public {
+        // open
+        OrderData memory orderData = _prepareOrderData();
+        OnchainCrossChainOrder memory order =
+            _prepareOnchainOrder(OrderEncoder.encode(orderData), orderData.fillDeadline, OrderEncoder.orderDataType());
+
+        vm.startPrank(kakaroto);
+        inputToken.approve(address(originRouter), amount);
+
+        uint256[] memory balancesBeforeOpen = _balances(inputToken);
+
+        vm.recordLogs();
+        originRouter.open(order);
+
+        (bytes32 orderId, ResolvedCrossChainOrder memory resolvedOrder) = _getOrderIDFromLogs();
+
+        _assertResolvedOrder(
+            resolvedOrder,
+            order.orderData,
+            kakaroto,
+            orderData.fillDeadline,
+            type(uint32).max,
+            address(destinationRouter).addressToBytes32(),
+            address(destinationRouter).addressToBytes32(),
+            origin,
+            address(inputToken),
+            address(outputToken)
+        );
+
+        _assertOpenOrder(orderId, kakaroto, order.orderData, balancesBeforeOpen, kakaroto);
+
+        // fill
+        vm.startPrank(vegeta);
+        outputToken.approve(address(destinationRouter), amount);
+
+        uint256[] memory balancesBeforeFill = _balances(outputToken);
+
+        bytes memory fillerData = abi.encode(TypeCasts.addressToBytes32(vegeta));
+
+        vm.expectEmit(false, false, false, true, address(destinationRouter));
+        emit Filled(orderId, resolvedOrder.fillInstructions[0].originData, fillerData);
+
+        destinationRouter.fill(orderId, resolvedOrder.fillInstructions[0].originData, fillerData);
+
+        assertEq(destinationRouter.orderStatus(orderId), destinationRouter.FILLED());
+
+        (bytes memory _originData, bytes memory _fillerData) = destinationRouter.filledOrders(orderId);
+
+        vm.stopPrank();
+
+        // ~~~
+
+        // Create calldata for checking the order status
+        bytes memory callData = abi.encodeWithSignature("filledOrders(bytes32)", orderId);
+
+        // Request verification of the order status
+        bytes32 requestId = originReader.requestRead(destination, address(l2_t1_7683_pull_based), callData, address(l1_t1_7683_pull_based));
+
+        // Handle the request on the destination chain
+        {
+            bytes memory message = T1Message.encodeRead(requestId, address(l2_t1_7683_pull_based), callData);
+
+            vm.startPrank(address(l2t1Messenger));
+            vm.mockCall(
+                address(l2t1Messenger),
+                abi.encodeWithSignature("xDomainMessageSender()"),
+                abi.encode(address(originReader))
+            );
+
+            destinationReader.handle(origin, TypeCasts.addressToBytes32(address(originReader)), message);
+            vm.stopPrank();
+        }
+
+        // Handle the response on the origin chain
+        {
+            bytes memory result = abi.encode(true); // Order is filled
+            bytes memory message = T1Message.encodeReadResult(requestId, result);
+
+            vm.startPrank(address(l1t1Messenger));
+            vm.mockCall(
+                address(l1t1Messenger),
+                abi.encodeWithSignature("xDomainMessageSender()"),
+                abi.encode(address(destinationReader))
+            );
+
+            originReader.handle(destination, TypeCasts.addressToBytes32(address(destinationReader)), message);
+            vm.stopPrank();
+        }
+
+        // Verify the order status was correctly read
+        // bool orderFilled = abi.decode(l1_t1_7683_pull_based.lastResult(), (bool));
+        // assertTrue(orderFilled);
+    }
+
+    function test_verifySettlement_flow() public {
+        // 1. User opens intent on origin chain
+        OrderData memory orderData = _prepareOrderData();
+        OnchainCrossChainOrder memory order = _prepareOnchainOrder(
+            OrderEncoder.encode(orderData),
+            orderData.fillDeadline,
+            OrderEncoder.orderDataType()
+        );
+
+        vm.startPrank(kakaroto);
+        inputToken.approve(address(l1_t1_7683_pull_based), amount);
+        l1_t1_7683_pull_based.open(order);
+        vm.stopPrank();
+
+        bytes32 orderId = OrderEncoder.id(orderData);
+        assertEq(l1_t1_7683_pull_based.orderStatus(orderId), _base7683.OPENED());
+
+        // 2. Filler fills intent on destination chain
+        vm.startPrank(vegeta);
+        outputToken.approve(address(l2_t1_7683_pull_based), amount);
+
+        bytes memory originData = OrderEncoder.encode(orderData);
+        bytes memory fillerData = abi.encode(TypeCasts.addressToBytes32(vegeta));
+
+        l2_t1_7683_pull_based.fill(orderId, originData, fillerData);
+        assertEq(l2_t1_7683_pull_based.orderStatus(orderId), l2_t1_7683_pull_based.FILLED());
+        vm.stopPrank();
+
+        // 3. Filler calls verifySettlement on the origin chain
+        vm.startPrank(vegeta);
+        bytes32 requestId = l1_t1_7683_pull_based.verifySettlement(
+            destination,
+            address(l2_t1_7683_pull_based),
+            orderId
+        );
+        vm.stopPrank();
+
+        // 4. Magic: The requested read is executed on the destination chain
+        // Simulate the cross-chain message from origin to destination
+        {
+            bytes memory callData = abi.encodeWithSelector(
+                destinationRouter.orderStatus.selector,
+                orderId
+            );
+
+            bytes memory message = T1Message.encodeRead(
+                requestId,
+                address(destinationRouter),
+                callData
+            );
+
+            // Mock messenger behavior
+            vm.startPrank(address(l2t1Messenger));
+            vm.mockCall(
+                address(l2t1Messenger),
+                abi.encodeWithSignature("xDomainMessageSender()"),
+                abi.encode(address(originReader))
+            );
+
+            // Execute the read request
+            l2_t1_7683_pull_based.handle(origin, TypeCasts.addressToBytes32(address(originReader)), message);
+            vm.stopPrank();
+        }
+
+        // 5. More Magic: The result is passed back to the calling contract
+        {
+            // The destination contract returns FILLED status
+            bytes memory result = abi.encode(l2_t1_7683_pull_based.FILLED);
+            bytes memory message = T1Message.encodeReadResult(requestId, result);
+
+            // Mock messenger behavior for the return path
+            vm.startPrank(address(l1t1Messenger));
+            vm.mockCall(
+                address(l1t1Messenger),
+                abi.encodeWithSignature("xDomainMessageSender()"),
+                abi.encode(address(destinationReader))
+            );
+
+            // Deliver the result
+            originReader.handle(destination, TypeCasts.addressToBytes32(address(destinationReader)), message);
+            vm.stopPrank();
+        }
+
+        // Verify that the verification was processed
+        assertTrue(l1_t1_7683_pull_based.orderVerified(orderId), "Order should be verified as settled");
+        // assertEq(pullBasedRouter.orderStatus(orderId), pullBasedRouter.SETTLED());
+    }
+
+    // 1. user opens intent on source chain
+    // 2. solver fills intent on destination chain
+    // 3a. solver calls 7683 verifySettlement on source chain which T1XChainRead.requestRead
+    // 3b. relayer picks up message and calls relayMessage on destination chain
+    // 3c. relayMessage calls T1XChainRead.handle which calls the view function, and packages the result into sendMessage
+    // 4a. relayer picks up message and calls relayMessageWithProof on source chain
+    // 4b. relayMessageWithProof calls T1XChainRead.handle which calls _handleReadResponse which calls onT1XChainReadResult on callback address
+    // 4c. onT1XChainReadResult on 7683 contract settles intent and releases funds to solver
+    function test_pullBasedSettlementFlow() public {
+        // 1. Setup: Open an order on L1 (origin chain)
+        OrderData memory orderData = _prepareOrderData();
+        OnchainCrossChainOrder memory order = _prepareOnchainOrder(
+            OrderEncoder.encode(orderData),
+            orderData.fillDeadline,
+            OrderEncoder.orderDataType()
+        );
+
+        vm.startPrank(kakaroto);
+        inputToken.approve(address(l1_t1_7683_pull_based), amount);
+        vm.recordLogs();
+        l1_t1_7683_pull_based.open(order);
+        vm.stopPrank();
+
+        (bytes32 orderId, ResolvedCrossChainOrder memory resolvedOrder) = _getOrderIDFromLogs();
+        assertEq(l1_t1_7683_pull_based.orderStatus(orderId), _base7683.OPENED());
+
+        // 2. Fill the order on L2 (destination chain)
+        vm.startPrank(vegeta);
+        outputToken.approve(address(l2_t1_7683_pull_based), amount);
+        bytes memory originData = OrderEncoder.encode(orderData);
+        bytes memory fillerData = abi.encode(TypeCasts.addressToBytes32(vegeta));
+        l2_t1_7683_pull_based.fill(orderId, originData, fillerData);
+        assertEq(l2_t1_7683_pull_based.orderStatus(orderId), l2_t1_7683_pull_based.FILLED());
+        vm.stopPrank();
+
+        // 3. Filler initiates settlement verification from L1
+        vm.startPrank(vegeta);
+        bytes32 requestId = l1_t1_7683_pull_based.verifySettlement(
+            destination,
+            address(l2_t1_7683_pull_based),
+            orderId
+        );
+        vm.stopPrank();
+
+        // 4. Process the read request on L2 (destination chain)
+        {
+            // Construct the read request calldata
+            bytes memory callData = abi.encodeWithSelector(
+                l2_t1_7683_pull_based.orderStatus.selector,
+                orderId
+            );
+            bytes memory readMessage = T1Message.encodeRead(
+                requestId,
+                address(l2_t1_7683_pull_based),
+                callData
+            );
+
+            // Simulate L1 -> L2 message via L2T1Messenger
+            bytes memory outerMessage = abi.encodeWithSelector(
+                T1XChainRead.handle.selector,
+                origin,
+                TypeCasts.addressToBytes32(address(originReader)),
+                readMessage
+            );
+
+            vm.startPrank(address(l2t1Messenger));
+            vm.mockCall(
+                address(l2t1Messenger),
+                abi.encodeWithSignature("xDomainMessageSender()"),
+                abi.encode(address(originReader))
+            );
+            destinationReader.handle(
+                origin,
+                TypeCasts.addressToBytes32(address(originReader)),
+                readMessage
+            );
+            vm.stopPrank();
+
+            // Verify the read was processed
+            assertEq(l2_t1_7683_pull_based.orderStatus(orderId), l2_t1_7683_pull_based.FILLED());
+        }
+
+        // 5. Relay the result back to L1 using relayMessage
+        {
+            // Get the result (FILLED status)
+            bytes memory result = l2_t1_7683_pull_based.getFilledOrderStatus(orderId);
+            bytes memory resultMessage = T1Message.encodeReadResult(requestId, result);
+
+            bytes memory outerMessage = abi.encodeWithSelector(
+                T1XChainRead.handle.selector,
+                destination,
+                TypeCasts.addressToBytes32(address(destinationReader)),
+                resultMessage
+            );
+
+            // Calculate message hash
+            bytes32 xDomainCalldataHash = keccak256(
+                abi.encodeWithSignature(
+                    "relayMessage(address,address,uint256,uint256,bytes)",
+                    address(destinationReader),
+                    address(originReader),
+                    0,
+                    0, // First nonce
+                    outerMessage
+                )
+            );
+
+            // Append message to L2 message queue
+            vm.startPrank(address(l2t1Messenger));
+            l2MessageQueue.appendMessage(xDomainCalldataHash);
+            vm.stopPrank();
+
+            // Simulate batch finalization
+            bytes memory batchHeader = generateBatchHeader();
+            rollup.addProver(address(0));
+            vm.startPrank(address(0));
+            rollup.finalizeBundleWithProof(
+                batchHeader,
+                bytes32(uint256(2)),
+                xDomainCalldataHash,
+                new bytes(0)
+            );
+            vm.stopPrank();
+
+            // Relay message from L2 to L1
+            IL1T1Messenger.L2MessageProof memory proof = IL1T1Messenger.L2MessageProof({
+                batchIndex: 1,
+                merkleProof: new bytes(0) // Mock proof
+            });
+
+            uint256 balanceSolverBeforeSettle = inputToken.balanceOf(address(vegeta));
+
+            l1t1Messenger.relayMessageWithProof(
+                address(destinationReader),
+                address(originReader),
+                0,
+                0,
+                outerMessage,
+                proof
+            );
+
+            uint256 balanceSolverAfterSettle = inputToken.balanceOf(address(vegeta));
+
+            assertEq(balanceSolverBeforeSettle + amount, balanceSolverAfterSettle, "vegeta balance increased by input amount");
+        }
+
+        // 6. Verify the final state on L1
+        assertTrue(l1_t1_7683_pull_based.orderVerified(orderId), "Order should be verified");
     }
 }
 
