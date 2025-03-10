@@ -477,11 +477,6 @@ contract T1XChainReadTest is t1BasicSwapE2E {
             );
 
             vm.startPrank(address(l2t1Messenger));
-            vm.mockCall(
-                address(l2t1Messenger),
-                abi.encodeWithSignature("xDomainMessageSender()"),
-                abi.encode(address(originReader))
-            );
             destinationReader.handle(
                 origin,
                 TypeCasts.addressToBytes32(address(originReader)),
