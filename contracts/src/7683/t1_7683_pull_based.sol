@@ -131,7 +131,7 @@ contract t1_7683_PullBased is BasicSwap7683, OwnableUpgradeable, IT1XChainReadCa
         if (orderStatus[orderId] != OPENED) revert InvalidOrderStatus();
 
         // Create the calldata to check the order status on the destination chain
-        bytes memory callData = abi.encodeWithSelector(this.orderStatus.selector, orderId);
+        bytes memory callData = abi.encodeWithSelector(this.getFilledOrderStatus.selector, orderId);
 
         // Request the cross-chain read
         requestId = xChainRead.requestRead(destinationDomain, destinationSettler, callData, address(this));
@@ -156,31 +156,36 @@ contract t1_7683_PullBased is BasicSwap7683, OwnableUpgradeable, IT1XChainReadCa
         // Clean up storage
         delete readRequestToOrderId[requestId];
 
-        // Decode the result (order status)
-        bytes32 remoteStatus;
-        if (result.length >= 32) {
-            remoteStatus = abi.decode(result, (bytes32));
-        }
-
-        // Check if the order is FILLED on the destination chain
-        bool isSettled = (remoteStatus == FILLED);
+        // Check if the order is FILLED based on result length
+        bool isSettled = (result.length != 0);
 
         // Store the verification result
         orderVerified[orderId] = isSettled;
 
-        // If the order is verified as filled, we could automatically process settlement
-        // For now we just emit the event
-        emit SettlementVerified(orderId, isSettled);
-
-        // In a complete implementation, we would process the settlement if verified
+        // process the settlement if verified
         if (isSettled && orderStatus[orderId] == OPENED) {
-            // Reconstruct the filler data and settle the order
-            // This would require additional logic and data
+            _handle(uint32(0), bytes32(0), result);
         }
+
+        emit SettlementVerified(orderId, isSettled);
+    }
+
+    function getFilledOrderStatus(bytes32 orderId) public view returns (bytes memory) {
+        FilledOrder memory filledOrder = filledOrders[orderId];
+        bytes memory orderStatus;
+        if (filledOrder.fillerData.length != 0) {
+            bytes32[] memory _orderIds = new bytes32[](1);
+            _orderIds[0] = orderId;
+
+            bytes[] memory _ordersFillerData = new bytes[](1); // Initialize with size 1
+            _ordersFillerData[0] = filledOrder.fillerData;
+            orderStatus = Hyperlane7683Message.encodeSettle(_orderIds, _ordersFillerData);
+        }
+        return orderStatus;
     }
 
     // ============ Internal Functions ============
-
+    // TODO - remove
     /// @notice Dispatches a settlement message to the specified domain.
     /// @dev Encodes the settle message using Hyperlane7683Message and dispatches it via the GasRouter.
     /// @param _originDomain The domain to which the settlement message is sent.
@@ -202,6 +207,7 @@ contract t1_7683_PullBased is BasicSwap7683, OwnableUpgradeable, IT1XChainReadCa
         messenger.sendMessage(counterpart, 0, outerMessage, DEFAULT_GAS_LIMIT, uint64(_originDomain));
     }
 
+    // TODO - remove
     /// @notice Dispatches a refund message to the specified domain.
     /// @dev Encodes the refund message using Hyperlane7683Message and dispatches it via the GasRouter.
     /// @param _originDomain The domain to which the refund message is sent.
