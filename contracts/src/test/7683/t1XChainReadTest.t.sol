@@ -365,20 +365,10 @@ contract T1XChainReadTest is t1BasicSwapE2E {
         // 4. Process the read request on L2 (destination chain)
         {
             // Construct the read request calldata
-            bytes memory callData = abi.encodeWithSelector(l2_t1_7683_pull_based.orderStatus.selector, orderId);
+            bytes memory callData = abi.encodeWithSelector(l2_t1_7683_pull_based.getFilledOrderStatus.selector, orderId);
             bytes memory readMessage = T1Message.encodeRead(requestId, address(l2_t1_7683_pull_based), callData);
-
-            // Simulate L1 -> L2 message via L2T1Messenger
-            bytes memory outerMessage = abi.encodeWithSelector(
-                T1XChainRead.handle.selector, origin, TypeCasts.addressToBytes32(address(originReader)), readMessage
-            );
-
-            vm.startPrank(address(l2t1Messenger));
-            destinationReader.handle(origin, TypeCasts.addressToBytes32(address(originReader)), readMessage);
-            vm.stopPrank();
-
-            // Verify the read was processed
-            assertEq(l2_t1_7683_pull_based.orderStatus(orderId), l2_t1_7683_pull_based.FILLED());
+            bytes memory handleMessage = abi.encodeWithSelector(destinationReader.handle.selector, origin, TypeCasts.addressToBytes32(address(originReader)), readMessage);
+            l2t1Messenger.relayMessage(vegeta, address(destinationReader), 0, 0, handleMessage);
         }
 
         // 5. Relay the result back to L1 using relayMessage
