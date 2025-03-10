@@ -46,8 +46,6 @@ contract t1_7683 is BasicSwap7683, OwnableUpgradeable {
         _;
     }
 
-    // ============ Constructor ============
-
     /// @notice Initializes the t17683 contract with the specified Mailbox and PERMIT2 address.
     /// @param _messenger The address of the _messenger contract.
     /// @param _permit2 The address of the permit2 contract.
