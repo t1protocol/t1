@@ -39,7 +39,6 @@ import { L2T1Messenger } from "../../L2/L2T1Messenger.sol";
 import { T1ChainMockBlob } from "../../mocks/T1ChainMockBlob.sol";
 import { MockRollupVerifier } from "../mocks/MockRollupVerifier.sol";
 
-
 event Settle(bytes32[] orderIds, bytes[] ordersFillerData);
 
 event Refund(bytes32[] orderIds);
@@ -48,6 +47,7 @@ event Refunded(bytes32 orderId, address receiver);
 
 contract t1BasicSwapE2E is BaseTest {
     event Filled(bytes32 orderId, bytes originData, bytes fillerData);
+
     using TypeCasts for address;
 
     L1T1Messenger internal l1t1Messenger;
