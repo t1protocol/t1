@@ -19,7 +19,9 @@ import {
 } from "intents-framework/ERC7683/IERC7683.sol";
 import { Base7683 } from "intents-framework/Base7683.sol";
 
-import { T1Message, T1XChainRead, IT1XChainReadCallback } from "../../libraries/x-chain/T1XChainRead.sol";
+import { T1XChainRead } from "../../libraries/x-chain/T1XChainRead.sol";
+import { IT1XChainReadCallback } from "../../libraries/x-chain/IT1XChainReadCallback.sol";
+import { T1Message } from "../../libraries/x-chain/T1Message.sol";
 import { t1BasicSwapE2E } from "./t1BasicSwapE2E.t.sol";
 import { IL1T1Messenger } from "../../L1/IL1T1Messenger.sol";
 import { L1T1Messenger } from "../../L1/L1T1Messenger.sol";
