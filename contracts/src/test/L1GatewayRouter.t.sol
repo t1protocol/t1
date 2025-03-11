@@ -59,6 +59,7 @@ contract L1GatewayRouterTest is L1GatewayTestBase, DeployPermit2, PermitSignatur
         usdt = new MockERC20("Tether", "USDT", 6);
         aave = new MockERC20("Aave coin", "AAVE", 18);
         dai = new MockERC20("Dai Stablecoin", "DAI", 18);
+        weth = new WETH();
 
         // Deploy L2 contracts
         template = new T1StandardERC20();
@@ -86,6 +87,10 @@ contract L1GatewayRouterTest is L1GatewayTestBase, DeployPermit2, PermitSignatur
             ITransparentUpgradeableProxy(address(l1ETHGateway)),
             address(new L1ETHGateway(address(l2ETHGateway), address(router), address(l1Messenger)))
         );
+        admin.upgrade(
+            ITransparentUpgradeableProxy(address(l1WETHGateway)),
+            address(new L1WETHGateway(address(weth), address(1), address(1), address(router), address(l1Messenger)))
+        );
 
         // Initialize L1 contracts
         l1StandardERC20Gateway.initialize();
@@ -100,6 +105,7 @@ contract L1GatewayRouterTest is L1GatewayTestBase, DeployPermit2, PermitSignatur
         weth.deposit{ value: 10 ether }();
         weth.transfer(address(l1WETHGateway), 1 ether);
 
+        // Set configurations
         router.setMM(address(this));
     }
 
@@ -330,7 +336,7 @@ contract L1GatewayRouterTest is L1GatewayTestBase, DeployPermit2, PermitSignatur
         uint256 alicePrivateKey = 0xa11ce;
         address alice = hevm.addr(alicePrivateKey);
 
-        uint256 inputTokenAmount = 3e9; // 3K USDT
+        uint256 inputTokenAmount = 3000 ether; // 3K USDT
         uint256 outputTokenAmount = 1 ether;
 
         usdt.mint(alice, 3e10);

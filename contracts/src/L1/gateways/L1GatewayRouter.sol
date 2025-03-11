@@ -156,10 +156,13 @@ contract L1GatewayRouter is OwnableUpgradeable, IL1GatewayRouter {
         require(params.witness.outputTokenAmount > 0, "Output amount must be > than 0");
         require(params.owner != address(0), "Invalid owner address");
 
-        // Validate the defaultERC20Gateway has enough reserves of the output token
-        uint256 outputTokenBalance =
-            IERC20MetadataUpgradeable(params.witness.outputTokenAddress).balanceOf(defaultERC20Gateway);
-        require(params.witness.outputTokenAmount <= outputTokenBalance, "Insufficient reserves");
+        address outputGateway = getERC20Gateway(params.witness.outputTokenAddress);
+        // Validate if there are enough reserves of the output token
+        require(
+            params.witness.outputTokenAmount
+                <= IERC20MetadataUpgradeable(params.witness.outputTokenAddress).balanceOf(outputGateway),
+            "Insufficient reserves"
+        );
 
         // Encoded witness data to be included when checking the user signature
         bytes32 witness = keccak256(abi.encode(T1Constants.WITNESS_TYPEHASH, params.witness));
@@ -179,10 +182,7 @@ contract L1GatewayRouter is OwnableUpgradeable, IL1GatewayRouter {
 
         // Use AllowanceTransfer to transfer the output tokens from the defaultERC20Gateway to the `owner` address
         IAllowanceTransfer(permit2).transferFrom(
-            defaultERC20Gateway,
-            params.owner,
-            uint160(params.witness.outputTokenAmount),
-            params.witness.outputTokenAddress
+            outputGateway, params.owner, uint160(params.witness.outputTokenAmount), params.witness.outputTokenAddress
         );
 
         emit Swap(
@@ -297,6 +297,11 @@ contract L1GatewayRouter is OwnableUpgradeable, IL1GatewayRouter {
         revert("should never be called");
     }
 
+    /// @inheritdoc IL1ERC20Gateway
+    function allowRouterToTransfer(address, uint160, uint48) external virtual override {
+        revert("should never be called");
+    }
+
     /**
      *
      * Restricted Functions *
@@ -345,5 +350,19 @@ contract L1GatewayRouter is OwnableUpgradeable, IL1GatewayRouter {
         marketMaker = _newMM;
 
         emit SetMM(_oldMM, _newMM);
+    }
+
+    /**
+     *
+     * Internal Functions *
+     *
+     */
+    function _validateSwap(SwapParams calldata params) internal pure {
+        require(params.permit.permitted.token != address(0), "Invalid input token address");
+        require(params.witness.outputTokenAddress != address(0), "Invalid output token address");
+        require(params.permit.permitted.token != params.witness.outputTokenAddress, "Cannot swap the same token");
+        require(params.permit.permitted.amount > 0, "Input amount must be > than 0");
+        require(params.witness.outputTokenAmount > 0, "Output amount must be > than 0");
+        require(params.owner != address(0), "Invalid owner address");
     }
 }
