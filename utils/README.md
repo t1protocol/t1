@@ -47,7 +47,7 @@ This script sets up the necessary tools and dependencies for running cloud infra
 
 #### Usage
 
-Please ensure that you ran ``./install-github-app-credential-helper.sh` first. Then:
+Please ensure that you ran `./install-github-app-credential-helper.sh` first. Then:
 
 ```bash
 ./gcp_setup.sh
