@@ -95,6 +95,10 @@ contract L1GatewayRouterTest is L1GatewayTestBase, DeployPermit2, PermitSignatur
         aave.mint(address(l1StandardERC20Gateway), 1e21); // 1,000 AAVE
         dai.mint(address(l1StandardERC20Gateway), 1e21); // 1,000 DAI
         usdt.mint(address(l1StandardERC20Gateway), 1e12); // 1,000,000 USDT
+        weth.approve(address(l1WETHGateway), type(uint256).max);
+        hevm.deal(address(this), 10 ether);
+        weth.deposit{ value: 10 ether }();
+        weth.transfer(address(l1WETHGateway), 1 ether);
 
         router.setMM(address(this));
     }
@@ -273,6 +277,99 @@ contract L1GatewayRouterTest is L1GatewayTestBase, DeployPermit2, PermitSignatur
         // Check output token balances after swap
         assertEq(aave.balanceOf(address(l1StandardERC20Gateway)), outputStartBalanceFrom - outputTokenAmount);
         assertEq(aave.balanceOf(alice), outputStartBalanceTo + outputTokenAmount);
+    }
+
+    function testSwapERC20inByWETH() public {
+        uint256 alicePrivateKey = 0xa11ce;
+        address alice = hevm.addr(alicePrivateKey);
+
+        uint256 inputTokenAmount = 1 ether;
+        uint256 outputTokenAmount = 3e9; // 3K USDT
+
+        weth.transfer(alice, inputTokenAmount);
+
+        hevm.startPrank(alice);
+        weth.approve(permit2, type(uint256).max);
+        hevm.stopPrank();
+
+        IL1GatewayRouter.SwapParams memory params = defaultWitnessAndSwapParams();
+        params.owner = alice;
+        params.permit.permitted.token = address(weth);
+        params.permit.permitted.amount = inputTokenAmount;
+        params.witness.outputTokenAddress = address(usdt);
+        params.witness.outputTokenAmount = outputTokenAmount;
+        params.sig = getPermitWitnessTransferSignature(
+            params.permit,
+            alicePrivateKey,
+            T1Constants.FULL_PERMITWITNESSTRANSFERFROM_TYPEHASH,
+            keccak256(abi.encode(T1Constants.WITNESS_TYPEHASH, params.witness)),
+            ISignatureTransfer(permit2).DOMAIN_SEPARATOR(),
+            address(router)
+        );
+
+        l1StandardERC20Gateway.allowRouterToTransfer(
+            params.witness.outputTokenAddress, type(uint160).max, uint48(block.timestamp + 1000)
+        );
+
+        uint256 inputStartBalanceFrom = weth.balanceOf(alice);
+        uint256 inputStartBalanceTo = weth.balanceOf(address(l1WETHGateway));
+        uint256 outputStartBalanceFrom = usdt.balanceOf(address(l1StandardERC20Gateway));
+        uint256 outputStartBalanceTo = usdt.balanceOf(alice);
+
+        router.swapERC20(params);
+
+        // Check input token balances after swap
+        assertEq(weth.balanceOf(alice), inputStartBalanceFrom - inputTokenAmount);
+        assertEq(weth.balanceOf(address(l1WETHGateway)), inputStartBalanceTo + inputTokenAmount);
+        // Check output token balances after swap
+        assertEq(usdt.balanceOf(address(l1StandardERC20Gateway)), outputStartBalanceFrom - outputTokenAmount);
+        assertEq(usdt.balanceOf(alice), outputStartBalanceTo + outputTokenAmount);
+    }
+
+    function testSwapERC20outForWETH() public {
+        uint256 alicePrivateKey = 0xa11ce;
+        address alice = hevm.addr(alicePrivateKey);
+
+        uint256 inputTokenAmount = 3e9; // 3K USDT
+        uint256 outputTokenAmount = 1 ether;
+
+        usdt.mint(alice, 3e10);
+
+        hevm.startPrank(alice);
+        usdt.approve(permit2, type(uint256).max);
+        hevm.stopPrank();
+
+        IL1GatewayRouter.SwapParams memory params = defaultWitnessAndSwapParams();
+        params.owner = alice;
+        params.permit.permitted.amount = inputTokenAmount;
+        params.witness.outputTokenAddress = address(weth);
+        params.witness.outputTokenAmount = outputTokenAmount;
+        params.sig = getPermitWitnessTransferSignature(
+            params.permit,
+            alicePrivateKey,
+            T1Constants.FULL_PERMITWITNESSTRANSFERFROM_TYPEHASH,
+            keccak256(abi.encode(T1Constants.WITNESS_TYPEHASH, params.witness)),
+            ISignatureTransfer(permit2).DOMAIN_SEPARATOR(),
+            address(router)
+        );
+
+        l1WETHGateway.allowRouterToTransfer(
+            params.witness.outputTokenAddress, type(uint160).max, uint48(block.timestamp + 1000)
+        );
+
+        uint256 inputStartBalanceFrom = usdt.balanceOf(alice);
+        uint256 inputStartBalanceTo = usdt.balanceOf(address(l1StandardERC20Gateway));
+        uint256 outputStartBalanceFrom = weth.balanceOf(address(l1WETHGateway));
+        uint256 outputStartBalanceTo = weth.balanceOf(alice);
+
+        router.swapERC20(params);
+
+        // Check input token balances after swap
+        assertEq(usdt.balanceOf(alice), inputStartBalanceFrom - inputTokenAmount);
+        assertEq(usdt.balanceOf(address(l1StandardERC20Gateway)), inputStartBalanceTo + inputTokenAmount);
+        // Check output token balances after swap
+        assertEq(weth.balanceOf(address(l1WETHGateway)), outputStartBalanceFrom - outputTokenAmount);
+        assertEq(weth.balanceOf(alice), outputStartBalanceTo + outputTokenAmount);
     }
 
     function testSwapERC20RevertInvalidSigner() public {
