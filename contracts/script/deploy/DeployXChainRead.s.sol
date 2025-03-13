@@ -12,20 +12,20 @@ import { T1XChainRead } from "../../src/libraries/x-chain/T1XChainRead.sol";
 import { T1Constants } from "../../src/libraries/constants/T1Constants.sol";
 
 contract DeployXChainRead is Script, DeploymentUtils {
-    uint32 internal origin = uint32(T1Constants.T1_DEVNET_CHAIN_ID);
-    uint32 internal pr1 = 1337; // Arbitrum Private Network
+    uint32 internal constant ORIGIN_CHAIN = uint32(T1Constants.T1_DEVNET_CHAIN_ID);
+    uint32 internal constant PR1 = uint32(T1Constants.L1_CHAIN_ID);
 
     function deploy_to_t1() external {
         logStart("DeployXChainRead to t1");
 
         uint256 L2_DEPLOYER_PRIVATE_KEY = vm.envUint("L2_DEPLOYER_PRIVATE_KEY");
         address L2_T1_MESSENGER = vm.envAddress("L2_T1_MESSENGER_PROXY_ADDR");
-        address T1_PROXY_ADMIN_ADDR = vm.envAddress("L2_PROXY_ADMIN_ADDR");
-        ProxyAdmin proxyAdmin = ProxyAdmin(T1_PROXY_ADMIN_ADDR);
+        address L2_T1_PROXY_ADMIN_ADDR = vm.envAddress("L2_PROXY_ADMIN_ADDR");
+        ProxyAdmin proxyAdmin = ProxyAdmin(L2_T1_PROXY_ADMIN_ADDR);
 
         vm.startBroadcast(L2_DEPLOYER_PRIVATE_KEY);
 
-        T1XChainRead impl = new T1XChainRead(address(L2_T1_MESSENGER), origin);
+        T1XChainRead impl = new T1XChainRead(address(L2_T1_MESSENGER), ORIGIN_CHAIN);
         logAddress("L2_T1_X_CHAIN_READ_IMPLEMENTATION_ADDR", address(impl));
 
         TransparentUpgradeableProxy proxy = new TransparentUpgradeableProxy(
@@ -52,7 +52,7 @@ contract DeployXChainRead is Script, DeploymentUtils {
 
         vm.startBroadcast(L1_DEPLOYER_PRIVATE_KEY);
 
-        T1XChainRead impl = new T1XChainRead(address(L1_T1_MESSENGER), pr1);
+        T1XChainRead impl = new T1XChainRead(address(L1_T1_MESSENGER), PR1);
         logAddress("L1_T1_X_CHAIN_READ_IMPLEMENTATION_ADDR", address(impl));
 
         TransparentUpgradeableProxy proxy = new TransparentUpgradeableProxy(
