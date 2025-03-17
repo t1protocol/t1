@@ -20,39 +20,47 @@ get_rpc_and_verifier() {
   local verifier=""
   local verifier_url=""
   local api_key_flag=""
+  local private_key=""
 
   if [[ $script_name == *"L1"* ]]; then
     rpc_url="$T1_L1_RPC"
     verifier="etherscan"
     verifier_url="https://api-sepolia.etherscan.io/api"
     api_key_flag="--etherscan-api-key $ETHERSCAN_API_KEY" # Only needed for Etherscan
+    private_key="0xXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX"
   elif [[ $script_name == *"L2"* ]]; then
     rpc_url="$T1_L2_RPC"
     verifier="blockscout"
     verifier_url="$BLOCKSCOUT_API_URL"  # Ensure this is set in your .env
     api_key_flag=""  # Blockscout does not require an API key
+    private_key="0xXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX"
   else
     echo "ERROR: Could not determine RPC URL for script: $script_name" >&2
     exit 1
   fi
 
-  echo "$rpc_url $verifier $verifier_url $api_key_flag"
+  echo "$rpc_url $verifier $verifier_url $private_key $api_key_flag"
 }
 
 # Function to execute a script with the correct RPC URL and verify it
 run_script() {
   local script_path=$1
   local contract_name=$2
-  local rpc_url verifier verifier_url api_key_flag
+  local rpc_url verifier verifier_url private_key api_key_flag
 
-  read rpc_url verifier verifier_url api_key_flag < <(get_rpc_and_verifier "$contract_name")
+  read rpc_url verifier verifier_url private_key api_key_flag < <(get_rpc_and_verifier "$contract_name")
 
   echo "=== Deploying $contract_name on $( [[ $verifier == "etherscan" ]] && echo 'Sepolia' || echo 'L2 Blockscout' ) ==="
 
-  forge script "$script_path:$contract_name" --rpc-url "$rpc_url" --broadcast --verify --verifier "$verifier" --verifier-url "$verifier_url" $api_key_flag
+  # ADD -g 200 or so if the network is slow
+  forge script "$script_path:$contract_name" --rpc-url "$rpc_url" --broadcast
+  sleep 15
+
+  # ADD -g 200 or so if the network is slow
+  forge script "$script_path:$contract_name" --rpc-url "$rpc_url" --private-key $private_key --resume --verify --verifier "$verifier" --verifier-url "$verifier_url" $api_key_flag
 
   echo "=== Deployment & Verification of $contract_name completed ==="
-  
+
   # Wait for the .env file to be updated
   sleep 10
 }
@@ -68,4 +76,3 @@ run_script script/deploy/DeployL1BridgeContracts.s.sol DeployL1BridgeContracts
 run_script script/deploy/InitializeL1BridgeContracts.s.sol InitializeL1BridgeContracts
 run_script script/deploy/InitializeL2BridgeContracts.s.sol InitializeL2BridgeContracts
 run_script script/deploy/InitializeL1T1Owner.s.sol InitializeL1T1Owner
-
