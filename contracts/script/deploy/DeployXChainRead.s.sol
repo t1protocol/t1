@@ -11,9 +11,9 @@ import { DeploymentUtils } from "../lib/DeploymentUtils.sol";
 import { T1XChainRead } from "../../src/libraries/x-chain/T1XChainRead.sol";
 import { T1Constants } from "../../src/libraries/constants/T1Constants.sol";
 
-contract DeployXChainRead is Script, DeploymentUtils {
+contract DeployXChainRead is DeploymentUtils {
     uint32 internal constant ORIGIN_CHAIN = uint32(T1Constants.T1_DEVNET_CHAIN_ID);
-    uint32 internal constant PR1 = uint32(T1Constants.L1_CHAIN_ID);
+    uint32 internal constant PR1 = 1337;
 
     function deploy_to_t1() external {
         logStart("DeployXChainRead to t1");
