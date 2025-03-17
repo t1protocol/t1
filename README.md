@@ -10,12 +10,19 @@ Monorepo for 𝚝𝟷
 - **[contracts](./contracts/)**: Solidity code for t1 L1 bridge and rollup contracts, plus L2 bridge and pre-deployed contracts.
 - **[reth](./reth/)**: Rust code for the t1 extension of reth.
 - **[e2e](./e2e/)**: End-to-end tests against a specified environment
+- **[utils](./utils/)**: Utility scripts used for setting up aspects of the protocol, such as funding wallets
 
 ## Getting Started
+Deploying t1 as a protocol involves three primary steps:
 
-### Prerequisites
+1. Setup environment: install prerequisites and clone repo
+2. Run node: start the t1 node with optional blockscout explorer
+3. Deploy contracts: deploy l1 contracts and initialize l2 predeployed contracts
 
-1. Install [Bun](https://bun.sh/):
+### Setup Environment
+
+#### Dependencies
+Install [Bun](https://bun.sh/):
 
 Bun is the recommended package manager for this repository. ensure it's installed before proceeding:
 
@@ -23,20 +30,33 @@ Bun is the recommended package manager for this repository. ensure it's installe
 curl https://bun.sh/install | bash
 ```
 
-2. Clone this repo:
+Install Foundry:
+```bash
+curl -L https://foundry.paradigm.xyz | bash
+```
+
+Install [Docker](https://docs.docker.com/get-docker/)
+
+#### Clone this repo:
 
 ```bash
 git clone https://github.com/t1protocol/t1_monorepo.git
 cd t1_monorepo
 ```
 
-### Install dependencies
+#### Install dependencies
 
 Run the following command at the root level to install all dependencies:
 
 ```bash
 bun install
 ```
+
+Husky is used for managing pre-commit hooks. Hooks are installed automatically when you run `bun install`.
+
+## [Run Node](./docker-compose/README.md)
+
+## [Deploy Contracts](./contracts/README.md)
 
 NB: Some sub-repos may have their own setup instructions (e.g., Rust for Reth). See the README.md within each subdirectory for details.
 
@@ -63,10 +83,6 @@ This repo uses [conventional commits](https://www.conventionalcommits.org/en/v1.
 * refactor: code refactoring
 * test: test updates
 * WIP: work in progress (use for intermediate commits)
-
-### Install pre-commit hooks
-
-Husky is used for managing pre-commit hooks. Hooks are installed automatically when you run `bun install`.
 
 ## License
 
