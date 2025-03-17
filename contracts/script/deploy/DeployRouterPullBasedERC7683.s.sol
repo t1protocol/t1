@@ -28,7 +28,7 @@ contract DeployRouterPullBasedERC7683 is Script {
             L1_T1_MESSENGER_PROXY_ADDR,
             address(0), // No Permit2 for now
             L1_T1_X_CHAIN_READ_PROXY_ADDR,
-            ORIGIN_CHAIN
+            PR1
         );
 
         // Deploy and initialize proxy
@@ -69,7 +69,7 @@ contract DeployRouterPullBasedERC7683 is Script {
             L2_T1_MESSENGER_PROXY_ADDR,
             address(0), // No Permit2 for now
             L2_T1_X_CHAIN_READ_PROXY_ADDR,
-            PR1
+            ORIGIN_CHAIN
         );
 
         // Deploy and initialize proxy
