@@ -11,11 +11,10 @@ import { T1Constants } from "../../src/libraries/constants/T1Constants.sol";
 
 contract DeployRouterPullBasedERC7683 is Script {
     uint32 internal constant ORIGIN_CHAIN = uint32(T1Constants.T1_DEVNET_CHAIN_ID);
-    uint32 internal constant PR1 = uint32(T1Constants.L1_CHAIN_ID);
+    uint32 internal constant PR1 = 1337;
     ProxyAdmin private proxyAdmin;
 
     function deploy_to_pr1() external {
-        // vm.createSelectFork(vm.rpcUrl("??"));
         uint256 deployerPk = vm.envUint("L1_DEPLOYER_PRIVATE_KEY");
         address L1_T1_MESSENGER_PROXY_ADDR = vm.envAddress("L1_T1_MESSENGER_PROXY_ADDR");
         address L1_T1_X_CHAIN_READ_PROXY_ADDR = vm.envAddress("L1_T1_X_CHAIN_READ_PROXY_ADDR");
@@ -43,7 +42,6 @@ contract DeployRouterPullBasedERC7683 is Script {
     }
 
     function initialize_pr1() external {
-        vm.createSelectFork(vm.rpcUrl("sepolia"));
         uint256 deployerPk = vm.envUint("L1_DEPLOYER_PRIVATE_KEY");
         address L1_t1_7683_PROXY_ADDR = vm.envAddress("L1_t1_7683_PROXY_ADDR");
         address L2_t1_7683_PROXY_ADDR = vm.envAddress("L2_t1_7683_PROXY_ADDR");
@@ -86,7 +84,7 @@ contract DeployRouterPullBasedERC7683 is Script {
 
     function initialize_t1() external {
         vm.createSelectFork(vm.rpcUrl("t1"));
-        uint256 deployerPk = vm.envUint("L1_DEPLOYER_PRIVATE_KEY");
+        uint256 deployerPk = vm.envUint("L2_DEPLOYER_PRIVATE_KEY");
         address L1_t1_7683_PROXY_ADDR = vm.envAddress("L1_t1_7683_PROXY_ADDR");
         address L2_t1_7683_PROXY_ADDR = vm.envAddress("L2_t1_7683_PROXY_ADDR");
 
