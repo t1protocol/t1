@@ -78,6 +78,8 @@ Scripts to test the canonical bridge functionalities:
   - [Withdraw USDT from L2->L1](./test/WithdrawUsdtFromL2ToL1.s.sol)
 - Swaps
   - [Swap ERC20s against bridge reserves](./test/SwapERC20.s.sol)
+  - [Allow router to transfer](./test/AllowRouterToTransfer.s.sol)
+  - [Set market maker](./test/SetMM.s.sol)
 - Chore
   - [Check Alice balances on L1/L2](./test/LogBalances.s.sol)
 
