@@ -23,6 +23,7 @@
 -   [ ] Bug fix (non-breaking change which fixes an issue)
 -   [ ] New feature (non-breaking change which adds functionality)
 -   [ ] Style (style only changes)
+-   [ ] Docs
 -   [ ] Refactor (code that does not add new functionality nor fixes a bug)
 
 ## Checklist:
