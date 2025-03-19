@@ -48,6 +48,7 @@ The backbone of t1, responsible for managing batches, state roots, and cross-cha
 - **L1T1Messenger**: facilitates message passing between L1 and L2, with the ability to retry failed messages
 - **L2T1Messenger**: the L2 counterpart, handling incoming messages from L1 and sending outbound messages
 - **L1MessageQueue**: maintains the ordered queue of L1→L2 messages awaiting processing
+- **L2MessageQueue**: maintains the ordered queue of L2→L1 messages awaiting processing
 
 ### Bridge Infrastructure
 
