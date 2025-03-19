@@ -16,7 +16,7 @@
 <!--- see how your change affects other areas of the code, etc. -->
 
 
-## Types of changes
+## Types of changes [REMOVE ALL UNCHECKED TYPES]
 
 <!--- What types of changes does your code introduce? Put an `x` in all the boxes that apply: -->
 
@@ -29,9 +29,6 @@
 
 <!--- Go over all the following points, and put an `x` in all the boxes that apply. -->
 
--   [ ] My code follows the code style of this project.
--   [ ] My change requires a change to the documentation.
--   [ ] I added deployment script (Makefile, docker file etc.)
--   [ ] I have updated the documentation accordingly - Docusaurus.
--   [ ] I have added tests to cover my changes.
--   [ ] All new and existing tests passed.
+-   [ ] This change includes any required documentation updates.
+-   [ ] I have added/updated any deployment scripts to ensure that the protocol is functional (Makefile, Dockerfile, Forge Script, etc.).
+-   [ ] This change includes any required test coverage.
