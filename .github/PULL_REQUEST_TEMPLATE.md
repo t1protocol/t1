@@ -33,3 +33,9 @@
 -   [ ] This change includes any required documentation updates.
 -   [ ] I have added/updated any deployment scripts to ensure that the protocol is functional (Makefile, Dockerfile, Forge Script, etc.).
 -   [ ] This change includes any required test coverage.
+-   [ ] The version has been bumped according to our internal semantic versioning rules˚¬˚
+
+˚¬˚ Semantic versioning rules:
+* Patch (i.e. 0.0.1) bumped if this change requires a redeployment/upgrade of contracts
+* Minor (i.e. 0.1.0) bumped if this change requires a new network deployment/hard fork
+* Major (i.e. 1.0.0) bumped if this change means we have achieved escape velocity
