@@ -16,22 +16,26 @@
 <!--- see how your change affects other areas of the code, etc. -->
 
 
-## Types of changes
+## Types of changes (remove all unchecked types)
 
 <!--- What types of changes does your code introduce? Put an `x` in all the boxes that apply: -->
 
 -   [ ] Bug fix (non-breaking change which fixes an issue)
 -   [ ] New feature (non-breaking change which adds functionality)
 -   [ ] Style (style only changes)
+-   [ ] Docs
 -   [ ] Refactor (code that does not add new functionality nor fixes a bug)
 
 ## Checklist:
 
 <!--- Go over all the following points, and put an `x` in all the boxes that apply. -->
 
--   [ ] My code follows the code style of this project.
--   [ ] My change requires a change to the documentation.
--   [ ] I added deployment script (Makefile, docker file etc.)
--   [ ] I have updated the documentation accordingly - Docusaurus.
--   [ ] I have added tests to cover my changes.
--   [ ] All new and existing tests passed.
+-   [ ] This change includes any required documentation updates.
+-   [ ] I have added/updated any deployment scripts to ensure that the protocol is functional (Makefile, Dockerfile, Forge Script, etc.).
+-   [ ] This change includes any required test coverage.
+-   [ ] The version has been bumped according to our internal semantic versioning rules˚¬˚
+
+˚¬˚ Semantic versioning rules:
+* Patch (i.e. 0.0.1) bumped if this change requires a redeployment/upgrade of contracts
+* Minor (i.e. 0.1.0) bumped if this change requires a new network deployment/hard fork
+* Major (i.e. 1.0.0) bumped if this change means we have achieved escape velocity
