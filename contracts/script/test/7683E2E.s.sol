@@ -94,8 +94,7 @@ contract SolverFillScript is Script {
         bytes32 orderId = hex"";
 
         // NOTE - encodedOrder logged from the first step goes here
-        bytes memory originData =
-            hex"";
+        bytes memory originData = hex"";
 
         // Approve output tokens
         ERC20(vm.envAddress("L2_USDT_ADDR")).approve(
