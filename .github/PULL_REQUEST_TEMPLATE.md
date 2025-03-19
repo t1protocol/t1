@@ -16,7 +16,7 @@
 <!--- see how your change affects other areas of the code, etc. -->
 
 
-## Types of changes [REMOVE ALL UNCHECKED TYPES]
+## Types of changes (remove all unchecked types)
 
 <!--- What types of changes does your code introduce? Put an `x` in all the boxes that apply: -->
 
