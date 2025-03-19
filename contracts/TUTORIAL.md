@@ -31,7 +31,7 @@ Protocol contract addresses can be found in the highest version of [/deployments
 
 ### Getting Funds on 𝚝𝟷
 
-The easiest way to get funds onto 𝚝𝟷 is to use the [devnet portal](https://devnet.t1protocol.com)
+The easiest way to get funds onto t1 is to bridge your own sepolia funds into our layer 2. Everyone can do so navigating our [devnet portal](https://devnet.t1protocol.com).
 
 ## Deploying Contracts
 
