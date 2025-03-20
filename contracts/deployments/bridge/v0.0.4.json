@@ -7,7 +7,7 @@
     "from_branch": "canary",
     "from_tag": "v0.0.4",
     "RPC_URL_L2": "https://rpc.devnet.t1protocol.com",
-    "RPC_URL_L1": "https://sepolia.infura.io/v3/XXXXXX"
+    "RPC_URL_L1": "https://sepolia.infura.io/v3/XXXXX"
   },
   "addresses": {
     "T1_L2_RPC": "http://127.0.0.1:8545",
