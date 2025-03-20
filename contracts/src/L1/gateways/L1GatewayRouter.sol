@@ -154,7 +154,8 @@ contract L1GatewayRouter is OwnableUpgradeable, IL1GatewayRouter {
         address outputGateway = getERC20Gateway(params.witness.outputTokenAddress);
         // Validate if there are enough reserves of the output token
         require(
-            params.witness.outputTokenAmount <= IERC20MetadataUpgradeable(params.witness.outputTokenAddress).balanceOf(outputGateway),
+            params.witness.outputTokenAmount
+                <= IERC20MetadataUpgradeable(params.witness.outputTokenAddress).balanceOf(outputGateway),
             "Insufficient reserves"
         );
 
@@ -176,10 +177,7 @@ contract L1GatewayRouter is OwnableUpgradeable, IL1GatewayRouter {
 
         // Use AllowanceTransfer to transfer the output tokens from the output gateway to the `owner` address
         IAllowanceTransfer(permit2).transferFrom(
-            outputGateway,
-            params.owner,
-            uint160(params.witness.outputTokenAmount),
-            params.witness.outputTokenAddress
+            outputGateway, params.owner, uint160(params.witness.outputTokenAmount), params.witness.outputTokenAddress
         );
 
         emit Swap(

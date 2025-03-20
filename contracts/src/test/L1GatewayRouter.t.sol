@@ -3,8 +3,6 @@
 pragma solidity ^0.8.25;
 
 import { StdUtils } from "forge-std/StdUtils.sol";
-import { console } from "forge-std/console.sol";
-import { WETH } from "solmate/tokens/WETH.sol";
 
 import { WETH } from "solmate/tokens/WETH.sol";
 import { MockERC20 } from "solmate/test/utils/mocks/MockERC20.sol";
@@ -64,7 +62,7 @@ contract L1GatewayRouterTest is L1GatewayTestBase, DeployPermit2, PermitSignatur
         l1Token = new MockERC20("Mock", "M", 18);
         usdt = new MockERC20("Tether", "USDT", 6);
         aave = new MockERC20("Aave coin", "AAVE", 18);
-        dai = new MockERC20("Dai Stablecoin", "DAI", 18); 
+        dai = new MockERC20("Dai Stablecoin", "DAI", 18);
         weth = new WETH();
 
         // Deploy L2 contracts
@@ -96,11 +94,7 @@ contract L1GatewayRouterTest is L1GatewayTestBase, DeployPermit2, PermitSignatur
         );
         admin.upgrade(
             ITransparentUpgradeableProxy(address(l1WETHGateway)),
-            address(
-                new L1WETHGateway(
-                    address(weth), address(1), address(1), address(router), address(l1Messenger)
-                )
-            )
+            address(new L1WETHGateway(address(weth), address(1), address(1), address(router), address(l1Messenger)))
         );
 
         // Initialize L1 contracts
@@ -113,10 +107,18 @@ contract L1GatewayRouterTest is L1GatewayTestBase, DeployPermit2, PermitSignatur
         aave.mint(address(l1StandardERC20Gateway), 1e21); // 1,000 AAVE
         dai.mint(address(l1StandardERC20Gateway), 1e21); // 1,000 DAI
         usdt.mint(address(l1StandardERC20Gateway), 1e12); // 1,000,000 USDT
-        vm.deal(address(router), 10 ether); 
         weth.deposit{ value: address(this).balance / 2 }();
         weth.approve(address(l1WETHGateway), type(uint256).max);
         weth.approve(address(router), type(uint256).max);
+
+        // set WETH gateway in router
+        {
+            address[] memory _tokens = new address[](1);
+            _tokens[0] = address(weth);
+            address[] memory _gateways = new address[](1);
+            _gateways[0] = address(l1WETHGateway);
+            L1GatewayRouter(router).setERC20Gateway(_tokens, _gateways);
+        }
 
         // Set configurations
         router.setMM(address(this));
@@ -303,7 +305,7 @@ contract L1GatewayRouterTest is L1GatewayTestBase, DeployPermit2, PermitSignatur
         address alice = hevm.addr(alicePrivateKey);
 
         uint256 inputTokenAmount = 1 ether;
-        uint256 outputTokenAmount = 3_000 ether; // 3K USDT
+        uint256 outputTokenAmount = 3e9; // 3K USDT
 
         weth.transfer(alice, inputTokenAmount);
 
@@ -331,7 +333,7 @@ contract L1GatewayRouterTest is L1GatewayTestBase, DeployPermit2, PermitSignatur
         );
 
         uint256 inputStartBalanceFrom = weth.balanceOf(alice);
-        uint256 inputStartBalanceTo = address(router).balance;
+        uint256 inputStartBalanceTo = weth.balanceOf(address(l1WETHGateway));
         uint256 outputStartBalanceFrom = usdt.balanceOf(address(l1StandardERC20Gateway));
         uint256 outputStartBalanceTo = usdt.balanceOf(alice);
 
@@ -339,7 +341,7 @@ contract L1GatewayRouterTest is L1GatewayTestBase, DeployPermit2, PermitSignatur
 
         // Check input token balances after swap
         assertEq(weth.balanceOf(alice), inputStartBalanceFrom - inputTokenAmount);
-        assertEq(address(router).balance, inputStartBalanceTo + inputTokenAmount);
+        assertEq(weth.balanceOf(address(l1WETHGateway)), inputStartBalanceTo + inputTokenAmount);
         // Check output token balances after swap
         assertEq(usdt.balanceOf(address(l1StandardERC20Gateway)), outputStartBalanceFrom - outputTokenAmount);
         assertEq(usdt.balanceOf(alice), outputStartBalanceTo + outputTokenAmount);
@@ -349,13 +351,14 @@ contract L1GatewayRouterTest is L1GatewayTestBase, DeployPermit2, PermitSignatur
         uint256 alicePrivateKey = 0xa11ce;
         address alice = hevm.addr(alicePrivateKey);
 
-        uint256 inputTokenAmount = 3_000 ether; // 3K USDT
+        uint256 inputTokenAmount = 3e9; // 3K USDT
         uint256 outputTokenAmount = 1 ether;
 
-        weth.transfer(alice, inputTokenAmount);
+        usdt.mint(alice, inputTokenAmount);
+        weth.transfer(address(l1WETHGateway), outputTokenAmount);
 
         hevm.startPrank(alice);
-        weth.approve(permit2, type(uint256).max);
+        usdt.approve(permit2, type(uint256).max);
         hevm.stopPrank();
 
         IL1GatewayRouter.SwapParams memory params = defaultWitnessAndSwapParams();
@@ -372,13 +375,13 @@ contract L1GatewayRouterTest is L1GatewayTestBase, DeployPermit2, PermitSignatur
             address(router)
         );
 
-        l1StandardERC20Gateway.allowRouterToTransfer(
+        l1WETHGateway.allowRouterToTransfer(
             params.witness.outputTokenAddress, type(uint160).max, uint48(block.timestamp + 1000)
         );
 
         uint256 inputStartBalanceFrom = usdt.balanceOf(alice);
         uint256 inputStartBalanceTo = usdt.balanceOf(address(l1StandardERC20Gateway));
-        uint256 outputStartBalanceFrom = weth.balanceOf(address(l1Messenger));
+        uint256 outputStartBalanceFrom = weth.balanceOf(address(l1WETHGateway));
         uint256 outputStartBalanceTo = weth.balanceOf(alice);
 
         router.swapERC20(params);
@@ -387,7 +390,7 @@ contract L1GatewayRouterTest is L1GatewayTestBase, DeployPermit2, PermitSignatur
         assertEq(usdt.balanceOf(alice), inputStartBalanceFrom - inputTokenAmount);
         assertEq(usdt.balanceOf(address(l1StandardERC20Gateway)), inputStartBalanceTo + inputTokenAmount);
         // Check output token balances after swap
-        assertEq(weth.balanceOf(address(l1Messenger)), outputStartBalanceFrom - outputTokenAmount);
+        assertEq(weth.balanceOf(address(l1WETHGateway)), outputStartBalanceFrom - outputTokenAmount);
         assertEq(weth.balanceOf(alice), outputStartBalanceTo + outputTokenAmount);
     }
 
