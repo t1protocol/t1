@@ -37,7 +37,7 @@ To deploy the 7683 contract, follow these steps:
 First, deploy the L1 router by running the following command:
 
 ```bash
-forge script ./script/deploy/DeployRouterERC7683.s.sol:RouterDeployScript --sig "deployL1Router()" --rpc-url $T1_L1_RPC --broadcast --verify --verifier etherscan --verifier-url https://api-sepolia.etherscan.io/api --etherscan-api-key SDDHW92M9NVRP8ZWP1WI5KHHHHTXR662AR
+forge script ./script/deploy/DeployRouterERC7683.s.sol:RouterDeployScript --sig "deployL1Router()" --rpc-url $T1_L1_RPC --broadcast --verify --verifier etherscan --verifier-url https://api-sepolia.etherscan.io/api
 ```
 
 ### Deploy L2 Router
