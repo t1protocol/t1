@@ -1,11 +1,18 @@
 {
   "name": "@t1protocol/t1-contracts",
   "description": "Solidity code for T1's L1 bridge and rollup contracts, plus L2 bridge and pre-deployed contracts.",
-  "version": "0.0.3",
+  "version": "0.0.6",
+  "license": "MIT",
   "author": {
     "name": "t1 Labs",
-    "url": "https://github.com/t1protocol"
+    "url": "https://t1protocol.com/"
   },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/t1protocol/t1.git",
+    "directory": "./contracts"
+  },
+  "homepage": "https://github.com/t1protocol/t1/blob/canary/contracts/README.md",
   "dependencies": {
     "@hyperlane-xyz/core": "5.4.1",
     "@openzeppelin/contracts": "4.9.3",
