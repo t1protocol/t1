@@ -57,3 +57,7 @@
   polygon = "https://polygon-mainnet.infura.io/v3/${API_KEY_INFURA}"
   sepolia = "${T1_L1_RPC}"
   t1 = "${T1_L2_RPC}"
+
+[etherscan]
+sepolia = { key = "${ETHERSCAN_API_KEY}" }
+

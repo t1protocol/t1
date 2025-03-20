@@ -1,5 +1,0 @@
-name: 't1'
-
-include:
-  - ./blockscout/compose.yml
-  - ./reth/compose.yml
