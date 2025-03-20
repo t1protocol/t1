@@ -71,4 +71,4 @@ Husky is used for managing pre-commit hooks. Hooks are installed automatically w
 
 ## License
 
-t1 Monorepo is licensed under the [MIT license](./LICENSE).
+t1 Monorepo is licensed under the [MIT](./LICENSE).
