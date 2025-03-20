@@ -68,6 +68,6 @@ This repo uses [conventional commits](https://www.conventionalcommits.org/en/v1.
 
 Husky is used for managing pre-commit hooks. Hooks are installed automatically when you run `bun install`.
 
-## Open Source
+## License
 
-This repository will eventually be open-sourced. We aim to make it modular and easy to fork, so users can access specific components without requiring the full stack.
+t1 Monorepo is licensed under the [MIT license](./LICENSE).
