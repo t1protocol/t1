@@ -2,12 +2,17 @@
   "name": "t1",
   "version": "0.0.6",
   "description": "A monorepo containing all major components of the t1 protocol",
+  "license": "MIT",
+  "author": {
+    "name": "t1 Labs",
+    "url": "https://t1protocol.com/"
+  },
   "repository": {
     "type": "git",
-    "url": "https://github.com/t1protocol/"
+    "url": "https://github.com/t1protocol/t1.git",
+    "directory": "."
   },
-  "author": "t1 Labs",
-  "license": "MIT",
+  "homepage": "https://github.com/t1protocol/t1/blob/canary/README.md",
   "scripts": {
     "prepare": "husky",
     "commit": "./node_modules/cz-customizable/standalone.js"
