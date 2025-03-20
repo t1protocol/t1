@@ -85,7 +85,7 @@ Make sure all these tools are installed and available on your `PATH`.
 ```
 
 - `<number_of_wallets>`: The number of wallets you want to generate. Must be a positive integer.
-- `-a` (optional): If present, the script will attempt to append the new wallet addresses to a `genesis.json` file located at `../docker-compose/reth/network-configs/genesis.json`.
+- `-a` (optional): If present, the script will attempt to append the new wallet addresses to a `genesis.json` file located at [infrastructure repository](https://github.com/t1protocol/infrastructure/).
 
 #### Examples
 
@@ -103,7 +103,7 @@ Make sure all these tools are installed and available on your `PATH`.
    ```bash
    ./generate_wallets.sh 2 -a
    ```
-   - In addition to creating `wallets.txt`, the script will look for `../docker-compose/reth/network-configs/genesis.json`.
+   - In addition to creating `wallets.txt`, the script will look for `genesis.json` located in the [infrastructure repository](https://github.com/t1protocol/infrastructure).
    - If found, it backs up the existing file, then appends the newly generated addresses under `.alloc`.
    - **Requires** `jq`. If `jq` is missing, the script will skip the append step.
 

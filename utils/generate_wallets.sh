@@ -33,7 +33,7 @@ if [ "$2" == "-a" ]; then
 fi
 
 OUTPUT_FILE="wallets.txt"
-GENESIS_PATH="../docker-compose/reth/network-configs/genesis.json"
+GENESIS_PATH="../../infrastructure/docker-compose/reth/network-configs/genesis.json"
 
 # Clear previous output
 > "$OUTPUT_FILE"
@@ -93,7 +93,7 @@ if $AUTO_APPEND; then
       done
 
       # Backup the existing genesis.json before modifying
-      backup_file="../docker-compose/reth/network-configs/genesis_backup_$(date +'%Y%m%d%H%M%S').json"
+      backup_file="../../infrastructure/docker-compose/reth/network-configs/genesis_backup_$(date +'%Y%m%d%H%M%S').json"
       cp "$GENESIS_PATH" "$backup_file"
 
       # -----------------------------------------------------
