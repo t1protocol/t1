@@ -141,7 +141,7 @@ include the following:
     "from_branch": "canary",
     "from_commit": "a7e7dae0dd90aa4091ba034e820ac224213d8a30",
     "RPC_URL_L2": "https://rpc.devnet.t1protocol.com",
-    "RPC_URL_L1": "https://sepolia.infura.io/v3/6de3d4cd043143e896aeebafa0b23f56"
+    "RPC_URL_L1": "https://sepolia.infura.io/v3/XXXXXX"
   },
   "addresses": {
     "CONTRACT_NAME": "0x0000000000000000000000000000000000000001"
