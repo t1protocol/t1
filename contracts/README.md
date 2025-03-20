@@ -200,4 +200,5 @@ This project is licensed under the [MIT LICENSE](../LICENSE).
 
 ## Acknowledgments
 
-This repository is a fork of [Scroll contracts](https://github.com/scroll-tech/scroll-contracts/) created by [Scroll](https://github.com/scroll-tech), licensed under the [MIT LICENSE](../LICENSE).
+This repository is a fork of [Scroll contracts](https://github.com/scroll-tech/scroll-contracts/) created by
+[Scroll](https://github.com/scroll-tech), licensed under the [MIT LICENSE](../LICENSE).
