@@ -43,7 +43,7 @@ This script sets up the necessary tools and dependencies for running cloud infra
 - Installs Docker and configures the user for Docker access.
 - Installs Rust, Foundry, Bun, Node.js (via NVM), PNPM, TypeScript, and Hardhat.
 - Installs PostgreSQL and configures it with a database (`postman_db`).
-- Clones T1 protocol repositories (`t1`, `postman`, `tdex`).
+- Clones t1 protocol repositories (`t1`, `postman`, `tdex`).
 
 #### Usage
 

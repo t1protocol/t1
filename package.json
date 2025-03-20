@@ -6,8 +6,8 @@
     "type": "git",
     "url": "https://github.com/t1protocol/"
   },
-  "author": "t1 Protocol",
-  "license": "SEE LICENSE IN <filename>",
+  "author": "t1 Labs",
+  "license": "MIT",
   "scripts": {
     "prepare": "husky",
     "commit": "./node_modules/cz-customizable/standalone.js"
