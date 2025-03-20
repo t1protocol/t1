@@ -10,7 +10,7 @@ import { DSTestPlus } from "solmate/test/utils/DSTestPlus.sol";
 import { ISignatureTransfer } from "@uniswap/permit2/src/interfaces/ISignatureTransfer.sol";
 
 import { IL1GatewayRouter } from "../../src/L1/gateways/IL1GatewayRouter.sol";
-import { IL1StandardERC20Gateway } from "../../src/L1/gateways/IL1StandardERC20Gateway.sol";
+import { IL1ERC20Gateway } from "../../src/L1/gateways/IL1ERC20Gateway.sol";
 import { T1StandardERC20 } from "../../src/libraries/token/T1StandardERC20.sol";
 import { PermitSignature } from "../../src/test/utils/PermitSignature.sol";
 import { T1Constants } from "../../src/libraries/constants/T1Constants.sol";
@@ -78,7 +78,7 @@ contract SwapERC20 is Script, PermitSignature {
         // TODO - Check if allowance has expired
         if (T1StandardERC20(L1_USDT_ADDR).allowance(L1_STANDARD_ERC20_GATEWAY_PROXY_ADDR, permit2) < outputTokenAmount)
         {
-            IL1StandardERC20Gateway(L1_STANDARD_ERC20_GATEWAY_PROXY_ADDR).allowRouterToTransfer(
+            IL1ERC20Gateway(L1_STANDARD_ERC20_GATEWAY_PROXY_ADDR).allowRouterToTransfer(
                 L1_USDT_ADDR, type(uint160).max, uint48(block.timestamp + 10_000_000)
             );
         }
