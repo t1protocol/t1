@@ -1,7 +1,7 @@
 # 𝚝𝟷
 [![Reth](https://github.com/t1protocol/t1/actions/workflows/reth.yml/badge.svg?branch=develop)](https://github.com/t1protocol/t1/actions/workflows/reth.yml)
 [![Contracts](https://github.com/t1protocol/t1/actions/workflows/contracts.yml/badge.svg?branch=develop)](https://github.com/t1protocol/t1/actions/workflows/contracts.yml)
-![License MIT](https://img.shields.io/badge/license-MIT-green.svg)
+![License MIT](https://img.shields.io/badge/license-MIT-blue.svg)
 
 Monorepo for 𝚝𝟷
 
