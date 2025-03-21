@@ -17,7 +17,7 @@
 
 # 🛠️ 𝚝𝟷 — Real-time proofs to unify Ethereum
 
-**𝚝𝟷** is pioneering intent-based bridges with RTP (Real Time Proofs) and programmability, enabling secure, flexible, and developer-friendly interactions between blockchain networks.
+𝚝𝟷 is a rollup that introduces real-time proofs to unify Ethereum and the rollup ecosystem.
 
 ## 📂 Directory Structure
 
