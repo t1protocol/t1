@@ -1,8 +1,19 @@
-[![Reth](https://github.com/t1protocol/t1/actions/workflows/reth.yml/badge.svg?branch=develop)](https://github.com/t1protocol/t1/actions/workflows/reth.yml)
-[![Contracts](https://github.com/t1protocol/t1/actions/workflows/contracts.yml/badge.svg?branch=develop)](https://github.com/t1protocol/t1/actions/workflows/contracts.yml)
-![License MIT](https://img.shields.io/badge/license-MIT-blue.svg)
-![Solidity](https://img.shields.io/badge/Solidity-%5E0.8-blueviolet?logo=solidity.svg)
-![Rust](https://img.shields.io/badge/Rust-stable-orange?logo=rust)
+[![Reth](https://github.com/t1protocol/t1/actions/workflows/reth.yml/badge.svg)](https://github.com/t1protocol/t1/actions/workflows/reth.yml)
+[![Contracts](https://github.com/t1protocol/t1/actions/workflows/contracts.yml/badge.svg)](https://github.com/t1protocol/t1/actions/workflows/contracts.yml)
+
+[![Solidity][solidity-badge]][solidity]
+[![Rust][rust-badge]][rust]
+[![Foundry][foundry-badge]][foundry]
+[![License: MIT][license-badge]][license]
+
+[solidity]: https://soliditylang.org/
+[solidity-badge]: https://img.shields.io/badge/Solidity-%5E0.8-blueviolet?logo=solidity
+[rust]: https://www.rust-lang.org/
+[rust-badge]: https://img.shields.io/badge/Rust-stable-orange?logo=rust
+[foundry]: https://getfoundry.sh/
+[foundry-badge]: https://img.shields.io/badge/Built%20with-Foundry-FFDB1C.svg
+[license]: https://opensource.org/licenses/MIT
+[license-badge]: https://img.shields.io/badge/License-MIT-blue.svg
 
 # 🛠️ 𝚝𝟷 — Real-time proofs to unify Ethereum
 
@@ -10,7 +21,7 @@
 
 ## 📂 Directory Structure
 
- This monorepo encompasses essential infrastructure components of the 𝚝𝟷 protocol. It contains the L1 and L2 contracts, the rollup node, and some e2e tests.
+This monorepo encompasses essential infrastructure components of the 𝚝𝟷 protocol, including Solidity contracts, rollup node in Rust, and comprehensive end-to-end tests.
 
 - 🧑‍💻 **[contracts](./contracts/README.md)**: Solidity contracts (L1/L2 bridges, rollup & pre-deployed contracts)
 - 🦀 **[reth](./reth/README.md)**: Rust-based t1 extension for reth
