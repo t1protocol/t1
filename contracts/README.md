@@ -1,7 +1,11 @@
-# t1 Contracts [![Github Actions][gha-badge]][gha] [![Foundry][foundry-badge]][foundry] [![License: MIT][license-badge]][license]
+# t1 Contracts
 
-[gha]: https://github.com/t1protocol/t1/actions
-[gha-badge]: https://github.com/t1protocol/t1/actions/workflows/contracts.yml/badge.svg?branch=main
+[![Contracts](https://github.com/t1protocol/t1/actions/workflows/contracts.yml/badge.svg)](https://github.com/t1protocol/t1/actions/workflows/contracts.yml)
+
+[![Solidity][solidity-badge]][solidity] [![Foundry][foundry-badge]][foundry] [![License: MIT][license-badge]][license]
+
+[solidity]: https://soliditylang.org/
+[solidity-badge]: https://img.shields.io/badge/Solidity-%5E0.8-blueviolet?logo=solidity
 [foundry]: https://getfoundry.sh/
 [foundry-badge]: https://img.shields.io/badge/Built%20with-Foundry-FFDB1C.svg
 [license]: https://opensource.org/licenses/MIT
