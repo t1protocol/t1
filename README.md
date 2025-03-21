@@ -6,11 +6,10 @@
 Monorepo for 𝚝𝟷
 
 ## Directory Structure
-
-- **[contracts](./contracts/)**: Solidity code for t1 L1 bridge and rollup contracts, plus L2 bridge and pre-deployed contracts.
-- **[reth](./reth/)**: Rust code for the t1 extension of reth.
-- **[e2e](./e2e/)**: End-to-end tests against a specified environment
-- **[utils](./utils/)**: Utility scripts used for setting up aspects of the protocol, such as funding wallets
+Every project in this monorepo has their own setup instructions (e.g., Rust for Reth). Here it goes the list of projects and their READMEs:
+- **[contracts](./contracts/README.md)**: Solidity code for t1 L1 bridge and rollup contracts, plus L2 bridge and pre-deployed contracts.
+- **[reth](./reth/README.md)**: Rust code for the t1 extension of reth.
+- **[e2e](./e2e/README.md)**: End-to-end tests against a specified environment
 
 ## Getting Started
 Deploying t1 as a protocol involves three primary steps:
@@ -22,26 +21,15 @@ Deploying t1 as a protocol involves three primary steps:
 ### Setup Environment
 
 #### Dependencies
-Install [Bun](https://bun.sh/):
+- [Bun](https://bun.sh/) is the recommended package manager for this repository. Ensure it's installed before proceeding.
+- [Foundry](https://getfoundry.sh/) is our lovely smart contract development toolchain.
+- [Docker](https://docs.docker.com/get-docker/) is neccesary to run the different components in our protocol.
 
-Bun is the recommended package manager for this repository. ensure it's installed before proceeding:
-
-```bash
-curl https://bun.sh/install | bash
-```
-
-Install Foundry:
-```bash
-curl -L https://foundry.paradigm.xyz | bash
-```
-
-Install [Docker](https://docs.docker.com/get-docker/)
-
-#### Clone this repo:
+#### Clone this repo
 
 ```bash
-git clone https://github.com/t1protocol/t1_monorepo.git
-cd t1_monorepo
+git clone https://github.com/t1protocol/t1.git
+cd t1
 ```
 
 #### Install dependencies
@@ -53,12 +41,6 @@ bun install
 ```
 
 Husky is used for managing pre-commit hooks. Hooks are installed automatically when you run `bun install`.
-
-## [Run Node](./docker-compose/README.md)
-
-## [Deploy Contracts](./contracts/README.md)
-
-NB: Some sub-repos may have their own setup instructions (e.g., Rust for Reth). See the README.md within each subdirectory for details.
 
 ## Development Workflow
 
