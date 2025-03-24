@@ -14,10 +14,13 @@ import { T1StandardERC20 } from "../../src/libraries/token/T1StandardERC20.sol";
 contract AllowRouterToTransfer is Script {
     address private L1_GATEWAY_ROUTER_PROXY_ADDR = vm.envAddress("L1_GATEWAY_ROUTER_PROXY_ADDR");
     address private L1_STANDARD_ERC20_GATEWAY_PROXY_ADDR = vm.envAddress("L1_STANDARD_ERC20_GATEWAY_PROXY_ADDR");
+    address private L1_WETH_GATEWAY_PROXY_ADDR = vm.envAddress("L1_WETH_GATEWAY_PROXY_ADDR");
     uint256 private MARKET_MAKER_PRIVATE_KEY = vm.envUint("MARKET_MAKER_PRIVATE_KEY");
 
     // List of token addresses listed on tDEX
-    address[] public ERC20s = [vm.envAddress("L1_WETH_ADDR"), vm.envAddress("L1_USDT_ADDR")];
+    address[] private ERC20s = [vm.envAddress("L1_WETH_ADDR"), vm.envAddress("L1_USDT_ADDR")];
+
+    address private wethAddress = vm.envAddress("L1_WETH_ADDR");
 
     address private marketMaker = vm.addr(MARKET_MAKER_PRIVATE_KEY);
 
@@ -37,6 +40,13 @@ contract AllowRouterToTransfer is Script {
                     ERC20s[i], type(uint160).max, uint48(block.timestamp + 10_000_000)
                 );
             }
+        }
+
+        // Check allowance for WETH
+        if (T1StandardERC20(wethAddress).allowance(L1_WETH_GATEWAY_PROXY_ADDR, permit2) < type(uint160).max / 2) {
+            IL1ERC20Gateway(L1_WETH_GATEWAY_PROXY_ADDR).allowRouterToTransfer(
+                wethAddress, type(uint160).max, uint48(block.timestamp + 10_000_000)
+            );
         }
 
         vm.stopBroadcast();
