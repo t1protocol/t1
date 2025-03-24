@@ -1,72 +1,67 @@
-# 𝚝𝟷
-[![Reth](https://github.com/t1protocol/t1/actions/workflows/reth.yml/badge.svg?branch=develop)](https://github.com/t1protocol/t1/actions/workflows/reth.yml)
-[![Contracts](https://github.com/t1protocol/t1/actions/workflows/contracts.yml/badge.svg?branch=develop)](https://github.com/t1protocol/t1/actions/workflows/contracts.yml)
-![License MIT](https://img.shields.io/badge/license-MIT-blue.svg)
+[![Reth](https://github.com/t1protocol/t1/actions/workflows/reth.yml/badge.svg)](https://github.com/t1protocol/t1/actions/workflows/reth.yml)
+[![Contracts](https://github.com/t1protocol/t1/actions/workflows/contracts.yml/badge.svg)](https://github.com/t1protocol/t1/actions/workflows/contracts.yml)
 
-Monorepo for 𝚝𝟷
+[![Solidity][solidity-badge]][solidity]
+[![Rust][rust-badge]][rust]
+[![Foundry][foundry-badge]][foundry]
+[![License: MIT][license-badge]][license]
 
-## Directory Structure
+[solidity]: https://soliditylang.org/
+[solidity-badge]: https://img.shields.io/badge/Solidity-%5E0.8-blueviolet?logo=solidity
+[rust]: https://www.rust-lang.org/
+[rust-badge]: https://img.shields.io/badge/Rust-stable-orange?logo=rust
+[foundry]: https://getfoundry.sh/
+[foundry-badge]: https://img.shields.io/badge/Built%20with-Foundry-FFDB1C.svg
+[license]: https://opensource.org/licenses/MIT
+[license-badge]: https://img.shields.io/badge/License-MIT-blue.svg
 
-- **[contracts](./contracts/)**: Solidity code for t1 L1 bridge and rollup contracts, plus L2 bridge and pre-deployed contracts.
-- **[reth](./reth/)**: Rust code for the t1 extension of reth.
-- **[e2e](./e2e/)**: End-to-end tests against a specified environment
+# 🛠️ 𝚝𝟷 — Real-time proofs to unify Ethereum
 
-## Getting Started
+𝚝𝟷 is a rollup that introduces real-time proofs to unify Ethereum and the rollup ecosystem.
 
-### Prerequisites
+## 📂 Directory Structure
 
-1. Install [Bun](https://bun.sh/):
+This monorepo encompasses essential infrastructure components of the 𝚝𝟷 protocol, including Solidity contracts, rollup node in Rust, and comprehensive end-to-end tests.
 
-Bun is the recommended package manager for this repository. ensure it's installed before proceeding:
+- 🧑‍💻 **[contracts](./contracts/README.md)**: Solidity contracts (L1/L2 bridges, rollup & pre-deployed contracts)
+- 🦀 **[reth](./reth/README.md)**: Rust-based t1 extension for reth
+- 🧪 **[e2e](./e2e/README.md)**: End-to-end testing suite for protocol validation
 
+## 🚧 Quick Start
+
+### 🧰 Dependencies
+
+- [Bun](https://bun.sh/) (recommended package manager)
+- [Foundry](https://getfoundry.sh/) (our favorite smart contract toolkit)
+- [Docker](https://docs.docker.com/get-docker/) (containerization)
+
+### 📥 Clone & Setup
 ```bash
-curl https://bun.sh/install | bash
-```
-
-2. Clone this repo:
-
-```bash
-git clone https://github.com/t1protocol/t1_monorepo.git
-cd t1_monorepo
-```
-
-### Install dependencies
-
-Run the following command at the root level to install all dependencies:
-
-```bash
+git clone https://github.com/t1protocol/t1.git
+cd t1
 bun install
 ```
 
-NB: Some sub-repos may have their own setup instructions (e.g., Rust for Reth). See the README.md within each subdirectory for details.
+## 💬 Contributing
 
-## Development Workflow
+We ❤️ open-source developers! Here's how you can help:
 
-* Use `bun commit` to ensure your commit messages follow the conventional commit format.
-* Check that the program compiles before pushing any changes. The particular command to run will depend on the specific subdirectory that you are working within.
+1. Fork the repository.
+2. Create your branch (`git checkout -b feat/amazing-feature`).
+3. Commit using our conventional commit guidelines (`bun commit` helps you format).
+4. Open a Pull Request 🎉
 
-## Contributing
+📖 See [contributing guidelines](CONTRIBUTING.md) for details.
 
-We welcome contributions! To get started:
+## 👾 Issues
 
-1. Fork the repo and create a branch for your changes.
-2. Ensure your changes pass tests and follow the commit message conventions (`bun commit` helps with this).
-3. Open a pull request for review.
+If you find a bug or have a feature request, please open an [issue](https://github.com/t1protocol/t1/issues).
 
-### Commit message guidelines
-
-This repo uses [conventional commits](https://www.conventionalcommits.org/en/v1.0.0/) to standardize commit messages. Available commit types include:
-
-* feat: new features
-* fix: bug fixes
-* docs: documentation updates
-* refactor: code refactoring
-* test: test updates
-* WIP: work in progress (use for intermediate commits)
-
-### Install pre-commit hooks
-
-Husky is used for managing pre-commit hooks. Hooks are installed automatically when you run `bun install`.
+## 🌍 Community
+- 🌐 [Website](https://t1protocol.com/)
+- 🐦 [Twitter](https://twitter.com/t1protocol)
+- 📚 [Documentation](https://docs.t1protocol.com/)
+- 💬 [Discord](https://discord.gg/C6kDaJS5)
 
 ## License
 

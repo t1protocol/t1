@@ -1,7 +1,11 @@
-# t1 Contracts [![Github Actions][gha-badge]][gha] [![Foundry][foundry-badge]][foundry] [![License: MIT][license-badge]][license]
+# t1 Contracts
 
-[gha]: https://github.com/t1protocol/t1/actions
-[gha-badge]: https://github.com/t1protocol/t1/actions/workflows/contracts.yml/badge.svg?branch=main
+[![Contracts](https://github.com/t1protocol/t1/actions/workflows/contracts.yml/badge.svg)](https://github.com/t1protocol/t1/actions/workflows/contracts.yml)
+
+[![Solidity][solidity-badge]][solidity] [![Foundry][foundry-badge]][foundry] [![License: MIT][license-badge]][license]
+
+[solidity]: https://soliditylang.org/
+[solidity-badge]: https://img.shields.io/badge/Solidity-%5E0.8-blueviolet?logo=solidity
 [foundry]: https://getfoundry.sh/
 [foundry-badge]: https://img.shields.io/badge/Built%20with-Foundry-FFDB1C.svg
 [license]: https://opensource.org/licenses/MIT
@@ -34,6 +38,28 @@ contracts.
 └── <a href="./deployments">deployments</a>: Metadata from previous deployments
 ...
 </pre>
+
+## Core Contracts Overview
+
+t1's architecture consists of these key components:
+
+### T1Chain
+
+The backbone of t1, responsible for managing batches, state roots, and cross-chain verification.
+
+### Messaging Layer
+
+- **L1T1Messenger**: facilitates message passing between L1 and L2, with the ability to retry failed messages
+- **L2T1Messenger**: the L2 counterpart, handling incoming messages from L1 and sending outbound messages
+- **L1MessageQueue**: maintains the ordered queue of L1→L2 messages awaiting processing
+- **L2MessageQueue**: maintains the ordered queue of L2→L1 messages awaiting processing
+
+### Bridge Infrastructure
+
+- **GatewayRouter**: entry point for all token bridging operations
+- **L1EthGateway**: handles native ETH bridging from L1→L2
+- **L1WethGateway**: specialized gateway for WETH transfers
+- **L1StandardERC20Gateway**: supports general ERC20 token bridging
 
 ## Dependencies
 
