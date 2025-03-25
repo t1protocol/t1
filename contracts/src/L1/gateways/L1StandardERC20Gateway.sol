@@ -5,12 +5,12 @@ pragma solidity ^0.8.25;
 import { ClonesUpgradeable } from "@openzeppelin/contracts-upgradeable/proxy/ClonesUpgradeable.sol";
 import { IERC20MetadataUpgradeable } from
     "@openzeppelin/contracts-upgradeable/token/ERC20/extensions/IERC20MetadataUpgradeable.sol";
+
 import { IAllowanceTransfer } from "@uniswap/permit2/src/interfaces/IAllowanceTransfer.sol";
 
 import { IL2ERC20Gateway } from "../../L2/gateways/IL2ERC20Gateway.sol";
 import { IL1T1Messenger } from "../IL1T1Messenger.sol";
 import { IL1ERC20Gateway } from "./IL1ERC20Gateway.sol";
-import { IL1StandardERC20Gateway } from "./IL1StandardERC20Gateway.sol";
 import { IL1GatewayRouter } from "../../L1/gateways/IL1GatewayRouter.sol";
 
 import { T1Constants } from "../../libraries/constants/T1Constants.sol";
@@ -24,7 +24,7 @@ import { L1ERC20Gateway } from "./L1ERC20Gateway.sol";
 /// token will be transfer to the recipient directly. Any ERC20 that requires non-standard functionality
 /// should use a separate gateway.
 /// @dev It includes a function to grant allowances to the `L1GatewayRouter` to swap against reserves.
-contract L1StandardERC20Gateway is L1ERC20Gateway, IL1StandardERC20Gateway {
+contract L1StandardERC20Gateway is L1ERC20Gateway {
     /**
      *
      * Constants *
@@ -94,33 +94,11 @@ contract L1StandardERC20Gateway is L1ERC20Gateway, IL1StandardERC20Gateway {
 
     /// @inheritdoc IL1ERC20Gateway
     function getL2ERC20Address(address _l1Token) public view override returns (address) {
-        // In StandardERC20Gateway, all corresponding l2 tokens are depoyed by Create2 with salt,
+        // In StandardERC20Gateway, all corresponding l2 tokens are deployed by Create2 with salt,
         // we can calculate the l2 address directly.
         bytes32 _salt = keccak256(abi.encodePacked(counterpart, keccak256(abi.encodePacked(_l1Token))));
 
         return ClonesUpgradeable.predictDeterministicAddress(l2TokenImplementation, _salt, l2TokenFactory);
-    }
-
-    /**
-     *
-     * Public Mutating Functions *
-     *
-     */
-
-    /// @inheritdoc IL1StandardERC20Gateway
-    function allowRouterToTransfer(address token, uint160 amount, uint48 expiration) external {
-        require(token != address(0), "Invalid token address");
-        require(expiration > block.timestamp, "Expiration must be in the future");
-
-        address permit2 = IL1GatewayRouter(router).permit2();
-
-        // Give permissions to Permit2 if the current ones aren't enough
-        if (IERC20MetadataUpgradeable(token).allowance(address(this), permit2) < amount) {
-            IERC20MetadataUpgradeable(token).approve(permit2, type(uint160).max);
-        }
-
-        // Call the Permit2 `approve` method to grant allowance to the router
-        IAllowanceTransfer(permit2).approve(token, T1GatewayBase.router, amount, expiration);
     }
 
     /**

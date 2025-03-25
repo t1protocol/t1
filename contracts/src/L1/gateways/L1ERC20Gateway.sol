@@ -5,6 +5,8 @@ pragma solidity ^0.8.25;
 import { IERC20Upgradeable } from "@openzeppelin/contracts-upgradeable/token/ERC20/IERC20Upgradeable.sol";
 import { SafeERC20Upgradeable } from "@openzeppelin/contracts-upgradeable/token/ERC20/utils/SafeERC20Upgradeable.sol";
 
+import { IAllowanceTransfer } from "@uniswap/permit2/src/interfaces/IAllowanceTransfer.sol";
+
 import { IL1ERC20Gateway } from "./IL1ERC20Gateway.sol";
 import { IL1GatewayRouter } from "./IL1GatewayRouter.sol";
 
@@ -109,6 +111,22 @@ abstract contract L1ERC20Gateway is IL1ERC20Gateway, IMessageDropCallback, T1Gat
         emit RefundERC20(_token, _receiver, _amount);
     }
 
+    /// @inheritdoc IL1ERC20Gateway
+    function allowRouterToTransfer(address token, uint160 amount, uint48 expiration) external {
+        require(token != address(0), "Invalid token address");
+        require(expiration > block.timestamp, "Expiration must be in the future");
+
+        address permit2 = IL1GatewayRouter(router).permit2();
+
+        // Give permissions to Permit2 if the current ones aren't enough
+        if (IERC20Upgradeable(token).allowance(address(this), permit2) < amount) {
+            IERC20Upgradeable(token).approve(permit2, type(uint160).max);
+        }
+
+        // Call the Permit2 `approve` method to grant allowance to the router
+        IAllowanceTransfer(permit2).approve(token, T1GatewayBase.router, amount, expiration);
+    }
+
     /**
      *
      * Internal Functions *
@@ -174,7 +192,7 @@ abstract contract L1ERC20Gateway is IL1ERC20Gateway, IMessageDropCallback, T1Gat
     /// @dev Internal function to do all the deposit operations.
     ///
     /// @param _token The token to deposit.
-    /// @param _to The recipient address to recieve the token in L2.
+    /// @param _to The recipient address to receive the token in L2.
     /// @param _amount The amount of token to deposit.
     /// @param _data Optional data to forward to recipient's account.
     /// @param _gasLimit Gas limit required to complete the deposit on L2.
