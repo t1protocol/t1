@@ -9,7 +9,7 @@ contracts directly on 𝚝𝟷, moving Ether and tokens betweens the L1 and 𝚝
 impossible. Some exciting use cases include:
 
 - cross-chain DEX with near-instant settlement
-- yield-bearing limit orders on [𝚝DEX](https://t-dex.v006.t1protocol.com/) (our native orderbook DEX)
+- yield-bearing limit orders on [T-DEX](https://t-dex.v006.t1protocol.com/) (our native orderbook DEX)
 - intent-based bridges with real-time execution
 - secure auction mechanisms with L1 finality within 1-2 blocks
 
@@ -20,7 +20,7 @@ our [DevNet portal](https://devnet.t1protocol.com/)
 
 ### Contract ABIs
 
-ABIs will appear in the ./artifacts directory after running `forge build`
+ABIs will appear in the ./artifacts directory after running `npm run build`
 
 ### Protocol Contract Addresses
 
@@ -29,7 +29,7 @@ Protocol contract addresses can be found in the highest version of [/deployments
 ### Getting Funds on 𝚝𝟷
 
 The easiest way to get funds onto t1 is to bridge your own sepolia funds into our layer 2. Everyone can do so navigating
-our [devnet portal](https://devnet.t1protocol.com).
+our [DevNet portal](https://devnet.t1protocol.com).
 
 ## Cross-Chain Arbitrary Message Passing
 
