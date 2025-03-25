@@ -108,6 +108,7 @@ contract InitializeL2T1Owner is Script {
         _selectors[1] = L1GasPriceOracle.setScalar.selector;
         owner.updateAccess(L1_GAS_PRICE_ORACLE_ADDR, _selectors, T1_MULTISIG_NO_DELAY_ROLE, true);
         owner.updateAccess(L1_GAS_PRICE_ORACLE_ADDR, _selectors, EMERGENCY_MULTISIG_NO_DELAY_ROLE, true);
+        owner.updateAccess(L1_GAS_PRICE_ORACLE_ADDR, _selectors, SECURITY_COUNCIL_NO_DELAY_ROLE, true);
     }
 
     function configL2Whitelist() internal {
@@ -117,6 +118,7 @@ contract InitializeL2T1Owner is Script {
         _selectors = new bytes4[](1);
         _selectors[0] = Whitelist.updateWhitelistStatus.selector;
         owner.updateAccess(L2_WHITELIST_ADDR, _selectors, TIMELOCK_1DAY_DELAY_ROLE, true);
+        owner.updateAccess(L2_WHITELIST_ADDR, _selectors, SECURITY_COUNCIL_NO_DELAY_ROLE, true);
     }
 
     function configL2T1Messenger() internal {
@@ -127,6 +129,7 @@ contract InitializeL2T1Owner is Script {
         _selectors[0] = T1MessengerBase.setPause.selector;
         owner.updateAccess(L2_T1_MESSENGER_PROXY_ADDR, _selectors, T1_MULTISIG_NO_DELAY_ROLE, true);
         owner.updateAccess(L2_T1_MESSENGER_PROXY_ADDR, _selectors, EMERGENCY_MULTISIG_NO_DELAY_ROLE, true);
+        owner.updateAccess(L2_T1_MESSENGER_PROXY_ADDR, _selectors, SECURITY_COUNCIL_NO_DELAY_ROLE, true);
     }
 
     function configL2GatewayRouter() internal {
@@ -136,5 +139,6 @@ contract InitializeL2T1Owner is Script {
         _selectors = new bytes4[](1);
         _selectors[0] = L2GatewayRouter.setERC20Gateway.selector;
         owner.updateAccess(L2_GATEWAY_ROUTER_PROXY_ADDR, _selectors, TIMELOCK_1DAY_DELAY_ROLE, true);
+        owner.updateAccess(L2_GATEWAY_ROUTER_PROXY_ADDR, _selectors, SECURITY_COUNCIL_NO_DELAY_ROLE, true);
     }
 }

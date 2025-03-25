@@ -121,17 +121,20 @@ contract InitializeL1T1Owner is Script {
         _selectors[3] = T1Chain.setPause.selector;
         owner.updateAccess(L1_T1_CHAIN_PROXY_ADDR, _selectors, T1_MULTISIG_NO_DELAY_ROLE, true);
         owner.updateAccess(L1_T1_CHAIN_PROXY_ADDR, _selectors, EMERGENCY_MULTISIG_NO_DELAY_ROLE, true);
+        owner.updateAccess(L1_T1_CHAIN_PROXY_ADDR, _selectors, SECURITY_COUNCIL_NO_DELAY_ROLE, true);
 
         // delay 1 day, t1 multisig
         _selectors = new bytes4[](2);
         _selectors[0] = T1Chain.addSequencer.selector;
         _selectors[1] = T1Chain.addProver.selector;
         owner.updateAccess(L1_T1_CHAIN_PROXY_ADDR, _selectors, TIMELOCK_1DAY_DELAY_ROLE, true);
+        owner.updateAccess(L1_T1_CHAIN_PROXY_ADDR, _selectors, SECURITY_COUNCIL_NO_DELAY_ROLE, true);
 
         // delay 7 day, t1 multisig
         _selectors = new bytes4[](1);
         _selectors[0] = T1Chain.updateMaxNumTxInChunk.selector;
         owner.updateAccess(L1_T1_CHAIN_PROXY_ADDR, _selectors, TIMELOCK_7DAY_DELAY_ROLE, true);
+        owner.updateAccess(L1_T1_CHAIN_PROXY_ADDR, _selectors, SECURITY_COUNCIL_NO_DELAY_ROLE, true);
     }
 
     function configL1MessageQueue() internal {
@@ -142,6 +145,7 @@ contract InitializeL1T1Owner is Script {
         _selectors[0] = L1MessageQueue.updateGasOracle.selector;
         _selectors[1] = L1MessageQueue.updateMaxGasLimit.selector;
         owner.updateAccess(L1_MESSAGE_QUEUE_PROXY_ADDR, _selectors, TIMELOCK_1DAY_DELAY_ROLE, true);
+        owner.updateAccess(L1_MESSAGE_QUEUE_PROXY_ADDR, _selectors, SECURITY_COUNCIL_NO_DELAY_ROLE, true);
 
         // no delay, security council
         _selectors = new bytes4[](1);
@@ -157,11 +161,13 @@ contract InitializeL1T1Owner is Script {
         _selectors[0] = T1MessengerBase.setPause.selector;
         owner.updateAccess(L1_T1_MESSENGER_PROXY_ADDR, _selectors, T1_MULTISIG_NO_DELAY_ROLE, true);
         owner.updateAccess(L1_T1_MESSENGER_PROXY_ADDR, _selectors, EMERGENCY_MULTISIG_NO_DELAY_ROLE, true);
+        owner.updateAccess(L1_T1_MESSENGER_PROXY_ADDR, _selectors, SECURITY_COUNCIL_NO_DELAY_ROLE, true);
 
         // delay 1 day, t1 multisig
         _selectors = new bytes4[](1);
         _selectors[0] = L1T1Messenger.updateMaxReplayTimes.selector;
         owner.updateAccess(L1_T1_MESSENGER_PROXY_ADDR, _selectors, TIMELOCK_1DAY_DELAY_ROLE, true);
+        owner.updateAccess(L1_T1_MESSENGER_PROXY_ADDR, _selectors, SECURITY_COUNCIL_NO_DELAY_ROLE, true);
     }
 
     function configL2GasPriceOracle() internal {
@@ -172,6 +178,7 @@ contract InitializeL1T1Owner is Script {
         _selectors[0] = L2GasPriceOracle.setIntrinsicParams.selector;
         owner.updateAccess(L2_GAS_PRICE_ORACLE_PROXY_ADDR, _selectors, T1_MULTISIG_NO_DELAY_ROLE, true);
         owner.updateAccess(L2_GAS_PRICE_ORACLE_PROXY_ADDR, _selectors, EMERGENCY_MULTISIG_NO_DELAY_ROLE, true);
+        owner.updateAccess(L2_GAS_PRICE_ORACLE_PROXY_ADDR, _selectors, SECURITY_COUNCIL_NO_DELAY_ROLE, true);
     }
 
     function configL1Whitelist() internal {
@@ -181,6 +188,7 @@ contract InitializeL1T1Owner is Script {
         _selectors = new bytes4[](1);
         _selectors[0] = Whitelist.updateWhitelistStatus.selector;
         owner.updateAccess(L1_WHITELIST_ADDR, _selectors, TIMELOCK_1DAY_DELAY_ROLE, true);
+        owner.updateAccess(L1_WHITELIST_ADDR, _selectors, SECURITY_COUNCIL_NO_DELAY_ROLE, true);
     }
 
     function configMultipleVersionRollupVerifier() internal {
@@ -195,6 +203,7 @@ contract InitializeL1T1Owner is Script {
         _selectors = new bytes4[](1);
         _selectors[0] = MultipleVersionRollupVerifier.updateVerifier.selector;
         owner.updateAccess(L1_MULTIPLE_VERSION_ROLLUP_VERIFIER_ADDR, _selectors, TIMELOCK_7DAY_DELAY_ROLE, true);
+        owner.updateAccess(L1_MULTIPLE_VERSION_ROLLUP_VERIFIER_ADDR, _selectors, SECURITY_COUNCIL_NO_DELAY_ROLE, true);
     }
 
     function configL1GatewayRouter() internal {
@@ -204,6 +213,7 @@ contract InitializeL1T1Owner is Script {
         _selectors = new bytes4[](1);
         _selectors[0] = L1GatewayRouter.setERC20Gateway.selector;
         owner.updateAccess(L1_GATEWAY_ROUTER_PROXY_ADDR, _selectors, TIMELOCK_1DAY_DELAY_ROLE, true);
+        owner.updateAccess(L1_GATEWAY_ROUTER_PROXY_ADDR, _selectors, SECURITY_COUNCIL_NO_DELAY_ROLE, true);
 
         // no delay, t1 multisig
         _selectors = new bytes4[](2);
