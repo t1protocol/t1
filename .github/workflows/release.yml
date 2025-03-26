@@ -1,10 +1,10 @@
-name: Bump, Tag, and Release
+name: "Bump, Tag, and Release"
 
 on:
   workflow_dispatch:
     inputs:
       release_type:
-        description: 'Select release type: patch, minor, or major'
+        description: "Select release type: patch, minor, or major"
         required: true
         type: choice
         options:
@@ -15,7 +15,6 @@ on:
 jobs:
   release:
     runs-on: ubuntu-latest
-
     steps:
       - name: "Check out the repo"
         uses: "actions/checkout@v4.1.1"
