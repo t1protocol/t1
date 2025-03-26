@@ -80,10 +80,10 @@ jobs:
           committer: GitHub Actions <actions@github.com>
           author: GitHub Actions <actions@github.com>
 
-      - name: Create GitHub Release with Notes
-        uses: release-drafter/release-drafter@v5
-        with:
-          tag: ${{ steps.tag.outputs.new_tag }}
-          name: Release ${{ steps.tag.outputs.new_tag }}
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      # - name: Create GitHub Release with Notes
+      #   uses: release-drafter/release-drafter@v5
+      #   with:
+      #     tag: ${{ steps.tag.outputs.new_tag }}
+      #     name: Release ${{ steps.tag.outputs.new_tag }}
+      #   env:
+      #     GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
