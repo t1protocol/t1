@@ -29,7 +29,7 @@ jobs:
       - name: "Install Bun"
         uses: "oven-sh/setup-bun@v2"
 
-      - name: "Install the Node.js dependencies"
+      - name: "Install Node.js dependencies"
         working-directory: "contracts"
         run: "bun install"
 
