@@ -63,7 +63,8 @@ jobs:
             echo "No changes to commit"
             exit 0
           fi
-          git commit -am "chore: bump version to ${{ steps.tag.outputs.new_version }}"
+          git add .
+          git commit -m "chore: bump version to ${{ steps.tag.outputs.new_version }}"
           git push origin "$BRANCH"
       
       - name: Create Pull Request
