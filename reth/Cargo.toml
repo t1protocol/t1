@@ -5,12 +5,12 @@ edition = "2021"
 
 [dependencies]
 # reth
-reth = { git = "https://github.com/paradigmxyz/reth.git", tag = "v1.2.1" }
-reth-exex = { git = "https://github.com/paradigmxyz/reth.git", tag = "v1.2.1" }
-reth-node-api = { git = "https://github.com/paradigmxyz/reth.git", tag = "v1.2.1" }
-reth-node-ethereum = { git = "https://github.com/paradigmxyz/reth.git", tag = "v1.2.1" }
-reth-tracing = { git = "https://github.com/paradigmxyz/reth.git", tag = "v1.2.1" }
-reth-execution-types = { git = "https://github.com/paradigmxyz/reth.git", tag = "v1.2.1" }
+reth = { git = "https://github.com/paradigmxyz/reth.git", tag = "v1.3.4" }
+reth-exex = { git = "https://github.com/paradigmxyz/reth.git", tag = "v1.3.4" }
+reth-node-api = { git = "https://github.com/paradigmxyz/reth.git", tag = "v1.3.4" }
+reth-node-ethereum = { git = "https://github.com/paradigmxyz/reth.git", tag = "v1.3.4" }
+reth-tracing = { git = "https://github.com/paradigmxyz/reth.git", tag = "v1.3.4" }
+reth-execution-types = { git = "https://github.com/paradigmxyz/reth.git", tag = "v1.3.4" }
 
 # misc
 eyre = "0.6"
@@ -20,5 +20,5 @@ futures = "0.3"
 
 [dev-dependencies]
 # testing
-reth-exex-test-utils = { git = "https://github.com/paradigmxyz/reth.git", tag = "v1.2.1" }
+reth-exex-test-utils = { git = "https://github.com/paradigmxyz/reth.git", tag = "v1.3.4" }
 tokio = "1.43"
