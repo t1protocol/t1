@@ -1,6 +1,15 @@
 name: "Bump, Tag, and Release"
 
 on:
+  push:
+    branches:
+      - "canary"
+  pull_request:
+    types:
+      - opened
+      - reopened
+      - synchronize
+      - ready_for_review
   workflow_dispatch:
     inputs:
       release_type:
