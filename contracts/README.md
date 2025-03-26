@@ -11,7 +11,7 @@
 [license]: https://opensource.org/licenses/MIT
 [license-badge]: https://img.shields.io/badge/License-MIT-blue.svg
 
-This project contains the Solidity code for t1 L1 bridge and rollup contracts, plus L2 bridge and pre-deployed
+This project contains the Solidity code for 𝚝𝟷 L1 bridge and rollup contracts, plus L2 bridge and pre-deployed
 contracts.
 
 ## Directory Structure
@@ -36,16 +36,26 @@ contracts.
 ├── <a href="./foundry.toml">foundry.toml</a>: Foundry configuration
 ├── <a href="./remappings.txt">remappings.txt</a>: Foundry dependency mappings
 └── <a href="./deployments">deployments</a>: Metadata from previous deployments
+└── <a href="./TUTORIAL.md">tutorial</a>: Walkthrough on getting started developing on 𝚝𝟷
 ...
 </pre>
 
+## Tutorials
+
+Get started with building on 𝚝𝟷 by following our [tutorial guide](./TUTORIAL.md). This guide covers:
+
+- Deploying contracts on 𝚝𝟷
+- Moving Ether and tokens between L1 and L2
+- Using cross-chain messaging contracts
+- Interacting with ERC-7683
+
 ## Core Contracts Overview
 
-t1's architecture consists of these key components:
+𝚝𝟷's architecture consists of these key components:
 
 ### T1Chain
 
-The backbone of t1, responsible for managing batches, state roots, and cross-chain verification.
+The backbone of 𝚝𝟷, responsible for managing batches, state roots, and cross-chain verification.
 
 ### Messaging Layer
 
