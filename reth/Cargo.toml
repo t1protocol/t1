@@ -1,3 +1,6 @@
+# This version is managed automatically by the GitHub release workflow.
+# Do not edit manually – it will be bumped along with package.json and other manifests.
+
 [package]
 name = "t1-reth"
 version = "0.0.6"

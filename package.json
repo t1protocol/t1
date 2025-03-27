@@ -15,7 +15,8 @@
   "homepage": "https://github.com/t1protocol/t1/blob/canary/README.md",
   "scripts": {
     "prepare": "husky",
-    "commit": "./node_modules/cz-customizable/standalone.js"
+    "commit": "./node_modules/cz-customizable/standalone.js",
+    "bump": "node scripts/bump-version.js"
   },
   "devDependencies": {
     "@commitlint/cli": "19.6.1",
