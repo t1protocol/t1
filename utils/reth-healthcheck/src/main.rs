@@ -1,6 +1,7 @@
 use axum::{routing::get, Router};
-use std::{net::SocketAddr, time::Duration};
-use tokio::{net::TcpListener, time::timeout};
+use std::net::SocketAddr;
+use tokio::net::TcpListener;
+use axum::{http::StatusCode, response::IntoResponse};
 
 #[tokio::main]
 async fn main() {
@@ -13,21 +14,19 @@ async fn main() {
     axum::serve(listener, app).await.unwrap();
 }
 
-async fn healthcheck() -> &'static str {
+async fn healthcheck() -> impl IntoResponse {
     let client = reqwest::Client::new();
     let payload = r#"{"jsonrpc":"2.0","method":"eth_chainId","params":[],"id":1}"#;
-    let res = timeout(
-        Duration::from_secs(2),
-        client
-            .post("http://127.0.0.1:8545")
-            .header("Content-Type", "application/json")
-            .body(payload)
-            .send(),
-    )
-    .await;
+
+    let res = client
+        .post("http://127.0.0.1:8545")
+        .header("Content-Type", "application/json")
+        .body(payload)
+        .send()
+        .await;
 
     match res {
-        Ok(Ok(resp)) if resp.status().is_success() => "OK",
-        _ => StatusCode::INTERNAL_SERVER_ERROR,
+        Ok(resp) if resp.status().is_success() => (StatusCode::OK, "OK"),
+        _ => (StatusCode::INTERNAL_SERVER_ERROR, "reth unhealthy"),
     }
 }
