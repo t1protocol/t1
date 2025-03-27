@@ -6,7 +6,7 @@ use tokio::{net::TcpListener, time::timeout};
 async fn main() {
     let app = Router::new().route("/", get(healthcheck));
 
-    let addr = SocketAddr::from(([0, 0, 0, 0], 8080));
+    let addr = SocketAddr::from(([0, 0, 0, 0], 8082));
     let listener = TcpListener::bind(addr).await.unwrap();
     println!("Listening on {}", addr);
 
@@ -28,6 +28,6 @@ async fn healthcheck() -> &'static str {
 
     match res {
         Ok(Ok(resp)) if resp.status().is_success() => "OK",
-        _ => panic!("Reth node croaked 💔"),
+        _ => StatusCode::INTERNAL_SERVER_ERROR,
     }
 }
