@@ -44,8 +44,8 @@ jobs:
           git config --global user.signingkey "$GPG_KEY_ID"
           git config --global commit.gpgsign true
           git config --global tag.gpgSign true
-          git config --global user.name "t1 GitHub Actions"
-          git config --global user.email "github@t1protocol.com"
+          git config --global user.name "t1-bot"
+          git config --global user.email "engineering@t1protocol.com"
         env:
           GPG_PRIVATE_KEY: ${{ secrets.GPG_PRIVATE_KEY }}
           GPG_KEY_ID: ${{ secrets.GPG_KEY_ID }}
@@ -109,11 +109,21 @@ jobs:
           VERSION=$(echo "${{ github.event.pull_request.title }}" | grep -oE 'v[0-9]+\.[0-9]+\.[0-9]+')
           echo "version=$VERSION" >> $GITHUB_OUTPUT
 
+      - name: Import GPG Key
+        run: |
+          echo "$GPG_PRIVATE_KEY" | gpg --batch --import
+          git config --global user.signingkey "$GPG_KEY_ID"
+          git config --global commit.gpgsign true
+          git config --global tag.gpgSign true
+          git config --global user.name "t1-bot"
+          git config --global user.email "engineering@t1protocol.com"
+        env:
+          GPG_PRIVATE_KEY: ${{ secrets.GPG_PRIVATE_KEY }}
+          GPG_KEY_ID: ${{ secrets.GPG_KEY_ID }}
+
       - name: Create Git tag
         run: |
-          git config user.name "t1-bot"
-          git config user.email "engineering@t1protocol.com"
-          git tag -a ${{ steps.extract.outputs.version }} -m "Release ${{ steps.extract.outputs.version }}"
+          git tag -s ${{ steps.extract.outputs.version }} -m "Release ${{ steps.extract.outputs.version }}"
           git push origin ${{ steps.extract.outputs.version }}
 
       - name: Create GitHub Release with Notes
