@@ -6,15 +6,18 @@ import { console2 } from "forge-std/console2.sol";
 import { ProxyAdmin } from "@openzeppelin/contracts/proxy/transparent/ProxyAdmin.sol";
 import { TransparentUpgradeableProxy } from "@openzeppelin/contracts/proxy/transparent/TransparentUpgradeableProxy.sol";
 
+import { DeploymentUtils } from "../lib/DeploymentUtils.sol";
+
 import { t1_7683_PullBased } from "../../src/7683/t1_7683_pull_based.sol";
 import { T1Constants } from "../../src/libraries/constants/T1Constants.sol";
 
-contract DeployRouterPullBasedERC7683 is Script {
+contract DeployRouterPullBasedERC7683 is DeploymentUtils  {
     uint32 internal constant ORIGIN_CHAIN = uint32(T1Constants.T1_DEVNET_CHAIN_ID);
-    uint32 internal constant PR1 = 1337;
+    uint32 internal constant PR1 = uint32(T1Constants.L1_CHAIN_ID);
     ProxyAdmin private proxyAdmin;
 
     function deploy_to_pr1() external {
+        logStart("DeployRouterPullBasedERC7683 to PR1");
         uint256 deployerPk = vm.envUint("L1_DEPLOYER_PRIVATE_KEY");
         address L1_T1_MESSENGER_PROXY_ADDR = vm.envAddress("L1_T1_MESSENGER_PROXY_ADDR");
         address L1_T1_X_CHAIN_READ_PROXY_ADDR = vm.envAddress("L1_T1_X_CHAIN_READ_PROXY_ADDR");
@@ -24,7 +27,7 @@ contract DeployRouterPullBasedERC7683 is Script {
         vm.startBroadcast(deployerPk);
 
         // Deploy L1 router implementation
-        t1_7683_PullBased implementation = new t1_7683_PullBased(
+        t1_7683_PullBased impl = new t1_7683_PullBased(
             L1_T1_MESSENGER_PROXY_ADDR,
             address(0), // No Permit2 for now
             L1_T1_X_CHAIN_READ_PROXY_ADDR,
@@ -33,18 +36,20 @@ contract DeployRouterPullBasedERC7683 is Script {
 
         // Deploy and initialize proxy
         TransparentUpgradeableProxy proxy =
-            new TransparentUpgradeableProxy(address(implementation), address(proxyAdmin), new bytes(0));
-
-        console2.log("L1_t1_7683_IMPLEMENTATION_ADDR=", address(implementation));
-        console2.log("L1_t1_7683_PROXY_ADDR=", address(proxy));
+            new TransparentUpgradeableProxy(address(impl), address(proxyAdmin), new bytes(0));
 
         vm.stopBroadcast();
+
+        logAddress("L1_T1_PULL_BASED_7683_IMPLEMENTATION_ADDR", address(impl));
+        logAddress("L1_T1_PULL_BASED_7683_PROXY_ADDR", address(proxy));
+
+        logEnd("DeployRouterPullBasedERC7683 to PR1");
     }
 
     function initialize_pr1() external {
         uint256 deployerPk = vm.envUint("L1_DEPLOYER_PRIVATE_KEY");
-        address L1_t1_7683_PROXY_ADDR = vm.envAddress("L1_t1_7683_PROXY_ADDR");
-        address L2_t1_7683_PROXY_ADDR = vm.envAddress("L2_t1_7683_PROXY_ADDR");
+        address L1_t1_7683_PROXY_ADDR = vm.envAddress("L1_T1_PULL_BASED_7683_PROXY_ADDR");
+        address L2_t1_7683_PROXY_ADDR = vm.envAddress("L2_T1_PULL_BASED_7683_PROXY_ADDR");
 
         vm.startBroadcast(deployerPk);
 
@@ -54,6 +59,7 @@ contract DeployRouterPullBasedERC7683 is Script {
     }
 
     function deploy_to_t1() external {
+        logStart("DeployRouterPullBasedERC7683 to t1");
         vm.createSelectFork(vm.rpcUrl("t1"));
         uint256 deployerPk = vm.envUint("L2_DEPLOYER_PRIVATE_KEY");
         address L2_T1_MESSENGER_PROXY_ADDR = vm.envAddress("L2_T1_MESSENGER_PROXY_ADDR");
@@ -65,7 +71,7 @@ contract DeployRouterPullBasedERC7683 is Script {
         proxyAdmin = ProxyAdmin(L2_PROXY_ADMIN_ADDR);
 
         // Deploy L2 router implementation
-        t1_7683_PullBased implementation = new t1_7683_PullBased(
+        t1_7683_PullBased impl = new t1_7683_PullBased(
             L2_T1_MESSENGER_PROXY_ADDR,
             address(0), // No Permit2 for now
             L2_T1_X_CHAIN_READ_PROXY_ADDR,
@@ -74,19 +80,21 @@ contract DeployRouterPullBasedERC7683 is Script {
 
         // Deploy and initialize proxy
         TransparentUpgradeableProxy proxy =
-            new TransparentUpgradeableProxy(address(implementation), address(proxyAdmin), new bytes(0));
-
-        console2.log("L2_t1_7683_IMPLEMENTATION_ADDR=", address(implementation));
-        console2.log("L2_t1_7683_PROXY_ADDR=", address(proxy));
+            new TransparentUpgradeableProxy(address(impl), address(proxyAdmin), new bytes(0));
 
         vm.stopBroadcast();
+
+        logAddress("L2_T1_PULL_BASED_7683_IMPLEMENTATION_ADDR", address(impl));
+        logAddress("L2_T1_PULL_BASED_7683_PROXY_ADDR", address(proxy));
+
+        logEnd("DeployRouterPullBasedERC7683 to t1");
     }
 
     function initialize_t1() external {
         vm.createSelectFork(vm.rpcUrl("t1"));
         uint256 deployerPk = vm.envUint("L2_DEPLOYER_PRIVATE_KEY");
-        address L1_t1_7683_PROXY_ADDR = vm.envAddress("L1_t1_7683_PROXY_ADDR");
-        address L2_t1_7683_PROXY_ADDR = vm.envAddress("L2_t1_7683_PROXY_ADDR");
+        address L1_t1_7683_PROXY_ADDR = vm.envAddress("L1_T1_PULL_BASED_7683_PROXY_ADDR");
+        address L2_t1_7683_PROXY_ADDR = vm.envAddress("L2_T1_PULL_BASED_7683_PROXY_ADDR");
 
         vm.startBroadcast(deployerPk);
 
