@@ -29,6 +29,7 @@ import {
 } from "intents-framework/ERC7683/IERC7683.sol";
 
 import { t1_7683 } from "../../7683/t1_7683.sol";
+import { L1MessageQueue } from "../../L1/rollup/L1MessageQueue.sol";
 import { IL1MessageQueue } from "../../L1/rollup/IL1MessageQueue.sol";
 import { L2MessageQueue } from "../../L2/predeploys/L2MessageQueue.sol";
 import { IL1MessageQueueWithGasPriceOracle } from "../../L1/rollup/IL1MessageQueueWithGasPriceOracle.sol";
@@ -38,8 +39,6 @@ import { L2T1Messenger } from "../../L2/L2T1Messenger.sol";
 import { T1ChainMockBlob } from "../../mocks/T1ChainMockBlob.sol";
 import { MockRollupVerifier } from "../mocks/MockRollupVerifier.sol";
 
-event Filled(bytes32 orderId, bytes originData, bytes fillerData);
-
 event Settle(bytes32[] orderIds, bytes[] ordersFillerData);
 
 event Refund(bytes32[] orderIds);
@@ -47,11 +46,13 @@ event Refund(bytes32[] orderIds);
 event Refunded(bytes32 orderId, address receiver);
 
 contract t1BasicSwapE2E is BaseTest {
+    event Filled(bytes32 orderId, bytes originData, bytes fillerData);
+
     using TypeCasts for address;
 
     L1T1Messenger internal l1t1Messenger;
     L2T1Messenger internal l2t1Messenger;
-    IL1MessageQueue internal messageQueue;
+    L1MessageQueue internal messageQueue;
     L2MessageQueue internal l2MessageQueue;
     T1ChainMockBlob internal rollup;
     MockRollupVerifier internal verifier;
@@ -117,13 +118,19 @@ contract t1BasicSwapE2E is BaseTest {
         vm.label(address(destinationRouter), "destinationRouter");
     }
 
-    function setUp() public override {
+    function setUp() public virtual override {
         super.setUp();
         __T1TestBase_setUp();
+        onSetup();
+    }
 
+    function onSetup() public {
         l1t1Messenger = L1T1Messenger(payable(_deployProxy(address(0))));
         rollup = T1ChainMockBlob(_deployProxy(address(0)));
-        messageQueue = IL1MessageQueue(_deployProxy(address(0)));
+        messageQueue = L1MessageQueue(_deployProxy(address(0)));
+        admin.upgrade(ITransparentUpgradeableProxy(address(messageQueue)), address(new L1MessageQueue()));
+        uint256 maxGasLimit = 5_000_000;
+        messageQueue.initialize(address(0), maxGasLimit);
         l2MessageQueue = new L2MessageQueue(address(this));
         l2t1Messenger = L2T1Messenger(payable(_deployProxy(address(0))));
 
