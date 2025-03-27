@@ -28,11 +28,8 @@ contract DeployXChainRead is DeploymentUtils {
         T1XChainRead impl = new T1XChainRead(address(L2_T1_MESSENGER), ORIGIN_CHAIN);
         logAddress("L2_T1_X_CHAIN_READ_IMPLEMENTATION_ADDR", address(impl));
 
-        TransparentUpgradeableProxy proxy = new TransparentUpgradeableProxy(
-            address(impl),
-            address(proxyAdmin),
-            new bytes(0)
-        );
+        TransparentUpgradeableProxy proxy =
+            new TransparentUpgradeableProxy(address(impl), address(proxyAdmin), new bytes(0));
         logAddress("L2_T1_X_CHAIN_READ_PROXY_ADDR", address(proxy));
 
         T1XChainRead(payable(proxy)).initialize(L2_T1_MESSENGER);
@@ -55,11 +52,8 @@ contract DeployXChainRead is DeploymentUtils {
         T1XChainRead impl = new T1XChainRead(address(L1_T1_MESSENGER), PR1);
         logAddress("L1_T1_X_CHAIN_READ_IMPLEMENTATION_ADDR", address(impl));
 
-        TransparentUpgradeableProxy proxy = new TransparentUpgradeableProxy(
-            address(impl),
-            address(proxyAdmin),
-            new bytes(0)
-        );
+        TransparentUpgradeableProxy proxy =
+            new TransparentUpgradeableProxy(address(impl), address(proxyAdmin), new bytes(0));
         logAddress("L1_T1_X_CHAIN_READ_PROXY_ADDR", address(proxy));
 
         T1XChainRead(payable(proxy)).initialize(L1_T1_MESSENGER);
