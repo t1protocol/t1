@@ -1,6 +1,6 @@
 {
   "name": "t1",
-  "version": "0.0.6",
+  "version": "0.1.0",
   "description": "A monorepo containing all major components of the t1 protocol",
   "license": "MIT",
   "author": {
