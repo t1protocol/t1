@@ -126,9 +126,12 @@ interface IT1Chain {
     /// @param proofOfFillRoot 7683 The Proof of Fill trie root of current batch.
     /// @param proofOfFillRootSignature The ECDSA valid signature of proof of fill root to match one of the provers
     function finalizeBatchWithProof(
-        bytes32 withdrawRoot, bytes calldata withdrawRootSignature,
-        bytes32 proofOfFill7683Root, bytes calldata proofOfFillRootSignature
-    ) external;
+        bytes32 withdrawRoot,
+        bytes calldata withdrawRootSignature,
+        bytes32 proofOfFill7683Root,
+        bytes calldata proofOfFillRootSignature
+    )
+        external;
 
     /// @notice Finalize a committed batch (with blob) on layer 1.
     ///
