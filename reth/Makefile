@@ -349,3 +349,31 @@ check-features:
 		--package reth-primitives \
 		--package reth-rpc-types \
 		--feature-powerset
+
+HEALTHCHECK_SRC := ../utils/reth-healthcheck
+HEALTHCHECK_BIN := $(HEALTHCHECK_SRC)/target/$(PROFILE)/reth-healthcheck
+HEALTHCHECK_SERVICE := /etc/systemd/system/reth-healthcheck.service
+
+.PHONY: build-healthcheck
+build-healthcheck: ## Build healthcheck binary from utils dir
+	cargo build --bin reth-healthcheck \
+		--manifest-path $(HEALTHCHECK_SRC)/Cargo.toml \
+		--profile $(PROFILE)
+
+.PHONY: install-healthcheck
+install-healthcheck: build-healthcheck ## Install healthcheck binary and systemd unit
+	sudo install -m 755 $(HEALTHCHECK_BIN) /usr/local/bin/reth-healthcheck
+	echo "[Unit]" | sudo tee $(HEALTHCHECK_SERVICE) > /dev/null
+	echo "Description=Reth Healthcheck Daemon" | sudo tee -a $(HEALTHCHECK_SERVICE) > /dev/null
+	echo "After=network.target" | sudo tee -a $(HEALTHCHECK_SERVICE) > /dev/null
+	echo "" | sudo tee -a $(HEALTHCHECK_SERVICE) > /dev/null
+	echo "[Service]" | sudo tee -a $(HEALTHCHECK_SERVICE) > /dev/null
+	echo "ExecStart=/usr/local/bin/reth-healthcheck" | sudo tee -a $(HEALTHCHECK_SERVICE) > /dev/null
+	echo "Restart=always" | sudo tee -a $(HEALTHCHECK_SERVICE) > /dev/null
+	echo "User=$(shell whoami)" | sudo tee -a $(HEALTHCHECK_SERVICE) > /dev/null
+	echo "Environment=RUST_LOG=info" | sudo tee -a $(HEALTHCHECK_SERVICE) > /dev/null
+	echo "" | sudo tee -a $(HEALTHCHECK_SERVICE) > /dev/null
+	echo "[Install]" | sudo tee -a $(HEALTHCHECK_SERVICE) > /dev/null
+	echo "WantedBy=multi-user.target" | sudo tee -a $(HEALTHCHECK_SERVICE) > /dev/null
+	sudo systemctl daemon-reexec
+	sudo systemctl enable --now reth-healthcheck
