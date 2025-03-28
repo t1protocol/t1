@@ -123,7 +123,7 @@ interface IT1Chain {
     ///
     /// @param withdrawRoot The withdraw trie root of current batch.
     /// @param withdrawRootSignature The ECDSA valid signature of withdraw root to match one of the provers
-    /// @param proofOfFillRoot 7683 The Proof of Fill trie root of current batch.
+    /// @param proofOfFill7683Root 7683 The Proof of Fill trie root of current batch.
     /// @param proofOfFillRootSignature The ECDSA valid signature of proof of fill root to match one of the provers
     function finalizeBatchWithProof(
         bytes32 withdrawRoot,

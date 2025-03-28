@@ -1671,7 +1671,7 @@ contract T1ChainTest is DSTestPlus {
         bytes memory invalidSig = new bytes(64); // 64 bytes, not 65
 
         hevm.expectRevert(T1Chain.ErrorIncorrectSignatureLength.selector);
-        rollup.finalizeBatchWithProof(dummyRoot, invalidSig);
+        rollup.finalizeBatchWithProof(dummyRoot, invalidSig, dummyRoot, invalidSig);
     }
 
     /**
@@ -1688,7 +1688,7 @@ contract T1ChainTest is DSTestPlus {
         hevm.expectRevert(abi.encodeWithSelector(T1Chain.ErrorIncorrectSigner.selector, expectedBadSigner));
 
         // This call should revert with `ErrorIncorrectSigner(badSigner)`
-        rollup.finalizeBatchWithProof(dummyRoot, sig);
+        rollup.finalizeBatchWithProof(dummyRoot, sig, dummyRoot, sig);
     }
 
     /**
@@ -1700,13 +1700,18 @@ contract T1ChainTest is DSTestPlus {
 
         bytes32 withdrawRoot = keccak256(abi.encode("some withdrawRoot"));
         // Sign with VALID_SIGNER_KEY to produce a valid signature
-        bytes memory sig = _signWithdrawRoot(VALID_SIGNER_KEY, withdrawRoot);
+        bytes memory withdrawSig = _signWithdrawRoot(VALID_SIGNER_KEY, withdrawRoot);
+
+        bytes32 proofOfFillRoot = keccak256(abi.encode("some proofOfFillRoot"));
+        // Sign with VALID_SIGNER_KEY to produce a valid signature
+        bytes memory proofOfFillSig = _signWithdrawRoot(VALID_SIGNER_KEY, proofOfFillRoot);
 
         // Expect it to succeed
-        rollup.finalizeBatchWithProof(withdrawRoot, sig);
+        rollup.finalizeBatchWithProof(withdrawRoot, withdrawSig, proofOfFillRoot, proofOfFillSig);
 
         assertEq(rollup.lastFinalizedBatchIndex(), 1);
         assertEq(rollup.withdrawRoots(1), withdrawRoot);
+        assertEq(rollup.proofOfFill7683Roots(1), proofOfFillRoot);
     }
 
     /**
@@ -1720,6 +1725,6 @@ contract T1ChainTest is DSTestPlus {
         bytes memory sig = _signWithdrawRoot(VALID_SIGNER_KEY, dummyRoot);
 
         hevm.expectRevert(bytes("Pausable: paused"));
-        rollup.finalizeBatchWithProof(dummyRoot, sig);
+        rollup.finalizeBatchWithProof(dummyRoot, sig, dummyRoot, sig);
     }
 }
