@@ -31,3 +31,8 @@ glob.sync('**/package.json', { ignore: ['**/node_modules/**'], cwd: path.resolve
 glob.sync('**/Cargo.toml', { ignore: ['**/target/**'], cwd: path.resolve(__dirname, '..') })
   .map(f => path.resolve(__dirname, '..', f))
   .forEach(updateCargoVersion);
+
+// Bump all Cargo.lock
+glob.sync('**/Cargo.lock', { ignore: ['**/target/**'], cwd: path.resolve(__dirname, '..') })
+  .map(f => path.resolve(__dirname, '..', f))
+  .forEach(updateCargoVersion);
