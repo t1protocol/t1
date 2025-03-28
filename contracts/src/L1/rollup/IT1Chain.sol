@@ -61,8 +61,12 @@ interface IT1Chain {
     function finalizedStateRoots(uint256 batchIndex) external view returns (bytes32);
 
     /// @param batchIndex The index of the batch.
-    /// @return The message root of a committed batch.
+    /// @return The withdrawal merkle trie root of a committed batch.
     function withdrawRoots(uint256 batchIndex) external view returns (bytes32);
+
+    /// @param batchIndex The index of the batch.
+    /// @return The proof of fill merkle trie root of a committed batch.
+    function proofOfFill7683Roots(uint256 batchIndex) external view returns (bytes32);
 
     /// @param batchIndex The index of the batch.
     /// @return Whether the batch is finalized by batch index.
@@ -118,8 +122,13 @@ interface IT1Chain {
     /// @notice t1 batch finalization
     ///
     /// @param withdrawRoot The withdraw trie root of current batch.
-    /// @param signature The ECDSA valid signature to match one of the provers
-    function finalizeBatchWithProof(bytes32 withdrawRoot, bytes calldata signature) external;
+    /// @param withdrawRootSignature The ECDSA valid signature of withdraw root to match one of the provers
+    /// @param proofOfFillRoot 7683 The Proof of Fill trie root of current batch.
+    /// @param proofOfFillRootSignature The ECDSA valid signature of proof of fill root to match one of the provers
+    function finalizeBatchWithProof(
+        bytes32 withdrawRoot, bytes calldata withdrawRootSignature,
+        bytes32 proofOfFill7683Root, bytes calldata proofOfFillRootSignature
+    ) external;
 
     /// @notice Finalize a committed batch (with blob) on layer 1.
     ///
