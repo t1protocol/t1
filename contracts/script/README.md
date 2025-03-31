@@ -27,6 +27,9 @@ The magical deploy order is as follows:
 9. [InitializeL2BridgeContracts.s.sol](./deploy/InitializeL2BridgeContracts.s.sol)
 10. [InitializeL1T1Owner.s.sol](./deploy/InitializeL1T1Owner.s.sol)
 11. [InitializeL2T1Owner.s.sol](./deploy/InitializeL2T1Owner.s.sol)
+12. [FirstUsdtDepositFromL1ToL2.s.sol](./configure/FirstUsdtDepositFromL1ToL2.s.sol)
+13. [SetMM.s.sol](./configure/SetMM.s.sol)
+14. [AllowRouterToTransfer.s.sol](./configure/AllowRouterToTransfer.s.sol)
 
 ## Deploy 7683 Contract
 
@@ -64,6 +67,15 @@ Initialize L2 Router:
 forge script ./script/deploy/DeployRouterERC7683.s.sol:RouterDeployScript --sig "initializeL2Router()" --rpc-url $T1_L2_RPC --broadcast
 ```
 
+## Configure
+
+Scripts to configure the canonical bridge functionalities:
+
+- Configure
+  - [First USDT deposit from L1 to L2](./configure/FirstUsdtDepositFromL1ToL2.s.sol)
+  - [Allow router to transfer](./configure/AllowRouterToTransfer.s.sol)
+  - [Set market maker](./configure/SetMM.s.sol)
+
 ## Test
 
 Scripts to test the canonical bridge functionalities:
@@ -78,8 +90,6 @@ Scripts to test the canonical bridge functionalities:
   - [Withdraw USDT from L2->L1](./test/WithdrawUsdtFromL2ToL1.s.sol)
 - Swaps
   - [Swap ERC20s against bridge reserves](./test/SwapERC20.s.sol)
-  - [Allow router to transfer](./test/AllowRouterToTransfer.s.sol)
-  - [Set market maker](./test/SetMM.s.sol)
 - Chore
   - [Check Alice balances on L1/L2](./test/LogBalances.s.sol)
 - 7683
