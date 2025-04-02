@@ -47,6 +47,21 @@ library T1Message {
         pure
         returns (bool isRequest, bytes32 requestId, bytes memory data)
     {
-        (isRequest, requestId, data) = abi.decode(message, (bool, bytes32, bytes));
+        bool _isRequest;
+        bytes32 _requestId;
+
+        (_isRequest, _requestId) = abi.decode(message, (bool, bytes32));
+
+        if (_isRequest) {
+            address targetContract;
+            bytes memory callData;
+            (,, targetContract, callData) = abi.decode(message, (bool, bytes32, address, bytes));
+            data = abi.encode(targetContract, callData);
+        } else {
+            (,, data) = abi.decode(message, (bool, bytes32, bytes));
+        }
+
+        isRequest = _isRequest;
+        requestId = _requestId;
     }
 }
