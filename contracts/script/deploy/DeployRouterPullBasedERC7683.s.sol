@@ -11,8 +11,8 @@ import { DeploymentUtils } from "../lib/DeploymentUtils.sol";
 import { t1_7683_PullBased } from "../../src/7683/t1_7683_pull_based.sol";
 import { T1Constants } from "../../src/libraries/constants/T1Constants.sol";
 
-contract DeployRouterPullBasedERC7683 is DeploymentUtils  {
-    uint32 internal constant ORIGIN_CHAIN = uint32(T1Constants.T1_DEVNET_CHAIN_ID);
+contract DeployRouterPullBasedERC7683 is DeploymentUtils {
+    uint32 internal constant T1 = uint32(T1Constants.T1_DEVNET_CHAIN_ID);
     uint32 internal constant PR1 = uint32(T1Constants.L1_CHAIN_ID);
     ProxyAdmin private proxyAdmin;
 
@@ -75,7 +75,7 @@ contract DeployRouterPullBasedERC7683 is DeploymentUtils  {
             L2_T1_MESSENGER_PROXY_ADDR,
             address(0), // No Permit2 for now
             L2_T1_X_CHAIN_READ_PROXY_ADDR,
-            ORIGIN_CHAIN
+            T1
         );
 
         // Deploy and initialize proxy
