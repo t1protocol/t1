@@ -20,8 +20,6 @@ import { IT1XChainReadCallback } from "../libraries/x-chain/IT1XChainReadCallbac
 contract t1_7683_PullBased is BasicSwap7683, OwnableUpgradeable, IT1XChainReadCallback {
     // ============ Constants ============
 
-    uint32 internal constant DEFAULT_GAS_LIMIT = 1_000_000;
-
     uint32 public immutable localDomain;
 
     IT1Messenger public immutable messenger;
@@ -124,6 +122,7 @@ contract t1_7683_PullBased is BasicSwap7683, OwnableUpgradeable, IT1XChainReadCa
         bytes32 orderId
     )
         external
+        payable
         returns (bytes32 requestId)
     {
         // Check if the order exists and is in a valid state
@@ -133,7 +132,8 @@ contract t1_7683_PullBased is BasicSwap7683, OwnableUpgradeable, IT1XChainReadCa
         bytes memory callData = abi.encodeWithSelector(this.getFilledOrderStatus.selector, orderId);
 
         // Request the cross-chain read
-        requestId = xChainRead.requestRead(destinationDomain, destinationSettler, callData, address(this));
+        requestId =
+            xChainRead.requestRead{ value: msg.value }(destinationDomain, destinationSettler, callData, address(this));
 
         readRequestToOrderId[requestId] = orderId;
 
