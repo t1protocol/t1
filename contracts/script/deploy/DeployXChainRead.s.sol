@@ -17,6 +17,7 @@ contract DeployXChainRead is DeploymentUtils {
     uint32 internal constant PR1 = uint32(T1Constants.L1_CHAIN_ID);
 
     function deploy_to_pr1() external {
+        vm.createSelectFork(vm.rpcUrl("sepolia"));
         logStart("DeployXChainRead to PR1");
 
         uint256 L1_DEPLOYER_PRIVATE_KEY = vm.envUint("L1_DEPLOYER_PRIVATE_KEY");
@@ -33,14 +34,23 @@ contract DeployXChainRead is DeploymentUtils {
             new TransparentUpgradeableProxy(address(impl), address(proxyAdmin), new bytes(0));
         logAddress("L1_T1_X_CHAIN_READ_PROXY_ADDR", address(proxy));
 
-        T1XChainRead(payable(proxy)).initialize(L1_T1_MESSENGER);
-
         vm.stopBroadcast();
 
         logEnd("DeployXChainRead to PR1");
     }
 
+    function initialize_pr1() external {
+        vm.createSelectFork(vm.rpcUrl("sepolia"));
+        uint256 L1_DEPLOYER_PRIVATE_KEY = vm.envUint("L1_DEPLOYER_PRIVATE_KEY");
+        vm.startBroadcast(L1_DEPLOYER_PRIVATE_KEY);
+        address L1_T1_X_CHAIN_READ_PROXY_ADDR = vm.envAddress("L1_T1_X_CHAIN_READ_PROXY_ADDR");
+        address L2_T1_X_CHAIN_READ_PROXY_ADDR = vm.envAddress("L2_T1_X_CHAIN_READ_PROXY_ADDR");
+        T1XChainRead(payable(L1_T1_X_CHAIN_READ_PROXY_ADDR)).initialize(L2_T1_X_CHAIN_READ_PROXY_ADDR);
+        vm.stopBroadcast();
+    }
+
     function deploy_to_t1() external {
+        vm.createSelectFork(vm.rpcUrl("t1"));
         logStart("DeployXChainRead to t1");
 
         uint256 L2_DEPLOYER_PRIVATE_KEY = vm.envUint("L2_DEPLOYER_PRIVATE_KEY");
@@ -57,10 +67,18 @@ contract DeployXChainRead is DeploymentUtils {
             new TransparentUpgradeableProxy(address(impl), address(proxyAdmin), new bytes(0));
         logAddress("L2_T1_X_CHAIN_READ_PROXY_ADDR", address(proxy));
 
-        T1XChainRead(payable(proxy)).initialize(L2_T1_MESSENGER);
-
         vm.stopBroadcast();
 
         logEnd("DeployXChainRead to t1");
+    }
+
+    function initialize_t1() external {
+        vm.createSelectFork(vm.rpcUrl("t1"));
+        uint256 L2_DEPLOYER_PRIVATE_KEY = vm.envUint("L2_DEPLOYER_PRIVATE_KEY");
+        vm.startBroadcast(L2_DEPLOYER_PRIVATE_KEY);
+        address L1_T1_X_CHAIN_READ_PROXY_ADDR = vm.envAddress("L1_T1_X_CHAIN_READ_PROXY_ADDR");
+        address L2_T1_X_CHAIN_READ_PROXY_ADDR = vm.envAddress("L2_T1_X_CHAIN_READ_PROXY_ADDR");
+        T1XChainRead(payable(L2_T1_X_CHAIN_READ_PROXY_ADDR)).initialize(L1_T1_X_CHAIN_READ_PROXY_ADDR);
+        vm.stopBroadcast();
     }
 }
