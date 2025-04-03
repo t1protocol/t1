@@ -25,6 +25,7 @@ contract T1XChainRead is OwnableUpgradeable, ReentrancyGuardUpgradeable {
      * @param requestId Unique identifier for the request
      * @param destinationDomain Domain ID of the target chain
      * @param targetContract Address of the contract to read from
+     * @param minBlock the minimum block on the target chain that you will accept the read to be executed
      * @param callData The encoded function call
      * @param callback Address that will receive the response
      */
@@ -32,6 +33,7 @@ contract T1XChainRead is OwnableUpgradeable, ReentrancyGuardUpgradeable {
         bytes32 indexed requestId,
         uint32 indexed destinationDomain,
         address targetContract,
+        uint64 minBlock,
         bytes callData,
         address indexed callback
     );
@@ -109,6 +111,7 @@ contract T1XChainRead is OwnableUpgradeable, ReentrancyGuardUpgradeable {
      * @notice Initiates a cross-chain read request
      * @param destinationDomain Domain ID of the target chain
      * @param targetContract Address of the contract to read from
+     * @param minBlock the minimum block on the target chain that you will accept the read to be executed
      * @param callData The encoded function call (selector + arguments)
      * @param callback Address that will receive the response
      * @return requestId Unique identifier for tracking this request
@@ -116,6 +119,7 @@ contract T1XChainRead is OwnableUpgradeable, ReentrancyGuardUpgradeable {
     function requestRead(
         uint32 destinationDomain,
         address targetContract,
+        uint64 minBlock,
         bytes calldata callData,
         address callback
     )
@@ -148,7 +152,7 @@ contract T1XChainRead is OwnableUpgradeable, ReentrancyGuardUpgradeable {
             uint64(destinationDomain)
         );
 
-        emit ReadRequested(requestId, destinationDomain, targetContract, callData, callback);
+        emit ReadRequested(requestId, destinationDomain, targetContract, minBlock, callData, callback);
 
         return requestId;
     }
