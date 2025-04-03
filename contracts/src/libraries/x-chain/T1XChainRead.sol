@@ -16,7 +16,7 @@ import { IT1XChainReadCallback } from "./IT1XChainReadCallback.sol";
 contract T1XChainRead is OwnableUpgradeable, ReentrancyGuardUpgradeable {
     // ============ Constants ============
 
-    uint32 internal constant DEFAULT_GAS_LIMIT = 1_000_000;
+    uint32 internal constant DEFAULT_GAS_LIMIT = 0;
 
     // ============ Events ============
 
@@ -120,6 +120,7 @@ contract T1XChainRead is OwnableUpgradeable, ReentrancyGuardUpgradeable {
         address callback
     )
         external
+        payable
         nonReentrant
         returns (bytes32 requestId)
     {
@@ -139,7 +140,7 @@ contract T1XChainRead is OwnableUpgradeable, ReentrancyGuardUpgradeable {
             T1XChainRead.handle.selector, localDomain, TypeCasts.addressToBytes32(address(this)), message
         );
 
-        messenger.sendMessage(
+        messenger.sendMessage{ value: msg.value }(
             counterpart,
             0, // No value transfer
             outerMessage,
@@ -158,7 +159,7 @@ contract T1XChainRead is OwnableUpgradeable, ReentrancyGuardUpgradeable {
      * @param _sender Sender address from the origin domain
      * @param _message The encoded message
      */
-    function handle(uint32 _origin, bytes32 _sender, bytes calldata _message) external onlyMessenger {
+    function handle(uint32 _origin, bytes32 _sender, bytes calldata _message) external payable onlyMessenger {
         address senderAddress = TypeCasts.bytes32ToAddress(_sender);
 
         if (senderAddress != counterpart) revert OnlyCounterpart();
@@ -200,7 +201,7 @@ contract T1XChainRead is OwnableUpgradeable, ReentrancyGuardUpgradeable {
             T1XChainRead.handle.selector, localDomain, TypeCasts.addressToBytes32(address(this)), responseMessage
         );
 
-        messenger.sendMessage(
+        messenger.sendMessage{ value: msg.value }(
             counterpart,
             0, // No value transfer
             outerMessage,
