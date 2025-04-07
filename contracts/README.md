@@ -73,8 +73,8 @@ The backbone of 𝚝𝟷, responsible for managing batches, state roots, and cro
 
 ## Dependencies
 
-- [Forge](https://github.com/foundry-rs/foundry/blob/master/README.md#forge): compile, test, fuzz, format, and deploy smart
-  contracts
+- [Forge](https://github.com/foundry-rs/foundry/blob/master/README.md#forge): compile, test, fuzz, format, and deploy
+  smart contracts
 - [Forge Std](https://github.com/foundry-rs/forge-std): collection of helpful contracts and utilities for testing
 - [Husky](https://github.com/typicode/husky): Git hooks made easy
 - [Openzeppelin](https://github.com/OpenZeppelin/openzeppelin-contracts): library for secure smart contract development
