@@ -131,9 +131,17 @@ contract t1_7683_PullBased is BasicSwap7683, OwnableUpgradeable, IT1XChainReadCa
         // Create the calldata to check the order status on the destination chain
         bytes memory callData = abi.encodeWithSelector(this.getFilledOrderStatus.selector, orderId);
 
+        T1XChainRead.ReadRequest memory readRequest = T1XChainRead.ReadRequest({
+            destinationDomain: destinationDomain,
+            targetContract: destinationSettler,
+            minBlock: 0,
+            callData: callData,
+            callback: address(this)
+        });
+
         // Request the cross-chain read
         requestId =
-            xChainRead.requestRead{ value: msg.value }(destinationDomain, destinationSettler, 0, callData, address(this));
+            xChainRead.requestRead{ value: msg.value }(readRequest);
 
         readRequestToOrderId[requestId] = orderId;
 
