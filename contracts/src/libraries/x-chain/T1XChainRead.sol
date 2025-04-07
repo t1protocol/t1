@@ -59,6 +59,14 @@ contract T1XChainRead is OwnableUpgradeable, ReentrancyGuardUpgradeable {
     /// @notice Maps request IDs to their callback addresses
     mapping(bytes32 => address) public callbacks;
 
+    struct ReadRequest {
+        uint32 destinationDomain;
+        address targetContract;
+        uint64 minBlock;
+        bytes callData;
+        address callback;
+    }
+
     // ============ Errors ============
 
     error OnlyMessenger();
@@ -109,25 +117,31 @@ contract T1XChainRead is OwnableUpgradeable, ReentrancyGuardUpgradeable {
 
     /**
      * @notice Initiates a cross-chain read request
-     * @param destinationDomain Domain ID of the target chain
-     * @param targetContract Address of the contract to read from
-     * @param minBlock the minimum block on the target chain that you will accept the read to be executed
-     * @param callData The encoded function call (selector + arguments)
-     * @param callback Address that will receive the response
+     * @param request ReadRequest
      * @return requestId Unique identifier for tracking this request
      */
-    function requestRead(
-        uint32 destinationDomain,
-        address targetContract,
-        uint64 minBlock,
-        bytes calldata callData,
-        address callback
-    )
+    function requestRead(ReadRequest calldata request)
         external
         payable
         nonReentrant
         returns (bytes32 requestId)
     {
+        return _processReadRequest(
+            request.destinationDomain,
+            request.targetContract,
+            request.minBlock,
+            request.callData,
+            request.callback
+        );
+    }
+
+    function _processReadRequest(
+        uint32 destinationDomain,
+        address targetContract,
+        uint64 minBlock,
+        bytes calldata callData,
+        address callback
+    ) internal returns (bytes32 requestId) {
         if (callback.code.length == 0) revert InvalidCallback();
 
         requestId = keccak256(
@@ -140,8 +154,28 @@ contract T1XChainRead is OwnableUpgradeable, ReentrancyGuardUpgradeable {
 
         bytes memory message = T1Message.encodeRead(requestId, targetContract, callData);
 
-        bytes memory outerMessage = abi.encodeWithSelector(
-            T1XChainRead.handle.selector, localDomain, TypeCasts.addressToBytes32(address(this)), message
+        // Using this selector to avoid hash collision
+        bytes4 requestReadSelector = bytes4(keccak256("requestRead(uint32,address,uint64,bytes,address)"));
+
+        _sendMessage(
+            destinationDomain,
+            requestReadSelector,
+            message
+        );
+
+        emit ReadRequested(requestId, destinationDomain, targetContract, minBlock, callData, callback);
+
+        return requestId;
+    }
+
+    function _sendMessage(
+        uint32 destinationDomain,
+        bytes4 selector,
+        bytes memory message
+    ) internal {
+        bytes memory outerMessage = abi.encodePacked(
+            selector,
+            message
         );
 
         messenger.sendMessage{ value: msg.value }(
@@ -151,30 +185,15 @@ contract T1XChainRead is OwnableUpgradeable, ReentrancyGuardUpgradeable {
             DEFAULT_GAS_LIMIT,
             uint64(destinationDomain)
         );
-
-        emit ReadRequested(requestId, destinationDomain, targetContract, minBlock, callData, callback);
-
-        return requestId;
     }
 
     /**
      * @notice Handles incoming messages from other chains
-     * @param _origin Origin domain of the message
-     * @param _sender Sender address from the origin domain
      * @param _message The encoded message
      */
-    function handle(uint32 _origin, bytes32 _sender, bytes calldata _message) external payable onlyMessenger {
-        address senderAddress = TypeCasts.bytes32ToAddress(_sender);
-
-        if (senderAddress != counterpart) revert OnlyCounterpart();
-
-        (bool isRequest, bytes32 requestId, bytes memory data) = T1Message.decode(_message);
-
-        if (isRequest) {
-            _handleReadRequest(requestId, data, _origin);
-        } else {
-            _handleReadResponse(requestId, data);
-        }
+    function handle(bytes calldata _message) external payable onlyMessenger {
+        (bytes32 requestId, bytes memory data) = T1Message.decodeResponse(_message);
+        _handleReadResponse(requestId, data);
     }
 
     /**
@@ -187,32 +206,6 @@ contract T1XChainRead is OwnableUpgradeable, ReentrancyGuardUpgradeable {
     }
 
     // ============ Internal Functions ============
-
-    /**
-     * @notice Handles an incoming read request
-     * @param requestId Unique identifier for the request
-     * @param data Encoded data containing target contract and calldata
-     * @param origin Domain identifier of the origin chain where request came from
-     */
-    function _handleReadRequest(bytes32 requestId, bytes memory data, uint32 origin) internal {
-        (address targetContract, bytes memory callData) = abi.decode(data, (address, bytes));
-
-        (, bytes memory result) = targetContract.staticcall(callData);
-
-        bytes memory responseMessage = T1Message.encodeReadResult(requestId, result);
-
-        bytes memory outerMessage = abi.encodeWithSelector(
-            T1XChainRead.handle.selector, localDomain, TypeCasts.addressToBytes32(address(this)), responseMessage
-        );
-
-        messenger.sendMessage{ value: msg.value }(
-            counterpart,
-            0, // No value transfer
-            outerMessage,
-            DEFAULT_GAS_LIMIT,
-            uint64(origin)
-        );
-    }
 
     /**
      * @notice Handles an incoming read response
