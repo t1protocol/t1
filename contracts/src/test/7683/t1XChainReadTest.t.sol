@@ -132,7 +132,7 @@ contract T1XChainReadTest is t1BasicSwapE2E {
         {
             // Get the result (FILLED status)
             bytes memory result = l2_t1_7683_pull_based.getFilledOrderStatus(orderId);
-            bytes memory resultMessage = T1Message.encodeReadResult(requestId, result);
+            bytes memory resultMessage = abi.encode(false, requestId, result);
 
             bytes memory outerMessage = abi.encodeWithSelector(
                 T1XChainRead.handle.selector,

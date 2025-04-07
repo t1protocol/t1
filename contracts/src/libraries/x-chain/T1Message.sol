@@ -22,46 +22,20 @@ library T1Message {
         pure
         returns (bytes memory)
     {
-        return abi.encode(true, requestId, targetContract, callData);
-    }
-
-    /**
-     * @notice Encodes a read response message
-     * @param requestId Unique identifier for the request
-     * @param result Result data from the read operation
-     * @return Encoded message
-     */
-    function encodeReadResult(bytes32 requestId, bytes memory result) internal pure returns (bytes memory) {
-        return abi.encode(false, requestId, result);
+        return abi.encode(requestId, targetContract, callData);
     }
 
     /**
      * @notice Decodes a T1 message
      * @param message The message to decode
-     * @return isRequest Whether this is a request (true) or response (false)
      * @return requestId Unique identifier for the request
      * @return data Additional data (varies based on isRequest)
      */
-    function decode(bytes memory message)
+    function decodeResponse(bytes memory message)
         internal
         pure
-        returns (bool isRequest, bytes32 requestId, bytes memory data)
+        returns (bytes32 requestId, bytes memory data)
     {
-        bool _isRequest;
-        bytes32 _requestId;
-
-        (_isRequest, _requestId) = abi.decode(message, (bool, bytes32));
-
-        if (_isRequest) {
-            address targetContract;
-            bytes memory callData;
-            (,, targetContract, callData) = abi.decode(message, (bool, bytes32, address, bytes));
-            data = abi.encode(targetContract, callData);
-        } else {
-            (,, data) = abi.decode(message, (bool, bytes32, bytes));
-        }
-
-        isRequest = _isRequest;
-        requestId = _requestId;
+        (requestId, data) = abi.decode(message, (bytes32, bytes));
     }
 }
