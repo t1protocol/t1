@@ -9,20 +9,18 @@ library T1Message {
     /**
      * @notice Encodes a read request message
      * @param requestId Unique identifier for the request
-     * @param targetContract Address of contract to read from
      * @param callData Function selector and arguments
      * @return Encoded message
      */
     function encodeRead(
         bytes32 requestId,
-        address targetContract,
         bytes memory callData
     )
         internal
         pure
         returns (bytes memory)
     {
-        return abi.encode(requestId, targetContract, callData);
+        return abi.encode(requestId, callData);
     }
 
     /**
