@@ -88,8 +88,6 @@ contract T1XChainRead is OwnableUpgradeable, ReentrancyGuardUpgradeable {
 
         messenger = IT1Messenger(_messenger);
         localDomain = _localDomain;
-
-        _disableInitializers();
     }
 
     // ============ External Functions ============
