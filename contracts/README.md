@@ -73,8 +73,8 @@ The backbone of 𝚝𝟷, responsible for managing batches, state roots, and cro
 
 ## Dependencies
 
-- [Forge](https://github.com/foundry-rs/foundry/blob/master/forge): compile, test, fuzz, format, and deploy smart
-  contracts
+- [Forge](https://github.com/foundry-rs/foundry/blob/master/README.md#forge): compile, test, fuzz, format, and deploy
+  smart contracts
 - [Forge Std](https://github.com/foundry-rs/forge-std): collection of helpful contracts and utilities for testing
 - [Husky](https://github.com/typicode/husky): Git hooks made easy
 - [Openzeppelin](https://github.com/OpenZeppelin/openzeppelin-contracts): library for secure smart contract development
@@ -162,7 +162,7 @@ For this script to work, you need to have a `MNEMONIC` environment variable set 
 [BIP39 mnemonic](https://iancoleman.io/bip39/).
 
 For instructions on how to deploy to a testnet or mainnet, check out the
-[Solidity Scripting](https://book.getfoundry.sh/tutorials/solidity-scripting.html) tutorial.
+[Solidity Scripting](https://book.getfoundry.sh/guides/scripting-with-solidity) tutorial.
 
 After deploying contracts, add a new json file to the [deployments](./deployments/) directory. At minimum, it should
 include the following:
