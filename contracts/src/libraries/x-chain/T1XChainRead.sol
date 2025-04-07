@@ -53,9 +53,6 @@ contract T1XChainRead is OwnableUpgradeable, ReentrancyGuardUpgradeable {
     /// @notice The local domain ID
     uint32 public immutable localDomain;
 
-    /// @notice Address of the counterpart T1XChainRead on other chains
-    address public counterpart;
-
     /// @notice Maps request IDs to their callback addresses
     mapping(bytes32 => address) public callbacks;
 
@@ -81,11 +78,6 @@ contract T1XChainRead is OwnableUpgradeable, ReentrancyGuardUpgradeable {
         _;
     }
 
-    modifier onlyCounterpart() {
-        if (messenger.xDomainMessageSender() != counterpart) revert OnlyCounterpart();
-        _;
-    }
-
     /**
      * @notice Sets up the T1XChainRead contract
      * @param _messenger Address of the T1 messenger contract
@@ -98,19 +90,6 @@ contract T1XChainRead is OwnableUpgradeable, ReentrancyGuardUpgradeable {
         localDomain = _localDomain;
 
         _disableInitializers();
-    }
-
-    /**
-     * @notice Initializes the contract
-     * @param _counterpart Address of the counterpart contract on other chains
-     */
-    function initialize(address _counterpart) external initializer {
-        if (_counterpart == address(0)) revert ZeroAddress();
-
-        counterpart = _counterpart;
-
-        __Ownable_init();
-        __ReentrancyGuard_init();
     }
 
     // ============ External Functions ============
@@ -152,13 +131,14 @@ contract T1XChainRead is OwnableUpgradeable, ReentrancyGuardUpgradeable {
 
         callbacks[requestId] = callback;
 
-        bytes memory message = T1Message.encodeRead(requestId, targetContract, callData);
+        bytes memory message = T1Message.encodeRead(requestId, callData);
 
         // Using this selector to avoid hash collision
         bytes4 requestReadSelector = bytes4(keccak256("requestRead(uint32,address,uint64,bytes,address)"));
 
         _sendMessage(
             destinationDomain,
+            targetContract,
             requestReadSelector,
             message
         );
@@ -170,6 +150,7 @@ contract T1XChainRead is OwnableUpgradeable, ReentrancyGuardUpgradeable {
 
     function _sendMessage(
         uint32 destinationDomain,
+        address targetContract,
         bytes4 selector,
         bytes memory message
     ) internal {
@@ -179,7 +160,7 @@ contract T1XChainRead is OwnableUpgradeable, ReentrancyGuardUpgradeable {
         );
 
         messenger.sendMessage{ value: msg.value }(
-            counterpart,
+            targetContract,
             0, // No value transfer
             outerMessage,
             DEFAULT_GAS_LIMIT,
@@ -194,15 +175,6 @@ contract T1XChainRead is OwnableUpgradeable, ReentrancyGuardUpgradeable {
     function handle(bytes calldata _message) external payable onlyMessenger {
         (bytes32 requestId, bytes memory data) = T1Message.decodeResponse(_message);
         _handleReadResponse(requestId, data);
-    }
-
-    /**
-     * @notice Updates the counterpart address
-     * @param _counterpart New counterpart address
-     */
-    function setCounterpart(address _counterpart) external onlyOwner {
-        if (_counterpart == address(0)) revert ZeroAddress();
-        counterpart = _counterpart;
     }
 
     // ============ Internal Functions ============

@@ -53,10 +53,6 @@ contract T1XChainReadTest is t1BasicSwapE2E {
             address(new T1XChainRead(address(l2t1Messenger), destination))
         );
 
-        // Initialize with counterparts
-        originReader.initialize(address(destinationReader));
-        destinationReader.initialize(address(originReader));
-
         l1_t1_7683_pull_based = t1_7683_PullBased(payable(_deployProxy(address(0))));
         l2_t1_7683_pull_based = t1_7683_PullBased(payable(_deployProxy(address(0))));
         admin.upgrade(
@@ -118,7 +114,7 @@ contract T1XChainReadTest is t1BasicSwapE2E {
         {
             // Construct the read request calldata
             bytes memory callData = abi.encodeWithSelector(l2_t1_7683_pull_based.getFilledOrderStatus.selector, orderId);
-            bytes memory readMessage = T1Message.encodeRead(requestId, address(l2_t1_7683_pull_based), callData);
+            bytes memory readMessage = T1Message.encodeRead(requestId, callData);
             bytes memory handleMessage = abi.encodeWithSelector(
                 destinationReader.handle.selector,
                 origin,
