@@ -118,6 +118,7 @@ contract t1_7683_PullBased is BasicSwap7683, OwnableUpgradeable, IT1XChainReadCa
     /// @return requestId The ID of the read request
     function verifySettlement(
         uint32 destinationDomain,
+        // TODO remove
         address destinationSettler,
         bytes32 orderId
     )
@@ -133,7 +134,7 @@ contract t1_7683_PullBased is BasicSwap7683, OwnableUpgradeable, IT1XChainReadCa
 
         T1XChainRead.ReadRequest memory readRequest = T1XChainRead.ReadRequest({
             destinationDomain: destinationDomain,
-            targetContract: destinationSettler,
+            targetContract: counterpart,
             minBlock: 0,
             callData: callData,
             callback: address(this)
