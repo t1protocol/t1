@@ -22,22 +22,22 @@ contract LogBalances is Script {
         address addr = vm.addr(TEST_PRIVATE_KEY);
         vm.createSelectFork(vm.rpcUrl("sepolia"));
 
-        console.log("[%s] currently has [%18e] ETH on L1", vm.toString(addr), addr.balance);
+        console.log("[%s] currently has [%6e] ETH on L1", vm.toString(addr), addr.balance);
         console.log(
-            "[%s] currently has [%18e] WETH on L1", vm.toString(addr), T1StandardERC20(L1_WETH_ADDR).balanceOf(addr)
+            "[%s] currently has [%6e] WETH on L1", vm.toString(addr), T1StandardERC20(L1_WETH_ADDR).balanceOf(addr)
         );
         console.log(
-            "[%s] currently has [%18e] USDT on L1", vm.toString(addr), T1StandardERC20(L1_USDT_ADDR).balanceOf(addr)
+            "[%s] currently has [%6e] USDT on L1", vm.toString(addr), T1StandardERC20(L1_USDT_ADDR).balanceOf(addr)
         );
 
         vm.createSelectFork(vm.rpcUrl("t1"));
-        console.log("[%s] currently has [%18e] ETH on L2", vm.toString(addr), addr.balance);
+        console.log("[%s] currently has [%6e] ETH on L2", vm.toString(addr), addr.balance);
         console.log(
-            "[%s] currently has [%18e] WETH on L2", vm.toString(addr), T1StandardERC20(L2_WETH_ADDR).balanceOf(addr)
+            "[%s] currently has [%6e] WETH on L2", vm.toString(addr), T1StandardERC20(L2_WETH_ADDR).balanceOf(addr)
         );
         if (L2_USDT_ADDR != address(0)) {
             console.log(
-                "[%s] currently has [%18e] USDT on L2", vm.toString(addr), T1StandardERC20(L2_USDT_ADDR).balanceOf(addr)
+                "[%s] currently has [%6e] USDT on L2", vm.toString(addr), T1StandardERC20(L2_USDT_ADDR).balanceOf(addr)
             );
         } else {
             console.log(
