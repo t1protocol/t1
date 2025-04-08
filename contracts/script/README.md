@@ -84,7 +84,7 @@ Scripts to test the canonical bridge functionalities:
   - [Deposit Ether from L1->L2](./test/DepositEtherFromL1ToL2.s.sol)
   - [Deposit WETH from L1->L2](./test/DepositWethFromL1ToL2.s.sol)
   - [Deposit USDT from L1->L2](./test/DepositUsdtFromL1ToL2.s.sol)
-- Witdrawals
+- Withdrawals
   - [Withdraw Ether from L2->L1](./test/WithdrawEtherFromL2ToL1.s.sol)
   - [Withdraw WETH from L2->L1](./test/WithdrawWethFromL2ToL1.s.sol)
   - [Withdraw USDT from L2->L1](./test/WithdrawUsdtFromL2ToL1.s.sol)
