@@ -19,9 +19,8 @@ import { T1Owner } from "../../src/misc/T1Owner.sol";
  *
  * This script:
  * 1. Deploys a new T1Chain implementation
- * 2. Checks if the implementation is different from the current one
- * 3. If different, upgrades the proxy to the new implementation
- * 4. Logs the new implementation address
+ * 2. Upgrades the proxy to the new implementation
+ * 3. Logs the new implementation address if everything is successful
  *
  * Usage:
  * forge script ./script/upgrade/UpgradeT1Chain.s.sol:UpgradeT1Chain --rpc-url $T1_L1_RPC --broadcast
@@ -59,56 +58,54 @@ contract UpgradeT1Chain is Script, DeploymentUtils {
             new T1Chain(CHAIN_ID_L2, L1_MESSAGE_QUEUE_PROXY_ADDR, L1_MULTIPLE_VERSION_ROLLUP_VERIFIER_ADDR);
         vm.stopBroadcast();
 
-        // Log the new implementation address
-        logAddress("L1_T1_CHAIN_IMPLEMENTATION_ADDR", address(t1ChainImplementation));
-
-        // Upgrade the proxy if needed
+        // Upgrade the proxy to the new implementation
         vm.startBroadcast(L1_SECURITY_COUNCIL_PRIVATE_KEY);
         ProxyAdmin proxyAdmin = ProxyAdmin(L1_PROXY_ADMIN_ADDR);
 
-        // Check if the T1Chain implementation is not the same
         address currentImplementation =
             proxyAdmin.getProxyImplementation(ITransparentUpgradeableProxy(L1_T1_CHAIN_PROXY_ADDR));
+        console.log(
+            "Upgrading T1Chain implementation from",
+            vm.toString(currentImplementation),
+            "to new implementation",
+            vm.toString(address(t1ChainImplementation))
+        );
 
-        if (currentImplementation != address(t1ChainImplementation)) {
-            console.log(
-                "Upgrading T1Chain implementation from",
-                vm.toString(currentImplementation),
-                "to",
-                vm.toString(address(t1ChainImplementation))
-            );
+        try T1Owner(payable(L1_T1_OWNER_ADDR)).execute(
+            L1_PROXY_ADMIN_ADDR,
+            0,
+            abi.encodeWithSelector(
+                proxyAdmin.upgrade.selector,
+                ITransparentUpgradeableProxy(L1_T1_CHAIN_PROXY_ADDR),
+                address(t1ChainImplementation)
+            ),
+            SECURITY_COUNCIL_NO_DELAY_ROLE
+        ) {
+            console.log("T1Chain upgrade successful");
 
-            try T1Owner(payable(L1_T1_OWNER_ADDR)).execute(
-                L1_T1_CHAIN_PROXY_ADDR,
-                0,
-                abi.encodeWithSelector(proxyAdmin.upgrade.selector, t1ChainImplementation),
-                SECURITY_COUNCIL_NO_DELAY_ROLE
-            ) {
-                console.log("T1Chain upgrade successful");
+            // Verify the upgrade was successful
+            address newImplementation =
+                proxyAdmin.getProxyImplementation(ITransparentUpgradeableProxy(L1_T1_CHAIN_PROXY_ADDR));
 
-                // Verify the upgrade was successful
-                address newImplementation =
-                    proxyAdmin.getProxyImplementation(ITransparentUpgradeableProxy(L1_T1_CHAIN_PROXY_ADDR));
+            if (newImplementation == address(t1ChainImplementation)) {
+                console.log("Verification successful: Implementation is now", vm.toString(newImplementation));
 
-                if (newImplementation == address(t1ChainImplementation)) {
-                    console.log("Verification successful: Implementation is now", vm.toString(newImplementation));
-                } else {
-                    console.log(
-                        "Verification failed: Expected",
-                        vm.toString(address(t1ChainImplementation)),
-                        "but got",
-                        vm.toString(newImplementation)
-                    );
-                }
-            } catch Error(string memory reason) {
-                console.log("T1Chain upgrade failed:", reason);
-                revert(string(abi.encodePacked("T1Chain upgrade failed: ", reason)));
-            } catch (bytes memory) {
-                console.log("T1Chain upgrade failed with unknown error");
-                revert("T1Chain upgrade failed with unknown error");
+                // Log the new implementation address
+                logAddress("L1_T1_CHAIN_IMPLEMENTATION_ADDR", address(t1ChainImplementation));
+            } else {
+                console.log(
+                    "Verification failed: Expected",
+                    vm.toString(address(t1ChainImplementation)),
+                    "but got",
+                    vm.toString(newImplementation)
+                );
             }
-        } else {
-            console.log("T1Chain implementation is already up to date");
+        } catch Error(string memory reason) {
+            console.log("T1Chain upgrade failed:", reason);
+            revert(string(abi.encodePacked("T1Chain upgrade failed: ", reason)));
+        } catch (bytes memory) {
+            console.log("T1Chain upgrade failed with unknown error");
+            revert("T1Chain upgrade failed with unknown error");
         }
 
         vm.stopBroadcast();
