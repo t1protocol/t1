@@ -8,6 +8,7 @@ import { IT1Messenger } from "../../libraries/IT1Messenger.sol";
 
 contract MockT1Messenger is IT1Messenger {
     address public override xDomainMessageSender;
+    address public override messageQueue;
 
     /**
      *

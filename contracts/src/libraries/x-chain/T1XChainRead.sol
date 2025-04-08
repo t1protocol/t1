@@ -3,8 +3,8 @@ pragma solidity ^0.8.25;
 
 import { OwnableUpgradeable } from "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
 import { ReentrancyGuardUpgradeable } from "@openzeppelin/contracts-upgradeable/security/ReentrancyGuardUpgradeable.sol";
-import { TypeCasts } from "@hyperlane-xyz/libs/TypeCasts.sol";
 
+import { IL1MessageQueue } from "../../L1/rollup/IL1MessageQueue.sol";
 import { IT1Messenger } from "../IT1Messenger.sol";
 import { T1Message } from "./T1Message.sol";
 import { IT1XChainReadCallback } from "./IT1XChainReadCallback.sol";
@@ -14,9 +14,6 @@ import { IT1XChainReadCallback } from "./IT1XChainReadCallback.sol";
  * @notice Facilitates reading data from contracts on other chains through t1
  */
 contract T1XChainRead is OwnableUpgradeable, ReentrancyGuardUpgradeable {
-    // ============ Constants ============
-
-    uint32 internal constant DEFAULT_GAS_LIMIT = 0;
 
     // ============ Events ============
 
@@ -157,11 +154,15 @@ contract T1XChainRead is OwnableUpgradeable, ReentrancyGuardUpgradeable {
             message
         );
 
+        uint256 gasLimit = IL1MessageQueue(messenger.messageQueue()).calculateIntrinsicGasFee(outerMessage);
+        // Add some buffer
+        gasLimit = gasLimit * 12 / 10; // 120% of intrinsic gas
+
         messenger.sendMessage{ value: msg.value }(
             targetContract,
             0, // No value transfer
             outerMessage,
-            DEFAULT_GAS_LIMIT,
+            gasLimit,
             uint64(destinationDomain)
         );
     }
