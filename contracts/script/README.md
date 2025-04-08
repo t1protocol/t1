@@ -94,6 +94,8 @@ Scripts to test the canonical bridge functionalities:
   - [Check Alice balances on L1/L2](./test/LogBalances.s.sol)
 - 7683
   - [Create an intent to on L1 and fill it on L2](./test/7683E2E.s.sol)
+- Utility
+  - [Log all balances from L1 & L2](./test/LogBalances.s.sol)
 
 ## 🔄 Upgrade
 
