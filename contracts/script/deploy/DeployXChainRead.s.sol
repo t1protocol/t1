@@ -13,7 +13,6 @@ import { T1Constants } from "../../src/libraries/constants/T1Constants.sol";
 
 contract DeployXChainRead is DeploymentUtils {
     uint32 internal constant ORIGIN_CHAIN = uint32(T1Constants.T1_DEVNET_CHAIN_ID);
-    // uint32 internal constant PR1 = 1337;
     uint32 internal constant PR1 = uint32(T1Constants.L1_CHAIN_ID);
 
     function deploy_to_pr1() external {
