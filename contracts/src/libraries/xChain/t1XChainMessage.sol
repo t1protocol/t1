@@ -2,10 +2,10 @@
 pragma solidity ^0.8.25;
 
 /**
- * @title T1Message
+ * @title t1XChainMessage
  * @dev Helper library for encoding/decoding T1 cross-chain messages
  */
-library T1Message {
+library t1XChainMessage {
     /**
      * @notice Encodes a read request message
      * @param requestId Unique identifier for the request

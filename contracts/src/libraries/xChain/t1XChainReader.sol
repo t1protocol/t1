@@ -6,7 +6,7 @@ import { ReentrancyGuardUpgradeable } from "@openzeppelin/contracts-upgradeable/
 
 import { IL1MessageQueue } from "../../L1/rollup/IL1MessageQueue.sol";
 import { IT1Messenger } from "../IT1Messenger.sol";
-import { T1Message } from "./T1Message.sol";
+import { t1XChainMessage } from "./t1XChainMessage.sol";
 import { It1XChainReaderCallback } from "./It1XChainReaderCallback.sol";
 
 /**
@@ -119,7 +119,7 @@ contract t1XChainReader is OwnableUpgradeable, ReentrancyGuardUpgradeable {
 
         callbacks[requestId] = callback;
 
-        bytes memory message = T1Message.encodeRead(requestId, callData);
+        bytes memory message = t1XChainMessage.encodeRead(requestId, callData);
 
         // Using this selector to avoid hash collision
         bytes4 requestReadSelector = bytes4(keccak256("requestRead(uint32,address,uint64,bytes,address)"));
@@ -159,7 +159,7 @@ contract t1XChainReader is OwnableUpgradeable, ReentrancyGuardUpgradeable {
      * @param _message The encoded message
      */
     function handle(bytes calldata _message) external payable onlyMessenger {
-        (bytes32 requestId, bytes memory data) = T1Message.decodeResponse(_message);
+        (bytes32 requestId, bytes memory data) = t1XChainMessage.decodeResponse(_message);
         _handleReadResponse(requestId, data);
     }
 

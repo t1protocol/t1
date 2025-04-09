@@ -7,7 +7,7 @@ import { OrderData, OrderEncoder } from "intents-framework/libs/OrderEncoder.sol
 import { OnchainCrossChainOrder } from "intents-framework/ERC7683/IERC7683.sol";
 
 import { t1XChainReader } from "../../libraries/xChain/t1XChainReader.sol";
-import { T1Message } from "../../libraries/xChain/T1Message.sol";
+import { t1XChainMessage } from "../../libraries/xChain/t1XChainMessage.sol";
 import { t1BasicSwapE2E } from "./t1BasicSwapE2E.t.sol";
 import { t1ERC7683Pull } from "../../7683/t1ERC7683Pull.sol";
 
@@ -58,7 +58,7 @@ contract t1XChainReaderTest is t1BasicSwapE2E {
     // 4b. relayer calls t1XChainReader.handle with the result of the read which calls
     // ont1XChainReaderResult on callback address
     // 4c. ont1XChainReaderResult on 7683 contract settles intent and releases funds to solver
-    function test_pullBasedSettlementFlow() public {
+    function test_ERC7683PullSettlementFlow() public {
         // 1. Setup: Open an order on L1 (origin chain)
         OrderData memory orderData = _prepareOrderData();
         OnchainCrossChainOrder memory order =
@@ -91,7 +91,7 @@ contract t1XChainReaderTest is t1BasicSwapE2E {
         {
             // Construct the read request calldata
             bytes memory orderStatus = l2_t1_7683_pull.getFilledOrderStatus(orderId);
-            bytes memory readMessage = T1Message.encodeRead(requestId, orderStatus);
+            bytes memory readMessage = t1XChainMessage.encodeRead(requestId, orderStatus);
             uint256 balanceSolverBeforeSettle = inputToken.balanceOf(address(vegeta));
             vm.prank(address(l1t1Messenger));
             originReader.handle(readMessage);
