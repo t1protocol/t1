@@ -1,6 +1,6 @@
 {
   "name": "t1",
-  "version": "0.0.6",
+  "version": "0.1.0",
   "description": "A monorepo containing all major components of the t1 protocol",
   "license": "MIT",
   "author": {
@@ -15,7 +15,8 @@
   "homepage": "https://github.com/t1protocol/t1/blob/canary/README.md",
   "scripts": {
     "prepare": "husky",
-    "commit": "./node_modules/cz-customizable/standalone.js"
+    "commit": "./node_modules/cz-customizable/standalone.js",
+    "bump": "node scripts/bump-version.js"
   },
   "devDependencies": {
     "@commitlint/cli": "19.6.1",

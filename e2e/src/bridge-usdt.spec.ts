@@ -8,7 +8,7 @@ const logger = createWinstonLogger("bridge-usdt.spec.ts");
 
 const l1AccountManager = config.getL1AccountManager();
 const l2AccountManager = config.getL2AccountManager();
-const bridgeAmountUsdt = ethers.parseEther("100");
+const bridgeAmountUsdt = ethers.parseUnits("1", 6);
 
 
 const l1account = l1AccountManager.getWallet(l1AccountManager.selectWhaleAccount(0).account);
@@ -32,18 +32,18 @@ describe("Bridge USDT L1 -> L2 and L2 -> L1", () => {
     await allowanceTx.wait();
 
     const allowanceL1Account = await l1usdtContract.allowance(l1account.address, l1standardErc20gatewayContract);
-    logger.info(`Current allowance of L1 account to L1 TokenBridge is [${weiToEther(allowanceL1Account.toString())}] USDT`);
+    logger.info(`Current allowance of L1 account to L1 TokenBridge is [${ethers.parseUnits(allowanceL1Account.toString(), 6)}] USDT`);
     expect(allowanceL1Account >= bridgeAmountUsdt);
 
     const feeData = await l1Provider.getFeeData();
     const l2BlockNumberBeforeBridging = await l2Provider.getBlockNumber();
 
     const l1TokenBalance = await l1usdtContract.balanceOf(l1account.address);
-    logger.info(`Token balance of L1 account is [${weiToEther(l1TokenBalance.toString())}] USDT`);
+    logger.info(`Token balance of L1 account is [${ethers.parseUnits(l1TokenBalance.toString(), 6)}] USDT`);
     expect(l1TokenBalance >= bridgeAmountUsdt);
 
     const initiall2TokenBalance = await l2usdtContract.balanceOf(l1account.address);
-    logger.info(`Token balance of L2 account before deposit is [${weiToEther(initiall2TokenBalance.toString())}] USDT`);
+    logger.info(`Token balance of L2 account before deposit is [${ethers.parseUnits(initiall2TokenBalance.toString(), 6)}] USDT`);
 
     const bridgeTokenTx = await l1StandardERC20Gateway
       .connect(l1account)
@@ -74,7 +74,7 @@ describe("Bridge USDT L1 -> L2 and L2 -> L1", () => {
     expect(depositFinalized).not.toBeNull();
 
     const l2usdtBalanceAfterTest = await l2usdtContract.balanceOf(l1account.address);
-    logger.info(`Token balance of L2 account after deposit is [${weiToEther(l2usdtBalanceAfterTest.toString())}]`);
+    logger.info(`Token balance of L2 account after deposit is [${ethers.parseUnits(l2usdtBalanceAfterTest.toString(), 6)}] USDT`);
 
     expect(l2usdtBalanceAfterTest).toEqual(initiall2TokenBalance + bridgeAmountUsdt);
   });
@@ -89,7 +89,7 @@ describe("Bridge USDT L1 -> L2 and L2 -> L1", () => {
     await allowanceTx.wait();
 
     const allowanceL2Account = await l2usdtContract.allowance(l2account.address, l2standardErc20gatewayContract);
-    logger.info(`Current allowance of L2 account to L2 TokenBridge is [${weiToEther(allowanceL2Account.toString())}] USDT`);
+    logger.info(`Current allowance of L2 account to L2 TokenBridge is [${ethers.parseUnits(allowanceL2Account.toString(), 6)}] USDT`);
     expect(allowanceL2Account >= bridgeAmountUsdt);
 
     const l2tokenBalance = await l2usdtContract.balanceOf(l2account);
@@ -97,7 +97,7 @@ describe("Bridge USDT L1 -> L2 and L2 -> L1", () => {
     expect(l2tokenBalance >= bridgeAmountUsdt);
 
     const initialL1TokenBalance = await l1usdtContract.balanceOf(l2account.address);
-    logger.info(`Token balance of L1 account before withdraw is [${weiToEther(initialL1TokenBalance.toString())}] USDT`);
+    logger.info(`Token balance of L1 account before withdraw is [${ethers.parseUnits(initialL1TokenBalance.toString(), 6)}] USDT`);
 
     const bridgeTokenTx = await l2standardErc20gatewayContract
       .connect(l2account)
@@ -129,7 +129,7 @@ describe("Bridge USDT L1 -> L2 and L2 -> L1", () => {
     expect(withdrawFinalized).not.toBeNull();
 
     const l1usdtBalanceAfterTest = await l1usdtContract.balanceOf(l2account.address);
-    logger.info(`Token balance of L1 account after withdraw is [${weiToEther(l1usdtBalanceAfterTest.toString())}]`);
+    logger.info(`Token balance of L1 account after withdraw is [${ethers.parseUnits(l1usdtBalanceAfterTest.toString(), 6)}] USDT`);
 
     expect(l1usdtBalanceAfterTest).toEqual(initialL1TokenBalance + bridgeAmountUsdt);
   });
