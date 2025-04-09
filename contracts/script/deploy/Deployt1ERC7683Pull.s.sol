@@ -11,12 +11,12 @@ import { DeploymentUtils } from "../lib/DeploymentUtils.sol";
 import { t1ERC7683Pull } from "../../src/7683/t1ERC7683Pull.sol";
 import { T1Constants } from "../../src/libraries/constants/T1Constants.sol";
 
-contract DeployRouterPullBasedERC7683 is DeploymentUtils {
+contract Deployt1ERC7683Pull is DeploymentUtils {
     uint32 internal constant T1 = uint32(T1Constants.T1_DEVNET_CHAIN_ID);
     uint32 internal constant PR1 = uint32(T1Constants.L1_CHAIN_ID);
     ProxyAdmin private proxyAdmin;
 
-    function deploy_to_pr1() external {
+    function pr1_deploy() external {
         logStart("DeployRouterPullBasedERC7683 to PR1");
         uint256 deployerPk = vm.envUint("L1_DEPLOYER_PRIVATE_KEY");
         address L1_T1_MESSENGER_PROXY_ADDR = vm.envAddress("L1_T1_MESSENGER_PROXY_ADDR");
@@ -46,7 +46,7 @@ contract DeployRouterPullBasedERC7683 is DeploymentUtils {
         logEnd("DeployRouterPullBasedERC7683 to PR1");
     }
 
-    function initialize_pr1() external {
+    function pr1_init() external {
         uint256 deployerPk = vm.envUint("L1_DEPLOYER_PRIVATE_KEY");
         address L1_t1_7683_PROXY_ADDR = vm.envAddress("L1_T1_PULL_BASED_7683_PROXY_ADDR");
         address L2_t1_7683_PROXY_ADDR = vm.envAddress("L2_T1_PULL_BASED_7683_PROXY_ADDR");
@@ -58,7 +58,7 @@ contract DeployRouterPullBasedERC7683 is DeploymentUtils {
         vm.stopBroadcast();
     }
 
-    function deploy_to_t1() external {
+    function t1_deploy() external {
         logStart("DeployRouterPullBasedERC7683 to t1");
         vm.createSelectFork(vm.rpcUrl("t1"));
         uint256 deployerPk = vm.envUint("L2_DEPLOYER_PRIVATE_KEY");
@@ -90,7 +90,7 @@ contract DeployRouterPullBasedERC7683 is DeploymentUtils {
         logEnd("DeployRouterPullBasedERC7683 to t1");
     }
 
-    function initialize_t1() external {
+    function t1_init() external {
         vm.createSelectFork(vm.rpcUrl("t1"));
         uint256 deployerPk = vm.envUint("L2_DEPLOYER_PRIVATE_KEY");
         address L1_t1_7683_PROXY_ADDR = vm.envAddress("L1_T1_PULL_BASED_7683_PROXY_ADDR");
