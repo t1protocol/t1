@@ -2,29 +2,27 @@
 pragma solidity ^0.8.25;
 
 import { OwnableUpgradeable } from "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
-import { ReentrancyGuardUpgradeable } from "@openzeppelin/contracts-upgradeable/security/ReentrancyGuardUpgradeable.sol";
 import { Hyperlane7683Message } from "intents-framework/libs/Hyperlane7683Message.sol";
 import { BasicSwap7683 } from "intents-framework/BasicSwap7683.sol";
-import { TypeCasts } from "@hyperlane-xyz/libs/TypeCasts.sol";
 
 import { IT1Messenger } from "../libraries/IT1Messenger.sol";
-import { T1XChainRead } from "../libraries/x-chain/T1XChainRead.sol";
-import { IT1XChainReadCallback } from "../libraries/x-chain/IT1XChainReadCallback.sol";
+import { t1XChainReader } from "../libraries/xChain/t1XChainReader.sol";
+import { It1XChainReaderCallback } from "../libraries/xChain/It1XChainReaderCallback.sol";
 
 /**
- * @title t1_7683_PullBased
+ * @title t1ERC7683Pull
  * @author t1 Labs
  * @notice This contract extends BasicSwap7683 with pull-based settlement using t1 cross-chain reads
  * @dev Implements both push-based messaging and pull-based verification for orders
  */
-contract t1_7683_PullBased is BasicSwap7683, OwnableUpgradeable, IT1XChainReadCallback {
+contract t1ERC7683Pull is BasicSwap7683, OwnableUpgradeable, It1XChainReaderCallback {
     // ============ Constants ============
 
     uint32 public immutable localDomain;
 
     IT1Messenger public immutable messenger;
 
-    T1XChainRead public immutable xChainRead;
+    t1XChainReader public immutable xChainRead;
 
     address public counterpart;
 
@@ -90,7 +88,7 @@ contract t1_7683_PullBased is BasicSwap7683, OwnableUpgradeable, IT1XChainReadCa
         BasicSwap7683(_permit2)
     {
         messenger = IT1Messenger(_messenger);
-        xChainRead = T1XChainRead(_xChainRead);
+        xChainRead = t1XChainReader(_xChainRead);
         localDomain = localDomain_;
     }
 
@@ -113,26 +111,16 @@ contract t1_7683_PullBased is BasicSwap7683, OwnableUpgradeable, IT1XChainReadCa
 
     /// @notice Initiates a pull-based settlement verification for an order
     /// @param destinationDomain The domain of the destination chain
-    /// @param destinationSettler The address of the destination settler
     /// @param orderId The ID of the order to verify
     /// @return requestId The ID of the read request
-    function verifySettlement(
-        uint32 destinationDomain,
-        // TODO remove
-        address destinationSettler,
-        bytes32 orderId
-    )
-        external
-        payable
-        returns (bytes32 requestId)
-    {
+    function verifySettlement(uint32 destinationDomain, bytes32 orderId) external payable returns (bytes32 requestId) {
         // Check if the order exists and is in a valid state
         if (orderStatus[orderId] != OPENED) revert InvalidOrderStatus();
 
         // Create the calldata to check the order status on the destination chain
         bytes memory callData = abi.encodeWithSelector(this.getFilledOrderStatus.selector, orderId);
 
-        T1XChainRead.ReadRequest memory readRequest = T1XChainRead.ReadRequest({
+        t1XChainReader.ReadRequest memory readRequest = t1XChainReader.ReadRequest({
             destinationDomain: destinationDomain,
             targetContract: counterpart,
             minBlock: 0,
@@ -153,7 +141,7 @@ contract t1_7683_PullBased is BasicSwap7683, OwnableUpgradeable, IT1XChainReadCa
     /// @notice Callback function for cross-chain read results
     /// @param requestId The ID of the read request
     /// @param result The result of the read
-    function onT1XChainReadResult(bytes32 requestId, bytes calldata result) external override onlyXChainRead {
+    function ont1XChainReaderResult(bytes32 requestId, bytes calldata result) external override onlyXChainRead {
         bytes32 orderId = readRequestToOrderId[requestId];
 
         // Ensure we have a valid order
