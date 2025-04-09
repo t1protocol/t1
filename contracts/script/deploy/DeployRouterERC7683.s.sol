@@ -6,7 +6,7 @@ import { console2 } from "forge-std/console2.sol";
 import { ProxyAdmin } from "@openzeppelin/contracts/proxy/transparent/ProxyAdmin.sol";
 import { TransparentUpgradeableProxy } from "@openzeppelin/contracts/proxy/transparent/TransparentUpgradeableProxy.sol";
 
-import { t1_7683 } from "../../src/7683/t1_7683.sol";
+import { t1ERC7683 } from "../../src/7683/t1ERC7683.sol";
 import { T1Constants } from "../../src/libraries/constants/T1Constants.sol";
 
 contract DeployRouterERC7683 is Script {
@@ -25,7 +25,7 @@ contract DeployRouterERC7683 is Script {
         proxyAdmin = ProxyAdmin(L1_PROXY_ADMIN_ADDR);
 
         // Deploy L1 router implementation
-        t1_7683 implementation = new t1_7683(
+        t1ERC7683 implementation = new t1ERC7683(
             l1Messenger,
             address(0), // No Permit2 for now
             ORIGIN_CHAIN
@@ -49,7 +49,7 @@ contract DeployRouterERC7683 is Script {
 
         vm.startBroadcast(deployerPk);
 
-        t1_7683(L1_t1_7683_PROXY_ADDR).initialize(L2_t1_7683_PROXY_ADDR);
+        t1ERC7683(L1_t1_7683_PROXY_ADDR).initialize(L2_t1_7683_PROXY_ADDR);
 
         vm.stopBroadcast();
     }
@@ -65,7 +65,7 @@ contract DeployRouterERC7683 is Script {
         proxyAdmin = ProxyAdmin(L2_PROXY_ADMIN_ADDR);
 
         // Deploy L2 router implementation
-        t1_7683 implementation = new t1_7683(
+        t1ERC7683 implementation = new t1ERC7683(
             l2Messenger,
             address(0), // No Permit2 for now
             DESTINATION_CHAIN
@@ -89,7 +89,7 @@ contract DeployRouterERC7683 is Script {
 
         vm.startBroadcast(deployerPk);
 
-        t1_7683(L2_t1_7683_PROXY_ADDR).initialize(L1_t1_7683_PROXY_ADDR);
+        t1ERC7683(L2_t1_7683_PROXY_ADDR).initialize(L1_t1_7683_PROXY_ADDR);
 
         vm.stopBroadcast();
     }

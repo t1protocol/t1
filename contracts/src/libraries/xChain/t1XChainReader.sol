@@ -7,13 +7,13 @@ import { ReentrancyGuardUpgradeable } from "@openzeppelin/contracts-upgradeable/
 import { IL1MessageQueue } from "../../L1/rollup/IL1MessageQueue.sol";
 import { IT1Messenger } from "../IT1Messenger.sol";
 import { T1Message } from "./T1Message.sol";
-import { IT1XChainReadCallback } from "./IT1XChainReadCallback.sol";
+import { It1XChainReaderCallback } from "./It1XChainReaderCallback.sol";
 
 /**
- * @title T1XChainRead
+ * @title t1XChainReader
  * @notice Facilitates reading data from contracts on other chains through t1
  */
-contract T1XChainRead is OwnableUpgradeable, ReentrancyGuardUpgradeable {
+contract t1XChainReader is OwnableUpgradeable, ReentrancyGuardUpgradeable {
     // ============ Events ============
 
     /**
@@ -75,7 +75,7 @@ contract T1XChainRead is OwnableUpgradeable, ReentrancyGuardUpgradeable {
     }
 
     /**
-     * @notice Sets up the T1XChainRead contract
+     * @notice Sets up the t1XChainReader contract
      * @param _messenger Address of the T1 messenger contract
      * @param _localDomain ID of the local domain
      */
@@ -177,7 +177,7 @@ contract T1XChainRead is OwnableUpgradeable, ReentrancyGuardUpgradeable {
         if (callback != address(0)) {
             delete callbacks[requestId];
 
-            IT1XChainReadCallback(callback).onT1XChainReadResult(requestId, result);
+            It1XChainReaderCallback(callback).ont1XChainReaderResult(requestId, result);
         }
 
         emit ReadResult(requestId, result);

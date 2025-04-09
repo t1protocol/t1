@@ -8,7 +8,7 @@ import { TransparentUpgradeableProxy } from "@openzeppelin/contracts/proxy/trans
 
 import { DeploymentUtils } from "../lib/DeploymentUtils.sol";
 
-import { t1_7683_PullBased } from "../../src/7683/t1_7683_pull_based.sol";
+import { t1ERC7683Pull } from "../../src/7683/t1ERC7683Pull.sol";
 import { T1Constants } from "../../src/libraries/constants/T1Constants.sol";
 
 contract DeployRouterPullBasedERC7683 is DeploymentUtils {
@@ -27,7 +27,7 @@ contract DeployRouterPullBasedERC7683 is DeploymentUtils {
         vm.startBroadcast(deployerPk);
 
         // Deploy L1 router implementation
-        t1_7683_PullBased impl = new t1_7683_PullBased(
+        t1ERC7683Pull impl = new t1ERC7683Pull(
             L1_T1_MESSENGER_PROXY_ADDR,
             address(0), // No Permit2 for now
             L1_T1_X_CHAIN_READ_PROXY_ADDR,
@@ -53,7 +53,7 @@ contract DeployRouterPullBasedERC7683 is DeploymentUtils {
 
         vm.startBroadcast(deployerPk);
 
-        t1_7683_PullBased(L1_t1_7683_PROXY_ADDR).initialize(L2_t1_7683_PROXY_ADDR);
+        t1ERC7683Pull(L1_t1_7683_PROXY_ADDR).initialize(L2_t1_7683_PROXY_ADDR);
 
         vm.stopBroadcast();
     }
@@ -71,7 +71,7 @@ contract DeployRouterPullBasedERC7683 is DeploymentUtils {
         proxyAdmin = ProxyAdmin(L2_PROXY_ADMIN_ADDR);
 
         // Deploy L2 router implementation
-        t1_7683_PullBased impl = new t1_7683_PullBased(
+        t1ERC7683Pull impl = new t1ERC7683Pull(
             L2_T1_MESSENGER_PROXY_ADDR,
             address(0), // No Permit2 for now
             L2_T1_X_CHAIN_READ_PROXY_ADDR,
@@ -98,7 +98,7 @@ contract DeployRouterPullBasedERC7683 is DeploymentUtils {
 
         vm.startBroadcast(deployerPk);
 
-        t1_7683_PullBased(L2_t1_7683_PROXY_ADDR).initialize(L1_t1_7683_PROXY_ADDR);
+        t1ERC7683Pull(L2_t1_7683_PROXY_ADDR).initialize(L1_t1_7683_PROXY_ADDR);
 
         vm.stopBroadcast();
     }

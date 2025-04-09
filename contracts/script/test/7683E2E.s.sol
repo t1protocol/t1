@@ -7,7 +7,7 @@ import { ERC20 } from "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 import { TypeCasts } from "@hyperlane-xyz/libs/TypeCasts.sol";
 import { OrderData, OrderEncoder } from "intents-framework/libs/OrderEncoder.sol";
 import { OnchainCrossChainOrder } from "intents-framework/ERC7683/IERC7683.sol";
-import { t1_7683 } from "../../src/7683/t1_7683.sol";
+import { t1ERC7683 } from "../../src/7683/t1ERC7683.sol";
 import { T1Constants } from "../../src/libraries/constants/T1Constants.sol";
 
 uint32 constant ORIGIN_CHAIN = uint32(T1Constants.L1_CHAIN_ID);
@@ -15,10 +15,10 @@ uint32 constant DESTINATION_CHAIN = uint32(T1Constants.T1_DEVNET_CHAIN_ID);
 
 // Step 1: Setup Alice's account, sign and relay intent
 contract AliceSetupScript is Script {
-    t1_7683 public l1Router;
+    t1ERC7683 public l1Router;
 
     function run() external {
-        l1Router = t1_7683(vm.envAddress("L1_t1_7683_PROXY_ADDR"));
+        l1Router = t1ERC7683(vm.envAddress("L1_t1_7683_PROXY_ADDR"));
         // Load Alice's private key from env
         uint256 alicePk = vm.envUint("ALICE_PRIVATE_KEY");
         address alice = vm.addr(alicePk);
@@ -89,7 +89,7 @@ contract SolverFillScript is Script {
         vm.startBroadcast(solverPk);
 
         // Get order details
-        t1_7683 l2Router = t1_7683(vm.envAddress("L2_t1_7683_PROXY_ADDR"));
+        t1ERC7683 l2Router = t1ERC7683(vm.envAddress("L2_t1_7683_PROXY_ADDR"));
         // NOTE - orderId logged from the first step goes here (remove 0x first)
         bytes32 orderId = hex"";
 
@@ -117,7 +117,7 @@ contract SettlementScript is Script {
 
         vm.startBroadcast(settlerPk);
 
-        t1_7683 l2Router = t1_7683(vm.envAddress("L2_t1_7683_PROXY_ADDR"));
+        t1ERC7683 l2Router = t1ERC7683(vm.envAddress("L2_t1_7683_PROXY_ADDR"));
 
         // Prepare order IDs and filler data for batch settlement
         bytes32[] memory orderIds = new bytes32[](1);

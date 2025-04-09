@@ -8,7 +8,7 @@ import { TransparentUpgradeableProxy } from "@openzeppelin/contracts/proxy/trans
 
 import { DeploymentUtils } from "../lib/DeploymentUtils.sol";
 
-import { T1XChainRead } from "../../src/libraries/x-chain/T1XChainRead.sol";
+import { t1XChainReader } from "../../src/libraries/xChain/t1XChainReader.sol";
 import { T1Constants } from "../../src/libraries/constants/T1Constants.sol";
 
 contract DeployXChainRead is DeploymentUtils {
@@ -26,7 +26,7 @@ contract DeployXChainRead is DeploymentUtils {
 
         vm.startBroadcast(L1_DEPLOYER_PRIVATE_KEY);
 
-        T1XChainRead impl = new T1XChainRead(address(L1_T1_MESSENGER), PR1);
+        t1XChainReader impl = new t1XChainReader(address(L1_T1_MESSENGER), PR1);
         logAddress("L1_T1_X_CHAIN_READ_IMPLEMENTATION_ADDR", address(impl));
 
         TransparentUpgradeableProxy proxy =
@@ -49,7 +49,7 @@ contract DeployXChainRead is DeploymentUtils {
 
         vm.startBroadcast(L2_DEPLOYER_PRIVATE_KEY);
 
-        T1XChainRead impl = new T1XChainRead(address(L2_T1_MESSENGER), ORIGIN_CHAIN);
+        t1XChainReader impl = new t1XChainReader(address(L2_T1_MESSENGER), ORIGIN_CHAIN);
         logAddress("L2_T1_X_CHAIN_READ_IMPLEMENTATION_ADDR", address(impl));
 
         TransparentUpgradeableProxy proxy =
