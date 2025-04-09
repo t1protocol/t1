@@ -63,6 +63,7 @@ The backbone of 𝚝𝟷, responsible for managing batches, state roots, and cro
 - **L2T1Messenger**: the L2 counterpart, handling incoming messages from L1 and sending outbound messages
 - **L1MessageQueue**: maintains the ordered queue of L1→L2 messages awaiting processing
 - **L2MessageQueue**: maintains the ordered queue of L2→L1 messages awaiting processing
+- **t1XChainReader**: facilitates cross-chain read requests between supported chains
 
 ### Bridge Infrastructure
 
