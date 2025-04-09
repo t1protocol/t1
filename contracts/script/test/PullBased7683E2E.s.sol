@@ -128,7 +128,7 @@ contract SettlementScript is Script {
         // NOTE - orderId logged from the first step goes here (remove 0x first)
         bytes32 orderId = hex"ca4f9cbf0c559f53bc039c3c2bbcaf44321cb7ca763ff98a620359b02debf9cb";
 
-        bytes32 requestId = l1Router.verifySettlement{ value: 1_000_000 }(DESTINATION_CHAIN, address(l2Router), orderId);
+        bytes32 requestId = l1Router.verifySettlement{ value: 0 }(DESTINATION_CHAIN, address(l2Router), orderId);
 
         vm.stopBroadcast();
     }
