@@ -14,7 +14,6 @@ import { IT1XChainReadCallback } from "./IT1XChainReadCallback.sol";
  * @notice Facilitates reading data from contracts on other chains through t1
  */
 contract T1XChainRead is OwnableUpgradeable, ReentrancyGuardUpgradeable {
-
     // ============ Events ============
 
     /**
@@ -94,18 +93,9 @@ contract T1XChainRead is OwnableUpgradeable, ReentrancyGuardUpgradeable {
      * @param request ReadRequest
      * @return requestId Unique identifier for tracking this request
      */
-    function requestRead(ReadRequest calldata request)
-        external
-        payable
-        nonReentrant
-        returns (bytes32 requestId)
-    {
+    function requestRead(ReadRequest calldata request) external payable nonReentrant returns (bytes32 requestId) {
         return _processReadRequest(
-            request.destinationDomain,
-            request.targetContract,
-            request.minBlock,
-            request.callData,
-            request.callback
+            request.destinationDomain, request.targetContract, request.minBlock, request.callData, request.callback
         );
     }
 
@@ -115,7 +105,10 @@ contract T1XChainRead is OwnableUpgradeable, ReentrancyGuardUpgradeable {
         uint64 minBlock,
         bytes calldata callData,
         address callback
-    ) internal returns (bytes32 requestId) {
+    )
+        internal
+        returns (bytes32 requestId)
+    {
         if (callback.code.length == 0) revert InvalidCallback();
 
         requestId = keccak256(
@@ -131,12 +124,7 @@ contract T1XChainRead is OwnableUpgradeable, ReentrancyGuardUpgradeable {
         // Using this selector to avoid hash collision
         bytes4 requestReadSelector = bytes4(keccak256("requestRead(uint32,address,uint64,bytes,address)"));
 
-        _sendMessage(
-            destinationDomain,
-            targetContract,
-            requestReadSelector,
-            message
-        );
+        _sendMessage(destinationDomain, targetContract, requestReadSelector, message);
 
         emit ReadRequested(requestId, destinationDomain, targetContract, minBlock, callData, callback);
 
@@ -148,11 +136,10 @@ contract T1XChainRead is OwnableUpgradeable, ReentrancyGuardUpgradeable {
         address targetContract,
         bytes4 selector,
         bytes memory message
-    ) internal {
-        bytes memory outerMessage = abi.encodePacked(
-            selector,
-            message
-        );
+    )
+        internal
+    {
+        bytes memory outerMessage = abi.encodePacked(selector, message);
 
         uint256 gasLimit = IL1MessageQueue(messenger.messageQueue()).calculateIntrinsicGasFee(outerMessage);
         // Add some buffer

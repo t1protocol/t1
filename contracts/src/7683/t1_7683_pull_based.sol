@@ -141,8 +141,7 @@ contract t1_7683_PullBased is BasicSwap7683, OwnableUpgradeable, IT1XChainReadCa
         });
 
         // Request the cross-chain read
-        requestId =
-            xChainRead.requestRead{ value: msg.value }(readRequest);
+        requestId = xChainRead.requestRead{ value: msg.value }(readRequest);
 
         readRequestToOrderId[requestId] = orderId;
 

@@ -12,14 +12,7 @@ library T1Message {
      * @param callData Function selector and arguments
      * @return Encoded message
      */
-    function encodeRead(
-        bytes32 requestId,
-        bytes memory callData
-    )
-        internal
-        pure
-        returns (bytes memory)
-    {
+    function encodeRead(bytes32 requestId, bytes memory callData) internal pure returns (bytes memory) {
         return abi.encode(requestId, callData);
     }
 
@@ -29,11 +22,7 @@ library T1Message {
      * @return requestId Unique identifier for the request
      * @return data Additional data (varies based on isRequest)
      */
-    function decodeResponse(bytes memory message)
-        internal
-        pure
-        returns (bytes32 requestId, bytes memory data)
-    {
+    function decodeResponse(bytes memory message) internal pure returns (bytes32 requestId, bytes memory data) {
         (requestId, data) = abi.decode(message, (bytes32, bytes));
     }
 }
