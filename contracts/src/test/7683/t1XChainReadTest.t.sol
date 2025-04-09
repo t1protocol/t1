@@ -73,12 +73,9 @@ contract T1XChainReadTest is t1BasicSwapE2E {
 
     // 1. user opens intent on source chain
     // 2. solver fills intent on destination chain
-    // 3a. solver calls 7683 verifySettlement on source chain which T1XChainRead.requestRead
-    // 3b. relayer picks up message and calls relayMessage on destination chain
-    // 3c. relayMessage calls T1XChainRead.handle which calls the view function, and packages the result into
-    // sendMessage
-    // 4a. relayer picks up message and calls relayMessageWithProof on source chain
-    // 4b. relayMessageWithProof calls T1XChainRead.handle which calls _handleReadResponse which calls
+    // 3a. solver calls 7683 verifySettlement on source chain, triggering T1XChainRead.requestRead
+    // 4a. relayer picks up message and calls getFilledOrderStatus on destination chain
+    // 4b. relayer calls T1XChainRead.handle with the result of the read which calls
     // onT1XChainReadResult on callback address
     // 4c. onT1XChainReadResult on 7683 contract settles intent and releases funds to solver
     function test_pullBasedSettlementFlow() public {
@@ -110,69 +107,14 @@ contract T1XChainReadTest is t1BasicSwapE2E {
         bytes32 requestId = l1_t1_7683_pull_based.verifySettlement(destination, address(l2_t1_7683_pull_based), orderId);
         vm.stopPrank();
 
-        // 4. Process the read request on L2 (destination chain)
+        // 4. Process the read request on L2 (destination chain) & Relay the result back to L1
         {
             // Construct the read request calldata
-            bytes memory callData = abi.encodeWithSelector(l2_t1_7683_pull_based.getFilledOrderStatus.selector, orderId);
-            bytes memory readMessage = T1Message.encodeRead(requestId, callData);
-            bytes memory handleMessage = abi.encodeWithSelector(
-                destinationReader.handle.selector,
-                origin,
-                TypeCasts.addressToBytes32(address(originReader)),
-                readMessage
-            );
-            l2t1Messenger.relayMessage(vegeta, address(destinationReader), 0, 0, handleMessage);
-        }
-
-        // 5. Relay the result back to L1 using relayMessage
-        {
-            // Get the result (FILLED status)
-            bytes memory result = l2_t1_7683_pull_based.getFilledOrderStatus(orderId);
-            bytes memory resultMessage = abi.encode(false, requestId, result);
-
-            bytes memory outerMessage = abi.encodeWithSelector(
-                T1XChainRead.handle.selector,
-                destination,
-                TypeCasts.addressToBytes32(address(destinationReader)),
-                resultMessage
-            );
-
-            // Calculate message hash
-            bytes32 xDomainCalldataHash = keccak256(
-                abi.encodeWithSignature(
-                    "relayMessage(address,address,uint256,uint256,bytes)",
-                    address(destinationReader),
-                    address(originReader),
-                    0,
-                    0, // First nonce
-                    outerMessage
-                )
-            );
-
-            // Append message to L2 message queue
-            vm.startPrank(address(l2t1Messenger));
-            l2MessageQueue.appendMessage(xDomainCalldataHash);
-            vm.stopPrank();
-
-            // Simulate batch finalization
-            bytes memory batchHeader = generateBatchHeader();
-            rollup.addProver(address(0));
-            vm.startPrank(address(0));
-            rollup.finalizeBundleWithProof(batchHeader, bytes32(uint256(2)), xDomainCalldataHash, new bytes(0));
-            vm.stopPrank();
-
-            // Relay message from L2 to L1
-            IL1T1Messenger.L2MessageProof memory proof = IL1T1Messenger.L2MessageProof({
-                batchIndex: 1,
-                merkleProof: new bytes(0) // Mock proof
-             });
-
+            bytes memory orderStatus = l2_t1_7683_pull_based.getFilledOrderStatus(orderId);
+            bytes memory readMessage = T1Message.encodeRead(requestId, orderStatus);
             uint256 balanceSolverBeforeSettle = inputToken.balanceOf(address(vegeta));
-
-            l1t1Messenger.relayMessageWithProof(
-                address(destinationReader), address(originReader), 0, 0, outerMessage, proof
-            );
-
+            vm.prank(address(l1t1Messenger));
+            originReader.handle(readMessage);
             uint256 balanceSolverAfterSettle = inputToken.balanceOf(address(vegeta));
 
             assertEq(
@@ -180,7 +122,7 @@ contract T1XChainReadTest is t1BasicSwapE2E {
             );
         }
 
-        // 6. Verify the final state on L1
+        // Verify the final state on L1
         assertTrue(l1_t1_7683_pull_based.orderVerified(orderId), "Order should be verified");
     }
 }
