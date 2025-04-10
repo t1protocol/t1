@@ -3,6 +3,7 @@
 pragma solidity ^0.8.25;
 
 import { DSTestPlus } from "solmate/test/utils/DSTestPlus.sol";
+import { console2 } from "forge-std/console2.sol";
 import { ERC1967Proxy } from "@openzeppelin/contracts/proxy/ERC1967/ERC1967Proxy.sol";
 
 import { L1GasPriceOracle } from "../L2/predeploys/L1GasPriceOracle.sol";
@@ -18,6 +19,7 @@ import { T1Constants } from "../libraries/constants/T1Constants.sol";
 contract L2T1MessengerTest is DSTestPlus {
     uint64 internal constant POLYGON_CHAIN_ID = 137;
     uint64 internal constant ARB_CHAIN_ID = 42_161;
+    uint64 internal constant L1_CHAIN_ID = T1Constants.L1_CHAIN_ID;
 
     L1T1Messenger internal l1Messenger;
 
@@ -120,6 +122,45 @@ contract L2T1MessengerTest is DSTestPlus {
         l2Messenger.sendMessage{ value: _valueMinusOne }(
             address(0), 0, new bytes(0), gasLimit, ARB_CHAIN_ID, callbackAddress
         );
+    }
+
+    function testSendMessageToL1(address callbackAddress) external {
+        hevm.assume(callbackAddress.code.length == 0);
+        hevm.assume(uint256(uint160(callbackAddress)) > 100); // ignore some precompile contracts
+
+        // succeed normally
+        uint256 balanceBefore = callbackAddress.balance;
+        assertEq(l2Messenger.nextL2MessageNonce(), 0);
+        l2Messenger.sendMessage{ value: 1 }(address(0), 1, new bytes(0), 21_000, L1_CHAIN_ID, callbackAddress);
+        assertEq(balanceBefore, callbackAddress.balance);
+        bytes32 messageRoot = l2MessageQueue.messageRoot();
+        console2.log("messageRoot");
+        console2.logBytes32(messageRoot);
+
+        l2Messenger.sendMessage{ value: 1 }(address(0), 1, new bytes(0), 21_000, L1_CHAIN_ID, callbackAddress);
+        messageRoot = l2MessageQueue.messageRoot();
+        console2.log("messageRoot1");
+        console2.logBytes32(messageRoot);
+
+        l2Messenger.sendMessage{ value: 1 }(address(0), 1, new bytes(0), 21_000, L1_CHAIN_ID, callbackAddress);
+        messageRoot = l2MessageQueue.messageRoot();
+        console2.log("messageRoot2");
+        console2.logBytes32(messageRoot);
+
+        l2Messenger.sendMessage{ value: 1 }(address(0), 1, new bytes(0), 21_000, L1_CHAIN_ID, callbackAddress);
+        messageRoot = l2MessageQueue.messageRoot();
+        console2.log("messageRoot3");
+        console2.logBytes32(messageRoot);
+
+        l2Messenger.sendMessage{ value: 1 }(address(0), 1, new bytes(0), 21_000, L1_CHAIN_ID, callbackAddress);
+        messageRoot = l2MessageQueue.messageRoot();
+        console2.log("messageRoot4");
+        console2.logBytes32(messageRoot);
+
+        l2Messenger.sendMessage{ value: 1 }(address(0), 1, new bytes(0), 21_000, L1_CHAIN_ID, callbackAddress);
+        messageRoot = l2MessageQueue.messageRoot();
+        console2.log("messageRoot5");
+        console2.logBytes32(messageRoot);
     }
 
     function testSendMessageRefund() external {
