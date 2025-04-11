@@ -592,6 +592,37 @@ contract L1T1MessengerTest is L1GatewayTestBase {
         l1Messenger.relayMessageWithProof(from, to, msgValue, nonce, message, messageProof);
     }
 
+    function testRelayMessageWithProofPostRoot() external {
+        rollup.addProver(address(0));
+        bytes memory batchHeader1 = generateBatchHeader();
+        assertBoolEq(rollup.isBatchFinalized(1), false);
+        bytes32 withdrawRoot = 0x09e51948e2195b138144dbc406a9212659b160da4808bbefb5013cd0a85bdd28;
+        hevm.startPrank(address(0));
+        rollup.finalizeBundleWithProof(batchHeader1, bytes32(uint256(2)), withdrawRoot, new bytes(0));
+
+        hevm.stopPrank();
+        assertBoolEq(rollup.isBatchFinalized(1), true);
+
+        bytes32 withdrawRootBatch1 = rollup.withdrawRoots(1);
+        assertEq(withdrawRoot, withdrawRootBatch1, "withdraw root");
+
+        bytes memory proof =
+        // solhint-disable-next-line max-line-length
+         hex"01f02994d8482786413b0bca028b7fd3df8eeeaf401868ccdd122f7a961899b8cc1513e3d77b92e4087eea0c2f9a9f7da500fecf8f83d2cb4ca1ef83898751d740f18d84209b1e331875842652404ffa21a8e161d42b27b04b86c31312d20bf0";
+        IL1T1Messenger.L2MessageProof memory messageProof =
+            IL1T1Messenger.L2MessageProof({ batchIndex: 1, merkleProof: proof });
+        // hash 0x5fbf7f1730623088d8f571ce03081c1b7d5944251e79c32b3e2ef75258225ad1
+        uint256 nonce = 2;
+        uint256 msgValue = 1;
+        bytes memory message =
+        // solhint-disable-next-line max-line-length
+         hex"";
+        address from = address(0xD38eBd7DbD6eeeFa8131a763204d64Ef53a96cfc);
+        address to = address(0x0000000000000000000000000000000000000000);
+        // does not revert
+        l1Messenger.relayMessageWithProof(from, to, msgValue, nonce, message, messageProof);
+    }
+
     function onDropMessage(bytes memory message) external payable {
         emit OnDropMessageCalled(message);
     }
