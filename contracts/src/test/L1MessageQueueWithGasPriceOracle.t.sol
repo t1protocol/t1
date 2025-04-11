@@ -46,17 +46,17 @@ contract L1MessageQueueWithGasPriceOracleTest is T1TestBase {
     }
 
     function testUpdateWhitelistChecker(address _newWhitelistChecker) external {
-        hevm.assume(_newWhitelistChecker != address(whitelist));
+        vm.assume(_newWhitelistChecker != address(whitelist));
 
         // call by non-owner, should revert
-        hevm.startPrank(address(1));
-        hevm.expectRevert("Ownable: caller is not the owner");
+        vm.startPrank(address(1));
+        vm.expectRevert("Ownable: caller is not the owner");
         queue.updateWhitelistChecker(_newWhitelistChecker);
-        hevm.stopPrank();
+        vm.stopPrank();
 
         // call by owner, should succeed
         assertEq(address(queue.whitelistChecker()), address(whitelist));
-        hevm.expectEmit(true, true, false, true);
+        vm.expectEmit(true, true, false, true);
         emit UpdateWhitelistChecker(address(whitelist), _newWhitelistChecker);
         queue.updateWhitelistChecker(_newWhitelistChecker);
         assertEq(address(queue.whitelistChecker()), _newWhitelistChecker);
@@ -64,19 +64,19 @@ contract L1MessageQueueWithGasPriceOracleTest is T1TestBase {
 
     function testSetL2BaseFee(uint256 _baseFee1, uint256 _baseFee2) external {
         // call by non-whitelister, should revert
-        hevm.startPrank(address(1));
-        hevm.expectRevert(IL1MessageQueueWithGasPriceOracle.ErrorNotWhitelistedSender.selector);
+        vm.startPrank(address(1));
+        vm.expectRevert(IL1MessageQueueWithGasPriceOracle.ErrorNotWhitelistedSender.selector);
         queue.setL2BaseFee(_baseFee1);
-        hevm.stopPrank();
+        vm.stopPrank();
 
         // call by owner, should succeed
         assertEq(queue.l2BaseFee(), 0);
-        hevm.expectEmit(false, false, false, true);
+        vm.expectEmit(false, false, false, true);
         emit UpdateL2BaseFee(0, _baseFee1);
         queue.setL2BaseFee(_baseFee1);
         assertEq(queue.l2BaseFee(), _baseFee1);
 
-        hevm.expectEmit(false, false, false, true);
+        vm.expectEmit(false, false, false, true);
         emit UpdateL2BaseFee(_baseFee1, _baseFee2);
         queue.setL2BaseFee(_baseFee2);
         assertEq(queue.l2BaseFee(), _baseFee2);

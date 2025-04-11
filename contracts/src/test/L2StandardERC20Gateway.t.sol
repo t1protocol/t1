@@ -74,7 +74,7 @@ contract L2StandardERC20GatewayTest is L2GatewayTestBase {
 
         // Prepare token balances
         l2Token = MockERC20(gateway.getL2ERC20Address(address(l1Token)));
-        hevm.startPrank(AddressAliasHelper.applyL1ToL2Alias(address(l1Messenger)));
+        vm.startPrank(AddressAliasHelper.applyL1ToL2Alias(address(l1Messenger)));
         l2Messenger.relayMessage(
             address(counterpartGateway),
             address(gateway),
@@ -90,7 +90,7 @@ contract L2StandardERC20GatewayTest is L2GatewayTestBase {
                 abi.encode(true, abi.encode("", abi.encode("symbol", "name", 18)))
             )
         );
-        hevm.stopPrank();
+        vm.stopPrank();
     }
 
     function testInitialized() public {
@@ -100,7 +100,7 @@ contract L2StandardERC20GatewayTest is L2GatewayTestBase {
         assertEq(address(factory), gateway.tokenFactory());
         assertEq(address(l1Token), gateway.getL1ERC20Address(address(l2Token)));
 
-        hevm.expectRevert("Initializable: contract is already initialized");
+        vm.expectRevert("Initializable: contract is already initialized");
         gateway.initialize();
     }
 
@@ -176,7 +176,7 @@ contract L2StandardERC20GatewayTest is L2GatewayTestBase {
         amount = bound(amount, 1, 100_000);
 
         // revert when caller is not messenger
-        hevm.expectRevert(ErrorCallerIsNotMessenger.selector);
+        vm.expectRevert(ErrorCallerIsNotMessenger.selector);
         gateway.finalizeDepositERC20(address(l1Token), address(l2Token), sender, recipient, amount, dataToCall);
 
         MockT1Messenger mockMessenger = new MockT1Messenger();
@@ -184,7 +184,7 @@ contract L2StandardERC20GatewayTest is L2GatewayTestBase {
         gateway.initialize();
 
         // only call by counterpart
-        hevm.expectRevert(ErrorCallerIsNotCounterpartGateway.selector);
+        vm.expectRevert(ErrorCallerIsNotCounterpartGateway.selector);
         mockMessenger.callTarget(
             address(gateway),
             abi.encodeWithSelector(
@@ -201,7 +201,7 @@ contract L2StandardERC20GatewayTest is L2GatewayTestBase {
         mockMessenger.setXDomainMessageSender(address(counterpartGateway));
 
         // msg.value mismatch
-        hevm.expectRevert("nonzero msg.value");
+        vm.expectRevert("nonzero msg.value");
         mockMessenger.callTarget{ value: 1 }(
             address(gateway),
             abi.encodeWithSelector(
@@ -216,7 +216,7 @@ contract L2StandardERC20GatewayTest is L2GatewayTestBase {
         );
 
         // l1 token mismatch
-        hevm.expectRevert("l2 token mismatch");
+        vm.expectRevert("l2 token mismatch");
         mockMessenger.callTarget(
             address(gateway),
             abi.encodeWithSelector(
@@ -240,7 +240,7 @@ contract L2StandardERC20GatewayTest is L2GatewayTestBase {
         public
     {
         // blacklist some addresses
-        hevm.assume(recipient != address(0));
+        vm.assume(recipient != address(0));
 
         amount = bound(amount, 1, l2Token.balanceOf(address(this)));
 
@@ -265,18 +265,18 @@ contract L2StandardERC20GatewayTest is L2GatewayTestBase {
 
         // counterpart is not L2WETHGateway
         // emit FailedRelayedMessage from L1T1Messenger
-        hevm.expectEmit(true, false, false, true);
+        vm.expectEmit(true, false, false, true);
         emit FailedRelayedMessage(keccak256(xDomainCalldata));
 
         uint256 gatewayBalance = l2Token.balanceOf(address(gateway));
         uint256 recipientBalance = l2Token.balanceOf(recipient);
-        assertBoolEq(false, l2Messenger.isL1MessageExecuted(keccak256(xDomainCalldata)));
-        hevm.startPrank(AddressAliasHelper.applyL1ToL2Alias(address(l1Messenger)));
+        assertEq(false, l2Messenger.isL1MessageExecuted(keccak256(xDomainCalldata)));
+        vm.startPrank(AddressAliasHelper.applyL1ToL2Alias(address(l1Messenger)));
         l2Messenger.relayMessage(address(uint160(address(counterpartGateway)) + 1), address(gateway), 0, 0, message);
-        hevm.stopPrank();
+        vm.stopPrank();
         assertEq(gatewayBalance, l2Token.balanceOf(address(gateway)));
         assertEq(recipientBalance, l2Token.balanceOf(recipient));
-        assertBoolEq(false, l2Messenger.isL1MessageExecuted(keccak256(xDomainCalldata)));
+        assertEq(false, l2Messenger.isL1MessageExecuted(keccak256(xDomainCalldata)));
     }
 
     function testFinalizeDepositERC20(address sender, uint256 amount, bytes memory dataToCall) public {
@@ -305,7 +305,7 @@ contract L2StandardERC20GatewayTest is L2GatewayTestBase {
 
         // emit FinalizeDepositERC20 from L2StandardERC20Gateway
         {
-            hevm.expectEmit(true, true, true, true);
+            vm.expectEmit(true, true, true, true);
             emit FinalizeDepositERC20(
                 address(l1Token), address(l2Token), sender, address(recipient), amount, dataToCall
             );
@@ -313,19 +313,19 @@ contract L2StandardERC20GatewayTest is L2GatewayTestBase {
 
         // emit RelayedMessage from L2T1Messenger
         {
-            hevm.expectEmit(true, false, false, true);
+            vm.expectEmit(true, false, false, true);
             emit RelayedMessage(keccak256(xDomainCalldata));
         }
 
         uint256 gatewayBalance = l2Token.balanceOf(address(gateway));
         uint256 recipientBalance = l2Token.balanceOf(address(recipient));
-        assertBoolEq(false, l2Messenger.isL1MessageExecuted(keccak256(xDomainCalldata)));
-        hevm.startPrank(AddressAliasHelper.applyL1ToL2Alias(address(l1Messenger)));
+        assertEq(false, l2Messenger.isL1MessageExecuted(keccak256(xDomainCalldata)));
+        vm.startPrank(AddressAliasHelper.applyL1ToL2Alias(address(l1Messenger)));
         l2Messenger.relayMessage(address(counterpartGateway), address(gateway), 0, 0, message);
-        hevm.stopPrank();
+        vm.stopPrank();
         assertEq(gatewayBalance, l2Token.balanceOf(address(gateway)));
         assertEq(recipientBalance + amount, l2Token.balanceOf(address(recipient)));
-        assertBoolEq(true, l2Messenger.isL1MessageExecuted(keccak256(xDomainCalldata)));
+        assertEq(true, l2Messenger.isL1MessageExecuted(keccak256(xDomainCalldata)));
     }
 
     function _withdrawERC20(bool useRouter, uint256 amount, uint256 gasLimit, uint256 feePerGas) private {
@@ -355,14 +355,14 @@ contract L2StandardERC20GatewayTest is L2GatewayTestBase {
         );
 
         if (amount == 0) {
-            hevm.expectRevert("withdraw zero amount");
+            vm.expectRevert("withdraw zero amount");
             if (useRouter) {
                 router.withdrawERC20{ value: feeToPay }(address(l2Token), amount, gasLimit);
             } else {
                 gateway.withdrawERC20{ value: feeToPay }(address(l2Token), amount, gasLimit);
             }
         } else {
-            hevm.expectRevert("no corresponding l1 token");
+            vm.expectRevert("no corresponding l1 token");
             if (useRouter) {
                 router.withdrawERC20{ value: feeToPay }(address(l1Token), amount, gasLimit);
             } else {
@@ -371,13 +371,13 @@ contract L2StandardERC20GatewayTest is L2GatewayTestBase {
 
             // emit AppendMessage from L2MessageQueue
             {
-                hevm.expectEmit(false, false, false, true);
+                vm.expectEmit(false, false, false, true);
                 emit AppendMessage(0, keccak256(xDomainCalldata));
             }
 
             // emit SentMessage from L2T1Messenger
             {
-                hevm.expectEmit(true, true, false, true);
+                vm.expectEmit(true, true, false, true);
                 emit SentMessage(
                     address(gateway),
                     address(counterpartGateway),
@@ -391,7 +391,7 @@ contract L2StandardERC20GatewayTest is L2GatewayTestBase {
             }
 
             // emit WithdrawERC20 from L2StandardERC20Gateway
-            hevm.expectEmit(true, true, true, true);
+            vm.expectEmit(true, true, true, true);
             emit WithdrawERC20(address(l1Token), address(l2Token), address(this), address(this), amount, new bytes(0));
 
             uint256 gatewayBalance = l2Token.balanceOf(address(gateway));
@@ -443,14 +443,14 @@ contract L2StandardERC20GatewayTest is L2GatewayTestBase {
         );
 
         if (amount == 0) {
-            hevm.expectRevert("withdraw zero amount");
+            vm.expectRevert("withdraw zero amount");
             if (useRouter) {
                 router.withdrawERC20{ value: feeToPay }(address(l2Token), recipient, amount, gasLimit);
             } else {
                 gateway.withdrawERC20{ value: feeToPay }(address(l2Token), recipient, amount, gasLimit);
             }
         } else {
-            hevm.expectRevert("no corresponding l1 token");
+            vm.expectRevert("no corresponding l1 token");
             if (useRouter) {
                 router.withdrawERC20{ value: feeToPay }(address(l1Token), recipient, amount, gasLimit);
             } else {
@@ -459,13 +459,13 @@ contract L2StandardERC20GatewayTest is L2GatewayTestBase {
 
             // emit AppendMessage from L2MessageQueue
             {
-                hevm.expectEmit(false, false, false, true);
+                vm.expectEmit(false, false, false, true);
                 emit AppendMessage(0, keccak256(xDomainCalldata));
             }
 
             // emit SentMessage from L1T1Messenger
             {
-                hevm.expectEmit(true, true, false, true);
+                vm.expectEmit(true, true, false, true);
                 emit SentMessage(
                     address(gateway),
                     address(counterpartGateway),
@@ -479,7 +479,7 @@ contract L2StandardERC20GatewayTest is L2GatewayTestBase {
             }
 
             // emit WithdrawERC20 from L1StandardERC20Gateway
-            hevm.expectEmit(true, true, true, true);
+            vm.expectEmit(true, true, true, true);
             emit WithdrawERC20(address(l1Token), address(l2Token), address(this), recipient, amount, new bytes(0));
 
             uint256 gatewayBalance = l2Token.balanceOf(address(gateway));
@@ -532,7 +532,7 @@ contract L2StandardERC20GatewayTest is L2GatewayTestBase {
         );
 
         if (amount == 0) {
-            hevm.expectRevert("withdraw zero amount");
+            vm.expectRevert("withdraw zero amount");
             if (useRouter) {
                 router.withdrawERC20AndCall{ value: feeToPay }(
                     address(l2Token), recipient, amount, dataToCall, gasLimit
@@ -543,7 +543,7 @@ contract L2StandardERC20GatewayTest is L2GatewayTestBase {
                 );
             }
         } else {
-            hevm.expectRevert("no corresponding l1 token");
+            vm.expectRevert("no corresponding l1 token");
             if (useRouter) {
                 router.withdrawERC20AndCall{ value: feeToPay }(
                     address(l1Token), recipient, amount, dataToCall, gasLimit
@@ -556,13 +556,13 @@ contract L2StandardERC20GatewayTest is L2GatewayTestBase {
 
             // emit AppendMessage from L2MessageQueue
             {
-                hevm.expectEmit(false, false, false, true);
+                vm.expectEmit(false, false, false, true);
                 emit AppendMessage(0, keccak256(xDomainCalldata));
             }
 
             // emit SentMessage from L1T1Messenger
             {
-                hevm.expectEmit(true, true, false, true);
+                vm.expectEmit(true, true, false, true);
                 emit SentMessage(
                     address(gateway),
                     address(counterpartGateway),
@@ -576,7 +576,7 @@ contract L2StandardERC20GatewayTest is L2GatewayTestBase {
             }
 
             // emit WithdrawERC20 from L1StandardERC20Gateway
-            hevm.expectEmit(true, true, true, true);
+            vm.expectEmit(true, true, true, true);
             emit WithdrawERC20(address(l1Token), address(l2Token), address(this), recipient, amount, dataToCall);
 
             uint256 gatewayBalance = l2Token.balanceOf(address(gateway));

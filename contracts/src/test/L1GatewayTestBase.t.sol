@@ -121,7 +121,7 @@ abstract contract L1GatewayTestBase is T1TestBase {
         whitelist.updateWhitelistStatus(_accounts, true);
 
         // Make nonzero block.timestamp
-        hevm.warp(1);
+        vm.warp(1);
     }
 
     function prepareL2MessageRoot(bytes32 messageHash) internal {
@@ -148,9 +148,9 @@ abstract contract L1GatewayTestBase is T1TestBase {
         bytes memory chunk0 = new bytes(1 + 60);
         chunk0[0] = bytes1(uint8(1)); // one block in this chunk
         chunks[0] = chunk0;
-        hevm.startPrank(address(0));
+        vm.startPrank(address(0));
         rollup.commitBatch(1, batchHeader0, chunks, new bytes(0));
-        hevm.stopPrank();
+        vm.stopPrank();
 
         bytes memory batchHeader1 = new bytes(121);
         assembly {
@@ -164,10 +164,10 @@ abstract contract L1GatewayTestBase is T1TestBase {
             mstore(add(batchHeader1, add(0x20, 89)), batchHash0) // parentBatchHash
         }
 
-        hevm.startPrank(address(0));
+        vm.startPrank(address(0));
         rollup.finalizeBatchWithProof4844(
             batchHeader1, bytes32(uint256(1)), bytes32(uint256(2)), messageHash, blobDataProof, new bytes(0)
         );
-        hevm.stopPrank();
+        vm.stopPrank();
     }
 }

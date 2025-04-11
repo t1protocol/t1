@@ -1,11 +1,11 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.25;
 
-import { DSTestPlus } from "solmate/test/utils/DSTestPlus.sol";
+import { Test } from "forge-std/Test.sol";
 
 import { ISignatureTransfer } from "@uniswap/permit2/src/interfaces/ISignatureTransfer.sol";
 
-contract PermitSignature is DSTestPlus {
+contract PermitSignature is Test {
     bytes32 public constant _TOKEN_PERMISSIONS_TYPEHASH = keccak256("TokenPermissions(address token,uint256 amount)");
 
     function getPermitWitnessTransferSignature(
@@ -29,7 +29,7 @@ contract PermitSignature is DSTestPlus {
             )
         );
 
-        (uint8 v, bytes32 r, bytes32 s) = hevm.sign(privateKey, msgHash);
+        (uint8 v, bytes32 r, bytes32 s) = vm.sign(privateKey, msgHash);
         return bytes.concat(r, s, bytes1(v));
     }
 }

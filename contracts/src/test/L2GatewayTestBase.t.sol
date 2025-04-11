@@ -2,7 +2,7 @@
 
 pragma solidity ^0.8.25;
 
-import { DSTestPlus } from "solmate/test/utils/DSTestPlus.sol";
+import { Test } from "forge-std/Test.sol";
 
 import { ProxyAdmin } from "@openzeppelin/contracts/proxy/transparent/ProxyAdmin.sol";
 import {
@@ -17,7 +17,7 @@ import { L1T1Messenger } from "../L1/L1T1Messenger.sol";
 import { L2T1Messenger } from "../L2/L2T1Messenger.sol";
 import { EmptyContract } from "../misc/EmptyContract.sol";
 
-abstract contract L2GatewayTestBase is DSTestPlus {
+abstract contract L2GatewayTestBase is Test {
     // from L2MessageQueue
     event AppendMessage(uint256 index, bytes32 messageHash);
 
@@ -96,7 +96,7 @@ abstract contract L2GatewayTestBase is DSTestPlus {
         whitelist.updateWhitelistStatus(_accounts, true);
 
         // make nonzero block.timestamp
-        hevm.warp(1);
+        vm.warp(1);
     }
 
     function setL1BaseFee(uint256 baseFee) internal {

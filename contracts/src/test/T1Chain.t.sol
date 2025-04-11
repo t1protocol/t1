@@ -2,7 +2,7 @@
 
 pragma solidity ^0.8.25;
 
-import { DSTestPlus } from "solmate/test/utils/DSTestPlus.sol";
+import { Test } from "forge-std/Test.sol";
 import { ProxyAdmin } from "@openzeppelin/contracts/proxy/transparent/ProxyAdmin.sol";
 import {
     ITransparentUpgradeableProxy,
@@ -22,7 +22,7 @@ import { MockRollupVerifier } from "./mocks/MockRollupVerifier.sol";
 
 // solhint-disable no-inline-assembly
 
-contract T1ChainTest is DSTestPlus {
+contract T1ChainTest is Test {
     // from T1Chain
     event UpdateSequencer(address indexed account, bool status);
     event UpdateProver(address indexed account, bool status);
@@ -61,7 +61,7 @@ contract T1ChainTest is DSTestPlus {
         assertEq(address(this), rollup.owner());
         assertEq(rollup.layer2ChainId(), 233);
 
-        hevm.expectRevert("Initializable: contract is already initialized");
+        vm.expectRevert("Initializable: contract is already initialized");
         rollup.initialize(100);
     }
 
@@ -81,45 +81,45 @@ contract T1ChainTest is DSTestPlus {
         assertEq(rollup.committedBatches(0), keccak256(batchHeader0));
 
         // caller not sequencer, revert
-        hevm.expectRevert(T1Chain.ErrorCallerIsNotSequencer.selector);
+        vm.expectRevert(T1Chain.ErrorCallerIsNotSequencer.selector);
         rollup.commitBatch(1, batchHeader0, new bytes[](0), new bytes(0));
 
         rollup.addSequencer(address(0));
 
         // batch is empty, revert
-        hevm.startPrank(address(0));
-        hevm.expectRevert(T1Chain.ErrorBatchIsEmpty.selector);
+        vm.startPrank(address(0));
+        vm.expectRevert(T1Chain.ErrorBatchIsEmpty.selector);
         rollup.commitBatch(1, batchHeader0, new bytes[](0), new bytes(0));
-        hevm.stopPrank();
+        vm.stopPrank();
 
         // batch header length too small, revert
         bytes memory header = new bytes(120);
         assembly {
             mstore8(add(header, 0x20), 1) // version
         }
-        hevm.startPrank(address(0));
-        hevm.expectRevert(BatchHeaderV1Codec.ErrorBatchHeaderV1LengthTooSmall.selector);
+        vm.startPrank(address(0));
+        vm.expectRevert(BatchHeaderV1Codec.ErrorBatchHeaderV1LengthTooSmall.selector);
         rollup.commitBatch(1, header, new bytes[](1), new bytes(0));
-        hevm.stopPrank();
+        vm.stopPrank();
 
         // wrong bitmap length, revert
         header = new bytes(122);
         assembly {
             mstore8(add(header, 0x20), 1) // version
         }
-        hevm.startPrank(address(0));
-        hevm.expectRevert(BatchHeaderV1Codec.ErrorIncorrectBitmapLengthV1.selector);
+        vm.startPrank(address(0));
+        vm.expectRevert(BatchHeaderV1Codec.ErrorIncorrectBitmapLengthV1.selector);
         rollup.commitBatch(1, header, new bytes[](1), new bytes(0));
-        hevm.stopPrank();
+        vm.stopPrank();
 
         // incorrect parent batch hash, revert
         assembly {
             mstore(add(batchHeader0, add(0x20, 25)), 2) // change data hash for batch0
         }
-        hevm.startPrank(address(0));
-        hevm.expectRevert(T1Chain.ErrorIncorrectBatchHash.selector);
+        vm.startPrank(address(0));
+        vm.expectRevert(T1Chain.ErrorIncorrectBatchHash.selector);
         rollup.commitBatch(1, batchHeader0, new bytes[](1), new bytes(0));
-        hevm.stopPrank();
+        vm.stopPrank();
         assembly {
             mstore(add(batchHeader0, add(0x20, 25)), 1) // change back
         }
@@ -130,19 +130,19 @@ contract T1ChainTest is DSTestPlus {
         // no block in chunk, revert
         chunk0 = new bytes(1);
         chunks[0] = chunk0;
-        hevm.startPrank(address(0));
-        hevm.expectRevert(ChunkCodecV1.ErrorNoBlockInChunkV1.selector);
+        vm.startPrank(address(0));
+        vm.expectRevert(ChunkCodecV1.ErrorNoBlockInChunkV1.selector);
         rollup.commitBatch(1, batchHeader0, chunks, new bytes(0));
-        hevm.stopPrank();
+        vm.stopPrank();
 
         // invalid chunk length, revert
         chunk0 = new bytes(1);
         chunk0[0] = bytes1(uint8(1)); // one block in this chunk
         chunks[0] = chunk0;
-        hevm.startPrank(address(0));
-        hevm.expectRevert(ChunkCodecV1.ErrorIncorrectChunkLengthV1.selector);
+        vm.startPrank(address(0));
+        vm.expectRevert(ChunkCodecV1.ErrorIncorrectChunkLengthV1.selector);
         rollup.commitBatch(1, batchHeader0, chunks, new bytes(0));
-        hevm.stopPrank();
+        vm.stopPrank();
 
         // cannot skip last L1 message, revert
         chunk0 = new bytes(1 + 60);
@@ -152,10 +152,10 @@ contract T1ChainTest is DSTestPlus {
         chunk0[60] = bytes1(uint8(1)); // numL1Messages = 1
         bitmap[31] = bytes1(uint8(1));
         chunks[0] = chunk0;
-        hevm.startPrank(address(0));
-        hevm.expectRevert(T1Chain.ErrorLastL1MessageSkipped.selector);
+        vm.startPrank(address(0));
+        vm.expectRevert(T1Chain.ErrorLastL1MessageSkipped.selector);
         rollup.commitBatch(1, batchHeader0, chunks, bitmap);
-        hevm.stopPrank();
+        vm.stopPrank();
 
         // num txs less than num L1 msgs, revert
         chunk0 = new bytes(1 + 60);
@@ -165,19 +165,19 @@ contract T1ChainTest is DSTestPlus {
         chunk0[60] = bytes1(uint8(3)); // numL1Messages = 3
         bitmap[31] = bytes1(uint8(3));
         chunks[0] = chunk0;
-        hevm.startPrank(address(0));
-        hevm.expectRevert(T1Chain.ErrorNumTxsLessThanNumL1Msgs.selector);
+        vm.startPrank(address(0));
+        vm.expectRevert(T1Chain.ErrorNumTxsLessThanNumL1Msgs.selector);
         rollup.commitBatch(1, batchHeader0, chunks, bitmap);
-        hevm.stopPrank();
+        vm.stopPrank();
 
         // revert when ErrorNoBlobFound
         chunk0 = new bytes(1 + 60);
         chunk0[0] = bytes1(uint8(1)); // one block in this chunk
         chunks[0] = chunk0;
-        hevm.startPrank(address(0));
-        hevm.expectRevert(T1Chain.ErrorNoBlobFound.selector);
+        vm.startPrank(address(0));
+        vm.expectRevert(T1Chain.ErrorNoBlobFound.selector);
         rollup.commitBatch(1, batchHeader0, chunks, new bytes(0));
-        hevm.stopPrank();
+        vm.stopPrank();
 
         // @note we cannot check `ErrorFoundMultipleBlobs` here
 
@@ -207,28 +207,28 @@ contract T1ChainTest is DSTestPlus {
         chunk0 = new bytes(1 + 60);
         chunk0[0] = bytes1(uint8(1)); // one block in this chunk
         chunks[0] = chunk0;
-        hevm.startPrank(address(0));
+        vm.startPrank(address(0));
         assertEq(rollup.committedBatches(1), bytes32(0));
         rollup.commitBatch(1, batchHeader0, chunks, new bytes(0));
-        hevm.stopPrank();
+        vm.stopPrank();
         assertEq(rollup.committedBatches(1), keccak256(batchHeader1));
 
         // batch is already committed, revert
-        hevm.startPrank(address(0));
-        hevm.expectRevert(T1Chain.ErrorBatchIsAlreadyCommitted.selector);
+        vm.startPrank(address(0));
+        vm.expectRevert(T1Chain.ErrorBatchIsAlreadyCommitted.selector);
         rollup.commitBatch(1, batchHeader0, chunks, new bytes(0));
-        hevm.stopPrank();
+        vm.stopPrank();
 
         // revert when ErrorIncorrectBatchVersion
-        hevm.startPrank(address(0));
-        hevm.expectRevert(T1Chain.ErrorIncorrectBatchVersion.selector);
+        vm.startPrank(address(0));
+        vm.expectRevert(T1Chain.ErrorIncorrectBatchVersion.selector);
         rollup.commitBatch(3, batchHeader1, chunks, new bytes(0));
-        hevm.stopPrank();
+        vm.stopPrank();
     }
 
     function testFinalizeBatchWithProof4844() external {
         // caller not prover, revert
-        hevm.expectRevert(T1Chain.ErrorCallerIsNotProver.selector);
+        vm.expectRevert(T1Chain.ErrorCallerIsNotProver.selector);
         rollup.finalizeBatchWithProof4844(new bytes(0), bytes32(0), bytes32(0), bytes32(0), new bytes(0), new bytes(0));
 
         rollup.addProver(address(0));
@@ -273,19 +273,19 @@ contract T1ChainTest is DSTestPlus {
         chunk0 = new bytes(1 + 60);
         chunk0[0] = bytes1(uint8(1)); // one block in this chunk
         chunks[0] = chunk0;
-        hevm.startPrank(address(0));
+        vm.startPrank(address(0));
         rollup.commitBatch(1, batchHeader0, chunks, new bytes(0));
-        hevm.stopPrank();
+        vm.stopPrank();
         assertEq(rollup.committedBatches(1), keccak256(batchHeader1));
 
         // incorrect batch hash, revert
         batchHeader1[1] = bytes1(uint8(1)); // change random byte
-        hevm.startPrank(address(0));
-        hevm.expectRevert(T1Chain.ErrorIncorrectBatchHash.selector);
+        vm.startPrank(address(0));
+        vm.expectRevert(T1Chain.ErrorIncorrectBatchHash.selector);
         rollup.finalizeBatchWithProof4844(
             batchHeader1, bytes32(uint256(1)), bytes32(uint256(2)), bytes32(0), new bytes(0), new bytes(0)
         );
-        hevm.stopPrank();
+        vm.stopPrank();
         batchHeader1[1] = bytes1(uint8(0)); // change back
 
         // batch header length too small, revert
@@ -293,33 +293,33 @@ contract T1ChainTest is DSTestPlus {
         assembly {
             mstore8(add(header, 0x20), 1) // version
         }
-        hevm.startPrank(address(0));
-        hevm.expectRevert(BatchHeaderV1Codec.ErrorBatchHeaderV1LengthTooSmall.selector);
+        vm.startPrank(address(0));
+        vm.expectRevert(BatchHeaderV1Codec.ErrorBatchHeaderV1LengthTooSmall.selector);
         rollup.finalizeBatchWithProof4844(
             header, bytes32(uint256(1)), bytes32(uint256(2)), bytes32(0), new bytes(0), new bytes(0)
         );
-        hevm.stopPrank();
+        vm.stopPrank();
 
         // wrong bitmap length, revert
         header = new bytes(122);
         assembly {
             mstore8(add(header, 0x20), 1) // version
         }
-        hevm.startPrank(address(0));
-        hevm.expectRevert(BatchHeaderV1Codec.ErrorIncorrectBitmapLengthV1.selector);
+        vm.startPrank(address(0));
+        vm.expectRevert(BatchHeaderV1Codec.ErrorIncorrectBitmapLengthV1.selector);
         rollup.finalizeBatchWithProof4844(
             header, bytes32(uint256(1)), bytes32(uint256(2)), bytes32(0), new bytes(0), new bytes(0)
         );
-        hevm.stopPrank();
+        vm.stopPrank();
 
         // verify success
-        assertBoolEq(rollup.isBatchFinalized(1), false);
-        hevm.startPrank(address(0));
+        assertEq(rollup.isBatchFinalized(1), false);
+        vm.startPrank(address(0));
         rollup.finalizeBatchWithProof4844(
             batchHeader1, bytes32(uint256(1)), bytes32(uint256(2)), bytes32(uint256(3)), blobDataProof, new bytes(0)
         );
-        hevm.stopPrank();
-        assertBoolEq(rollup.isBatchFinalized(1), true);
+        vm.stopPrank();
+        assertEq(rollup.isBatchFinalized(1), true);
         /// TODO - comment back in once logic to update state root is commented back in
         // assertEq(rollup.finalizedStateRoots(1), bytes32(uint256(2)));
         assertEq(rollup.withdrawRoots(1), bytes32(uint256(3)));
@@ -327,12 +327,12 @@ contract T1ChainTest is DSTestPlus {
 
         /// TODO - comment back in once logic to update state root is commented back in
         // batch already verified, revert
-        // hevm.startPrank(address(0));
-        // hevm.expectRevert(T1Chain.ErrorBatchIsAlreadyVerified.selector);
+        // vm.startPrank(address(0));
+        // vm.expectRevert(T1Chain.ErrorBatchIsAlreadyVerified.selector);
         // rollup.finalizeBatchWithProof4844(
         //     batchHeader1, bytes32(uint256(1)), bytes32(uint256(2)), bytes32(uint256(3)), blobDataProof, new bytes(0)
         // );
-        // hevm.stopPrank();
+        // vm.stopPrank();
     }
 
     function testCommitAndFinalizeWithL1MessagesV1() external {
@@ -411,29 +411,29 @@ contract T1ChainTest is DSTestPlus {
         chunks = new bytes[](1);
         chunks[0] = chunk0;
         bitmap = new bytes(32);
-        hevm.startPrank(address(0));
-        hevm.expectEmit(true, true, false, true);
+        vm.startPrank(address(0));
+        vm.expectEmit(true, true, false, true);
         emit CommitBatch(1, keccak256(batchHeader1));
         rollup.commitBatch(1, batchHeader0, chunks, bitmap);
-        hevm.stopPrank();
-        assertBoolEq(rollup.isBatchFinalized(1), false);
+        vm.stopPrank();
+        assertEq(rollup.isBatchFinalized(1), false);
         bytes32 batchHash1 = rollup.committedBatches(1);
         assertEq(batchHash1, keccak256(batchHeader1));
 
         // finalize batch1
-        hevm.startPrank(address(0));
-        hevm.expectEmit(true, true, false, true);
+        vm.startPrank(address(0));
+        vm.expectEmit(true, true, false, true);
         emit FinalizeBatch(1, batchHash1, bytes32(uint256(2)), bytes32(uint256(3)));
         rollup.finalizeBatchWithProof4844(
             batchHeader1, bytes32(uint256(1)), bytes32(uint256(2)), bytes32(uint256(3)), blobDataProof, new bytes(0)
         );
-        hevm.stopPrank();
-        assertBoolEq(rollup.isBatchFinalized(1), true);
+        vm.stopPrank();
+        assertEq(rollup.isBatchFinalized(1), true);
         /// TODO - comment back in once logic to update state root is commented back in
         // assertEq(rollup.finalizedStateRoots(1), bytes32(uint256(2)));
         assertEq(rollup.withdrawRoots(1), bytes32(uint256(3)));
         assertEq(rollup.lastFinalizedBatchIndex(), 1);
-        assertBoolEq(messageQueue.isMessageSkipped(0), false);
+        assertEq(messageQueue.isMessageSkipped(0), false);
         assertEq(messageQueue.pendingQueueIndex(), 1);
 
         // commit batch2 with two chunks, correctly
@@ -528,35 +528,35 @@ contract T1ChainTest is DSTestPlus {
 
         // too many txs in one chunk, revert
         rollup.updateMaxNumTxInChunk(2); // 3 - 1
-        hevm.startPrank(address(0));
-        hevm.expectRevert(T1Chain.ErrorTooManyTxsInOneChunk.selector);
+        vm.startPrank(address(0));
+        vm.expectRevert(T1Chain.ErrorTooManyTxsInOneChunk.selector);
         rollup.commitBatch(1, batchHeader1, chunks, bitmap); // first chunk with too many txs
-        hevm.stopPrank();
+        vm.stopPrank();
         rollup.updateMaxNumTxInChunk(185); // 5+10+300 - 2 - 127
-        hevm.startPrank(address(0));
-        hevm.expectRevert(T1Chain.ErrorTooManyTxsInOneChunk.selector);
+        vm.startPrank(address(0));
+        vm.expectRevert(T1Chain.ErrorTooManyTxsInOneChunk.selector);
         rollup.commitBatch(1, batchHeader1, chunks, bitmap); // second chunk with too many txs
-        hevm.stopPrank();
+        vm.stopPrank();
 
         rollup.updateMaxNumTxInChunk(186);
-        hevm.startPrank(address(0));
-        hevm.expectEmit(true, true, false, true);
+        vm.startPrank(address(0));
+        vm.expectEmit(true, true, false, true);
         emit CommitBatch(2, keccak256(batchHeader2));
         rollup.commitBatch(1, batchHeader1, chunks, bitmap);
-        hevm.stopPrank();
-        assertBoolEq(rollup.isBatchFinalized(2), false);
+        vm.stopPrank();
+        assertEq(rollup.isBatchFinalized(2), false);
         bytes32 batchHash2 = rollup.committedBatches(2);
         assertEq(batchHash2, keccak256(batchHeader2));
 
         // verify committed batch correctly
-        hevm.startPrank(address(0));
-        hevm.expectEmit(true, true, false, true);
+        vm.startPrank(address(0));
+        vm.expectEmit(true, true, false, true);
         emit FinalizeBatch(2, batchHash2, bytes32(uint256(4)), bytes32(uint256(5)));
         rollup.finalizeBatchWithProof4844(
             batchHeader2, bytes32(uint256(2)), bytes32(uint256(4)), bytes32(uint256(5)), blobDataProof, new bytes(0)
         );
-        hevm.stopPrank();
-        assertBoolEq(rollup.isBatchFinalized(2), true);
+        vm.stopPrank();
+        assertEq(rollup.isBatchFinalized(2), true);
         /// TODO - comment back in once logic to update state root is commented back in
         // assertEq(rollup.finalizedStateRoots(2), bytes32(uint256(4)));
         assertEq(rollup.withdrawRoots(2), bytes32(uint256(5)));
@@ -564,22 +564,22 @@ contract T1ChainTest is DSTestPlus {
         assertEq(messageQueue.pendingQueueIndex(), 265);
         // 1 ~ 4, zero
         for (uint256 i = 1; i < 4; i++) {
-            assertBoolEq(messageQueue.isMessageSkipped(i), false);
+            assertEq(messageQueue.isMessageSkipped(i), false);
         }
         // 4 ~ 9, even is nonzero, odd is zero
         for (uint256 i = 4; i < 9; i++) {
             if (i % 2 == 1 || i == 8) {
-                assertBoolEq(messageQueue.isMessageSkipped(i), false);
+                assertEq(messageQueue.isMessageSkipped(i), false);
             } else {
-                assertBoolEq(messageQueue.isMessageSkipped(i), true);
+                assertEq(messageQueue.isMessageSkipped(i), true);
             }
         }
         // 9 ~ 265, even is nonzero, odd is zero
         for (uint256 i = 9; i < 265; i++) {
             if (i % 2 == 1 || i == 264) {
-                assertBoolEq(messageQueue.isMessageSkipped(i), false);
+                assertEq(messageQueue.isMessageSkipped(i), false);
             } else {
-                assertBoolEq(messageQueue.isMessageSkipped(i), true);
+                assertEq(messageQueue.isMessageSkipped(i), true);
             }
         }
     }
@@ -599,40 +599,40 @@ contract T1ChainTest is DSTestPlus {
         assertEq(rollup.committedBatches(0), keccak256(batchHeader0));
 
         // caller not sequencer, revert
-        hevm.expectRevert(T1Chain.ErrorCallerIsNotSequencer.selector);
+        vm.expectRevert(T1Chain.ErrorCallerIsNotSequencer.selector);
         rollup.commitBatchWithBlobProof(3, batchHeader0, new bytes[](0), new bytes(0), new bytes(0));
         rollup.addSequencer(address(0));
 
         // revert when ErrorIncorrectBatchVersion
-        hevm.startPrank(address(0));
-        hevm.expectRevert(T1Chain.ErrorIncorrectBatchVersion.selector);
+        vm.startPrank(address(0));
+        vm.expectRevert(T1Chain.ErrorIncorrectBatchVersion.selector);
         rollup.commitBatchWithBlobProof(2, batchHeader0, new bytes[](0), new bytes(0), new bytes(0));
-        hevm.stopPrank();
+        vm.stopPrank();
 
         // revert when ErrorBatchIsEmpty
-        hevm.startPrank(address(0));
-        hevm.expectRevert(T1Chain.ErrorBatchIsEmpty.selector);
+        vm.startPrank(address(0));
+        vm.expectRevert(T1Chain.ErrorBatchIsEmpty.selector);
         rollup.commitBatchWithBlobProof(3, batchHeader0, new bytes[](0), new bytes(0), new bytes(0));
-        hevm.stopPrank();
+        vm.stopPrank();
 
         // revert when ErrorBatchHeaderV3LengthMismatch
         bytes memory header = new bytes(192);
         assembly {
             mstore8(add(header, 0x20), 3) // version
         }
-        hevm.startPrank(address(0));
-        hevm.expectRevert(BatchHeaderV3Codec.ErrorBatchHeaderV3LengthMismatch.selector);
+        vm.startPrank(address(0));
+        vm.expectRevert(BatchHeaderV3Codec.ErrorBatchHeaderV3LengthMismatch.selector);
         rollup.commitBatchWithBlobProof(3, header, new bytes[](1), new bytes(0), new bytes(0));
-        hevm.stopPrank();
+        vm.stopPrank();
 
         // revert when ErrorIncorrectBatchHash
         assembly {
             mstore(add(batchHeader0, add(0x20, 25)), 2) // change data hash for batch0
         }
-        hevm.startPrank(address(0));
-        hevm.expectRevert(T1Chain.ErrorIncorrectBatchHash.selector);
+        vm.startPrank(address(0));
+        vm.expectRevert(T1Chain.ErrorIncorrectBatchHash.selector);
         rollup.commitBatchWithBlobProof(3, batchHeader0, new bytes[](1), new bytes(0), new bytes(0));
-        hevm.stopPrank();
+        vm.stopPrank();
         assembly {
             mstore(add(batchHeader0, add(0x20, 25)), 1) // change back
         }
@@ -643,19 +643,19 @@ contract T1ChainTest is DSTestPlus {
         // no block in chunk, revert
         chunk0 = new bytes(1);
         chunks[0] = chunk0;
-        hevm.startPrank(address(0));
-        hevm.expectRevert(ChunkCodecV1.ErrorNoBlockInChunkV1.selector);
+        vm.startPrank(address(0));
+        vm.expectRevert(ChunkCodecV1.ErrorNoBlockInChunkV1.selector);
         rollup.commitBatchWithBlobProof(3, batchHeader0, chunks, new bytes(0), new bytes(0));
-        hevm.stopPrank();
+        vm.stopPrank();
 
         // invalid chunk length, revert
         chunk0 = new bytes(1);
         chunk0[0] = bytes1(uint8(1)); // one block in this chunk
         chunks[0] = chunk0;
-        hevm.startPrank(address(0));
-        hevm.expectRevert(ChunkCodecV1.ErrorIncorrectChunkLengthV1.selector);
+        vm.startPrank(address(0));
+        vm.expectRevert(ChunkCodecV1.ErrorIncorrectChunkLengthV1.selector);
         rollup.commitBatchWithBlobProof(3, batchHeader0, chunks, new bytes(0), new bytes(0));
-        hevm.stopPrank();
+        vm.stopPrank();
 
         // cannot skip last L1 message, revert
         chunk0 = new bytes(1 + 60);
@@ -665,10 +665,10 @@ contract T1ChainTest is DSTestPlus {
         chunk0[60] = bytes1(uint8(1)); // numL1Messages = 1
         bitmap[31] = bytes1(uint8(1));
         chunks[0] = chunk0;
-        hevm.startPrank(address(0));
-        hevm.expectRevert(T1Chain.ErrorLastL1MessageSkipped.selector);
+        vm.startPrank(address(0));
+        vm.expectRevert(T1Chain.ErrorLastL1MessageSkipped.selector);
         rollup.commitBatchWithBlobProof(3, batchHeader0, chunks, bitmap, new bytes(0));
-        hevm.stopPrank();
+        vm.stopPrank();
 
         // num txs less than num L1 msgs, revert
         chunk0 = new bytes(1 + 60);
@@ -678,20 +678,20 @@ contract T1ChainTest is DSTestPlus {
         chunk0[60] = bytes1(uint8(3)); // numL1Messages = 3
         bitmap[31] = bytes1(uint8(3));
         chunks[0] = chunk0;
-        hevm.startPrank(address(0));
-        hevm.expectRevert(T1Chain.ErrorNumTxsLessThanNumL1Msgs.selector);
+        vm.startPrank(address(0));
+        vm.expectRevert(T1Chain.ErrorNumTxsLessThanNumL1Msgs.selector);
         rollup.commitBatchWithBlobProof(3, batchHeader0, chunks, bitmap, new bytes(0));
-        hevm.stopPrank();
+        vm.stopPrank();
 
         // revert when ErrorNoBlobFound
         // revert when ErrorNoBlobFound
         chunk0 = new bytes(1 + 60);
         chunk0[0] = bytes1(uint8(1)); // one block in this chunk
         chunks[0] = chunk0;
-        hevm.startPrank(address(0));
-        hevm.expectRevert(T1Chain.ErrorNoBlobFound.selector);
+        vm.startPrank(address(0));
+        vm.expectRevert(T1Chain.ErrorNoBlobFound.selector);
         rollup.commitBatchWithBlobProof(3, batchHeader0, chunks, new bytes(0), new bytes(0));
-        hevm.stopPrank();
+        vm.stopPrank();
 
         // @note we cannot check `ErrorFoundMultipleBlobs` here
 
@@ -709,10 +709,10 @@ contract T1ChainTest is DSTestPlus {
         chunk0[0] = bytes1(uint8(1)); // one block in this chunk
         chunks[0] = chunk0;
         // revert when ErrorCallPointEvaluationPrecompileFailed
-        hevm.startPrank(address(0));
-        hevm.expectRevert(T1Chain.ErrorCallPointEvaluationPrecompileFailed.selector);
+        vm.startPrank(address(0));
+        vm.expectRevert(T1Chain.ErrorCallPointEvaluationPrecompileFailed.selector);
         rollup.commitBatchWithBlobProof(3, batchHeader0, chunks, new bytes(0), new bytes(0));
-        hevm.stopPrank();
+        vm.stopPrank();
 
         bytes32 batchHash0 = rollup.committedBatches(0);
         bytes memory batchHeader1 = new bytes(193);
@@ -731,22 +731,22 @@ contract T1ChainTest is DSTestPlus {
         // hash is ed32768c5f910a11edaf1c1ec0c0da847def9d24e0a24567c3c3d284061cf935
 
         // succeed
-        hevm.startPrank(address(0));
+        vm.startPrank(address(0));
         assertEq(rollup.committedBatches(1), bytes32(0));
         rollup.commitBatchWithBlobProof(3, batchHeader0, chunks, new bytes(0), blobDataProof);
-        hevm.stopPrank();
+        vm.stopPrank();
         assertEq(rollup.committedBatches(1), keccak256(batchHeader1));
 
         // revert when ErrorBatchIsAlreadyCommitted
-        hevm.startPrank(address(0));
-        hevm.expectRevert(T1Chain.ErrorBatchIsAlreadyCommitted.selector);
+        vm.startPrank(address(0));
+        vm.expectRevert(T1Chain.ErrorBatchIsAlreadyCommitted.selector);
         rollup.commitBatchWithBlobProof(3, batchHeader0, chunks, new bytes(0), blobDataProof);
-        hevm.stopPrank();
+        vm.stopPrank();
     }
 
     function testFinalizeBundleWithProof() external {
         // caller not prover, revert
-        hevm.expectRevert(T1Chain.ErrorCallerIsNotProver.selector);
+        vm.expectRevert(T1Chain.ErrorCallerIsNotProver.selector);
         rollup.finalizeBundleWithProof(new bytes(0), bytes32(0), bytes32(0), new bytes(0));
 
         rollup.addProver(address(0));
@@ -792,51 +792,51 @@ contract T1ChainTest is DSTestPlus {
         chunk0 = new bytes(1 + 60);
         chunk0[0] = bytes1(uint8(1)); // one block in this chunk
         chunks[0] = chunk0;
-        hevm.startPrank(address(0));
+        vm.startPrank(address(0));
         assertEq(rollup.committedBatches(1), bytes32(0));
         rollup.commitBatchWithBlobProof(3, batchHeader0, chunks, new bytes(0), blobDataProof);
-        hevm.stopPrank();
+        vm.stopPrank();
         assertEq(rollup.committedBatches(1), keccak256(batchHeader1));
 
         // revert when ErrorStateRootIsZero
-        hevm.startPrank(address(0));
-        hevm.expectRevert(T1Chain.ErrorStateRootIsZero.selector);
+        vm.startPrank(address(0));
+        vm.expectRevert(T1Chain.ErrorStateRootIsZero.selector);
         rollup.finalizeBundleWithProof(batchHeader1, bytes32(0), bytes32(0), new bytes(0));
-        hevm.stopPrank();
+        vm.stopPrank();
 
         // revert when ErrorBatchHeaderV3LengthMismatch
         bytes memory header = new bytes(192);
         assembly {
             mstore8(add(header, 0x20), 3) // version
         }
-        hevm.startPrank(address(0));
-        hevm.expectRevert(BatchHeaderV3Codec.ErrorBatchHeaderV3LengthMismatch.selector);
+        vm.startPrank(address(0));
+        vm.expectRevert(BatchHeaderV3Codec.ErrorBatchHeaderV3LengthMismatch.selector);
         rollup.finalizeBundleWithProof(header, bytes32(uint256(1)), bytes32(uint256(2)), new bytes(0));
-        hevm.stopPrank();
+        vm.stopPrank();
 
         // revert when ErrorIncorrectBatchHash
         batchHeader1[1] = bytes1(uint8(1)); // change random byte
-        hevm.startPrank(address(0));
-        hevm.expectRevert(T1Chain.ErrorIncorrectBatchHash.selector);
+        vm.startPrank(address(0));
+        vm.expectRevert(T1Chain.ErrorIncorrectBatchHash.selector);
         rollup.finalizeBundleWithProof(batchHeader1, bytes32(uint256(1)), bytes32(uint256(2)), new bytes(0));
-        hevm.stopPrank();
+        vm.stopPrank();
         batchHeader1[1] = bytes1(uint8(0)); // change back
 
         // verify success
-        assertBoolEq(rollup.isBatchFinalized(1), false);
-        hevm.startPrank(address(0));
+        assertEq(rollup.isBatchFinalized(1), false);
+        vm.startPrank(address(0));
         rollup.finalizeBundleWithProof(batchHeader1, bytes32(uint256(2)), bytes32(uint256(3)), new bytes(0));
-        hevm.stopPrank();
-        assertBoolEq(rollup.isBatchFinalized(1), true);
+        vm.stopPrank();
+        assertEq(rollup.isBatchFinalized(1), true);
         assertEq(rollup.finalizedStateRoots(1), bytes32(uint256(2)));
         assertEq(rollup.withdrawRoots(1), bytes32(uint256(3)));
         assertEq(rollup.lastFinalizedBatchIndex(), 1);
 
         // revert when ErrorBatchIsAlreadyVerified
-        hevm.startPrank(address(0));
-        hevm.expectRevert(T1Chain.ErrorBatchIsAlreadyVerified.selector);
+        vm.startPrank(address(0));
+        vm.expectRevert(T1Chain.ErrorBatchIsAlreadyVerified.selector);
         rollup.finalizeBundleWithProof(batchHeader1, bytes32(uint256(2)), bytes32(uint256(3)), new bytes(0));
-        hevm.stopPrank();
+        vm.stopPrank();
     }
 
     function _commitBatchV3()
@@ -914,17 +914,17 @@ contract T1ChainTest is DSTestPlus {
         chunks = new bytes[](1);
         chunks[0] = chunk0;
         bitmap = new bytes(32);
-        hevm.startPrank(address(0));
-        hevm.expectEmit(true, true, false, true);
+        vm.startPrank(address(0));
+        vm.expectEmit(true, true, false, true);
         emit CommitBatch(1, keccak256(batchHeader1));
         rollup.commitBatchWithBlobProof(3, batchHeader0, chunks, bitmap, blobDataProof);
-        hevm.stopPrank();
-        assertBoolEq(rollup.isBatchFinalized(1), false);
+        vm.stopPrank();
+        assertEq(rollup.isBatchFinalized(1), false);
         bytes32 batchHash1 = rollup.committedBatches(1);
         assertEq(batchHash1, keccak256(batchHeader1));
         assertEq(1, messageQueue.pendingQueueIndex());
         assertEq(0, messageQueue.nextUnfinalizedQueueIndex());
-        assertBoolEq(messageQueue.isMessageSkipped(0), false);
+        assertEq(messageQueue.isMessageSkipped(0), false);
 
         // commit batch2 with two chunks, correctly
         // 1. chunk0 has one block, 3 tx, no L1 messages
@@ -1020,25 +1020,25 @@ contract T1ChainTest is DSTestPlus {
 
         // too many txs in one chunk, revert
         rollup.updateMaxNumTxInChunk(2); // 3 - 1
-        hevm.startPrank(address(0));
-        hevm.expectRevert(T1Chain.ErrorTooManyTxsInOneChunk.selector);
+        vm.startPrank(address(0));
+        vm.expectRevert(T1Chain.ErrorTooManyTxsInOneChunk.selector);
         rollup.commitBatchWithBlobProof(3, batchHeader1, chunks, bitmap, blobDataProof); // first chunk with too many
             // txs
-        hevm.stopPrank();
+        vm.stopPrank();
         rollup.updateMaxNumTxInChunk(185); // 5+10+300 - 2 - 127
-        hevm.startPrank(address(0));
-        hevm.expectRevert(T1Chain.ErrorTooManyTxsInOneChunk.selector);
+        vm.startPrank(address(0));
+        vm.expectRevert(T1Chain.ErrorTooManyTxsInOneChunk.selector);
         rollup.commitBatchWithBlobProof(3, batchHeader1, chunks, bitmap, blobDataProof); // second chunk with too many
             // txs
-        hevm.stopPrank();
+        vm.stopPrank();
 
         rollup.updateMaxNumTxInChunk(186);
-        hevm.startPrank(address(0));
-        hevm.expectEmit(true, true, false, true);
+        vm.startPrank(address(0));
+        vm.expectEmit(true, true, false, true);
         emit CommitBatch(2, keccak256(batchHeader2));
         rollup.commitBatchWithBlobProof(3, batchHeader1, chunks, bitmap, blobDataProof);
-        hevm.stopPrank();
-        assertBoolEq(rollup.isBatchFinalized(2), false);
+        vm.stopPrank();
+        assertEq(rollup.isBatchFinalized(2), false);
         bytes32 batchHash2 = rollup.committedBatches(2);
         assertEq(batchHash2, keccak256(batchHeader2));
         assertEq(265, messageQueue.pendingQueueIndex());
@@ -1058,33 +1058,33 @@ contract T1ChainTest is DSTestPlus {
 
         // 1 ~ 4, zero
         for (uint256 i = 1; i < 4; i++) {
-            assertBoolEq(messageQueue.isMessageSkipped(i), false);
+            assertEq(messageQueue.isMessageSkipped(i), false);
         }
         // 4 ~ 9, even is nonzero, odd is zero
         for (uint256 i = 4; i < 9; i++) {
             if (i % 2 == 1 || i == 8) {
-                assertBoolEq(messageQueue.isMessageSkipped(i), false);
+                assertEq(messageQueue.isMessageSkipped(i), false);
             } else {
-                assertBoolEq(messageQueue.isMessageSkipped(i), true);
+                assertEq(messageQueue.isMessageSkipped(i), true);
             }
         }
         // 9 ~ 265, even is nonzero, odd is zero
         for (uint256 i = 9; i < 265; i++) {
             if (i % 2 == 1 || i == 264) {
-                assertBoolEq(messageQueue.isMessageSkipped(i), false);
+                assertEq(messageQueue.isMessageSkipped(i), false);
             } else {
-                assertBoolEq(messageQueue.isMessageSkipped(i), true);
+                assertEq(messageQueue.isMessageSkipped(i), true);
             }
         }
 
         // finalize batch1 and batch2 together
-        assertBoolEq(rollup.isBatchFinalized(1), false);
-        assertBoolEq(rollup.isBatchFinalized(2), false);
-        hevm.startPrank(address(0));
+        assertEq(rollup.isBatchFinalized(1), false);
+        assertEq(rollup.isBatchFinalized(2), false);
+        vm.startPrank(address(0));
         rollup.finalizeBundleWithProof(batchHeader2, bytes32(uint256(2)), bytes32(uint256(3)), new bytes(0));
-        hevm.stopPrank();
-        assertBoolEq(rollup.isBatchFinalized(1), true);
-        assertBoolEq(rollup.isBatchFinalized(2), true);
+        vm.stopPrank();
+        assertEq(rollup.isBatchFinalized(1), true);
+        assertEq(rollup.isBatchFinalized(2), true);
         assertEq(rollup.finalizedStateRoots(1), bytes32(0));
         assertEq(rollup.withdrawRoots(1), bytes32(0));
         assertEq(rollup.finalizedStateRoots(2), bytes32(uint256(2)));
@@ -1106,22 +1106,22 @@ contract T1ChainTest is DSTestPlus {
 
         // 1 ~ 4, zero
         for (uint256 i = 1; i < 4; i++) {
-            assertBoolEq(messageQueue.isMessageSkipped(i), false);
+            assertEq(messageQueue.isMessageSkipped(i), false);
         }
         // 4 ~ 9, even is nonzero, odd is zero
         for (uint256 i = 4; i < 9; i++) {
             if (i % 2 == 1 || i == 8) {
-                assertBoolEq(messageQueue.isMessageSkipped(i), false);
+                assertEq(messageQueue.isMessageSkipped(i), false);
             } else {
-                assertBoolEq(messageQueue.isMessageSkipped(i), true);
+                assertEq(messageQueue.isMessageSkipped(i), true);
             }
         }
         // 9 ~ 265, even is nonzero, odd is zero
         for (uint256 i = 9; i < 265; i++) {
             if (i % 2 == 1 || i == 264) {
-                assertBoolEq(messageQueue.isMessageSkipped(i), false);
+                assertEq(messageQueue.isMessageSkipped(i), false);
             } else {
-                assertBoolEq(messageQueue.isMessageSkipped(i), true);
+                assertEq(messageQueue.isMessageSkipped(i), true);
             }
         }
 
@@ -1130,7 +1130,7 @@ contract T1ChainTest is DSTestPlus {
         assertEq(0, messageQueue.pendingQueueIndex());
         assertEq(0, messageQueue.nextUnfinalizedQueueIndex());
         for (uint256 i = 0; i < 265; i++) {
-            assertBoolEq(messageQueue.isMessageSkipped(i), false);
+            assertEq(messageQueue.isMessageSkipped(i), false);
         }
     }
 
@@ -1210,12 +1210,12 @@ contract T1ChainTest is DSTestPlus {
         chunks = new bytes[](1);
         chunks[0] = chunk0;
         bitmap = new bytes(32);
-        hevm.startPrank(address(0));
-        hevm.expectEmit(true, true, false, true);
+        vm.startPrank(address(0));
+        vm.expectEmit(true, true, false, true);
         emit CommitBatch(1, keccak256(batchHeader1));
         rollup.commitBatch(1, batchHeader0, chunks, bitmap);
-        hevm.stopPrank();
-        assertBoolEq(rollup.isBatchFinalized(1), false);
+        vm.stopPrank();
+        assertEq(rollup.isBatchFinalized(1), false);
         bytes32 batchHash1 = rollup.committedBatches(1);
         assertEq(batchHash1, keccak256(batchHeader1));
 
@@ -1313,35 +1313,35 @@ contract T1ChainTest is DSTestPlus {
 
         rollup.updateMaxNumTxInChunk(186);
         // should revert, when all v1 batch not finalized
-        hevm.startPrank(address(0));
-        hevm.expectRevert("start index mismatch");
+        vm.startPrank(address(0));
+        vm.expectRevert("start index mismatch");
         rollup.commitBatchWithBlobProof(3, batchHeader1, chunks, bitmap, blobDataProof);
-        hevm.stopPrank();
+        vm.stopPrank();
 
         // finalize batch1
-        hevm.startPrank(address(0));
-        hevm.expectEmit(true, true, false, true);
+        vm.startPrank(address(0));
+        vm.expectEmit(true, true, false, true);
         emit FinalizeBatch(1, batchHash1, bytes32(uint256(2)), bytes32(uint256(3)));
         rollup.finalizeBatchWithProof4844(
             batchHeader1, bytes32(uint256(1)), bytes32(uint256(2)), bytes32(uint256(3)), blobDataProof, new bytes(0)
         );
-        hevm.stopPrank();
-        assertBoolEq(rollup.isBatchFinalized(1), true);
+        vm.stopPrank();
+        assertEq(rollup.isBatchFinalized(1), true);
         /// TODO - comment back in once logic to update state root is commented back in
         // assertEq(rollup.finalizedStateRoots(1), bytes32(uint256(2)));
         assertEq(rollup.withdrawRoots(1), bytes32(uint256(3)));
         /// TODO - comment back in once logic to update state root is commented back in
         // assertEq(rollup.lastFinalizedBatchIndex(), 1);
-        assertBoolEq(messageQueue.isMessageSkipped(0), false);
+        assertEq(messageQueue.isMessageSkipped(0), false);
         assertEq(messageQueue.pendingQueueIndex(), 1);
         /// TODO - comment back in once logic to update state root is commented back in
         // assertEq(messageQueue.nextUnfinalizedQueueIndex(), 1);
 
-        hevm.startPrank(address(0));
-        hevm.expectEmit(true, true, false, true);
+        vm.startPrank(address(0));
+        vm.expectEmit(true, true, false, true);
         emit CommitBatch(2, keccak256(batchHeader2));
         rollup.commitBatchWithBlobProof(3, batchHeader1, chunks, bitmap, blobDataProof);
-        hevm.stopPrank();
+        vm.stopPrank();
         bytes32 batchHash2 = rollup.committedBatches(2);
         assertEq(batchHash2, keccak256(batchHeader2));
         assertEq(messageQueue.pendingQueueIndex(), 265);
@@ -1349,11 +1349,11 @@ contract T1ChainTest is DSTestPlus {
         // assertEq(messageQueue.nextUnfinalizedQueueIndex(), 1);
 
         // finalize batch2
-        assertBoolEq(rollup.isBatchFinalized(2), false);
-        hevm.startPrank(address(0));
+        assertEq(rollup.isBatchFinalized(2), false);
+        vm.startPrank(address(0));
         rollup.finalizeBundleWithProof(batchHeader2, bytes32(uint256(2)), bytes32(uint256(3)), new bytes(0));
-        hevm.stopPrank();
-        assertBoolEq(rollup.isBatchFinalized(2), true);
+        vm.stopPrank();
+        assertEq(rollup.isBatchFinalized(2), true);
         assertEq(rollup.finalizedStateRoots(2), bytes32(uint256(2)));
         assertEq(rollup.withdrawRoots(2), bytes32(uint256(3)));
         assertEq(rollup.lastFinalizedBatchIndex(), 2);
@@ -1372,10 +1372,10 @@ contract T1ChainTest is DSTestPlus {
         T1ChainMockBlob(address(rollup)).setBlobVersionedHash(blobVersionedHash);
 
         // caller not owner, revert
-        hevm.startPrank(address(1));
-        hevm.expectRevert("Ownable: caller is not the owner");
+        vm.startPrank(address(1));
+        vm.expectRevert("Ownable: caller is not the owner");
         rollup.revertBatch(new bytes(89), new bytes(89));
-        hevm.stopPrank();
+        vm.stopPrank();
 
         rollup.addSequencer(address(0));
 
@@ -1395,10 +1395,10 @@ contract T1ChainTest is DSTestPlus {
         chunk0 = new bytes(1 + 60);
         chunk0[0] = bytes1(uint8(1)); // one block in this chunk
         chunks[0] = chunk0;
-        hevm.startPrank(address(0));
+        vm.startPrank(address(0));
         rollup.commitBatch(1, batchHeader0, chunks, new bytes(0));
         bytes32 batchHash1 = rollup.committedBatches(1);
-        hevm.stopPrank();
+        vm.stopPrank();
 
         bytes memory batchHeader1 = new bytes(121);
         assembly {
@@ -1413,9 +1413,9 @@ contract T1ChainTest is DSTestPlus {
         }
 
         // commit another batch
-        hevm.startPrank(address(0));
+        vm.startPrank(address(0));
         rollup.commitBatch(1, batchHeader1, chunks, new bytes(0));
-        hevm.stopPrank();
+        vm.stopPrank();
 
         bytes memory batchHeader2 = new bytes(121);
         assembly {
@@ -1431,33 +1431,33 @@ contract T1ChainTest is DSTestPlus {
 
         // incorrect batch hash of first header, revert
         batchHeader1[1] = bytes1(uint8(1)); // change random byte
-        hevm.expectRevert(T1Chain.ErrorIncorrectBatchHash.selector);
+        vm.expectRevert(T1Chain.ErrorIncorrectBatchHash.selector);
         rollup.revertBatch(batchHeader1, batchHeader0);
         batchHeader1[1] = bytes1(uint8(0)); // change back
 
         // incorrect batch hash of second header, revert
         batchHeader1[1] = bytes1(uint8(1)); // change random byte
-        hevm.expectRevert(T1Chain.ErrorIncorrectBatchHash.selector);
+        vm.expectRevert(T1Chain.ErrorIncorrectBatchHash.selector);
         rollup.revertBatch(batchHeader0, batchHeader1);
         batchHeader1[1] = bytes1(uint8(0)); // change back
 
         // count must be nonzero, revert
-        hevm.expectRevert(T1Chain.ErrorRevertZeroBatches.selector);
+        vm.expectRevert(T1Chain.ErrorRevertZeroBatches.selector);
         rollup.revertBatch(batchHeader1, batchHeader0);
 
         // revert middle batch, revert
-        hevm.expectRevert(T1Chain.ErrorRevertNotStartFromEnd.selector);
+        vm.expectRevert(T1Chain.ErrorRevertNotStartFromEnd.selector);
         rollup.revertBatch(batchHeader1, batchHeader1);
 
         // can only revert unfinalized batch, revert
-        hevm.expectRevert(T1Chain.ErrorRevertFinalizedBatch.selector);
+        vm.expectRevert(T1Chain.ErrorRevertFinalizedBatch.selector);
         rollup.revertBatch(batchHeader0, batchHeader2);
 
         // succeed to revert next two pending batches.
 
-        hevm.expectEmit(true, true, false, true);
+        vm.expectEmit(true, true, false, true);
         emit RevertBatch(2, rollup.committedBatches(2));
-        hevm.expectEmit(true, true, false, true);
+        vm.expectEmit(true, true, false, true);
         emit RevertBatch(1, rollup.committedBatches(1));
 
         assertGt(uint256(rollup.committedBatches(1)), 0);
@@ -1469,56 +1469,56 @@ contract T1ChainTest is DSTestPlus {
 
     function testAddAndRemoveSequencer(address _sequencer) external {
         // set by non-owner, should revert
-        hevm.startPrank(address(1));
-        hevm.expectRevert("Ownable: caller is not the owner");
+        vm.startPrank(address(1));
+        vm.expectRevert("Ownable: caller is not the owner");
         rollup.addSequencer(_sequencer);
-        hevm.expectRevert("Ownable: caller is not the owner");
+        vm.expectRevert("Ownable: caller is not the owner");
         rollup.removeSequencer(_sequencer);
-        hevm.stopPrank();
+        vm.stopPrank();
 
-        hevm.expectRevert(T1Chain.ErrorAccountIsNotEOA.selector);
+        vm.expectRevert(T1Chain.ErrorAccountIsNotEOA.selector);
         rollup.addSequencer(address(this));
-        hevm.assume(_sequencer.code.length == 0);
+        vm.assume(_sequencer.code.length == 0);
 
         // change to random EOA operator
-        hevm.expectEmit(true, false, false, true);
+        vm.expectEmit(true, false, false, true);
         emit UpdateSequencer(_sequencer, true);
 
-        assertBoolEq(rollup.isSequencer(_sequencer), false);
+        assertEq(rollup.isSequencer(_sequencer), false);
         rollup.addSequencer(_sequencer);
-        assertBoolEq(rollup.isSequencer(_sequencer), true);
+        assertEq(rollup.isSequencer(_sequencer), true);
 
-        hevm.expectEmit(true, false, false, true);
+        vm.expectEmit(true, false, false, true);
         emit UpdateSequencer(_sequencer, false);
         rollup.removeSequencer(_sequencer);
-        assertBoolEq(rollup.isSequencer(_sequencer), false);
+        assertEq(rollup.isSequencer(_sequencer), false);
     }
 
     function testAddAndRemoveProver(address _prover) external {
         // set by non-owner, should revert
-        hevm.startPrank(address(1));
-        hevm.expectRevert("Ownable: caller is not the owner");
+        vm.startPrank(address(1));
+        vm.expectRevert("Ownable: caller is not the owner");
         rollup.addProver(_prover);
-        hevm.expectRevert("Ownable: caller is not the owner");
+        vm.expectRevert("Ownable: caller is not the owner");
         rollup.removeProver(_prover);
-        hevm.stopPrank();
+        vm.stopPrank();
 
-        hevm.expectRevert(T1Chain.ErrorAccountIsNotEOA.selector);
+        vm.expectRevert(T1Chain.ErrorAccountIsNotEOA.selector);
         rollup.addProver(address(this));
-        hevm.assume(_prover.code.length == 0);
+        vm.assume(_prover.code.length == 0);
 
         // change to random EOA operator
-        hevm.expectEmit(true, false, false, true);
+        vm.expectEmit(true, false, false, true);
         emit UpdateProver(_prover, true);
 
-        assertBoolEq(rollup.isProver(_prover), false);
+        assertEq(rollup.isProver(_prover), false);
         rollup.addProver(_prover);
-        assertBoolEq(rollup.isProver(_prover), true);
+        assertEq(rollup.isProver(_prover), true);
 
-        hevm.expectEmit(true, false, false, true);
+        vm.expectEmit(true, false, false, true);
         emit UpdateProver(_prover, false);
         rollup.removeProver(_prover);
-        assertBoolEq(rollup.isProver(_prover), false);
+        assertEq(rollup.isProver(_prover), false);
     }
 
     function testSetPause() external {
@@ -1526,40 +1526,40 @@ contract T1ChainTest is DSTestPlus {
         rollup.addProver(address(0));
 
         // not owner, revert
-        hevm.startPrank(address(1));
-        hevm.expectRevert("Ownable: caller is not the owner");
+        vm.startPrank(address(1));
+        vm.expectRevert("Ownable: caller is not the owner");
         rollup.setPause(false);
-        hevm.stopPrank();
+        vm.stopPrank();
 
         // pause
         rollup.setPause(true);
-        assertBoolEq(true, rollup.paused());
+        assertEq(true, rollup.paused());
 
-        hevm.startPrank(address(0));
-        hevm.expectRevert("Pausable: paused");
+        vm.startPrank(address(0));
+        vm.expectRevert("Pausable: paused");
         rollup.commitBatch(1, new bytes(0), new bytes[](0), new bytes(0));
-        hevm.expectRevert("Pausable: paused");
+        vm.expectRevert("Pausable: paused");
         rollup.commitBatchWithBlobProof(3, new bytes(0), new bytes[](0), new bytes(0), new bytes(0));
-        hevm.expectRevert("Pausable: paused");
+        vm.expectRevert("Pausable: paused");
         rollup.finalizeBatchWithProof4844(new bytes(0), bytes32(0), bytes32(0), bytes32(0), new bytes(0), new bytes(0));
-        hevm.expectRevert("Pausable: paused");
+        vm.expectRevert("Pausable: paused");
         rollup.finalizeBundleWithProof(new bytes(0), bytes32(0), bytes32(0), new bytes(0));
-        hevm.stopPrank();
+        vm.stopPrank();
 
         // unpause
         rollup.setPause(false);
-        assertBoolEq(false, rollup.paused());
+        assertEq(false, rollup.paused());
     }
 
     function testUpdateMaxNumTxInChunk(uint256 _maxNumTxInChunk) external {
         // set by non-owner, should revert
-        hevm.startPrank(address(1));
-        hevm.expectRevert("Ownable: caller is not the owner");
+        vm.startPrank(address(1));
+        vm.expectRevert("Ownable: caller is not the owner");
         rollup.updateMaxNumTxInChunk(_maxNumTxInChunk);
-        hevm.stopPrank();
+        vm.stopPrank();
 
         // change to random operator
-        hevm.expectEmit(false, false, false, true);
+        vm.expectEmit(false, false, false, true);
         emit UpdateMaxNumTxInChunk(100, _maxNumTxInChunk);
 
         assertEq(rollup.maxNumTxInChunk(), 100);
@@ -1572,52 +1572,52 @@ contract T1ChainTest is DSTestPlus {
 
         // zero state root, revert
         batchHeader = new bytes(89);
-        hevm.expectRevert(T1Chain.ErrorStateRootIsZero.selector);
+        vm.expectRevert(T1Chain.ErrorStateRootIsZero.selector);
         rollup.importGenesisBatch(batchHeader, bytes32(0));
 
         // batch header length too small, revert
         batchHeader = new bytes(88);
-        hevm.expectRevert(BatchHeaderV0Codec.ErrorBatchHeaderV0LengthTooSmall.selector);
+        vm.expectRevert(BatchHeaderV0Codec.ErrorBatchHeaderV0LengthTooSmall.selector);
         rollup.importGenesisBatch(batchHeader, bytes32(uint256(1)));
 
         // wrong bitmap length, revert
         batchHeader = new bytes(90);
-        hevm.expectRevert(BatchHeaderV0Codec.ErrorIncorrectBitmapLengthV0.selector);
+        vm.expectRevert(BatchHeaderV0Codec.ErrorIncorrectBitmapLengthV0.selector);
         rollup.importGenesisBatch(batchHeader, bytes32(uint256(1)));
 
         // not all fields are zero, revert
         batchHeader = new bytes(121);
         batchHeader[0] = bytes1(uint8(1)); // version not zero
-        hevm.expectRevert(T1Chain.ErrorGenesisBatchHasNonZeroField.selector);
+        vm.expectRevert(T1Chain.ErrorGenesisBatchHasNonZeroField.selector);
         rollup.importGenesisBatch(batchHeader, bytes32(uint256(1)));
 
         batchHeader = new bytes(89);
         batchHeader[1] = bytes1(uint8(1)); // batchIndex not zero
-        hevm.expectRevert(T1Chain.ErrorGenesisBatchHasNonZeroField.selector);
+        vm.expectRevert(T1Chain.ErrorGenesisBatchHasNonZeroField.selector);
         rollup.importGenesisBatch(batchHeader, bytes32(uint256(1)));
 
         batchHeader = new bytes(89 + 32);
         assembly {
             mstore(add(batchHeader, add(0x20, 9)), shl(192, 1)) // l1MessagePopped not zero
         }
-        hevm.expectRevert(T1Chain.ErrorGenesisBatchHasNonZeroField.selector);
+        vm.expectRevert(T1Chain.ErrorGenesisBatchHasNonZeroField.selector);
         rollup.importGenesisBatch(batchHeader, bytes32(uint256(1)));
 
         batchHeader = new bytes(89);
         batchHeader[17] = bytes1(uint8(1)); // totalL1MessagePopped not zero
-        hevm.expectRevert(T1Chain.ErrorGenesisBatchHasNonZeroField.selector);
+        vm.expectRevert(T1Chain.ErrorGenesisBatchHasNonZeroField.selector);
         rollup.importGenesisBatch(batchHeader, bytes32(uint256(1)));
 
         // zero data hash, revert
         batchHeader = new bytes(89);
-        hevm.expectRevert(T1Chain.ErrorGenesisDataHashIsZero.selector);
+        vm.expectRevert(T1Chain.ErrorGenesisDataHashIsZero.selector);
         rollup.importGenesisBatch(batchHeader, bytes32(uint256(1)));
 
         // nonzero parent batch hash, revert
         batchHeader = new bytes(89);
         batchHeader[25] = bytes1(uint8(1)); // dataHash not zero
         batchHeader[57] = bytes1(uint8(1)); // parentBatchHash not zero
-        hevm.expectRevert(T1Chain.ErrorGenesisParentBatchHashIsNonZero.selector);
+        vm.expectRevert(T1Chain.ErrorGenesisParentBatchHashIsNonZero.selector);
         rollup.importGenesisBatch(batchHeader, bytes32(uint256(1)));
 
         // import correctly
@@ -1632,7 +1632,7 @@ contract T1ChainTest is DSTestPlus {
         assertGt(uint256(rollup.committedBatches(0)), 0);
 
         // Genesis batch imported, revert
-        hevm.expectRevert(T1Chain.ErrorGenesisBatchImported.selector);
+        vm.expectRevert(T1Chain.ErrorGenesisBatchImported.selector);
         rollup.importGenesisBatch(batchHeader, bytes32(uint256(1)));
     }
 
@@ -1656,8 +1656,8 @@ contract T1ChainTest is DSTestPlus {
         // 1) Reproduce the prefixing: keccak256("\x19Ethereum Signed Message:\n32", root)
         bytes32 ethSignedMsg = keccak256(abi.encodePacked("\x19Ethereum Signed Message:\n32", root));
 
-        // 2) Foundry cheatcode: hevm.sign(privateKey, hash) -> (v,r,s)
-        (uint8 v, bytes32 r, bytes32 s) = hevm.sign(privKey, ethSignedMsg);
+        // 2) Foundry cheatcode: vm.sign(privateKey, hash) -> (v,r,s)
+        (uint8 v, bytes32 r, bytes32 s) = vm.sign(privKey, ethSignedMsg);
 
         // 3) Pack [r, s, v] into a 65-byte signature
         sig = abi.encodePacked(r, s, v);
@@ -1670,7 +1670,7 @@ contract T1ChainTest is DSTestPlus {
         bytes32 dummyRoot = keccak256(abi.encode("dummyRoot"));
         bytes memory invalidSig = new bytes(64); // 64 bytes, not 65
 
-        hevm.expectRevert(T1Chain.ErrorIncorrectSignatureLength.selector);
+        vm.expectRevert(T1Chain.ErrorIncorrectSignatureLength.selector);
         rollup.finalizeBatchWithProof(dummyRoot, invalidSig);
     }
 
@@ -1682,10 +1682,10 @@ contract T1ChainTest is DSTestPlus {
         bytes memory sig = _signWithdrawRoot(NON_SIGNER_KEY, dummyRoot);
 
         // The address recovered by ecrecover(...) will be this one:
-        address expectedBadSigner = hevm.addr(NON_SIGNER_KEY);
+        address expectedBadSigner = vm.addr(NON_SIGNER_KEY);
 
         // Now we provide the entire revert data:
-        hevm.expectRevert(abi.encodeWithSelector(T1Chain.ErrorIncorrectSigner.selector, expectedBadSigner));
+        vm.expectRevert(abi.encodeWithSelector(T1Chain.ErrorIncorrectSigner.selector, expectedBadSigner));
 
         // This call should revert with `ErrorIncorrectSigner(badSigner)`
         rollup.finalizeBatchWithProof(dummyRoot, sig);
@@ -1695,7 +1695,7 @@ contract T1ChainTest is DSTestPlus {
      * @notice Tests a happy path with a correct signature from a prover.
      */
     function testFinalizeBatchWithProof_Success() external {
-        address proverAddr = hevm.addr(VALID_SIGNER_KEY);
+        address proverAddr = vm.addr(VALID_SIGNER_KEY);
         rollup.addProver(proverAddr);
 
         bytes32 withdrawRoot = keccak256(abi.encode("some withdrawRoot"));
@@ -1719,7 +1719,7 @@ contract T1ChainTest is DSTestPlus {
         bytes32 dummyRoot = keccak256(abi.encode("dummyRoot"));
         bytes memory sig = _signWithdrawRoot(VALID_SIGNER_KEY, dummyRoot);
 
-        hevm.expectRevert(bytes("Pausable: paused"));
+        vm.expectRevert(bytes("Pausable: paused"));
         rollup.finalizeBatchWithProof(dummyRoot, sig);
     }
 }
