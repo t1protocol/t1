@@ -101,14 +101,6 @@ contract t1ERC7683Pull is BasicSwap7683, OwnableUpgradeable, It1XChainReaderCall
         __Ownable_init();
     }
 
-    /// @notice Handles an incoming message
-    /// @param _origin The origin domain
-    /// @param _sender The sender address
-    /// @param _message The message
-    function handle(uint32 _origin, bytes32 _sender, bytes calldata _message) external payable onlyMessenger {
-        _handle(_origin, _sender, _message);
-    }
-
     /// @notice Initiates a pull-based settlement verification for an order
     /// @param destinationDomain The domain of the destination chain
     /// @param orderId The ID of the order to verify
