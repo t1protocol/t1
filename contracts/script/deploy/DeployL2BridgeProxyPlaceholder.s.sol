@@ -52,7 +52,7 @@ contract DeployL2BridgeProxyPlaceholder is Script, DeploymentUtils {
     }
 
     function deployL2T1Messenger() internal {
-        TransparentUpgradeableProxy proxy = new TransparentUpgradeableProxy{ value: 1000 ether }(
+        TransparentUpgradeableProxy proxy = new TransparentUpgradeableProxy{ value: 300000 ether }(
             address(placeholder), address(proxyAdmin), new bytes(0)
         );
 
