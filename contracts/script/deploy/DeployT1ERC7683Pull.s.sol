@@ -1,17 +1,15 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.25;
 
-import { Script } from "forge-std/Script.sol";
-import { console2 } from "forge-std/console2.sol";
 import { ProxyAdmin } from "@openzeppelin/contracts/proxy/transparent/ProxyAdmin.sol";
 import { TransparentUpgradeableProxy } from "@openzeppelin/contracts/proxy/transparent/TransparentUpgradeableProxy.sol";
 
 import { DeploymentUtils } from "../lib/DeploymentUtils.sol";
 
-import { t1ERC7683Pull } from "../../src/7683/t1ERC7683Pull.sol";
+import { T1ERC7683Pull } from "../../src/7683/T1ERC7683Pull.sol";
 import { T1Constants } from "../../src/libraries/constants/T1Constants.sol";
 
-contract Deployt1ERC7683Pull is DeploymentUtils {
+contract DeployT1ERC7683Pull is DeploymentUtils {
     uint32 internal constant T1 = uint32(T1Constants.T1_DEVNET_CHAIN_ID);
     uint32 internal constant PR1 = uint32(T1Constants.L1_CHAIN_ID);
     ProxyAdmin private proxyAdmin;
@@ -27,7 +25,7 @@ contract Deployt1ERC7683Pull is DeploymentUtils {
         vm.startBroadcast(deployerPk);
 
         // Deploy L1 router implementation
-        t1ERC7683Pull impl = new t1ERC7683Pull(
+        T1ERC7683Pull impl = new T1ERC7683Pull(
             L1_T1_MESSENGER_PROXY_ADDR,
             address(0), // No Permit2 for now
             L1_T1_X_CHAIN_READ_PROXY_ADDR,
@@ -48,12 +46,12 @@ contract Deployt1ERC7683Pull is DeploymentUtils {
 
     function pr1_init() external {
         uint256 deployerPk = vm.envUint("L1_DEPLOYER_PRIVATE_KEY");
-        address L1_t1_7683_PROXY_ADDR = vm.envAddress("L1_T1_PULL_BASED_7683_PROXY_ADDR");
-        address L2_t1_7683_PROXY_ADDR = vm.envAddress("L2_T1_PULL_BASED_7683_PROXY_ADDR");
+        address L1_T1_7683_PROXY_ADDR = vm.envAddress("L1_T1_PULL_BASED_7683_PROXY_ADDR");
+        address L2_T1_7683_PROXY_ADDR = vm.envAddress("L2_T1_PULL_BASED_7683_PROXY_ADDR");
 
         vm.startBroadcast(deployerPk);
 
-        t1ERC7683Pull(L1_t1_7683_PROXY_ADDR).initialize(L2_t1_7683_PROXY_ADDR);
+        T1ERC7683Pull(L1_T1_7683_PROXY_ADDR).initialize(L2_T1_7683_PROXY_ADDR);
 
         vm.stopBroadcast();
     }
@@ -71,7 +69,7 @@ contract Deployt1ERC7683Pull is DeploymentUtils {
         proxyAdmin = ProxyAdmin(L2_PROXY_ADMIN_ADDR);
 
         // Deploy L2 router implementation
-        t1ERC7683Pull impl = new t1ERC7683Pull(
+        T1ERC7683Pull impl = new T1ERC7683Pull(
             L2_T1_MESSENGER_PROXY_ADDR,
             address(0), // No Permit2 for now
             L2_T1_X_CHAIN_READ_PROXY_ADDR,
@@ -93,12 +91,12 @@ contract Deployt1ERC7683Pull is DeploymentUtils {
     function t1_init() external {
         vm.createSelectFork(vm.rpcUrl("t1"));
         uint256 deployerPk = vm.envUint("L2_DEPLOYER_PRIVATE_KEY");
-        address L1_t1_7683_PROXY_ADDR = vm.envAddress("L1_T1_PULL_BASED_7683_PROXY_ADDR");
-        address L2_t1_7683_PROXY_ADDR = vm.envAddress("L2_T1_PULL_BASED_7683_PROXY_ADDR");
+        address L1_T1_7683_PROXY_ADDR = vm.envAddress("L1_T1_PULL_BASED_7683_PROXY_ADDR");
+        address L2_T1_7683_PROXY_ADDR = vm.envAddress("L2_T1_PULL_BASED_7683_PROXY_ADDR");
 
         vm.startBroadcast(deployerPk);
 
-        t1ERC7683Pull(L2_t1_7683_PROXY_ADDR).initialize(L1_t1_7683_PROXY_ADDR);
+        T1ERC7683Pull(L2_T1_7683_PROXY_ADDR).initialize(L1_T1_7683_PROXY_ADDR);
 
         vm.stopBroadcast();
     }

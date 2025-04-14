@@ -10,12 +10,12 @@ import { TypeCasts } from "@hyperlane-xyz/libs/TypeCasts.sol";
 import { IT1Messenger } from "../libraries/IT1Messenger.sol";
 
 /**
- * @title t1ERC7683
+ * @title T1ERC7683
  * @author t1 Labs
  * @notice This contract builds on top of BasicSwap7683 as a messaging layer using t1.
  * @dev It integrates with the t1 protocol for cross-chain communication.
  */
-contract t1ERC7683 is BasicSwap7683, OwnableUpgradeable {
+contract T1ERC7683 is BasicSwap7683, OwnableUpgradeable {
     // ============ Constants ============
 
     uint32 internal constant DEFAULT_GAS_LIMIT = 1_000_000;
@@ -91,7 +91,7 @@ contract t1ERC7683 is BasicSwap7683, OwnableUpgradeable {
         if (msg.value != 0) revert EthNotAllowed();
         bytes memory innerMessage = Hyperlane7683Message.encodeSettle(_orderIds, _ordersFillerData);
         bytes memory outerMessage = abi.encodeWithSelector(
-            t1ERC7683.handle.selector, _originDomain, TypeCasts.addressToBytes32(address(this)), innerMessage
+            T1ERC7683.handle.selector, _originDomain, TypeCasts.addressToBytes32(address(this)), innerMessage
         );
         messenger.sendMessage(counterpart, 0, outerMessage, DEFAULT_GAS_LIMIT, uint64(_originDomain));
     }
@@ -104,7 +104,7 @@ contract t1ERC7683 is BasicSwap7683, OwnableUpgradeable {
         if (msg.value != 0) revert EthNotAllowed();
         bytes memory innerMessage = Hyperlane7683Message.encodeRefund(_orderIds);
         bytes memory outerMessage = abi.encodeWithSelector(
-            t1ERC7683.handle.selector, _originDomain, TypeCasts.addressToBytes32(address(this)), innerMessage
+            T1ERC7683.handle.selector, _originDomain, TypeCasts.addressToBytes32(address(this)), innerMessage
         );
         messenger.sendMessage(counterpart, 0, outerMessage, DEFAULT_GAS_LIMIT, uint64(_originDomain));
     }

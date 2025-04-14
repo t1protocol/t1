@@ -10,7 +10,7 @@ import { DeploymentUtils } from "../lib/DeploymentUtils.sol";
 import { t1XChainReader } from "../../src/libraries/xChain/t1XChainReader.sol";
 import { T1Constants } from "../../src/libraries/constants/T1Constants.sol";
 
-contract DeployPR1t1XChainReader is DeploymentUtils {
+contract DeployPR1T1XChainReader is DeploymentUtils {
     uint32 internal constant PR1 = uint32(T1Constants.L1_CHAIN_ID);
 
     function run() external {

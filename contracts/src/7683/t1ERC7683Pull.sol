@@ -10,12 +10,12 @@ import { t1XChainReader } from "../libraries/xChain/t1XChainReader.sol";
 import { It1XChainReaderCallback } from "../libraries/xChain/It1XChainReaderCallback.sol";
 
 /**
- * @title t1ERC7683Pull
+ * @title T1ERC7683Pull
  * @author t1 Labs
  * @notice This contract extends BasicSwap7683 with pull-based settlement using t1 cross-chain reads
  * @dev Implements both push-based messaging and pull-based verification for orders
  */
-contract t1ERC7683Pull is BasicSwap7683, OwnableUpgradeable, It1XChainReaderCallback {
+contract T1ERC7683Pull is BasicSwap7683, OwnableUpgradeable, It1XChainReaderCallback {
     // ============ Constants ============
 
     uint32 public immutable localDomain;
