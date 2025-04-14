@@ -6,14 +6,14 @@ import { ReentrancyGuardUpgradeable } from "@openzeppelin/contracts-upgradeable/
 
 import { IL1MessageQueue } from "../../L1/rollup/IL1MessageQueue.sol";
 import { IT1Messenger } from "../IT1Messenger.sol";
-import { t1XChainMessage } from "./t1XChainMessage.sol";
-import { It1XChainReaderCallback } from "./It1XChainReaderCallback.sol";
+import { T1XChainMessage } from "./T1XChainMessage.sol";
+import { IT1XChainReaderCallback } from "./IT1XChainReaderCallback.sol";
 
 /**
- * @title t1XChainReader
+ * @title T1XChainReader
  * @notice Facilitates reading data from contracts on other chains through t1
  */
-contract t1XChainReader is OwnableUpgradeable, ReentrancyGuardUpgradeable {
+contract T1XChainReader is OwnableUpgradeable, ReentrancyGuardUpgradeable {
     // ============ Events ============
 
     /**
@@ -75,7 +75,7 @@ contract t1XChainReader is OwnableUpgradeable, ReentrancyGuardUpgradeable {
     }
 
     /**
-     * @notice Sets up the t1XChainReader contract
+     * @notice Sets up the T1XChainReader contract
      * @param _messenger Address of the T1 messenger contract
      * @param _localDomain ID of the local domain
      */
@@ -119,7 +119,7 @@ contract t1XChainReader is OwnableUpgradeable, ReentrancyGuardUpgradeable {
 
         callbacks[requestId] = callback;
 
-        bytes memory message = t1XChainMessage.encodeRead(requestId, callData);
+        bytes memory message = T1XChainMessage.encodeRead(requestId, callData);
 
         // Using this selector to avoid hash collision
         bytes4 requestReadSelector = bytes4(keccak256("requestRead(uint32,address,uint64,bytes,address)"));
@@ -159,7 +159,7 @@ contract t1XChainReader is OwnableUpgradeable, ReentrancyGuardUpgradeable {
      * @param _message The encoded message
      */
     function handle(bytes calldata _message) external payable onlyMessenger {
-        (bytes32 requestId, bytes memory data) = t1XChainMessage.decodeResponse(_message);
+        (bytes32 requestId, bytes memory data) = T1XChainMessage.decodeResponse(_message);
         _handleReadResponse(requestId, data);
     }
 
@@ -177,7 +177,7 @@ contract t1XChainReader is OwnableUpgradeable, ReentrancyGuardUpgradeable {
         if (callback != address(0)) {
             delete callbacks[requestId];
 
-            It1XChainReaderCallback(callback).ont1XChainReaderResult(requestId, result);
+            IT1XChainReaderCallback(callback).onT1XChainReaderResult(requestId, result);
         }
 
         emit ReadResult(requestId, result);

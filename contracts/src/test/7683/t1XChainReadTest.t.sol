@@ -6,33 +6,33 @@ import { ITransparentUpgradeableProxy } from "@openzeppelin/contracts/proxy/tran
 import { OrderData, OrderEncoder } from "intents-framework/libs/OrderEncoder.sol";
 import { OnchainCrossChainOrder } from "intents-framework/ERC7683/IERC7683.sol";
 
-import { t1XChainReader } from "../../libraries/xChain/t1XChainReader.sol";
-import { t1XChainMessage } from "../../libraries/xChain/t1XChainMessage.sol";
+import { T1XChainReader } from "../../libraries/xChain/T1XChainReader.sol";
+import { T1XChainMessage } from "../../libraries/xChain/T1XChainMessage.sol";
 import { t1BasicSwapE2E } from "./t1BasicSwapE2E.t.sol";
 import { T1ERC7683Pull } from "../../7683/T1ERC7683Pull.sol";
 
-contract t1XChainReaderTest is t1BasicSwapE2E {
+contract T1XChainReaderTest is t1BasicSwapE2E {
     using TypeCasts for address;
 
-    t1XChainReader internal originReader;
-    t1XChainReader internal destinationReader;
+    T1XChainReader internal originReader;
+    T1XChainReader internal destinationReader;
     T1ERC7683Pull internal L1T17683Pull;
     T1ERC7683Pull internal L2T17683Pull;
 
     function setUp() public virtual override {
         super.setUp();
 
-        // Deploy t1XChainReader on both chains
-        originReader = t1XChainReader(payable(_deployProxy(address(0))));
+        // Deploy T1XChainReader on both chains
+        originReader = T1XChainReader(payable(_deployProxy(address(0))));
         admin.upgrade(
             ITransparentUpgradeableProxy(address(originReader)),
-            address(new t1XChainReader(address(l1t1Messenger), origin))
+            address(new T1XChainReader(address(l1t1Messenger), origin))
         );
 
-        destinationReader = t1XChainReader(payable(_deployProxy(address(0))));
+        destinationReader = T1XChainReader(payable(_deployProxy(address(0))));
         admin.upgrade(
             ITransparentUpgradeableProxy(address(destinationReader)),
-            address(new t1XChainReader(address(l2t1Messenger), destination))
+            address(new T1XChainReader(address(l2t1Messenger), destination))
         );
 
         L1T17683Pull = T1ERC7683Pull(payable(_deployProxy(address(0))));
@@ -53,11 +53,11 @@ contract t1XChainReaderTest is t1BasicSwapE2E {
 
     // 1. user opens intent on source chain
     // 2. solver fills intent on destination chain
-    // 3a. solver calls 7683 verifySettlement on source chain, triggering t1XChainReader.requestRead
+    // 3a. solver calls 7683 verifySettlement on source chain, triggering T1XChainReader.requestRead
     // 4a. relayer picks up message and calls getFilledOrderStatus on destination chain
-    // 4b. relayer calls t1XChainReader.handle with the result of the read which calls
-    // ont1XChainReaderResult on callback address
-    // 4c. ont1XChainReaderResult on 7683 contract settles intent and releases funds to solver
+    // 4b. relayer calls T1XChainReader.handle with the result of the read which calls
+    // onT1XChainReaderResult on callback address
+    // 4c. onT1XChainReaderResult on 7683 contract settles intent and releases funds to solver
     function test_ERC7683PullSettlementFlow() public {
         // 1. Setup: Open an order on L1 (origin chain)
         OrderData memory orderData = _prepareOrderData();
@@ -91,7 +91,7 @@ contract t1XChainReaderTest is t1BasicSwapE2E {
         {
             // Construct the read request calldata
             bytes memory orderStatus = L2T17683Pull.getFilledOrderStatus(orderId);
-            bytes memory readMessage = t1XChainMessage.encodeRead(requestId, orderStatus);
+            bytes memory readMessage = T1XChainMessage.encodeRead(requestId, orderStatus);
             uint256 balanceSolverBeforeSettle = inputToken.balanceOf(address(vegeta));
             vm.prank(address(l1t1Messenger));
             originReader.handle(readMessage);

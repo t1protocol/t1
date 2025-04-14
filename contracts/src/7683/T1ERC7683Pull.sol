@@ -6,8 +6,8 @@ import { Hyperlane7683Message } from "intents-framework/libs/Hyperlane7683Messag
 import { BasicSwap7683 } from "intents-framework/BasicSwap7683.sol";
 
 import { IT1Messenger } from "../libraries/IT1Messenger.sol";
-import { t1XChainReader } from "../libraries/xChain/t1XChainReader.sol";
-import { It1XChainReaderCallback } from "../libraries/xChain/It1XChainReaderCallback.sol";
+import { T1XChainReader } from "../libraries/xChain/T1XChainReader.sol";
+import { IT1XChainReaderCallback } from "../libraries/xChain/IT1XChainReaderCallback.sol";
 
 /**
  * @title T1ERC7683Pull
@@ -15,14 +15,14 @@ import { It1XChainReaderCallback } from "../libraries/xChain/It1XChainReaderCall
  * @notice This contract extends BasicSwap7683 with pull-based settlement using t1 cross-chain reads
  * @dev Implements both push-based messaging and pull-based verification for orders
  */
-contract T1ERC7683Pull is BasicSwap7683, OwnableUpgradeable, It1XChainReaderCallback {
+contract T1ERC7683Pull is BasicSwap7683, OwnableUpgradeable, IT1XChainReaderCallback {
     // ============ Constants ============
 
     uint32 public immutable localDomain;
 
     IT1Messenger public immutable messenger;
 
-    t1XChainReader public immutable xChainRead;
+    T1XChainReader public immutable xChainRead;
 
     address public counterpart;
 
@@ -88,7 +88,7 @@ contract T1ERC7683Pull is BasicSwap7683, OwnableUpgradeable, It1XChainReaderCall
         BasicSwap7683(_permit2)
     {
         messenger = IT1Messenger(_messenger);
-        xChainRead = t1XChainReader(_xChainRead);
+        xChainRead = T1XChainReader(_xChainRead);
         localDomain = localDomain_;
     }
 
@@ -112,7 +112,7 @@ contract T1ERC7683Pull is BasicSwap7683, OwnableUpgradeable, It1XChainReaderCall
         // Create the calldata to check the order status on the destination chain
         bytes memory callData = abi.encodeWithSelector(this.getFilledOrderStatus.selector, orderId);
 
-        t1XChainReader.ReadRequest memory readRequest = t1XChainReader.ReadRequest({
+        T1XChainReader.ReadRequest memory readRequest = T1XChainReader.ReadRequest({
             destinationDomain: destinationDomain,
             targetContract: counterpart,
             minBlock: 0,
@@ -133,7 +133,7 @@ contract T1ERC7683Pull is BasicSwap7683, OwnableUpgradeable, It1XChainReaderCall
     /// @notice Callback function for cross-chain read results
     /// @param requestId The ID of the read request
     /// @param result The result of the read
-    function ont1XChainReaderResult(bytes32 requestId, bytes calldata result) external override onlyXChainRead {
+    function onT1XChainReaderResult(bytes32 requestId, bytes calldata result) external override onlyXChainRead {
         bytes32 orderId = readRequestToOrderId[requestId];
 
         // Ensure we have a valid order
