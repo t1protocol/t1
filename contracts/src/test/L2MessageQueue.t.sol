@@ -2,11 +2,11 @@
 
 pragma solidity ^0.8.25;
 
-import { DSTestPlus } from "solmate/test/utils/DSTestPlus.sol";
+import { Test } from "forge-std/Test.sol";
 
 import { L2MessageQueue } from "../L2/predeploys/L2MessageQueue.sol";
 
-contract L2MessageQueueTest is DSTestPlus {
+contract L2MessageQueueTest is Test {
     L2MessageQueue internal queue;
 
     function setUp() public {
@@ -21,10 +21,10 @@ contract L2MessageQueueTest is DSTestPlus {
 
     function testPassMessageFailed() external {
         // not messenger
-        hevm.startPrank(address(0));
-        hevm.expectRevert("only messenger");
+        vm.startPrank(address(0));
+        vm.expectRevert("only messenger");
         queue.appendMessage(bytes32(0));
-        hevm.stopPrank();
+        vm.stopPrank();
     }
 
     function testPassMessageOnceSuccess(bytes32 _message) external {
@@ -70,10 +70,10 @@ contract L2MessageQueueTest is DSTestPlus {
 
     function testSetGasOracle() external {
         // non-owner cannot set gas oracle
-        hevm.startPrank(address(0));
-        hevm.expectRevert("caller is not the owner");
+        vm.startPrank(address(0));
+        vm.expectRevert("caller is not the owner");
         queue.setGasOracle(1, address(0xdead));
-        hevm.stopPrank();
+        vm.stopPrank();
 
         // owner can set gas oracle
         uint64 chainId = 1;

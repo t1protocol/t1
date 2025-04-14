@@ -75,7 +75,7 @@ contract L2GatewayRouterTest is L2GatewayTestBase {
 
         // Prepare token balances
         l2Token = MockERC20(l2StandardERC20Gateway.getL2ERC20Address(address(l1Token)));
-        hevm.startPrank(AddressAliasHelper.applyL1ToL2Alias(address(l1Messenger)));
+        vm.startPrank(AddressAliasHelper.applyL1ToL2Alias(address(l1Messenger)));
         l2Messenger.relayMessage(
             address(l1StandardERC20Gateway),
             address(l2StandardERC20Gateway),
@@ -91,7 +91,7 @@ contract L2GatewayRouterTest is L2GatewayTestBase {
                 abi.encode(true, abi.encode("", abi.encode("symbol", "name", 18)))
             )
         );
-        hevm.stopPrank();
+        vm.stopPrank();
     }
 
     function testOwnership() public {
@@ -103,10 +103,10 @@ contract L2GatewayRouterTest is L2GatewayTestBase {
         assertEq(address(l2StandardERC20Gateway), router.getERC20Gateway(address(l2Token)));
 
         assertEq(address(l1Token), router.getL1ERC20Address(address(l2Token)));
-        hevm.expectRevert("unsupported");
+        vm.expectRevert("unsupported");
         router.getL2ERC20Address(address(l1Token));
 
-        hevm.expectRevert("Initializable: contract is already initialized");
+        vm.expectRevert("Initializable: contract is already initialized");
         router.initialize(address(l2ETHGateway), address(l2StandardERC20Gateway));
     }
 
@@ -114,13 +114,13 @@ contract L2GatewayRouterTest is L2GatewayTestBase {
         router.setDefaultERC20Gateway(address(0));
 
         // set by non-owner, should revert
-        hevm.startPrank(address(1));
-        hevm.expectRevert("Ownable: caller is not the owner");
+        vm.startPrank(address(1));
+        vm.expectRevert("Ownable: caller is not the owner");
         router.setDefaultERC20Gateway(address(l2StandardERC20Gateway));
-        hevm.stopPrank();
+        vm.stopPrank();
 
         // set by owner, should succeed
-        hevm.expectEmit(true, true, false, true);
+        vm.expectEmit(true, true, false, true);
         emit SetDefaultERC20Gateway(address(0), address(l2StandardERC20Gateway));
 
         assertEq(address(0), router.getERC20Gateway(address(l2Token)));
@@ -137,9 +137,9 @@ contract L2GatewayRouterTest is L2GatewayTestBase {
         // length mismatch, should revert
         address[] memory empty = new address[](0);
         address[] memory single = new address[](1);
-        hevm.expectRevert("length mismatch");
+        vm.expectRevert("length mismatch");
         router.setERC20Gateway(empty, single);
-        hevm.expectRevert("length mismatch");
+        vm.expectRevert("length mismatch");
         router.setERC20Gateway(single, empty);
 
         // set by owner, should succeed
@@ -148,7 +148,7 @@ contract L2GatewayRouterTest is L2GatewayTestBase {
         _tokens[0] = address(l2Token);
         _gateways[0] = address(l2StandardERC20Gateway);
 
-        hevm.expectEmit(true, true, true, true);
+        vm.expectEmit(true, true, true, true);
         emit SetERC20Gateway(address(l2Token), address(0), address(l2StandardERC20Gateway));
 
         assertEq(address(0), router.getERC20Gateway(address(l2Token)));
@@ -157,12 +157,12 @@ contract L2GatewayRouterTest is L2GatewayTestBase {
     }
 
     function testFinalizeDepositERC20() public {
-        hevm.expectRevert("should never be called");
+        vm.expectRevert("should never be called");
         router.finalizeDepositERC20(address(0), address(0), address(0), address(0), 0, "");
     }
 
     function testFinalizeDepositETH() public {
-        hevm.expectRevert("should never be called");
+        vm.expectRevert("should never be called");
         router.finalizeDepositETH(address(0), address(0), 0, "");
     }
 }
