@@ -2,11 +2,11 @@
 
 pragma solidity ^0.8.25;
 
-import { DSTestPlus } from "solmate/test/utils/DSTestPlus.sol";
+import { Test } from "forge-std/Test.sol";
 
 import { Whitelist } from "../L2/predeploys/Whitelist.sol";
 
-contract WhitelistTest is DSTestPlus {
+contract WhitelistTest is Test {
     Whitelist private whitelist;
 
     function setUp() public {
@@ -15,10 +15,10 @@ contract WhitelistTest is DSTestPlus {
 
     function testRenounceOwnership() external {
         // call by non-owner, should revert
-        hevm.startPrank(address(1));
-        hevm.expectRevert("caller is not the owner");
+        vm.startPrank(address(1));
+        vm.expectRevert("caller is not the owner");
         whitelist.renounceOwnership();
-        hevm.stopPrank();
+        vm.stopPrank();
 
         // call by owner, should succeed
         assertEq(whitelist.owner(), address(this));
@@ -28,14 +28,14 @@ contract WhitelistTest is DSTestPlus {
 
     function testTransferOwnership(address _to) external {
         // call by non-owner, should revert
-        hevm.startPrank(address(1));
-        hevm.expectRevert("caller is not the owner");
+        vm.startPrank(address(1));
+        vm.expectRevert("caller is not the owner");
         whitelist.transferOwnership(_to);
-        hevm.stopPrank();
+        vm.stopPrank();
 
         // call by owner, should succeed
         if (_to == address(0)) {
-            hevm.expectRevert("new owner is the zero address");
+            vm.expectRevert("new owner is the zero address");
             whitelist.transferOwnership(_to);
         } else {
             assertEq(whitelist.owner(), address(this));
@@ -48,16 +48,16 @@ contract WhitelistTest is DSTestPlus {
         address[] memory _accounts = new address[](1);
         _accounts[0] = _to;
         // call by non-owner, should revert
-        hevm.startPrank(address(1));
-        hevm.expectRevert("caller is not the owner");
+        vm.startPrank(address(1));
+        vm.expectRevert("caller is not the owner");
         whitelist.updateWhitelistStatus(_accounts, true);
-        hevm.stopPrank();
+        vm.stopPrank();
 
         // call by owner, should succeed
-        assertBoolEq(whitelist.isSenderAllowed(_to), false);
+        assertEq(whitelist.isSenderAllowed(_to), false);
         whitelist.updateWhitelistStatus(_accounts, true);
-        assertBoolEq(whitelist.isSenderAllowed(_to), true);
+        assertEq(whitelist.isSenderAllowed(_to), true);
         whitelist.updateWhitelistStatus(_accounts, false);
-        assertBoolEq(whitelist.isSenderAllowed(_to), false);
+        assertEq(whitelist.isSenderAllowed(_to), false);
     }
 }

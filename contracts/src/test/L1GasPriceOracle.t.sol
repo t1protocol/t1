@@ -2,12 +2,12 @@
 
 pragma solidity ^0.8.25;
 
-import { DSTestPlus } from "solmate/test/utils/DSTestPlus.sol";
+import { Test } from "forge-std/Test.sol";
 
 import { L1GasPriceOracle } from "../L2/predeploys/L1GasPriceOracle.sol";
 import { Whitelist } from "../L2/predeploys/Whitelist.sol";
 
-contract L1GasPriceOracleTest is DSTestPlus {
+contract L1GasPriceOracleTest is Test {
     uint256 private constant PRECISION = 1e9;
     uint256 private constant MAX_OVERHEAD = 30_000_000 / 16;
     uint256 private constant MAX_SCALAR = 1000 * PRECISION;
@@ -31,13 +31,13 @@ contract L1GasPriceOracleTest is DSTestPlus {
         _overhead = bound(_overhead, 0, MAX_OVERHEAD);
 
         // call by non-owner, should revert
-        hevm.startPrank(address(1));
-        hevm.expectRevert("caller is not the owner");
+        vm.startPrank(address(1));
+        vm.expectRevert("caller is not the owner");
         oracle.setOverhead(_overhead);
-        hevm.stopPrank();
+        vm.stopPrank();
 
         // overhead is too large
-        hevm.expectRevert(L1GasPriceOracle.ErrExceedMaxOverhead.selector);
+        vm.expectRevert(L1GasPriceOracle.ErrExceedMaxOverhead.selector);
         oracle.setOverhead(MAX_OVERHEAD + 1);
 
         // call by owner, should succeed
@@ -50,13 +50,13 @@ contract L1GasPriceOracleTest is DSTestPlus {
         _scalar = bound(_scalar, 0, MAX_SCALAR);
 
         // call by non-owner, should revert
-        hevm.startPrank(address(1));
-        hevm.expectRevert("caller is not the owner");
+        vm.startPrank(address(1));
+        vm.expectRevert("caller is not the owner");
         oracle.setScalar(_scalar);
-        hevm.stopPrank();
+        vm.stopPrank();
 
         // scale is too large
-        hevm.expectRevert(L1GasPriceOracle.ErrExceedMaxScalar.selector);
+        vm.expectRevert(L1GasPriceOracle.ErrExceedMaxScalar.selector);
         oracle.setScalar(MAX_SCALAR + 1);
 
         // call by owner, should succeed
@@ -69,13 +69,13 @@ contract L1GasPriceOracleTest is DSTestPlus {
         _scalar = bound(_scalar, 0, MAX_COMMIT_SCALAR);
 
         // call by non-owner, should revert
-        hevm.startPrank(address(1));
-        hevm.expectRevert("caller is not the owner");
+        vm.startPrank(address(1));
+        vm.expectRevert("caller is not the owner");
         oracle.setCommitScalar(_scalar);
-        hevm.stopPrank();
+        vm.stopPrank();
 
         // scale is too large
-        hevm.expectRevert(L1GasPriceOracle.ErrExceedMaxCommitScalar.selector);
+        vm.expectRevert(L1GasPriceOracle.ErrExceedMaxCommitScalar.selector);
         oracle.setCommitScalar(MAX_COMMIT_SCALAR + 1);
 
         // call by owner, should succeed
@@ -88,13 +88,13 @@ contract L1GasPriceOracleTest is DSTestPlus {
         _scalar = bound(_scalar, 0, MAX_BLOB_SCALAR);
 
         // call by non-owner, should revert
-        hevm.startPrank(address(1));
-        hevm.expectRevert("caller is not the owner");
+        vm.startPrank(address(1));
+        vm.expectRevert("caller is not the owner");
         oracle.setBlobScalar(_scalar);
-        hevm.stopPrank();
+        vm.stopPrank();
 
         // scale is too large
-        hevm.expectRevert(L1GasPriceOracle.ErrExceedMaxBlobScalar.selector);
+        vm.expectRevert(L1GasPriceOracle.ErrExceedMaxBlobScalar.selector);
         oracle.setBlobScalar(MAX_COMMIT_SCALAR + 1);
 
         // call by owner, should succeed
@@ -104,13 +104,13 @@ contract L1GasPriceOracleTest is DSTestPlus {
     }
 
     function testUpdateWhitelist(address _newWhitelist) external {
-        hevm.assume(_newWhitelist != address(whitelist));
+        vm.assume(_newWhitelist != address(whitelist));
 
         // call by non-owner, should revert
-        hevm.startPrank(address(1));
-        hevm.expectRevert("caller is not the owner");
+        vm.startPrank(address(1));
+        vm.expectRevert("caller is not the owner");
         oracle.updateWhitelist(_newWhitelist);
-        hevm.stopPrank();
+        vm.stopPrank();
 
         // call by owner, should succeed
         assertEq(address(oracle.whitelist()), address(whitelist));
@@ -120,18 +120,18 @@ contract L1GasPriceOracleTest is DSTestPlus {
 
     function testEnableCurie() external {
         // call by non-owner, should revert
-        hevm.startPrank(address(1));
-        hevm.expectRevert("caller is not the owner");
+        vm.startPrank(address(1));
+        vm.expectRevert("caller is not the owner");
         oracle.enableCurie();
-        hevm.stopPrank();
+        vm.stopPrank();
 
         // call by owner, should succeed
-        assertBoolEq(oracle.isCurie(), false);
+        assertEq(oracle.isCurie(), false);
         oracle.enableCurie();
-        assertBoolEq(oracle.isCurie(), true);
+        assertEq(oracle.isCurie(), true);
 
         // enable twice, should revert
-        hevm.expectRevert(L1GasPriceOracle.ErrAlreadyInCurieFork.selector);
+        vm.expectRevert(L1GasPriceOracle.ErrAlreadyInCurieFork.selector);
         oracle.enableCurie();
     }
 
@@ -139,10 +139,10 @@ contract L1GasPriceOracleTest is DSTestPlus {
         _baseFee = bound(_baseFee, 0, 1e9 * 20_000); // max 20k gwei
 
         // call by non-owner, should revert
-        hevm.startPrank(address(1));
-        hevm.expectRevert(L1GasPriceOracle.ErrCallerNotWhitelisted.selector);
+        vm.startPrank(address(1));
+        vm.expectRevert(L1GasPriceOracle.ErrCallerNotWhitelisted.selector);
         oracle.setL1BaseFee(_baseFee);
-        hevm.stopPrank();
+        vm.stopPrank();
 
         // call by owner, should succeed
         assertEq(oracle.l1BaseFee(), 0);
@@ -155,10 +155,10 @@ contract L1GasPriceOracleTest is DSTestPlus {
         _blobBaseFee = bound(_blobBaseFee, 0, 1e9 * 20_000); // max 20k gwei
 
         // call by non-owner, should revert
-        hevm.startPrank(address(1));
-        hevm.expectRevert(L1GasPriceOracle.ErrCallerNotWhitelisted.selector);
+        vm.startPrank(address(1));
+        vm.expectRevert(L1GasPriceOracle.ErrCallerNotWhitelisted.selector);
         oracle.setL1BaseFeeAndBlobBaseFee(_baseFee, _blobBaseFee);
-        hevm.stopPrank();
+        vm.stopPrank();
 
         // call by owner, should succeed
         assertEq(oracle.l1BaseFee(), 0);

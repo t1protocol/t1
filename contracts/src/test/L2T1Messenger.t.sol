@@ -2,7 +2,7 @@
 
 pragma solidity ^0.8.25;
 
-import { DSTestPlus } from "solmate/test/utils/DSTestPlus.sol";
+import { Test } from "forge-std/Test.sol";
 import { ERC1967Proxy } from "@openzeppelin/contracts/proxy/ERC1967/ERC1967Proxy.sol";
 
 import { L1GasPriceOracle } from "../L2/predeploys/L1GasPriceOracle.sol";
@@ -15,7 +15,7 @@ import { L2T1Messenger } from "../L2/L2T1Messenger.sol";
 import { AddressAliasHelper } from "../libraries/common/AddressAliasHelper.sol";
 import { T1Constants } from "../libraries/constants/T1Constants.sol";
 
-contract L2T1MessengerTest is DSTestPlus {
+contract L2T1MessengerTest is Test {
     uint64 internal constant POLYGON_CHAIN_ID = 137;
     uint64 internal constant ARB_CHAIN_ID = 42_161;
 
@@ -71,28 +71,28 @@ contract L2T1MessengerTest is DSTestPlus {
     // https://www.notion.so/t1protocol/
     // Allow-certain-bridge-methods-onchain-to-be-only-called-by-Postman-identity-17b231194dc380799d13f78f1c3a51b1
     function skiptestRelayByCounterparty() external {
-        hevm.expectRevert("Caller is not L1T1Messenger");
+        vm.expectRevert("Caller is not L1T1Messenger");
         l2Messenger.relayMessage(address(this), address(this), 0, 0, new bytes(0));
     }
 
     function testForbidCallFromL1() external {
-        hevm.startPrank(AddressAliasHelper.applyL1ToL2Alias(address(l1Messenger)));
-        hevm.expectRevert("Forbid to call message queue");
+        vm.startPrank(AddressAliasHelper.applyL1ToL2Alias(address(l1Messenger)));
+        vm.expectRevert("Forbid to call message queue");
         l2Messenger.relayMessage(address(this), address(l2MessageQueue), 0, 0, new bytes(0));
 
-        hevm.expectRevert("Forbid to call self");
+        vm.expectRevert("Forbid to call self");
         l2Messenger.relayMessage(address(this), address(l2Messenger), 0, 0, new bytes(0));
-        hevm.stopPrank();
+        vm.stopPrank();
     }
 
     function testSendMessage(address callbackAddress) external {
-        hevm.assume(callbackAddress.code.length == 0);
-        hevm.assume(uint256(uint160(callbackAddress)) > 100); // ignore some precompile contracts
+        vm.assume(callbackAddress.code.length == 0);
+        vm.assume(uint256(uint160(callbackAddress)) > 100); // ignore some precompile contracts
         // Insufficient msg.value
-        hevm.expectRevert(abi.encodeWithSelector(L2T1Messenger.InsufficientMsgValue.selector, 1));
+        vm.expectRevert(abi.encodeWithSelector(L2T1Messenger.InsufficientMsgValue.selector, 1));
         l2Messenger.sendMessage(address(0), 1, new bytes(0), 21_000, ARB_CHAIN_ID, callbackAddress);
 
-        hevm.expectRevert(L2T1Messenger.InvalidDestinationChain.selector);
+        vm.expectRevert(L2T1Messenger.InvalidDestinationChain.selector);
         l2Messenger.sendMessage(address(0), 1, new bytes(0), 21_000, POLYGON_CHAIN_ID, callbackAddress);
 
         // succeed normally
@@ -116,7 +116,7 @@ contract L2T1MessengerTest is DSTestPlus {
 
         // failure case - 1 wei short
         uint256 _valueMinusOne = _value - 1;
-        hevm.expectRevert(abi.encodeWithSelector(L2T1Messenger.InsufficientMsgValue.selector, _value));
+        vm.expectRevert(abi.encodeWithSelector(L2T1Messenger.InsufficientMsgValue.selector, _value));
         l2Messenger.sendMessage{ value: _valueMinusOne }(
             address(0), 0, new bytes(0), gasLimit, ARB_CHAIN_ID, callbackAddress
         );
@@ -150,11 +150,11 @@ contract L2T1MessengerTest is DSTestPlus {
     function testAddChain() external {
         uint64 thisChainId = l2Messenger.chainId();
 
-        hevm.expectRevert(L2T1Messenger.CannotSupportCurrentChain.selector);
+        vm.expectRevert(L2T1Messenger.CannotSupportCurrentChain.selector);
         l2Messenger.addChain(thisChainId);
 
-        hevm.prank(address(1));
-        hevm.expectRevert("Ownable: caller is not the owner");
+        vm.prank(address(1));
+        vm.expectRevert("Ownable: caller is not the owner");
         l2Messenger.addChain(ARB_CHAIN_ID);
 
         l2Messenger.addChain(ARB_CHAIN_ID);
@@ -166,8 +166,8 @@ contract L2T1MessengerTest is DSTestPlus {
     }
 
     function testRemoveChain() external {
-        hevm.prank(address(1));
-        hevm.expectRevert("Ownable: caller is not the owner");
+        vm.prank(address(1));
+        vm.expectRevert("Ownable: caller is not the owner");
         l2Messenger.removeChain(ARB_CHAIN_ID);
 
         l2Messenger.removeChain(ARB_CHAIN_ID);
