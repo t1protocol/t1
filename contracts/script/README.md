@@ -92,9 +92,11 @@ Scripts to test the canonical bridge functionalities:
   - [Withdraw USDT from L2->L1](./test/WithdrawUsdtFromL2ToL1.s.sol)
 - Swaps
   - [Swap ERC20s against bridge reserves](./test/SwapERC20.s.sol)
-- Chore
-  - [Check Alice balances on L1/L2](./test/LogBalances.s.sol)
-- 7683
-  - [Create an intent to on L1 and fill it on L2](./test/7683E2E.s.sol)
 - Utility
   - [Log all balances from L1 & L2](./test/LogBalances.s.sol)
+
+
+Miscellaneous Scripts:
+- 7683
+  - [Create an intent on L1, fill it on L2, and settle it from L2](./test/7683E2E.s.sol)
+  - [Create an intent on L1, fill it on L2, and settle it from L1](./test/t1ERC7683PullE2E.s.sol)
