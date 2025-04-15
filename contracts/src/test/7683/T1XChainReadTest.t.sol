@@ -8,10 +8,10 @@ import { OnchainCrossChainOrder } from "intents-framework/ERC7683/IERC7683.sol";
 
 import { T1XChainReader } from "../../libraries/xChain/T1XChainReader.sol";
 import { T1XChainMessage } from "../../libraries/xChain/T1XChainMessage.sol";
-import { t1BasicSwapE2E } from "./t1BasicSwapE2E.t.sol";
+import { T1BasicSwapE2E } from "./T1BasicSwapE2E.t.sol";
 import { T1ERC7683Pull } from "../../7683/T1ERC7683Pull.sol";
 
-contract T1XChainReaderTest is t1BasicSwapE2E {
+contract T1XChainReaderTest is T1BasicSwapE2E {
     using TypeCasts for address;
 
     T1XChainReader internal originReader;
