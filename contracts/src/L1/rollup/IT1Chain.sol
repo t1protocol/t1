@@ -117,9 +117,10 @@ interface IT1Chain {
 
     /// @notice t1 batch finalization
     ///
-    /// @param withdrawRoot The withdraw trie root of current batch.
-    /// @param signature The ECDSA valid signature to match one of the provers
-    function finalizeBatchWithProof(bytes32 withdrawRoot, bytes calldata signature) external;
+    /// @param _batchIndex The index of the current batch.
+    /// @param _withdrawRoot The withdraw trie root of current batch.
+    /// @param _signature The ECDSA valid signature to match one of the provers
+    function finalizeBatchWithProof(uint256 _batchIndex, bytes32 _withdrawRoot, bytes calldata _signature) external;
 
     /// @notice Finalize a committed batch (with blob) on layer 1.
     ///

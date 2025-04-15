@@ -426,18 +426,17 @@ contract T1Chain is OwnableUpgradeable, PausableUpgradeable, IT1Chain {
 
     /// @inheritdoc IT1Chain
     function finalizeBatchWithProof(
-        //        bytes calldata _batchHeader,
+        uint256 _batchIndex,
         //        bytes32 _prevStateRoot,
         //        bytes32 _postStateRoot,
         bytes32 _withdrawRoot,
-        bytes calldata signature
+        bytes calldata _signature
     )
         //        bytes calldata _aggrProof
         external
         override
         whenNotPaused
     {
-        //    ) external override OnlyProver whenNotPaused {
         //        (uint256 batchPtr, bytes32 _batchHash, uint256 _batchIndex) = _beforeFinalizeBatch(
         //            _batchHeader,
         //            _postStateRoot
@@ -457,13 +456,13 @@ contract T1Chain is OwnableUpgradeable, PausableUpgradeable, IT1Chain {
         //        _afterFinalizeBatch(_totalL1MessagesPoppedOverall, _batchIndex, _batchHash, _postStateRoot,
         // _withdrawRoot);
         // Basic sanity check
-        if (signature.length != 65) revert ErrorIncorrectSignatureLength();
+        if (_signature.length != 65) revert ErrorIncorrectSignatureLength();
 
         // Hash the message with the standard Ethereum Signed Message prefix
         bytes32 ethSignedMessageHash = _withdrawRoot.toEthSignedMessageHash();
 
         // Recover the signer from the signature
-        address signer = ethSignedMessageHash.recover(signature);
+        address signer = ethSignedMessageHash.recover(_signature);
 
         // Verify that the recovered signer matches a prover
         if (!isProver[signer]) {
@@ -471,7 +470,7 @@ contract T1Chain is OwnableUpgradeable, PausableUpgradeable, IT1Chain {
         }
 
         // Now that the signature is verified, perform your internal logic
-        _afterFinalizeBatch(0, 1, "", "", _withdrawRoot);
+        _afterFinalizeBatch(0, _batchIndex, "", "", _withdrawRoot);
     }
 
     /// @inheritdoc IT1Chain
