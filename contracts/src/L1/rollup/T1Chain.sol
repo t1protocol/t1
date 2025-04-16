@@ -165,6 +165,9 @@ contract T1Chain is OwnableUpgradeable, PausableUpgradeable, IT1Chain {
 
     /// @inheritdoc IT1Chain
     mapping(uint256 => bytes32) public override withdrawRoots;
+
+    /// @inheritdoc IT1Chain
+    mapping(uint256 => bytes32) public override proofOfFill7683Roots;
     /**
      *
      * Function Modifiers *
@@ -430,7 +433,9 @@ contract T1Chain is OwnableUpgradeable, PausableUpgradeable, IT1Chain {
         //        bytes32 _prevStateRoot,
         //        bytes32 _postStateRoot,
         bytes32 _withdrawRoot,
-        bytes calldata signature
+        bytes calldata withdrawRootSignature,
+        bytes32 _proofOfFill7683Root,
+        bytes calldata proofOfFillRootSignature
     )
         //        bytes calldata _aggrProof
         external
@@ -442,7 +447,6 @@ contract T1Chain is OwnableUpgradeable, PausableUpgradeable, IT1Chain {
         //            _batchHeader,
         //            _postStateRoot
         //        );
-        //        // TODO: Diego to replace following with verifying TEE signature
         //        // verify batch
         //        IRollupVerifier(verifier).verifyAggregateProof(0, _batchIndex, _aggrProof, _publicInputHash);
 
@@ -456,22 +460,11 @@ contract T1Chain is OwnableUpgradeable, PausableUpgradeable, IT1Chain {
 
         //        _afterFinalizeBatch(_totalL1MessagesPoppedOverall, _batchIndex, _batchHash, _postStateRoot,
         // _withdrawRoot);
-        // Basic sanity check
-        if (signature.length != 65) revert ErrorIncorrectSignatureLength();
-
-        // Hash the message with the standard Ethereum Signed Message prefix
-        bytes32 ethSignedMessageHash = _withdrawRoot.toEthSignedMessageHash();
-
-        // Recover the signer from the signature
-        address signer = ethSignedMessageHash.recover(signature);
-
-        // Verify that the recovered signer matches a prover
-        if (!isProver[signer]) {
-            revert ErrorIncorrectSigner(signer);
-        }
+        _checkSignedByProver(withdrawRootSignature, _withdrawRoot);
+        _checkSignedByProver(proofOfFillRootSignature, _proofOfFill7683Root);
 
         // Now that the signature is verified, perform your internal logic
-        _afterFinalizeBatch(0, 1, "", "", _withdrawRoot);
+        _afterFinalizeBatch(0, 1, "", "", _withdrawRoot, _proofOfFill7683Root);
     }
 
     /// @inheritdoc IT1Chain
@@ -531,7 +524,7 @@ contract T1Chain is OwnableUpgradeable, PausableUpgradeable, IT1Chain {
             BatchHeaderV0Codec.getL1MessagePopped(batchPtr)
         );
 
-        _afterFinalizeBatch(_totalL1MessagesPoppedOverall, _batchIndex, _batchHash, _postStateRoot, _withdrawRoot);
+        _afterFinalizeBatch(_totalL1MessagesPoppedOverall, _batchIndex, _batchHash, _postStateRoot, _withdrawRoot, "");
     }
 
     /// @inheritdoc IT1Chain
@@ -715,12 +708,14 @@ contract T1Chain is OwnableUpgradeable, PausableUpgradeable, IT1Chain {
     /// @param _batchHash The hash of current batch.
     /// @param _postStateRoot The state root after current batch.
     /// @param _withdrawRoot The withdraw trie root after current batch.
+    /// @param _proofOfFill7683Root The proof of fill trie root after current batch.
     function _afterFinalizeBatch(
         uint256, /*_totalL1MessagesPoppedOverall*/
         uint256 _batchIndex,
         bytes32 _batchHash,
         bytes32 _postStateRoot,
-        bytes32 _withdrawRoot
+        bytes32 _withdrawRoot,
+        bytes32 _proofOfFill7683Root
     )
         internal
     {
@@ -733,6 +728,7 @@ contract T1Chain is OwnableUpgradeable, PausableUpgradeable, IT1Chain {
         //        // record state root and withdraw root
         //        finalizedStateRoots[_batchIndex] = _postStateRoot;
         withdrawRoots[_batchIndex] = _withdrawRoot;
+        proofOfFill7683Roots[_batchIndex] = _proofOfFill7683Root;
 
         //        // Pop finalized and non-skipped message from L1MessageQueue.
         //        _finalizePoppedL1Messages(_totalL1MessagesPoppedOverall);
@@ -1247,6 +1243,22 @@ contract T1Chain is OwnableUpgradeable, PausableUpgradeable, IT1Chain {
                 IL1MessageQueue(messageQueue).popCrossDomainMessage(startIndex, _count, bitmap);
                 startIndex += 256;
             }
+        }
+    }
+
+    function _checkSignedByProver(bytes calldata signature, bytes32 message) internal {
+        // Basic sanity check
+        if (signature.length != 65) revert ErrorIncorrectSignatureLength();
+
+        // Hash the message with the standard Ethereum Signed Message prefix
+        bytes32 ethSignedMessageHash = message.toEthSignedMessageHash();
+
+        // Recover the signer from the signature
+        address signer = ethSignedMessageHash.recover(signature);
+
+        // Verify that the recovered signer matches a prover
+        if (!isProver[signer]) {
+            revert ErrorIncorrectSigner(signer);
         }
     }
 }
