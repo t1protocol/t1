@@ -2,11 +2,11 @@
 
 pragma solidity ^0.8.25;
 
-import { DSTestPlus } from "solmate/test/utils/DSTestPlus.sol";
+import { Test } from "forge-std/Test.sol";
 
 import { T1Owner } from "../misc/T1Owner.sol";
 
-contract T1OwnerTest is DSTestPlus {
+contract T1OwnerTest is Test {
     event GrantAccess(bytes32 indexed role, address indexed target, bytes4[] selectors);
     event RevokeAccess(bytes32 indexed role, address indexed target, bytes4[] selectors);
     event Call();
@@ -19,13 +19,13 @@ contract T1OwnerTest is DSTestPlus {
 
     function testUpdateAccess() external {
         // not admin, evert
-        hevm.startPrank(address(1));
-        hevm.expectRevert(
+        vm.startPrank(address(1));
+        vm.expectRevert(
             // solhint-disable-next-line max-line-length
             "AccessControl: account 0x0000000000000000000000000000000000000001 is missing role 0x0000000000000000000000000000000000000000000000000000000000000000"
         );
         owner.updateAccess(address(0), new bytes4[](0), bytes32(0), true);
-        hevm.stopPrank();
+        vm.stopPrank();
 
         bytes4[] memory _selectors;
         bytes32[] memory _roles;
@@ -36,7 +36,7 @@ contract T1OwnerTest is DSTestPlus {
         _selectors = new bytes4[](1);
         _selectors[0] = T1OwnerTest.revertOnCall.selector;
 
-        hevm.expectEmit(true, true, false, true);
+        vm.expectEmit(true, true, false, true);
         emit GrantAccess(bytes32(uint256(1)), address(this), _selectors);
 
         owner.updateAccess(address(this), _selectors, bytes32(uint256(1)), true);
@@ -44,7 +44,7 @@ contract T1OwnerTest is DSTestPlus {
         assertEq(1, _roles.length);
         assertEq(_roles[0], bytes32(uint256(1)));
 
-        hevm.expectEmit(true, true, false, true);
+        vm.expectEmit(true, true, false, true);
         emit RevokeAccess(bytes32(uint256(1)), address(this), _selectors);
 
         owner.updateAccess(address(this), _selectors, bytes32(uint256(1)), false);
@@ -54,17 +54,17 @@ contract T1OwnerTest is DSTestPlus {
 
     function testAdminExecute() external {
         // call with revert
-        hevm.expectRevert("Called");
+        vm.expectRevert("Called");
         owner.execute(address(this), 0, abi.encodeWithSelector(T1OwnerTest.revertOnCall.selector), bytes32(0));
 
         // call with emit
-        hevm.expectEmit(false, false, false, true);
+        vm.expectEmit(false, false, false, true);
         emit Call();
         owner.execute(address(this), 0, abi.encodeWithSelector(T1OwnerTest.emitOnCall.selector), bytes32(0));
     }
 
     function testExecute(bytes32 _role) external {
-        hevm.assume(_role != bytes32(0));
+        vm.assume(_role != bytes32(0));
 
         bytes4[] memory _selectors = new bytes4[](2);
         _selectors[0] = T1OwnerTest.revertOnCall.selector;
@@ -73,17 +73,17 @@ contract T1OwnerTest is DSTestPlus {
         owner.grantRole(_role, address(this));
 
         // no access, revert
-        hevm.expectRevert("no access");
+        vm.expectRevert("no access");
         owner.execute(address(this), 0, abi.encodeWithSelector(T1OwnerTest.revertOnCall.selector), _role);
 
         owner.updateAccess(address(this), _selectors, _role, true);
 
         // call with revert
-        hevm.expectRevert("Called");
+        vm.expectRevert("Called");
         owner.execute(address(this), 0, abi.encodeWithSelector(T1OwnerTest.revertOnCall.selector), _role);
 
         // call with emit
-        hevm.expectEmit(false, false, false, true);
+        vm.expectEmit(false, false, false, true);
         emit Call();
         owner.execute(address(this), 0, abi.encodeWithSelector(T1OwnerTest.emitOnCall.selector), _role);
     }

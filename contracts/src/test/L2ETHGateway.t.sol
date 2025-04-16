@@ -45,7 +45,7 @@ contract L2ETHGatewayTest is L2GatewayTestBase {
         assertEq(address(router), gateway.router());
         assertEq(address(l2Messenger), gateway.messenger());
 
-        hevm.expectRevert("Initializable: contract is already initialized");
+        vm.expectRevert("Initializable: contract is already initialized");
         gateway.initialize();
     }
 
@@ -117,7 +117,7 @@ contract L2ETHGatewayTest is L2GatewayTestBase {
         amount = bound(amount, 1, address(this).balance / 2);
 
         // revert when caller is not messenger
-        hevm.expectRevert(ErrorCallerIsNotMessenger.selector);
+        vm.expectRevert(ErrorCallerIsNotMessenger.selector);
         gateway.finalizeDepositETH(sender, recipient, amount, dataToCall);
 
         MockT1Messenger mockMessenger = new MockT1Messenger();
@@ -125,7 +125,7 @@ contract L2ETHGatewayTest is L2GatewayTestBase {
         gateway.initialize();
 
         // only call by counterpart
-        hevm.expectRevert(ErrorCallerIsNotCounterpartGateway.selector);
+        vm.expectRevert(ErrorCallerIsNotCounterpartGateway.selector);
         mockMessenger.callTarget(
             address(gateway),
             abi.encodeWithSelector(gateway.finalizeDepositETH.selector, sender, recipient, amount, dataToCall)
@@ -134,14 +134,14 @@ contract L2ETHGatewayTest is L2GatewayTestBase {
         mockMessenger.setXDomainMessageSender(address(counterpartGateway));
 
         // msg.value mismatch
-        hevm.expectRevert("msg.value mismatch");
+        vm.expectRevert("msg.value mismatch");
         mockMessenger.callTarget(
             address(gateway),
             abi.encodeWithSelector(gateway.finalizeDepositETH.selector, sender, recipient, amount, dataToCall)
         );
 
         // ETH transfer failed
-        hevm.expectRevert("ETH transfer failed");
+        vm.expectRevert("ETH transfer failed");
         mockMessenger.callTarget{ value: amount }(
             address(gateway),
             abi.encodeWithSelector(gateway.finalizeDepositETH.selector, sender, address(this), amount, dataToCall)
@@ -176,20 +176,20 @@ contract L2ETHGatewayTest is L2GatewayTestBase {
 
         // counterpart is not L1ETHGateway
         // emit FailedRelayedMessage from L2T1Messenger
-        hevm.expectEmit(true, false, false, true);
+        vm.expectEmit(true, false, false, true);
         emit FailedRelayedMessage(keccak256(xDomainCalldata));
 
         uint256 messengerBalance = address(l2Messenger).balance;
         uint256 recipientBalance = recipient.balance;
-        assertBoolEq(false, l2Messenger.isL1MessageExecuted(keccak256(xDomainCalldata)));
-        hevm.startPrank(AddressAliasHelper.applyL1ToL2Alias(address(l1Messenger)));
+        assertEq(false, l2Messenger.isL1MessageExecuted(keccak256(xDomainCalldata)));
+        vm.startPrank(AddressAliasHelper.applyL1ToL2Alias(address(l1Messenger)));
         l2Messenger.relayMessage(
             address(uint160(address(counterpartGateway)) + 1), address(gateway), amount, 0, message
         );
-        hevm.stopPrank();
+        vm.stopPrank();
         assertEq(messengerBalance, address(l2Messenger).balance);
         assertEq(recipientBalance, recipient.balance);
-        assertBoolEq(false, l2Messenger.isL1MessageExecuted(keccak256(xDomainCalldata)));
+        assertEq(false, l2Messenger.isL1MessageExecuted(keccak256(xDomainCalldata)));
     }
 
     function testFinalizeWithdrawETH(address sender, uint256 amount, bytes memory dataToCall) public {
@@ -215,25 +215,25 @@ contract L2ETHGatewayTest is L2GatewayTestBase {
 
         // emit FinalizeDepositETH from L2ETHGateway
         {
-            hevm.expectEmit(true, true, false, true);
+            vm.expectEmit(true, true, false, true);
             emit FinalizeDepositETH(sender, address(recipient), amount, dataToCall);
         }
 
         // emit RelayedMessage from L2T1Messenger
         {
-            hevm.expectEmit(true, false, false, true);
+            vm.expectEmit(true, false, false, true);
             emit RelayedMessage(keccak256(xDomainCalldata));
         }
 
         uint256 messengerBalance = address(l2Messenger).balance;
         uint256 recipientBalance = address(recipient).balance;
-        assertBoolEq(false, l2Messenger.isL1MessageExecuted(keccak256(xDomainCalldata)));
-        hevm.startPrank(AddressAliasHelper.applyL1ToL2Alias(address(l1Messenger)));
+        assertEq(false, l2Messenger.isL1MessageExecuted(keccak256(xDomainCalldata)));
+        vm.startPrank(AddressAliasHelper.applyL1ToL2Alias(address(l1Messenger)));
         l2Messenger.relayMessage(address(counterpartGateway), address(gateway), amount, 0, message);
-        hevm.stopPrank();
+        vm.stopPrank();
         assertEq(messengerBalance - amount, address(l2Messenger).balance);
         assertEq(recipientBalance + amount, address(recipient).balance);
-        assertBoolEq(true, l2Messenger.isL1MessageExecuted(keccak256(xDomainCalldata)));
+        assertEq(true, l2Messenger.isL1MessageExecuted(keccak256(xDomainCalldata)));
     }
 
     function _withdrawETH(bool useRouter, uint256 amount, uint256 gasLimit, uint256 feePerGas) private {
@@ -257,7 +257,7 @@ contract L2ETHGatewayTest is L2GatewayTestBase {
         );
 
         if (amount == 0) {
-            hevm.expectRevert("withdraw zero eth");
+            vm.expectRevert("withdraw zero eth");
             if (useRouter) {
                 router.withdrawETH{ value: amount }(amount, gasLimit);
             } else {
@@ -266,13 +266,13 @@ contract L2ETHGatewayTest is L2GatewayTestBase {
         } else {
             // emit AppendMessage from L2MessageQueue
             {
-                hevm.expectEmit(false, false, false, true);
+                vm.expectEmit(false, false, false, true);
                 emit AppendMessage(0, keccak256(xDomainCalldata));
             }
 
             // emit SentMessage from L2T1Messenger
             {
-                hevm.expectEmit(true, true, false, true);
+                vm.expectEmit(true, true, false, true);
                 emit SentMessage(
                     address(gateway),
                     address(counterpartGateway),
@@ -286,7 +286,7 @@ contract L2ETHGatewayTest is L2GatewayTestBase {
             }
 
             // emit WithdrawETH from L2ETHGateway
-            hevm.expectEmit(true, true, false, true);
+            vm.expectEmit(true, true, false, true);
             emit WithdrawETH(address(this), address(this), amount, new bytes(0));
 
             uint256 messengerBalance = address(l2Messenger).balance;
@@ -332,7 +332,7 @@ contract L2ETHGatewayTest is L2GatewayTestBase {
         );
 
         if (amount == 0) {
-            hevm.expectRevert("withdraw zero eth");
+            vm.expectRevert("withdraw zero eth");
             if (useRouter) {
                 router.withdrawETH{ value: amount }(recipient, amount, gasLimit);
             } else {
@@ -341,13 +341,13 @@ contract L2ETHGatewayTest is L2GatewayTestBase {
         } else {
             // emit AppendMessage from L2MessageQueue
             {
-                hevm.expectEmit(false, false, false, true);
+                vm.expectEmit(false, false, false, true);
                 emit AppendMessage(0, keccak256(xDomainCalldata));
             }
 
             // emit SentMessage from L2T1Messenger
             {
-                hevm.expectEmit(true, true, false, true);
+                vm.expectEmit(true, true, false, true);
                 emit SentMessage(
                     address(gateway),
                     address(counterpartGateway),
@@ -361,7 +361,7 @@ contract L2ETHGatewayTest is L2GatewayTestBase {
             }
 
             // emit WithdrawETH from L2ETHGateway
-            hevm.expectEmit(true, true, false, true);
+            vm.expectEmit(true, true, false, true);
             emit WithdrawETH(address(this), recipient, amount, new bytes(0));
 
             uint256 messengerBalance = address(l2Messenger).balance;
@@ -408,7 +408,7 @@ contract L2ETHGatewayTest is L2GatewayTestBase {
         );
 
         if (amount == 0) {
-            hevm.expectRevert("withdraw zero eth");
+            vm.expectRevert("withdraw zero eth");
             if (useRouter) {
                 router.withdrawETHAndCall{ value: amount }(recipient, amount, dataToCall, gasLimit);
             } else {
@@ -417,13 +417,13 @@ contract L2ETHGatewayTest is L2GatewayTestBase {
         } else {
             // emit AppendMessage from L2MessageQueue
             {
-                hevm.expectEmit(false, false, false, true);
+                vm.expectEmit(false, false, false, true);
                 emit AppendMessage(0, keccak256(xDomainCalldata));
             }
 
             // emit SentMessage from L2T1Messenger
             {
-                hevm.expectEmit(true, true, false, true);
+                vm.expectEmit(true, true, false, true);
                 emit SentMessage(
                     address(gateway),
                     address(counterpartGateway),
@@ -437,7 +437,7 @@ contract L2ETHGatewayTest is L2GatewayTestBase {
             }
 
             // emit WithdrawETH from L2ETHGateway
-            hevm.expectEmit(true, true, false, true);
+            vm.expectEmit(true, true, false, true);
             emit WithdrawETH(address(this), recipient, amount, dataToCall);
 
             uint256 messengerBalance = address(l2Messenger).balance;

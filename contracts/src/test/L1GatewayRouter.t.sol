@@ -2,11 +2,9 @@
 
 pragma solidity ^0.8.25;
 
-import { StdUtils } from "forge-std/StdUtils.sol";
-
 import { WETH } from "solmate/tokens/WETH.sol";
 import { MockERC20 } from "solmate/test/utils/mocks/MockERC20.sol";
-import { DSTestPlus } from "solmate/test/utils/DSTestPlus.sol";
+import { Test } from "forge-std/Test.sol";
 
 import { ITransparentUpgradeableProxy } from "@openzeppelin/contracts/proxy/transparent/TransparentUpgradeableProxy.sol";
 
@@ -136,18 +134,18 @@ contract L1GatewayRouterTest is L1GatewayTestBase, DeployPermit2, PermitSignatur
         );
         assertEq(address(l1StandardERC20Gateway), router.getERC20Gateway(address(l1Token)));
 
-        hevm.expectRevert("Initializable: contract is already initialized");
+        vm.expectRevert("Initializable: contract is already initialized");
         router.initialize(address(l1ETHGateway), address(l1StandardERC20Gateway), address(0));
     }
 
     function testSetEthGateway() public {
-        hevm.startPrank(address(1));
-        hevm.expectRevert("Ownable: caller is not the owner");
+        vm.startPrank(address(1));
+        vm.expectRevert("Ownable: caller is not the owner");
         router.setETHGateway(address(2));
-        hevm.stopPrank();
+        vm.stopPrank();
 
         // set by owner, should succeed
-        hevm.expectEmit(true, true, true, true);
+        vm.expectEmit(true, true, true, true);
         emit IL1GatewayRouter.SetETHGateway(address(l1ETHGateway), address(2));
 
         router.setETHGateway(address(2));
@@ -158,13 +156,13 @@ contract L1GatewayRouterTest is L1GatewayTestBase, DeployPermit2, PermitSignatur
         router.setDefaultERC20Gateway(address(0));
 
         // set by non-owner, should revert
-        hevm.startPrank(address(1));
-        hevm.expectRevert("Ownable: caller is not the owner");
+        vm.startPrank(address(1));
+        vm.expectRevert("Ownable: caller is not the owner");
         router.setDefaultERC20Gateway(address(l1StandardERC20Gateway));
-        hevm.stopPrank();
+        vm.stopPrank();
 
         // set by owner, should succeed
-        hevm.expectEmit(true, true, false, true);
+        vm.expectEmit(true, true, false, true);
         emit IL1GatewayRouter.SetDefaultERC20Gateway(address(0), address(l1StandardERC20Gateway));
 
         assertEq(address(0), router.getERC20Gateway(address(l1Token)));
@@ -175,13 +173,13 @@ contract L1GatewayRouterTest is L1GatewayTestBase, DeployPermit2, PermitSignatur
     }
 
     function testSetPermit2() public {
-        hevm.startPrank(address(1));
-        hevm.expectRevert("Ownable: caller is not the owner");
+        vm.startPrank(address(1));
+        vm.expectRevert("Ownable: caller is not the owner");
         router.setPermit2(address(2));
-        hevm.stopPrank();
+        vm.stopPrank();
 
         // set by owner, should succeed
-        hevm.expectEmit(true, true, true, true);
+        vm.expectEmit(true, true, true, true);
         emit IL1GatewayRouter.SetPermit2(permit2, address(2));
 
         router.setPermit2(address(2));
@@ -189,13 +187,13 @@ contract L1GatewayRouterTest is L1GatewayTestBase, DeployPermit2, PermitSignatur
     }
 
     function testSetMM() public {
-        hevm.startPrank(address(1));
-        hevm.expectRevert("Ownable: caller is not the owner");
+        vm.startPrank(address(1));
+        vm.expectRevert("Ownable: caller is not the owner");
         router.setMM(address(2));
-        hevm.stopPrank();
+        vm.stopPrank();
 
         // set by owner, should succeed
-        hevm.expectEmit(true, true, true, true);
+        vm.expectEmit(true, true, true, true);
         emit IL1GatewayRouter.SetMM(0xb4c79daB8f259C7Aee6E5b2Aa729821864227e84, address(2));
 
         router.setMM(address(2));
@@ -208,9 +206,9 @@ contract L1GatewayRouterTest is L1GatewayTestBase, DeployPermit2, PermitSignatur
         // length mismatch, should revert
         address[] memory empty = new address[](0);
         address[] memory single = new address[](1);
-        hevm.expectRevert("length mismatch");
+        vm.expectRevert("length mismatch");
         router.setERC20Gateway(empty, single);
-        hevm.expectRevert("length mismatch");
+        vm.expectRevert("length mismatch");
         router.setERC20Gateway(single, empty);
 
         // set by owner, should succeed
@@ -219,7 +217,7 @@ contract L1GatewayRouterTest is L1GatewayTestBase, DeployPermit2, PermitSignatur
         _tokens[0] = address(l1Token);
         _gateways[0] = address(l1StandardERC20Gateway);
 
-        hevm.expectEmit(true, true, true, true);
+        vm.expectEmit(true, true, true, true);
         emit IL1GatewayRouter.SetERC20Gateway(address(l1Token), address(0), address(l1StandardERC20Gateway));
 
         assertEq(address(0), router.getERC20Gateway(address(l1Token)));
@@ -228,32 +226,32 @@ contract L1GatewayRouterTest is L1GatewayTestBase, DeployPermit2, PermitSignatur
     }
 
     function testFinalizeWithdrawERC20() public {
-        hevm.expectRevert("should never be called");
+        vm.expectRevert("should never be called");
         router.finalizeWithdrawERC20(address(0), address(0), address(0), address(0), 0, "");
     }
 
     function testFinalizeWithdrawETH() public {
-        hevm.expectRevert("should never be called");
+        vm.expectRevert("should never be called");
         router.finalizeWithdrawETH(address(0), address(0), 0, "");
     }
 
     function testRequestERC20(address _sender, address _token, uint256 _amount) public {
-        hevm.expectRevert("Only in deposit context");
+        vm.expectRevert("Only in deposit context");
         router.requestERC20(_sender, _token, _amount);
     }
 
     function testSwapERC20WithWitness() public {
         uint256 alicePrivateKey = 0xa11ce;
-        address alice = hevm.addr(alicePrivateKey);
+        address alice = vm.addr(alicePrivateKey);
 
         uint256 inputTokenAmount = 2e18;
         uint256 outputTokenAmount = 2e18;
 
         usdt.mint(alice, inputTokenAmount);
 
-        hevm.startPrank(alice);
+        vm.startPrank(alice);
         usdt.approve(permit2, type(uint256).max);
-        hevm.stopPrank();
+        vm.stopPrank();
 
         IL1GatewayRouter.SwapParams memory params = defaultWitnessAndSwapParams();
         params.owner = alice;
@@ -281,7 +279,7 @@ contract L1GatewayRouterTest is L1GatewayTestBase, DeployPermit2, PermitSignatur
         uint256 outputStartBalanceFrom = aave.balanceOf(address(l1StandardERC20Gateway));
         uint256 outputStartBalanceTo = aave.balanceOf(alice);
 
-        hevm.expectEmit(true, true, true, true);
+        vm.expectEmit(true, true, true, true);
         emit IL1GatewayRouter.Swap(
             alice,
             params.permit.permitted.token,
@@ -302,16 +300,16 @@ contract L1GatewayRouterTest is L1GatewayTestBase, DeployPermit2, PermitSignatur
 
     function testSwapERC20inByWETH() public {
         uint256 alicePrivateKey = 0xa11ce;
-        address alice = hevm.addr(alicePrivateKey);
+        address alice = vm.addr(alicePrivateKey);
 
         uint256 inputTokenAmount = 1 ether;
         uint256 outputTokenAmount = 3e9; // 3K USDT
 
         weth.transfer(alice, inputTokenAmount);
 
-        hevm.startPrank(alice);
+        vm.startPrank(alice);
         weth.approve(permit2, type(uint256).max);
-        hevm.stopPrank();
+        vm.stopPrank();
 
         IL1GatewayRouter.SwapParams memory params = defaultWitnessAndSwapParams();
         params.owner = alice;
@@ -349,7 +347,7 @@ contract L1GatewayRouterTest is L1GatewayTestBase, DeployPermit2, PermitSignatur
 
     function testSwapERC20outForWETH() public {
         uint256 alicePrivateKey = 0xa11ce;
-        address alice = hevm.addr(alicePrivateKey);
+        address alice = vm.addr(alicePrivateKey);
 
         uint256 inputTokenAmount = 3e9; // 3K USDT
         uint256 outputTokenAmount = 1 ether;
@@ -357,9 +355,9 @@ contract L1GatewayRouterTest is L1GatewayTestBase, DeployPermit2, PermitSignatur
         usdt.mint(alice, inputTokenAmount);
         weth.transfer(address(l1WETHGateway), outputTokenAmount);
 
-        hevm.startPrank(alice);
+        vm.startPrank(alice);
         usdt.approve(permit2, type(uint256).max);
-        hevm.stopPrank();
+        vm.stopPrank();
 
         IL1GatewayRouter.SwapParams memory params = defaultWitnessAndSwapParams();
         params.owner = alice;
@@ -410,15 +408,15 @@ contract L1GatewayRouterTest is L1GatewayTestBase, DeployPermit2, PermitSignatur
             address(router)
         );
 
-        hevm.expectRevert(InvalidSigner.selector);
+        vm.expectRevert(InvalidSigner.selector);
         router.swapERC20(params);
     }
 
     function testSwapERC20RevertInvalidCaller() public {
         IL1GatewayRouter.SwapParams memory params = defaultWitnessAndSwapParams();
 
-        hevm.prank(address(1));
-        hevm.expectRevert("Only the market maker");
+        vm.prank(address(1));
+        vm.expectRevert("Only the market maker");
         router.swapERC20(params);
     }
 
@@ -426,7 +424,7 @@ contract L1GatewayRouterTest is L1GatewayTestBase, DeployPermit2, PermitSignatur
         IL1GatewayRouter.SwapParams memory params = defaultWitnessAndSwapParams();
         params.owner = address(0);
 
-        hevm.expectRevert("Invalid owner address");
+        vm.expectRevert("Invalid owner address");
         router.swapERC20(params);
     }
 
@@ -434,7 +432,7 @@ contract L1GatewayRouterTest is L1GatewayTestBase, DeployPermit2, PermitSignatur
         IL1GatewayRouter.SwapParams memory params = defaultWitnessAndSwapParams();
         params.permit.permitted.token = address(0);
 
-        hevm.expectRevert("Invalid input token address");
+        vm.expectRevert("Invalid input token address");
         router.swapERC20(params);
     }
 
@@ -442,7 +440,7 @@ contract L1GatewayRouterTest is L1GatewayTestBase, DeployPermit2, PermitSignatur
         IL1GatewayRouter.SwapParams memory params = defaultWitnessAndSwapParams();
         params.witness.outputTokenAddress = address(0);
 
-        hevm.expectRevert("Invalid output token address");
+        vm.expectRevert("Invalid output token address");
         router.swapERC20(params);
     }
 
@@ -450,7 +448,7 @@ contract L1GatewayRouterTest is L1GatewayTestBase, DeployPermit2, PermitSignatur
         IL1GatewayRouter.SwapParams memory params = defaultWitnessAndSwapParams();
         params.permit.permitted.token = address(aave);
 
-        hevm.expectRevert("Cannot swap the same token");
+        vm.expectRevert("Cannot swap the same token");
         router.swapERC20(params);
     }
 
@@ -458,7 +456,7 @@ contract L1GatewayRouterTest is L1GatewayTestBase, DeployPermit2, PermitSignatur
         IL1GatewayRouter.SwapParams memory params = defaultWitnessAndSwapParams();
         params.permit.permitted.amount = 0;
 
-        hevm.expectRevert("Input amount must be > than 0");
+        vm.expectRevert("Input amount must be > than 0");
         router.swapERC20(params);
     }
 
@@ -466,7 +464,7 @@ contract L1GatewayRouterTest is L1GatewayTestBase, DeployPermit2, PermitSignatur
         IL1GatewayRouter.SwapParams memory params = defaultWitnessAndSwapParams();
         params.witness.outputTokenAmount = 0;
 
-        hevm.expectRevert("Output amount must be > than 0");
+        vm.expectRevert("Output amount must be > than 0");
         router.swapERC20(params);
     }
 
@@ -474,7 +472,7 @@ contract L1GatewayRouterTest is L1GatewayTestBase, DeployPermit2, PermitSignatur
         IL1GatewayRouter.SwapParams memory params = defaultWitnessAndSwapParams();
         params.witness.outputTokenAmount = 2e21;
 
-        hevm.expectRevert("Insufficient reserves");
+        vm.expectRevert("Insufficient reserves");
         router.swapERC20(params);
     }
 
@@ -491,7 +489,7 @@ contract L1GatewayRouterTest is L1GatewayTestBase, DeployPermit2, PermitSignatur
             ),
             true
         );
-        hevm.expectRevert("Only not in context");
+        vm.expectRevert("Only not in context");
         router.depositERC20(address(reentrantToken), 1, 0);
 
         reentrantToken.setReentrantCall(
@@ -502,7 +500,7 @@ contract L1GatewayRouterTest is L1GatewayTestBase, DeployPermit2, PermitSignatur
             ),
             false
         );
-        hevm.expectRevert("Only not in context");
+        vm.expectRevert("Only not in context");
         router.depositERC20(address(reentrantToken), 1, 0);
     }
 
@@ -521,19 +519,5 @@ contract L1GatewayRouterTest is L1GatewayTestBase, DeployPermit2, PermitSignatur
         });
 
         return IL1GatewayRouter.SwapParams({ permit: permit, owner: address(1), witness: witness, sig: bytes("") });
-    }
-
-    // Override to prefer StdUtils bouns()
-    function bound(
-        uint256 x,
-        uint256 min,
-        uint256 max
-    )
-        internal
-        pure
-        override(DSTestPlus, StdUtils)
-        returns (uint256)
-    {
-        return StdUtils.bound(x, min, max); // Explicitly choose StdUtils version
     }
 }

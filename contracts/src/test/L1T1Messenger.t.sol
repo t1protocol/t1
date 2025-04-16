@@ -32,7 +32,7 @@ contract L1T1MessengerTest is L1GatewayTestBase {
         IL1T1Messenger.L2MessageProof memory proof;
         proof.batchIndex = rollup.lastFinalizedBatchIndex();
 
-        hevm.expectRevert("Forbid to call message queue");
+        vm.expectRevert("Forbid to call message queue");
         l1Messenger.relayMessageWithProof(address(this), address(messageQueue), 0, 0, new bytes(0), proof);
     }
 
@@ -51,19 +51,19 @@ contract L1T1MessengerTest is L1GatewayTestBase {
         IL1T1Messenger.L2MessageProof memory proof;
         proof.batchIndex = rollup.lastFinalizedBatchIndex();
 
-        hevm.expectRevert("Forbid to call self");
+        vm.expectRevert("Forbid to call self");
         l1Messenger.relayMessageWithProof(address(this), address(l1Messenger), 0, 0, new bytes(0), proof);
     }
 
     function testSendMessage(uint256 exceedValue, address refundAddress) external {
-        hevm.assume(refundAddress.code.length == 0);
-        hevm.assume(uint256(uint160(refundAddress)) > 100); // ignore some precompile contracts
-        hevm.assume(refundAddress != address(0x000000000000000000636F6e736F6c652e6c6f67)); // ignore console/console2
+        vm.assume(refundAddress.code.length == 0);
+        vm.assume(uint256(uint160(refundAddress)) > 100); // ignore some precompile contracts
+        vm.assume(refundAddress != address(0x000000000000000000636F6e736F6c652e6c6f67)); // ignore console/console2
 
         exceedValue = bound(exceedValue, 1, address(this).balance / 2);
 
         // Insufficient msg.value
-        hevm.expectRevert("Insufficient msg.value");
+        vm.expectRevert("Insufficient msg.value");
         l1Messenger.sendMessage(
             address(0), 1, new bytes(0), DEFAULT_GAS_LIMIT, T1Constants.T1_DEVNET_CHAIN_ID, refundAddress
         );
@@ -77,10 +77,10 @@ contract L1T1MessengerTest is L1GatewayTestBase {
     }
 
     function testReplayMessage(uint256 exceedValue, address refundAddress) external {
-        hevm.assume(refundAddress.code.length == 0);
-        hevm.assume(uint256(uint160(refundAddress)) > uint256(100)); // ignore some precompile contracts
-        hevm.assume(refundAddress != feeVault);
-        hevm.assume(refundAddress != address(0x000000000000000000636F6e736F6c652e6c6f67)); // ignore console/console2
+        vm.assume(refundAddress.code.length == 0);
+        vm.assume(uint256(uint160(refundAddress)) > uint256(100)); // ignore some precompile contracts
+        vm.assume(refundAddress != feeVault);
+        vm.assume(refundAddress != address(0x000000000000000000636F6e736F6c652e6c6f67)); // ignore console/console2
 
         exceedValue = bound(exceedValue, 1, address(this).balance / 2);
 
@@ -92,18 +92,18 @@ contract L1T1MessengerTest is L1GatewayTestBase {
         );
 
         // Provided message has not been enqueued
-        hevm.expectRevert("Provided message has not been enqueued");
+        vm.expectRevert("Provided message has not been enqueued");
         l1Messenger.replayMessage(address(this), address(0), 101, 0, new bytes(0), DEFAULT_GAS_LIMIT, refundAddress);
 
         messageQueue.setL2BaseFee(1);
         // Insufficient msg.value
-        hevm.expectRevert("Insufficient msg.value for fee");
+        vm.expectRevert("Insufficient msg.value for fee");
         l1Messenger.replayMessage(address(this), address(0), 100, 0, new bytes(0), DEFAULT_GAS_LIMIT, refundAddress);
 
         uint256 _fee = messageQueue.l2BaseFee() * DEFAULT_GAS_LIMIT;
 
         // Exceed maximum replay times
-        hevm.expectRevert("Exceed maximum replay times");
+        vm.expectRevert("Exceed maximum replay times");
         l1Messenger.replayMessage{ value: _fee }(
             address(this), address(0), 100, 0, new bytes(0), DEFAULT_GAS_LIMIT, refundAddress
         );
@@ -149,12 +149,12 @@ contract L1T1MessengerTest is L1GatewayTestBase {
 
     function testUpdateMaxReplayTimes(uint256 _maxReplayTimes) external {
         // not owner, revert
-        hevm.startPrank(address(1));
-        hevm.expectRevert("Ownable: caller is not the owner");
+        vm.startPrank(address(1));
+        vm.expectRevert("Ownable: caller is not the owner");
         l1Messenger.updateMaxReplayTimes(_maxReplayTimes);
-        hevm.stopPrank();
+        vm.stopPrank();
 
-        hevm.expectEmit(false, false, false, true);
+        vm.expectEmit(false, false, false, true);
         emit UpdateMaxReplayTimes(3, _maxReplayTimes);
 
         assertEq(l1Messenger.maxReplayTimes(), 3);
@@ -164,32 +164,32 @@ contract L1T1MessengerTest is L1GatewayTestBase {
 
     function testSetPause() external {
         // not owner, revert
-        hevm.startPrank(address(1));
-        hevm.expectRevert("Ownable: caller is not the owner");
+        vm.startPrank(address(1));
+        vm.expectRevert("Ownable: caller is not the owner");
         l1Messenger.setPause(false);
-        hevm.stopPrank();
+        vm.stopPrank();
 
         // pause
         l1Messenger.setPause(true);
-        assertBoolEq(true, l1Messenger.paused());
+        assertEq(true, l1Messenger.paused());
 
-        hevm.expectRevert("Pausable: paused");
+        vm.expectRevert("Pausable: paused");
         l1Messenger.sendMessage(address(0), 0, new bytes(0), DEFAULT_GAS_LIMIT, T1Constants.T1_DEVNET_CHAIN_ID);
-        hevm.expectRevert("Pausable: paused");
+        vm.expectRevert("Pausable: paused");
         l1Messenger.sendMessage(
             address(0), 0, new bytes(0), DEFAULT_GAS_LIMIT, T1Constants.T1_DEVNET_CHAIN_ID, address(0)
         );
-        hevm.expectRevert("Pausable: paused");
+        vm.expectRevert("Pausable: paused");
         IL1T1Messenger.L2MessageProof memory _proof;
         l1Messenger.relayMessageWithProof(address(0), address(0), 0, 0, new bytes(0), _proof);
-        hevm.expectRevert("Pausable: paused");
+        vm.expectRevert("Pausable: paused");
         l1Messenger.replayMessage(address(0), address(0), 0, 0, new bytes(0), 0, address(0));
-        hevm.expectRevert("Pausable: paused");
+        vm.expectRevert("Pausable: paused");
         l1Messenger.dropMessage(address(0), address(0), 0, 0, new bytes(0));
 
         // unpause
         l1Messenger.setPause(false);
-        assertBoolEq(false, l1Messenger.paused());
+        assertEq(false, l1Messenger.paused());
     }
 
     function testIntrinsicGasLimit() external {
@@ -209,7 +209,7 @@ contract L1T1MessengerTest is L1GatewayTestBase {
         );
 
         // insufficient intrinsic gas
-        hevm.expectRevert("Insufficient gas limit, must be above intrinsic gas");
+        vm.expectRevert("Insufficient gas limit, must be above intrinsic gas");
         l1Messenger.sendMessage{ value: _fee + value }(
             address(0), 1, hex"0011220033", 24_647, T1Constants.T1_DEVNET_CHAIN_ID
         );
@@ -217,7 +217,7 @@ contract L1T1MessengerTest is L1GatewayTestBase {
         // gas limit exceeds the max value
         uint256 gasLimit = 100_000_000;
         _fee = messageQueue.l2BaseFee() * gasLimit;
-        hevm.expectRevert("Gas limit must not exceed maxGasLimit");
+        vm.expectRevert("Gas limit must not exceed maxGasLimit");
         l1Messenger.sendMessage{ value: _fee + value }(
             address(0), value, hex"0011220033", gasLimit, T1Constants.T1_DEVNET_CHAIN_ID
         );
@@ -231,7 +231,7 @@ contract L1T1MessengerTest is L1GatewayTestBase {
 
     function testDropMessage() external {
         // Provided message has not been enqueued, revert
-        hevm.expectRevert("Provided message has not been enqueued");
+        vm.expectRevert("Provided message has not been enqueued");
         l1Messenger.dropMessage(address(0), address(0), 0, 0, new bytes(0));
 
         // send one message with nonce 0
@@ -239,7 +239,7 @@ contract L1T1MessengerTest is L1GatewayTestBase {
         assertEq(messageQueue.nextCrossDomainMessageIndex(), 1);
 
         // drop pending message, revert
-        hevm.expectRevert("cannot drop pending message");
+        vm.expectRevert("cannot drop pending message");
         l1Messenger.dropMessage(address(this), address(0), 0, 0, new bytes(0));
 
         l1Messenger.updateMaxReplayTimes(10);
@@ -249,22 +249,22 @@ contract L1T1MessengerTest is L1GatewayTestBase {
         assertEq(messageQueue.nextCrossDomainMessageIndex(), 2);
 
         // skip all 2 messages
-        hevm.startPrank(address(rollup));
+        vm.startPrank(address(rollup));
         messageQueue.popCrossDomainMessage(0, 2, 0x3);
         messageQueue.finalizePoppedCrossDomainMessage(2);
         assertEq(messageQueue.nextUnfinalizedQueueIndex(), 2);
         assertEq(messageQueue.pendingQueueIndex(), 2);
-        hevm.stopPrank();
+        vm.stopPrank();
         for (uint256 i = 0; i < 2; ++i) {
-            assertBoolEq(messageQueue.isMessageSkipped(i), true);
-            assertBoolEq(messageQueue.isMessageDropped(i), false);
+            assertEq(messageQueue.isMessageSkipped(i), true);
+            assertEq(messageQueue.isMessageDropped(i), false);
         }
-        hevm.expectEmit(false, false, false, true);
+        vm.expectEmit(false, false, false, true);
         emit OnDropMessageCalled(new bytes(0));
         l1Messenger.dropMessage(address(this), address(0), 0, 0, new bytes(0));
         for (uint256 i = 0; i < 2; ++i) {
-            assertBoolEq(messageQueue.isMessageSkipped(i), true);
-            assertBoolEq(messageQueue.isMessageDropped(i), true);
+            assertEq(messageQueue.isMessageSkipped(i), true);
+            assertEq(messageQueue.isMessageDropped(i), true);
         }
 
         // send one message with nonce 2 and replay 3 times
@@ -276,19 +276,19 @@ contract L1T1MessengerTest is L1GatewayTestBase {
         assertEq(messageQueue.nextCrossDomainMessageIndex(), 6);
 
         // only first 3 are skipped
-        hevm.startPrank(address(rollup));
+        vm.startPrank(address(rollup));
         messageQueue.popCrossDomainMessage(2, 4, 0x7);
         messageQueue.finalizePoppedCrossDomainMessage(6);
         assertEq(messageQueue.nextUnfinalizedQueueIndex(), 6);
         assertEq(messageQueue.pendingQueueIndex(), 6);
-        hevm.stopPrank();
+        vm.stopPrank();
         for (uint256 i = 2; i < 6; i++) {
-            assertBoolEq(messageQueue.isMessageSkipped(i), i < 5);
-            assertBoolEq(messageQueue.isMessageDropped(i), false);
+            assertEq(messageQueue.isMessageSkipped(i), i < 5);
+            assertEq(messageQueue.isMessageDropped(i), false);
         }
 
         // drop non-skipped message, revert
-        hevm.expectRevert("drop non-skipped message");
+        vm.expectRevert("drop non-skipped message");
         l1Messenger.dropMessage(address(this), address(0), 0, 2, new bytes(0));
 
         // send one message with nonce 6 and replay 4 times
@@ -299,34 +299,34 @@ contract L1T1MessengerTest is L1GatewayTestBase {
         assertEq(messageQueue.nextCrossDomainMessageIndex(), 11);
 
         // skip all 5 messages
-        hevm.startPrank(address(rollup));
+        vm.startPrank(address(rollup));
         messageQueue.popCrossDomainMessage(6, 5, 0x1f);
         messageQueue.finalizePoppedCrossDomainMessage(11);
         assertEq(messageQueue.nextUnfinalizedQueueIndex(), 11);
         assertEq(messageQueue.pendingQueueIndex(), 11);
-        hevm.stopPrank();
+        vm.stopPrank();
         for (uint256 i = 6; i < 11; ++i) {
-            assertBoolEq(messageQueue.isMessageSkipped(i), true);
-            assertBoolEq(messageQueue.isMessageDropped(i), false);
+            assertEq(messageQueue.isMessageSkipped(i), true);
+            assertEq(messageQueue.isMessageDropped(i), false);
         }
-        hevm.expectEmit(false, false, false, true);
+        vm.expectEmit(false, false, false, true);
         emit OnDropMessageCalled(new bytes(0));
         l1Messenger.dropMessage(address(this), address(0), 0, 6, new bytes(0));
         for (uint256 i = 6; i < 11; ++i) {
-            assertBoolEq(messageQueue.isMessageSkipped(i), true);
-            assertBoolEq(messageQueue.isMessageDropped(i), true);
+            assertEq(messageQueue.isMessageSkipped(i), true);
+            assertEq(messageQueue.isMessageDropped(i), true);
         }
 
         // Message already dropped, revert
-        hevm.expectRevert("Message already dropped");
+        vm.expectRevert("Message already dropped");
         l1Messenger.dropMessage(address(this), address(0), 0, 0, new bytes(0));
-        hevm.expectRevert("Message already dropped");
+        vm.expectRevert("Message already dropped");
         l1Messenger.dropMessage(address(this), address(0), 0, 6, new bytes(0));
 
         // replay dropped message, revert
-        hevm.expectRevert("Message already dropped");
+        vm.expectRevert("Message already dropped");
         l1Messenger.replayMessage(address(this), address(0), 0, 0, new bytes(0), DEFAULT_GAS_LIMIT, address(0));
-        hevm.expectRevert("Message already dropped");
+        vm.expectRevert("Message already dropped");
         l1Messenger.replayMessage(address(this), address(0), 0, 6, new bytes(0), DEFAULT_GAS_LIMIT, address(0));
     }
 
@@ -352,12 +352,12 @@ contract L1T1MessengerTest is L1GatewayTestBase {
         }
         batchHeader1[1] = bytes1(uint8(0)); // change back
         bytes32 withdrawRoot = 0x222854db53c4515941d8fef2e5367f5fe781fa56506bb1463985c15bfa4a59da;
-        assertBoolEq(rollup.isBatchFinalized(1), false);
-        hevm.startPrank(address(0));
+        assertEq(rollup.isBatchFinalized(1), false);
+        vm.startPrank(address(0));
         rollup.finalizeBundleWithProof(batchHeader1, bytes32(uint256(2)), withdrawRoot, new bytes(0));
 
-        hevm.stopPrank();
-        assertBoolEq(rollup.isBatchFinalized(1), true);
+        vm.stopPrank();
+        assertEq(rollup.isBatchFinalized(1), true);
 
         bytes32 withdrawRootBatch1 = rollup.withdrawRoots(1);
         assertEq(withdrawRoot, withdrawRootBatch1, "withdraw root");
@@ -379,13 +379,13 @@ contract L1T1MessengerTest is L1GatewayTestBase {
     function testRelayMessageWithProofNonce18() external {
         rollup.addProver(address(0));
         bytes memory batchHeader1 = generateBatchHeader();
-        assertBoolEq(rollup.isBatchFinalized(1), false);
+        assertEq(rollup.isBatchFinalized(1), false);
         bytes32 withdrawRoot = 0xf527187db10d953f02ec890a9d325af97abfcf3ee8fc4d3e388c3a38c8905065;
-        hevm.startPrank(address(0));
+        vm.startPrank(address(0));
         rollup.finalizeBundleWithProof(batchHeader1, bytes32(uint256(2)), withdrawRoot, new bytes(0));
 
-        hevm.stopPrank();
-        assertBoolEq(rollup.isBatchFinalized(1), true);
+        vm.stopPrank();
+        assertEq(rollup.isBatchFinalized(1), true);
 
         bytes32 withdrawRootBatch1 = rollup.withdrawRoots(1);
         assertEq(withdrawRoot, withdrawRootBatch1, "withdraw root");
@@ -410,13 +410,13 @@ contract L1T1MessengerTest is L1GatewayTestBase {
     function testRelayMessageWithProofNonce19() external {
         rollup.addProver(address(0));
         bytes memory batchHeader1 = generateBatchHeader();
-        assertBoolEq(rollup.isBatchFinalized(1), false);
+        assertEq(rollup.isBatchFinalized(1), false);
         bytes32 withdrawRoot = 0xd820115d49a31129d66a3307cd020b6632f30813de0922c45102429f1a56a2f9;
-        hevm.startPrank(address(0));
+        vm.startPrank(address(0));
         rollup.finalizeBundleWithProof(batchHeader1, bytes32(uint256(2)), withdrawRoot, new bytes(0));
 
-        hevm.stopPrank();
-        assertBoolEq(rollup.isBatchFinalized(1), true);
+        vm.stopPrank();
+        assertEq(rollup.isBatchFinalized(1), true);
         bytes32 withdrawRootBatch1 = rollup.withdrawRoots(1);
         assertEq(withdrawRoot, withdrawRootBatch1, "withdraw root");
         // generated with off-chain merkle proof generator
@@ -440,13 +440,13 @@ contract L1T1MessengerTest is L1GatewayTestBase {
     function testRelayMessageWithProofNonce20() external {
         rollup.addProver(address(0));
         bytes memory batchHeader1 = generateBatchHeader();
-        assertBoolEq(rollup.isBatchFinalized(1), false);
+        assertEq(rollup.isBatchFinalized(1), false);
         bytes32 withdrawRoot = 0xccc0f65eda86a6324bdec4fb7a5f162395fd7029cd5f27480c63888ce204958d;
-        hevm.startPrank(address(0));
+        vm.startPrank(address(0));
         rollup.finalizeBundleWithProof(batchHeader1, bytes32(uint256(2)), withdrawRoot, new bytes(0));
 
-        hevm.stopPrank();
-        assertBoolEq(rollup.isBatchFinalized(1), true);
+        vm.stopPrank();
+        assertEq(rollup.isBatchFinalized(1), true);
 
         bytes32 withdrawRootBatch1 = rollup.withdrawRoots(1);
         assertEq(withdrawRoot, withdrawRootBatch1, "withdraw root");
@@ -471,13 +471,13 @@ contract L1T1MessengerTest is L1GatewayTestBase {
     function testRelayMessageWithProofNonce24() external {
         rollup.addProver(address(0));
         bytes memory batchHeader1 = generateBatchHeader();
-        assertBoolEq(rollup.isBatchFinalized(1), false);
+        assertEq(rollup.isBatchFinalized(1), false);
         bytes32 withdrawRoot = 0x4aaf9c53c8bb853fdcd7ad6eb8e1636e980c4ae9291cf917b0498287eeb72f3f;
-        hevm.startPrank(address(0));
+        vm.startPrank(address(0));
         rollup.finalizeBundleWithProof(batchHeader1, bytes32(uint256(2)), withdrawRoot, new bytes(0));
 
-        hevm.stopPrank();
-        assertBoolEq(rollup.isBatchFinalized(1), true);
+        vm.stopPrank();
+        assertEq(rollup.isBatchFinalized(1), true);
 
         bytes32 withdrawRootBatch1 = rollup.withdrawRoots(1);
         assertEq(withdrawRoot, withdrawRootBatch1, "withdraw root");
@@ -502,13 +502,13 @@ contract L1T1MessengerTest is L1GatewayTestBase {
     function testRelayMessageWithProofNonce26() external {
         rollup.addProver(address(0));
         bytes memory batchHeader1 = generateBatchHeader();
-        assertBoolEq(rollup.isBatchFinalized(1), false);
+        assertEq(rollup.isBatchFinalized(1), false);
         bytes32 withdrawRoot = 0xc498724949b0861f080e041b4a169b630166289662c41fb537dbf642229d4d76;
-        hevm.startPrank(address(0));
+        vm.startPrank(address(0));
         rollup.finalizeBundleWithProof(batchHeader1, bytes32(uint256(2)), withdrawRoot, new bytes(0));
 
-        hevm.stopPrank();
-        assertBoolEq(rollup.isBatchFinalized(1), true);
+        vm.stopPrank();
+        assertEq(rollup.isBatchFinalized(1), true);
 
         bytes32 withdrawRootBatch1 = rollup.withdrawRoots(1);
         assertEq(withdrawRoot, withdrawRootBatch1, "withdraw root");

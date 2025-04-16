@@ -86,7 +86,7 @@ Scripts to test the canonical bridge functionalities:
   - [Deposit Ether from L1->L2](./test/DepositEtherFromL1ToL2.s.sol)
   - [Deposit WETH from L1->L2](./test/DepositWethFromL1ToL2.s.sol)
   - [Deposit USDT from L1->L2](./test/DepositUsdtFromL1ToL2.s.sol)
-- Witdrawals
+- Withdrawals
   - [Withdraw Ether from L2->L1](./test/WithdrawEtherFromL2ToL1.s.sol)
   - [Withdraw WETH from L2->L1](./test/WithdrawWethFromL2ToL1.s.sol)
   - [Withdraw USDT from L2->L1](./test/WithdrawUsdtFromL2ToL1.s.sol)
@@ -95,8 +95,16 @@ Scripts to test the canonical bridge functionalities:
 - Utility
   - [Log all balances from L1 & L2](./test/LogBalances.s.sol)
 
-
 Miscellaneous Scripts:
 - 7683
   - [Create an intent on L1, fill it on L2, and settle it from L2](./test/7683E2E.s.sol)
   - [Create an intent on L1, fill it on L2, and settle it from L1](./test/T1ERC7683PullE2E.s.sol)
+
+## 🔄 Upgrade
+
+Scripts to upgrade contract implementations:
+
+- [T1Chain implementation](./upgrade/UpgradeT1Chain.s.sol)
+  ```bash
+  forge script ./script/upgrade/UpgradeT1Chain.s.sol:UpgradeT1Chain --rpc-url $T1_L1_RPC --broadcast
+  ```

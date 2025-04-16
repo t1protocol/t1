@@ -2,13 +2,13 @@
 
 pragma solidity ^0.8.25;
 
-import { DSTestPlus } from "solmate/test/utils/DSTestPlus.sol";
+import { Test } from "forge-std/Test.sol";
 
 import { MultipleVersionRollupVerifier } from "../L1/rollup/MultipleVersionRollupVerifier.sol";
 
 import { MockZkEvmVerifier } from "./mocks/MockZkEvmVerifier.sol";
 
-contract MultipleVersionRollupVerifierTest is DSTestPlus {
+contract MultipleVersionRollupVerifierTest is Test {
     // from MultipleVersionRollupVerifier
     event UpdateVerifier(uint256 startBatchIndex, address verifier);
 
@@ -30,16 +30,16 @@ contract MultipleVersionRollupVerifierTest is DSTestPlus {
     }
 
     function testUpdateVerifierVersion0(address _newVerifier) external {
-        hevm.assume(_newVerifier != address(0));
+        vm.assume(_newVerifier != address(0));
 
         // set by non-owner, should revert
-        hevm.startPrank(address(1));
-        hevm.expectRevert("Ownable: caller is not the owner");
+        vm.startPrank(address(1));
+        vm.expectRevert("Ownable: caller is not the owner");
         verifier.updateVerifier(0, 0, address(0));
-        hevm.stopPrank();
+        vm.stopPrank();
 
         // zero verifier address, revert
-        hevm.expectRevert(MultipleVersionRollupVerifier.ErrorZeroAddress.selector);
+        vm.expectRevert(MultipleVersionRollupVerifier.ErrorZeroAddress.selector);
         verifier.updateVerifier(0, 1, address(0));
 
         // change to random operator
@@ -63,13 +63,13 @@ contract MultipleVersionRollupVerifierTest is DSTestPlus {
         assertEq(_verifier, address(v0));
 
         // start batch index too small, revert
-        hevm.expectRevert(MultipleVersionRollupVerifier.ErrorStartBatchIndexTooSmall.selector);
+        vm.expectRevert(MultipleVersionRollupVerifier.ErrorStartBatchIndexTooSmall.selector);
         verifier.updateVerifier(0, 99, _newVerifier);
     }
 
     function testUpdateVerifierVersion(uint256 version, address _newVerifier) external {
-        hevm.assume(version != 0);
-        hevm.assume(_newVerifier != address(0));
+        vm.assume(version != 0);
+        vm.assume(_newVerifier != address(0));
 
         // set v0
         assertEq(verifier.legacyVerifiersLength(version), 0);
@@ -80,13 +80,13 @@ contract MultipleVersionRollupVerifierTest is DSTestPlus {
         assertEq(_verifier, address(v0));
 
         // set by non-owner, should revert
-        hevm.startPrank(address(1));
-        hevm.expectRevert("Ownable: caller is not the owner");
+        vm.startPrank(address(1));
+        vm.expectRevert("Ownable: caller is not the owner");
         verifier.updateVerifier(version, 0, address(0));
-        hevm.stopPrank();
+        vm.stopPrank();
 
         // zero verifier address, revert
-        hevm.expectRevert(MultipleVersionRollupVerifier.ErrorZeroAddress.selector);
+        vm.expectRevert(MultipleVersionRollupVerifier.ErrorZeroAddress.selector);
         verifier.updateVerifier(version, 1, address(0));
 
         // change to random operator
@@ -110,7 +110,7 @@ contract MultipleVersionRollupVerifierTest is DSTestPlus {
         assertEq(_verifier, address(v0));
 
         // start batch index too small, revert
-        hevm.expectRevert(MultipleVersionRollupVerifier.ErrorStartBatchIndexTooSmall.selector);
+        vm.expectRevert(MultipleVersionRollupVerifier.ErrorStartBatchIndexTooSmall.selector);
         verifier.updateVerifier(version, 99, _newVerifier);
     }
 
@@ -130,7 +130,7 @@ contract MultipleVersionRollupVerifierTest is DSTestPlus {
     }
 
     function testGetVerifier(uint256 version) external {
-        hevm.assume(version != 0);
+        vm.assume(version != 0);
 
         verifier.updateVerifier(version, 1, address(v0));
         verifier.updateVerifier(version, 100, address(v1));
@@ -150,48 +150,48 @@ contract MultipleVersionRollupVerifierTest is DSTestPlus {
         verifier.updateVerifier(0, 100, address(v1));
         verifier.updateVerifier(0, 300, address(v2));
 
-        hevm.expectRevert(abi.encode(address(v0)));
+        vm.expectRevert(abi.encode(address(v0)));
         verifier.verifyAggregateProof(0, new bytes(0), bytes32(0));
-        hevm.expectRevert(abi.encode(address(v0)));
+        vm.expectRevert(abi.encode(address(v0)));
         verifier.verifyAggregateProof(1, new bytes(0), bytes32(0));
-        hevm.expectRevert(abi.encode(address(v0)));
+        vm.expectRevert(abi.encode(address(v0)));
         verifier.verifyAggregateProof(99, new bytes(0), bytes32(0));
-        hevm.expectRevert(abi.encode(address(v1)));
+        vm.expectRevert(abi.encode(address(v1)));
         verifier.verifyAggregateProof(100, new bytes(0), bytes32(0));
-        hevm.expectRevert(abi.encode(address(v1)));
+        vm.expectRevert(abi.encode(address(v1)));
         verifier.verifyAggregateProof(101, new bytes(0), bytes32(0));
-        hevm.expectRevert(abi.encode(address(v1)));
+        vm.expectRevert(abi.encode(address(v1)));
         verifier.verifyAggregateProof(299, new bytes(0), bytes32(0));
-        hevm.expectRevert(abi.encode(address(v2)));
+        vm.expectRevert(abi.encode(address(v2)));
         verifier.verifyAggregateProof(300, new bytes(0), bytes32(0));
-        hevm.expectRevert(abi.encode(address(v2)));
+        vm.expectRevert(abi.encode(address(v2)));
         verifier.verifyAggregateProof(301, new bytes(0), bytes32(0));
-        hevm.expectRevert(abi.encode(address(v2)));
+        vm.expectRevert(abi.encode(address(v2)));
         verifier.verifyAggregateProof(10_000, new bytes(0), bytes32(0));
     }
 
     function testVerifyAggregateProof(uint256 version) external {
-        hevm.assume(version != 0);
+        vm.assume(version != 0);
 
         verifier.updateVerifier(version, 1, address(v0));
         verifier.updateVerifier(version, 100, address(v1));
         verifier.updateVerifier(version, 300, address(v2));
 
-        hevm.expectRevert(abi.encode(address(v0)));
+        vm.expectRevert(abi.encode(address(v0)));
         verifier.verifyAggregateProof(version, 1, new bytes(0), bytes32(0));
-        hevm.expectRevert(abi.encode(address(v0)));
+        vm.expectRevert(abi.encode(address(v0)));
         verifier.verifyAggregateProof(version, 99, new bytes(0), bytes32(0));
-        hevm.expectRevert(abi.encode(address(v1)));
+        vm.expectRevert(abi.encode(address(v1)));
         verifier.verifyAggregateProof(version, 100, new bytes(0), bytes32(0));
-        hevm.expectRevert(abi.encode(address(v1)));
+        vm.expectRevert(abi.encode(address(v1)));
         verifier.verifyAggregateProof(version, 101, new bytes(0), bytes32(0));
-        hevm.expectRevert(abi.encode(address(v1)));
+        vm.expectRevert(abi.encode(address(v1)));
         verifier.verifyAggregateProof(version, 299, new bytes(0), bytes32(0));
-        hevm.expectRevert(abi.encode(address(v2)));
+        vm.expectRevert(abi.encode(address(v2)));
         verifier.verifyAggregateProof(version, 300, new bytes(0), bytes32(0));
-        hevm.expectRevert(abi.encode(address(v2)));
+        vm.expectRevert(abi.encode(address(v2)));
         verifier.verifyAggregateProof(version, 301, new bytes(0), bytes32(0));
-        hevm.expectRevert(abi.encode(address(v2)));
+        vm.expectRevert(abi.encode(address(v2)));
         verifier.verifyAggregateProof(version, 10_000, new bytes(0), bytes32(0));
     }
 }

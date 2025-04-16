@@ -3,9 +3,6 @@
 pragma solidity ^0.8.25;
 
 import { Script } from "forge-std/Script.sol";
-import { StdUtils } from "forge-std/StdUtils.sol";
-
-import { DSTestPlus } from "solmate/test/utils/DSTestPlus.sol";
 
 import { ISignatureTransfer } from "@uniswap/permit2/src/interfaces/ISignatureTransfer.sol";
 
@@ -97,19 +94,5 @@ contract SwapERC20 is Script, PermitSignature {
         IL1GatewayRouter(L1_GATEWAY_ROUTER_PROXY_ADDR).swapERC20(params);
 
         vm.stopBroadcast();
-    }
-
-    // Override to prefer StdUtils bouns()
-    function bound(
-        uint256 x,
-        uint256 min,
-        uint256 max
-    )
-        internal
-        pure
-        override(DSTestPlus, StdUtils)
-        returns (uint256)
-    {
-        return StdUtils.bound(x, min, max); // Explicitly choose StdUtils version
     }
 }

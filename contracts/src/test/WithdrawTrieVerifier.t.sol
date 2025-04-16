@@ -2,14 +2,14 @@
 
 pragma solidity ^0.8.25;
 
-import { DSTestPlus } from "solmate/test/utils/DSTestPlus.sol";
+import { Test } from "forge-std/Test.sol";
 
 import { WithdrawTrieVerifier } from "../libraries/verifier/WithdrawTrieVerifier.sol";
 
-contract WithdrawTrieVerifierTest is DSTestPlus {
+contract WithdrawTrieVerifierTest is Test {
     /// forge-config: default.allow_internal_expect_revert = true
     function testInvalidProof() public {
-        hevm.expectRevert("Invalid proof");
+        vm.expectRevert("Invalid proof");
         WithdrawTrieVerifier.verifyMerkleProof(bytes32(uint256(1)), bytes32(uint256(1)), 1, hex"00");
     }
 
