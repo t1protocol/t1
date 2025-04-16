@@ -4,10 +4,10 @@ pragma solidity ^0.8.25;
 import { ProxyAdmin } from "@openzeppelin/contracts/proxy/transparent/ProxyAdmin.sol";
 import { TransparentUpgradeableProxy } from "@openzeppelin/contracts/proxy/transparent/TransparentUpgradeableProxy.sol";
 
-import { DeploymentUtils } from "../lib/DeploymentUtils.sol";
+import { DeploymentUtils } from "../../lib/DeploymentUtils.sol";
 
-import { T1ERC7683Pull } from "../../src/7683/T1ERC7683Pull.sol";
-import { T1Constants } from "../../src/libraries/constants/T1Constants.sol";
+import { T1ERC7683Pull } from "../../../src/7683/T1ERC7683Pull.sol";
+import { T1Constants } from "../../../src/libraries/constants/T1Constants.sol";
 
 contract DeployT1ERC7683Pull is DeploymentUtils {
     uint32 internal constant T1 = uint32(T1Constants.T1_DEVNET_CHAIN_ID);
