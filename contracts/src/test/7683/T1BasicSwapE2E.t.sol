@@ -1,21 +1,11 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.25;
 
-import { Test, Vm } from "forge-std/Test.sol";
-import { console2 } from "forge-std/console2.sol";
-
 import {
     TransparentUpgradeableProxy,
     ITransparentUpgradeableProxy
 } from "@openzeppelin/contracts/proxy/transparent/TransparentUpgradeableProxy.sol";
-import { Address } from "@openzeppelin/contracts/utils/Address.sol";
-import { ERC20 } from "@openzeppelin/contracts/token/ERC20/ERC20.sol";
-
-import { StandardHookMetadata } from "@hyperlane-xyz/hooks/libs/StandardHookMetadata.sol";
-import { MockMailbox } from "@hyperlane-xyz/mock/MockMailbox.sol";
-import { MockHyperlaneEnvironment } from "@hyperlane-xyz/mock/MockHyperlaneEnvironment.sol";
 import { TypeCasts } from "@hyperlane-xyz/libs/TypeCasts.sol";
-import { IPostDispatchHook } from "@hyperlane-xyz/interfaces/hooks/IPostDispatchHook.sol";
 
 import { BaseTest, TestInterchainGasPaymaster } from "./BaseTest.sol";
 import { Base7683 } from "intents-framework/Base7683.sol";
@@ -23,16 +13,13 @@ import { OrderData, OrderEncoder } from "intents-framework/libs/OrderEncoder.sol
 import {
     GaslessCrossChainOrder,
     OnchainCrossChainOrder,
-    ResolvedCrossChainOrder,
-    Output,
-    FillInstruction
+    ResolvedCrossChainOrder
 } from "intents-framework/ERC7683/IERC7683.sol";
 
 import { T1ERC7683 } from "../../7683/T1ERC7683.sol";
 import { L1MessageQueue } from "../../L1/rollup/L1MessageQueue.sol";
 import { IL1MessageQueue } from "../../L1/rollup/IL1MessageQueue.sol";
 import { L2MessageQueue } from "../../L2/predeploys/L2MessageQueue.sol";
-import { IL1MessageQueueWithGasPriceOracle } from "../../L1/rollup/IL1MessageQueueWithGasPriceOracle.sol";
 import { L1T1Messenger } from "../../L1/L1T1Messenger.sol";
 import { IL1T1Messenger } from "../../L1/IL1T1Messenger.sol";
 import { L2T1Messenger } from "../../L2/L2T1Messenger.sol";
