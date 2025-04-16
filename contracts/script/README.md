@@ -32,6 +32,7 @@ The magical deploy order is as follows:
 14. [AllowRouterToTransfer.s.sol](./configure/AllowRouterToTransfer.s.sol)
 15. [DeployPR1T1XChainReader.s.sol](./deploy/DeployPR1T1XChainReader.s.sol)
 16. [DeployL2T1XChainReader.s.sol](./deploy/DeployL2T1XChainReader.s.sol)
+16. [DeployT1ERC7683Pull.s.sol](./deploy/DeployT1ERC7683Pull.s.sol)
 
 ## Deploy 7683 Contract
 
@@ -42,7 +43,7 @@ To deploy the 7683 contract, follow these steps:
 First, deploy the L1 router by running the following command:
 
 ```bash
-forge script ./script/deploy/DeployRouterERC7683.s.sol:RouterDeployScript --sig "deployL1Router()" --rpc-url $T1_L1_RPC --broadcast --verify --verifier etherscan --verifier-url https://api-sepolia.etherscan.io/api
+forge script ./script/deploy/7683/DeployT1ERC7683.s.sol:RouterDeployScript --sig "deployL1Router()" --rpc-url $T1_L1_RPC --broadcast --verify --verifier etherscan --verifier-url https://api-sepolia.etherscan.io/api
 ```
 
 ### Deploy L2 Router
@@ -50,7 +51,7 @@ forge script ./script/deploy/DeployRouterERC7683.s.sol:RouterDeployScript --sig 
 Next, deploy the L2 router with the following command:
 
 ```bash
-forge script ./script/deploy/DeployRouterERC7683.s.sol:RouterDeployScript --sig "deployL2Router()" --rpc-url $T1_L2_RPC --broadcast --verify --verifier blockscout --verifier-url https://explorer.devnet.t1protocol.com/api
+forge script ./script/deploy/7683/DeployT1ERC7683.s.sol:RouterDeployScript --sig "deployL2Router()" --rpc-url $T1_L2_RPC --broadcast --verify --verifier blockscout --verifier-url https://explorer.devnet.t1protocol.com/api
 ```
 
 ### Initialize Functions
@@ -60,13 +61,13 @@ After deploying the routers, you will need to initialize them by running the fol
 Initialize L1 Router:
 
 ```bash
-forge script ./script/deploy/DeployRouterERC7683.s.sol:RouterDeployScript --sig "initializeL1Router()" --rpc-url $T1_L1_RPC --broadcast
+forge script ./script/deploy/7683/DeployT1ERC7683.s.sol:RouterDeployScript --sig "initializeL1Router()" --rpc-url $T1_L1_RPC --broadcast
 ```
 
 Initialize L2 Router:
 
 ```bash
-forge script ./script/deploy/DeployRouterERC7683.s.sol:RouterDeployScript --sig "initializeL2Router()" --rpc-url $T1_L2_RPC --broadcast
+forge script ./script/deploy/7683/DeployT1ERC7683.s.sol:RouterDeployScript --sig "initializeL2Router()" --rpc-url $T1_L2_RPC --broadcast
 ```
 
 ## Configure
