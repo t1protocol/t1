@@ -156,16 +156,16 @@ contract T1ERC7683Pull is BasicSwap7683, OwnableUpgradeable, IT1XChainReaderCall
 
     function getFilledOrderStatus(bytes32 orderId) public view returns (bytes memory) {
         FilledOrder memory filledOrder = filledOrders[orderId];
-        bytes memory orderStatus;
+        bytes memory _orderStatus;
         if (filledOrder.fillerData.length != 0) {
             bytes32[] memory _orderIds = new bytes32[](1);
             _orderIds[0] = orderId;
 
             bytes[] memory _ordersFillerData = new bytes[](1);
             _ordersFillerData[0] = filledOrder.fillerData;
-            orderStatus = Hyperlane7683Message.encodeSettle(_orderIds, _ordersFillerData);
+            _orderStatus = Hyperlane7683Message.encodeSettle(_orderIds, _ordersFillerData);
         }
-        return orderStatus;
+        return _orderStatus;
     }
 
     // ============ Internal Functions ============
