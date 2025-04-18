@@ -57,7 +57,7 @@ run_script() {
   forge script "$script_path:$contract_name" --rpc-url "$rpc_url" --broadcast
 
   # Wait in L2 due to a forge bug to verify contracts in Blockscout
-  if [[ $script_name == *"L2"* ]]; then
+  if [[ $contract_name == *"L2"* ]]; then
     sleep 15
   fi
 
