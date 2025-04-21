@@ -718,11 +718,11 @@ contract T1Chain is OwnableUpgradeable, PausableUpgradeable, IT1Chain {
     )
         internal
     {
-        //        // check and update lastFinalizedBatchIndex
-        //        unchecked {
-        //            if (lastFinalizedBatchIndex + 1 != _batchIndex) revert ErrorIncorrectBatchIndex();
-        lastFinalizedBatchIndex = _batchIndex;
-        //        }
+        // check and update lastFinalizedBatchIndex
+        unchecked {
+            if (lastFinalizedBatchIndex + 1 != _batchIndex) revert ErrorIncorrectBatchIndex();
+            lastFinalizedBatchIndex = _batchIndex;
+        }
 
         //        // record state root and withdraw root
         //        finalizedStateRoots[_batchIndex] = _postStateRoot;
