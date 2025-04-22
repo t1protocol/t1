@@ -1245,7 +1245,7 @@ contract T1Chain is OwnableUpgradeable, PausableUpgradeable, IT1Chain {
         }
     }
 
-    function _checkSignedByProver(bytes calldata signature, bytes32 message) internal {
+    function _checkSignedByProver(bytes calldata signature, bytes32 message) internal view {
         // Basic sanity check
         if (signature.length != 65) revert ErrorIncorrectSignatureLength();
 
