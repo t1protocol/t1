@@ -17,6 +17,7 @@ contract PermitSignature is Test {
         address spender
     )
         internal
+        pure
         returns (bytes memory sig)
     {
         bytes32 tokenPermissions = keccak256(abi.encode(_TOKEN_PERMISSIONS_TYPEHASH, permit.permitted));
