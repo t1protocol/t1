@@ -30,6 +30,9 @@ The magical deploy order is as follows:
 12. [FirstUsdtDepositFromL1ToL2.s.sol](./configure/FirstUsdtDepositFromL1ToL2.s.sol)
 13. [SetMM.s.sol](./configure/SetMM.s.sol)
 14. [AllowRouterToTransfer.s.sol](./configure/AllowRouterToTransfer.s.sol)
+15. [DeployPR1T1XChainReader.s.sol](./deploy/DeployPR1T1XChainReader.s.sol)
+16. [DeployL2T1XChainReader.s.sol](./deploy/DeployL2T1XChainReader.s.sol)
+17. [DeployT1ERC7683Pull.s.sol](./deploy/7683/DeployT1ERC7683Pull.s.sol)
 
 ## Deploy 7683 Contract
 
@@ -40,7 +43,7 @@ To deploy the 7683 contract, follow these steps:
 First, deploy the L1 router by running the following command:
 
 ```bash
-forge script ./script/deploy/DeployRouterERC7683.s.sol:RouterDeployScript --sig "deployL1Router()" --rpc-url $T1_L1_RPC --broadcast --verify --verifier etherscan --verifier-url https://api-sepolia.etherscan.io/api
+forge script ./script/deploy/7683/DeployT1ERC7683.s.sol:RouterDeployScript --sig "deployL1Router()" --rpc-url $T1_L1_RPC --broadcast --verify --verifier etherscan --verifier-url https://api-sepolia.etherscan.io/api
 ```
 
 ### Deploy L2 Router
@@ -48,7 +51,7 @@ forge script ./script/deploy/DeployRouterERC7683.s.sol:RouterDeployScript --sig 
 Next, deploy the L2 router with the following command:
 
 ```bash
-forge script ./script/deploy/DeployRouterERC7683.s.sol:RouterDeployScript --sig "deployL2Router()" --rpc-url $T1_L2_RPC --broadcast --verify --verifier blockscout --verifier-url https://explorer.devnet.t1protocol.com/api
+forge script ./script/deploy/7683/DeployT1ERC7683.s.sol:RouterDeployScript --sig "deployL2Router()" --rpc-url $T1_L2_RPC --broadcast --verify --verifier blockscout --verifier-url https://explorer.devnet.t1protocol.com/api
 ```
 
 ### Initialize Functions
@@ -58,13 +61,13 @@ After deploying the routers, you will need to initialize them by running the fol
 Initialize L1 Router:
 
 ```bash
-forge script ./script/deploy/DeployRouterERC7683.s.sol:RouterDeployScript --sig "initializeL1Router()" --rpc-url $T1_L1_RPC --broadcast
+forge script ./script/deploy/7683/DeployT1ERC7683.s.sol:RouterDeployScript --sig "initializeL1Router()" --rpc-url $T1_L1_RPC --broadcast
 ```
 
 Initialize L2 Router:
 
 ```bash
-forge script ./script/deploy/DeployRouterERC7683.s.sol:RouterDeployScript --sig "initializeL2Router()" --rpc-url $T1_L2_RPC --broadcast
+forge script ./script/deploy/7683/DeployT1ERC7683.s.sol:RouterDeployScript --sig "initializeL2Router()" --rpc-url $T1_L2_RPC --broadcast
 ```
 
 ## Configure
@@ -90,12 +93,14 @@ Scripts to test the canonical bridge functionalities:
   - [Withdraw USDT from L2->L1](./test/WithdrawUsdtFromL2ToL1.s.sol)
 - Swaps
   - [Swap ERC20s against bridge reserves](./test/SwapERC20.s.sol)
-- Chore
-  - [Check Alice balances on L1/L2](./test/LogBalances.s.sol)
-- 7683
-  - [Create an intent to on L1 and fill it on L2](./test/7683E2E.s.sol)
 - Utility
   - [Log all balances from L1 & L2](./test/LogBalances.s.sol)
+
+Miscellaneous Scripts:
+
+- 7683
+  - [Create an intent on L1, fill it on L2, and settle it from L2](./test/7683E2E.s.sol)
+  - [Create an intent on L1, fill it on L2, and settle it from L1](./test/T1ERC7683PullE2E.s.sol)
 
 ## 🔄 Upgrade
 

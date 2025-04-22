@@ -1,21 +1,11 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.25;
 
-import { Test, Vm } from "forge-std/Test.sol";
-import { console2 } from "forge-std/console2.sol";
-
 import {
     TransparentUpgradeableProxy,
     ITransparentUpgradeableProxy
 } from "@openzeppelin/contracts/proxy/transparent/TransparentUpgradeableProxy.sol";
-import { Address } from "@openzeppelin/contracts/utils/Address.sol";
-import { ERC20 } from "@openzeppelin/contracts/token/ERC20/ERC20.sol";
-
-import { StandardHookMetadata } from "@hyperlane-xyz/hooks/libs/StandardHookMetadata.sol";
-import { MockMailbox } from "@hyperlane-xyz/mock/MockMailbox.sol";
-import { MockHyperlaneEnvironment } from "@hyperlane-xyz/mock/MockHyperlaneEnvironment.sol";
 import { TypeCasts } from "@hyperlane-xyz/libs/TypeCasts.sol";
-import { IPostDispatchHook } from "@hyperlane-xyz/interfaces/hooks/IPostDispatchHook.sol";
 
 import { BaseTest, TestInterchainGasPaymaster } from "./BaseTest.sol";
 import { Base7683 } from "intents-framework/Base7683.sol";
@@ -23,22 +13,18 @@ import { OrderData, OrderEncoder } from "intents-framework/libs/OrderEncoder.sol
 import {
     GaslessCrossChainOrder,
     OnchainCrossChainOrder,
-    ResolvedCrossChainOrder,
-    Output,
-    FillInstruction
+    ResolvedCrossChainOrder
 } from "intents-framework/ERC7683/IERC7683.sol";
 
-import { t1_7683 } from "../../7683/t1_7683.sol";
+import { T1ERC7683 } from "../../7683/T1ERC7683.sol";
+import { L1MessageQueue } from "../../L1/rollup/L1MessageQueue.sol";
 import { IL1MessageQueue } from "../../L1/rollup/IL1MessageQueue.sol";
 import { L2MessageQueue } from "../../L2/predeploys/L2MessageQueue.sol";
-import { IL1MessageQueueWithGasPriceOracle } from "../../L1/rollup/IL1MessageQueueWithGasPriceOracle.sol";
 import { L1T1Messenger } from "../../L1/L1T1Messenger.sol";
 import { IL1T1Messenger } from "../../L1/IL1T1Messenger.sol";
 import { L2T1Messenger } from "../../L2/L2T1Messenger.sol";
 import { T1ChainMockBlob } from "../../mocks/T1ChainMockBlob.sol";
 import { MockRollupVerifier } from "../mocks/MockRollupVerifier.sol";
-
-event Filled(bytes32 orderId, bytes originData, bytes fillerData);
 
 event Settle(bytes32[] orderIds, bytes[] ordersFillerData);
 
@@ -46,20 +32,22 @@ event Refund(bytes32[] orderIds);
 
 event Refunded(bytes32 orderId, address receiver);
 
-contract t1BasicSwapE2E is BaseTest {
+contract T1BasicSwapE2E is BaseTest {
+    event Filled(bytes32 orderId, bytes originData, bytes fillerData);
+
     using TypeCasts for address;
 
     L1T1Messenger internal l1t1Messenger;
     L2T1Messenger internal l2t1Messenger;
-    IL1MessageQueue internal messageQueue;
+    L1MessageQueue internal messageQueue;
     L2MessageQueue internal l2MessageQueue;
     T1ChainMockBlob internal rollup;
     MockRollupVerifier internal verifier;
 
     TestInterchainGasPaymaster internal igp;
 
-    t1_7683 internal originRouter;
-    t1_7683 internal destinationRouter;
+    T1ERC7683 internal originRouter;
+    T1ERC7683 internal destinationRouter;
 
     bytes32 internal originRouterB32;
     bytes32 internal destinationRouterB32;
@@ -73,16 +61,16 @@ contract t1BasicSwapE2E is BaseTest {
     address internal sender = makeAddr("sender");
     address internal feeVault;
 
-    function _deployProxiedOriginRouter(L1T1Messenger _messenger, address _owner) internal returns (t1_7683) {
-        t1_7683 implementation = new t1_7683(address(_messenger), permit2, origin);
+    function _deployProxiedOriginRouter(L1T1Messenger _messenger, address _owner) internal returns (T1ERC7683) {
+        T1ERC7683 implementation = new T1ERC7683(address(_messenger), permit2, origin);
 
         TransparentUpgradeableProxy proxy = new TransparentUpgradeableProxy(
             address(implementation),
             address(admin),
-            abi.encodeWithSelector(t1_7683.initialize.selector, address(0), address(0), _owner)
+            abi.encodeWithSelector(T1ERC7683.initialize.selector, address(0), address(0), _owner)
         );
 
-        return t1_7683(address(proxy));
+        return T1ERC7683(address(proxy));
     }
 
     function _deployProxiedDestinationRouter(
@@ -90,15 +78,15 @@ contract t1BasicSwapE2E is BaseTest {
         address _counterpart
     )
         internal
-        returns (t1_7683)
+        returns (T1ERC7683)
     {
-        t1_7683 implementation = new t1_7683(address(_messenger), permit2, destination);
+        T1ERC7683 implementation = new T1ERC7683(address(_messenger), permit2, destination);
 
         TransparentUpgradeableProxy proxy = new TransparentUpgradeableProxy(
-            address(implementation), address(admin), abi.encodeWithSelector(t1_7683.initialize.selector, _counterpart)
+            address(implementation), address(admin), abi.encodeWithSelector(T1ERC7683.initialize.selector, _counterpart)
         );
 
-        return t1_7683(address(proxy));
+        return T1ERC7683(address(proxy));
     }
 
     function labelAccounts() internal {
@@ -117,13 +105,19 @@ contract t1BasicSwapE2E is BaseTest {
         vm.label(address(destinationRouter), "destinationRouter");
     }
 
-    function setUp() public override {
+    function setUp() public virtual override {
         super.setUp();
         __T1TestBase_setUp();
+        onSetup();
+    }
 
+    function onSetup() public {
         l1t1Messenger = L1T1Messenger(payable(_deployProxy(address(0))));
         rollup = T1ChainMockBlob(_deployProxy(address(0)));
-        messageQueue = IL1MessageQueue(_deployProxy(address(0)));
+        messageQueue = L1MessageQueue(_deployProxy(address(0)));
+        admin.upgrade(ITransparentUpgradeableProxy(address(messageQueue)), address(new L1MessageQueue()));
+        uint256 maxGasLimit = 5_000_000;
+        messageQueue.initialize(address(0), maxGasLimit);
         l2MessageQueue = new L2MessageQueue(address(this));
         l2t1Messenger = L2T1Messenger(payable(_deployProxy(address(0))));
 
@@ -711,7 +705,7 @@ contract t1BasicSwapE2E is BaseTest {
         bytes memory innerMessage = abi.encode(isSettle, orderIds, ordersFillerData);
 
         bytes memory outerMessage = abi.encodeWithSelector(
-            t1_7683.handle.selector, origin, TypeCasts.addressToBytes32(address(destinationRouter)), innerMessage
+            T1ERC7683.handle.selector, origin, TypeCasts.addressToBytes32(address(destinationRouter)), innerMessage
         );
 
         // hash 0xcca132db240c06c148d210ceda18701a38e863e5ab2ed4638b15b6c7b30a08ae

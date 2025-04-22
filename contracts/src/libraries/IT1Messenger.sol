@@ -55,6 +55,9 @@ interface IT1Messenger {
     /// @notice Return the sender of a cross domain message.
     function xDomainMessageSender() external view returns (address);
 
+    /// @notice Return the address of the message queue.
+    function messageQueue() external view returns (address);
+
     /**
      *
      * Public Mutating Functions *

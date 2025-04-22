@@ -19,6 +19,7 @@ contracts.
 <pre>
 ├── <a href="./script">script</a>: Deployment scripts
 ├── <a href="./src">src</a>
+│   ├── <a href="./src/7683/">7683</a>: ERC7683 contracts
 │   ├── <a href="./src/L1/">L1</a>: Contracts deployed on the L1 (Ethereum)
 │   │   ├── <a href="./src/L1/gateways/">gateways</a>: Gateway router and token gateway contracts
 │   │   ├── <a href="./src/L1/rollup/">rollup</a>: Rollup contracts for data availability and finalization
@@ -63,6 +64,7 @@ The backbone of 𝚝𝟷, responsible for managing batches, state roots, and cro
 - **L2T1Messenger**: the L2 counterpart, handling incoming messages from L1 and sending outbound messages
 - **L1MessageQueue**: maintains the ordered queue of L1→L2 messages awaiting processing
 - **L2MessageQueue**: maintains the ordered queue of L2→L1 messages awaiting processing
+- **T1XChainReader**: facilitates cross-chain read requests between supported chains
 
 ### Bridge Infrastructure
 
