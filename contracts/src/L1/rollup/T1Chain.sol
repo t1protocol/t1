@@ -429,7 +429,7 @@ contract T1Chain is OwnableUpgradeable, PausableUpgradeable, IT1Chain {
 
     /// @inheritdoc IT1Chain
     function finalizeBatchWithProof(
-        //        bytes calldata _batchHeader,
+        uint256 batchIndex,
         //        bytes32 _prevStateRoot,
         //        bytes32 _postStateRoot,
         bytes32 _withdrawRoot,
@@ -442,7 +442,6 @@ contract T1Chain is OwnableUpgradeable, PausableUpgradeable, IT1Chain {
         override
         whenNotPaused
     {
-        //    ) external override OnlyProver whenNotPaused {
         //        (uint256 batchPtr, bytes32 _batchHash, uint256 _batchIndex) = _beforeFinalizeBatch(
         //            _batchHeader,
         //            _postStateRoot
@@ -464,7 +463,7 @@ contract T1Chain is OwnableUpgradeable, PausableUpgradeable, IT1Chain {
         _checkSignedByProver(proofOfFillRootSignature, _proofOfFill7683Root);
 
         // Now that the signature is verified, perform your internal logic
-        _afterFinalizeBatch(0, 1, "", "", _withdrawRoot, _proofOfFill7683Root);
+        _afterFinalizeBatch(0, batchIndex, "", "", _withdrawRoot, _proofOfFill7683Root);
     }
 
     /// @inheritdoc IT1Chain
@@ -719,11 +718,11 @@ contract T1Chain is OwnableUpgradeable, PausableUpgradeable, IT1Chain {
     )
         internal
     {
-        //        // check and update lastFinalizedBatchIndex
-        //        unchecked {
-        //            if (lastFinalizedBatchIndex + 1 != _batchIndex) revert ErrorIncorrectBatchIndex();
-        lastFinalizedBatchIndex = _batchIndex;
-        //        }
+        // check and update lastFinalizedBatchIndex
+        unchecked {
+            if (lastFinalizedBatchIndex + 1 != _batchIndex) revert ErrorIncorrectBatchIndex();
+            lastFinalizedBatchIndex = _batchIndex;
+        }
 
         //        // record state root and withdraw root
         //        finalizedStateRoots[_batchIndex] = _postStateRoot;

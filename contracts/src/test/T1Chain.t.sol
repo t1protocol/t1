@@ -1671,7 +1671,7 @@ contract T1ChainTest is Test {
         bytes memory invalidSig = new bytes(64); // 64 bytes, not 65
 
         vm.expectRevert(T1Chain.ErrorIncorrectSignatureLength.selector);
-        rollup.finalizeBatchWithProof(dummyRoot, invalidSig, dummyRoot, invalidSig);
+        rollup.finalizeBatchWithProof(0, dummyRoot, invalidSig, dummyRoot, invalidSig);
     }
 
     /**
@@ -1688,7 +1688,7 @@ contract T1ChainTest is Test {
         vm.expectRevert(abi.encodeWithSelector(T1Chain.ErrorIncorrectSigner.selector, expectedBadSigner));
 
         // This call should revert with `ErrorIncorrectSigner(badSigner)`
-        rollup.finalizeBatchWithProof(dummyRoot, sig, dummyRoot, sig);
+        rollup.finalizeBatchWithProof(0, dummyRoot, sig, dummyRoot, sig);
     }
 
     /**
@@ -1707,11 +1707,12 @@ contract T1ChainTest is Test {
         bytes memory proofOfFillSig = _signWithdrawRoot(VALID_SIGNER_KEY, proofOfFillRoot);
 
         // Expect it to succeed
-        rollup.finalizeBatchWithProof(withdrawRoot, withdrawSig, proofOfFillRoot, proofOfFillSig);
+        uint256 batchIndex = 1;
+        rollup.finalizeBatchWithProof(batchIndex, withdrawRoot, withdrawSig, proofOfFillRoot, proofOfFillSig);
 
-        assertEq(rollup.lastFinalizedBatchIndex(), 1);
-        assertEq(rollup.withdrawRoots(1), withdrawRoot);
-        assertEq(rollup.proofOfFill7683Roots(1), proofOfFillRoot);
+        assertEq(rollup.lastFinalizedBatchIndex(), batchIndex);
+        assertEq(rollup.withdrawRoots(batchIndex), withdrawRoot);
+        assertEq(rollup.proofOfFill7683Roots(batchIndex), proofOfFillRoot);
     }
 
     /**
@@ -1725,6 +1726,6 @@ contract T1ChainTest is Test {
         bytes memory sig = _signWithdrawRoot(VALID_SIGNER_KEY, dummyRoot);
 
         vm.expectRevert(bytes("Pausable: paused"));
-        rollup.finalizeBatchWithProof(dummyRoot, sig, dummyRoot, sig);
+        rollup.finalizeBatchWithProof(0, dummyRoot, sig, dummyRoot, sig);
     }
 }

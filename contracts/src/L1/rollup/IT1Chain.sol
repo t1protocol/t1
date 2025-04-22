@@ -121,11 +121,13 @@ interface IT1Chain {
 
     /// @notice t1 batch finalization
     ///
+    /// @param batchIndex The index of the current batch.
     /// @param withdrawRoot The withdraw trie root of current batch.
     /// @param withdrawRootSignature The ECDSA valid signature of withdraw root to match one of the provers
     /// @param proofOfFill7683Root 7683 The Proof of Fill trie root of current batch.
     /// @param proofOfFillRootSignature The ECDSA valid signature of proof of fill root to match one of the provers
     function finalizeBatchWithProof(
+        uint256 batchIndex,
         bytes32 withdrawRoot,
         bytes calldata withdrawRootSignature,
         bytes32 proofOfFill7683Root,
