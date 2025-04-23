@@ -131,9 +131,19 @@ contract T1ERC7683Pull is BasicSwap7683, OwnableUpgradeable, IT1XChainReaderCall
     }
 
     /// @notice Callback function for cross-chain read results
+    /// @param _originDomain The origin domain
+    /// @param _sender The sender address
     /// @param requestId The ID of the read request
     /// @param result The result of the read
-    function onT1XChainReaderResult(bytes32 requestId, bytes calldata result) external override onlyXChainRead {
+    function onT1XChainReaderResult(
+        uint32 _originDomain,
+        bytes32 _sender,
+        bytes32 requestId,
+        bytes calldata result
+    )
+        external
+        onlyXChainRead
+    {
         bytes32 orderId = readRequestToOrderId[requestId];
 
         // Ensure we have a valid order
@@ -148,7 +158,7 @@ contract T1ERC7683Pull is BasicSwap7683, OwnableUpgradeable, IT1XChainReaderCall
 
         // process the settlement if verified
         if (isSettled && orderStatus[orderId] == OPENED) {
-            _handle(uint32(0), bytes32(0), result);
+            _handle(_originDomain, _sender, result);
         }
 
         emit SettlementVerified(orderId, isSettled);
@@ -194,8 +204,8 @@ contract T1ERC7683Pull is BasicSwap7683, OwnableUpgradeable, IT1XChainReaderCall
 
     /// @notice Handles incoming messages
     /// @dev Decodes the message and processes settlement or refund operations accordingly
-    /// @param _originDomain The domain from which the message originates (unused in this implementation)
-    /// @param _sender The address of the sender on the origin domain (unused in this implementation)
+    /// @param _originDomain The domain from which the message originates
+    /// @param _sender The address of the sender on the origin domain
     /// @param _message The encoded message received via t1
     function _handle(uint32 _originDomain, bytes32 _sender, bytes calldata _message) internal {
         (bool _settle, bytes32[] memory _orderIds, bytes[] memory _ordersFillerData) =

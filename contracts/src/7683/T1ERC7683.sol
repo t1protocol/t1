@@ -111,8 +111,8 @@ contract T1ERC7683 is BasicSwap7683, OwnableUpgradeable {
 
     /// @notice Handles incoming messages
     /// @dev Decodes the message and processes settlement or refund operations accordingly
-    /// @param _messageOrigin The domain from which the message originates (unused in this implementation)
-    /// @param _messageSender The address of the sender on the origin domain (unused in this implementation)
+    /// @param _messageOrigin The domain from which the message originates
+    /// @param _messageSender The address of the sender on the origin domain
     /// @param _message The encoded message received via t1
     function _handle(uint32 _messageOrigin, bytes32 _messageSender, bytes calldata _message) internal {
         (bool _settle, bytes32[] memory _orderIds, bytes[] memory _ordersFillerData) =

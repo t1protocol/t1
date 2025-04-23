@@ -91,7 +91,8 @@ contract T1XChainReaderTest is T1BasicSwapE2E {
         {
             // Construct the read request calldata
             bytes memory orderStatus = L2T17683Pull.getFilledOrderStatus(orderId);
-            bytes memory readMessage = T1XChainMessage.encodeRead(requestId, orderStatus);
+            bytes memory readMessage =
+                T1XChainMessage.encodeRead(destination, destinationRouterB32, requestId, orderStatus);
             uint256 balanceSolverBeforeSettle = inputToken.balanceOf(address(vegeta));
             vm.prank(address(l1t1Messenger));
             originReader.handle(readMessage);
