@@ -181,15 +181,7 @@ contract T1ERC7683Pull is BasicSwap7683, OwnableUpgradeable, IT1XChainReaderCall
     // ============ Internal Functions ============
 
     /// @notice Not implemented
-    function _dispatchSettle(
-        uint32,
-        bytes32[] memory,
-        bytes[] memory
-    )
-        internal
-        pure
-        override
-    {
+    function _dispatchSettle(uint32, bytes32[] memory, bytes[] memory) internal pure override {
         revert FunctionNotImplemented("_dispatchSettle");
     }
 
