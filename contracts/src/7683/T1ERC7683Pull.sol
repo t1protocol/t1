@@ -181,24 +181,20 @@ contract T1ERC7683Pull is BasicSwap7683, OwnableUpgradeable, IT1XChainReaderCall
     // ============ Internal Functions ============
 
     /// @notice Not implemented
-    /// @param _originDomain The domain to which the settlement message is sent.
-    /// @param _orderIds The IDs of the orders to settle.
-    /// @param _ordersFillerData The filler data for the orders.
     function _dispatchSettle(
-        uint32 _originDomain,
-        bytes32[] memory _orderIds,
-        bytes[] memory _ordersFillerData
+        uint32,
+        bytes32[] memory,
+        bytes[] memory
     )
         internal
+        pure
         override
     {
         revert FunctionNotImplemented("_dispatchSettle");
     }
 
     /// @notice Not implemented
-    /// @param _originDomain The domain to which the refund message is sent.
-    /// @param _orderIds The IDs of the orders to refund.
-    function _dispatchRefund(uint32 _originDomain, bytes32[] memory _orderIds) internal override {
+    function _dispatchRefund(uint32, bytes32[] memory) internal pure override {
         revert FunctionNotImplemented("_dispatchRefund");
     }
 

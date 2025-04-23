@@ -10,8 +10,8 @@ import { T1ERC7683 } from "../../../src/7683/T1ERC7683.sol";
 import { T1Constants } from "../../../src/libraries/constants/T1Constants.sol";
 
 contract DeployT1ERC7683 is Script {
-    uint32 constant ORIGIN_CHAIN = uint32(T1Constants.L1_CHAIN_ID); // Sepolia
-    uint32 constant DESTINATION_CHAIN = uint32(T1Constants.T1_DEVNET_CHAIN_ID); // t1 devnet
+    uint32 private constant ORIGIN_CHAIN = uint32(T1Constants.L1_CHAIN_ID); // Sepolia
+    uint32 private constant DESTINATION_CHAIN = uint32(T1Constants.T1_DEVNET_CHAIN_ID); // t1 devnet
     ProxyAdmin private proxyAdmin;
 
     function deployL1Router() external {

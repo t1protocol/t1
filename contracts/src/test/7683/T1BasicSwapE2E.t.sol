@@ -18,7 +18,6 @@ import {
 
 import { T1ERC7683 } from "../../7683/T1ERC7683.sol";
 import { L1MessageQueue } from "../../L1/rollup/L1MessageQueue.sol";
-import { IL1MessageQueue } from "../../L1/rollup/IL1MessageQueue.sol";
 import { L2MessageQueue } from "../../L2/predeploys/L2MessageQueue.sol";
 import { L1T1Messenger } from "../../L1/L1T1Messenger.sol";
 import { IL1T1Messenger } from "../../L1/IL1T1Messenger.sol";
