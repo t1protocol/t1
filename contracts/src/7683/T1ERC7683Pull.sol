@@ -17,32 +17,24 @@ import { IT1XChainReaderCallback } from "../libraries/xChain/IT1XChainReaderCall
  */
 contract T1ERC7683Pull is BasicSwap7683, OwnableUpgradeable, IT1XChainReaderCallback {
     // ============ Constants ============
-
     uint32 public immutable localDomain;
-
     IT1Messenger public immutable messenger;
-
     T1XChainReader public immutable xChainRead;
-
     address public counterpart;
 
     // ============ State Variables ============
-
     /// @notice Maps request IDs to order IDs for cross-chain read requests
     mapping(bytes32 => bytes32) public readRequestToOrderId;
-
     /// @notice Maps order IDs to verification status
     mapping(bytes32 => bool) public orderVerified;
 
     // ============ Events ============
-
     /**
      * @notice Emitted when an order settlement verification is requested
      * @param orderId The ID of the order
      * @param requestId The ID of the read request
      */
     event SettlementVerificationRequested(bytes32 indexed orderId, bytes32 indexed requestId);
-
     /**
      * @notice Emitted when an order settlement is verified
      * @param orderId The ID of the order
@@ -51,19 +43,18 @@ contract T1ERC7683Pull is BasicSwap7683, OwnableUpgradeable, IT1XChainReaderCall
     event SettlementVerified(bytes32 indexed orderId, bool isSettled);
 
     // ============ Upgrade Gap ============
-
     /// @dev Reserved storage slots for upgradeability.
     uint256[47] private __GAP;
 
     // ============ Errors ============
-
     error OnlyMessenger();
     error OnlyXChainRead();
     error FunctionNotImplemented(string functionName);
     error EthNotAllowed();
+    error SettlementFailed();
+    error RefundFailed();
 
     // ============ Modifiers ============
-
     modifier onlyMessenger() {
         if (_msgSender() != address(messenger)) revert OnlyMessenger();
         _;
@@ -202,8 +193,12 @@ contract T1ERC7683Pull is BasicSwap7683, OwnableUpgradeable, IT1XChainReaderCall
         for (uint256 i = 0; i < _orderIds.length; i++) {
             if (_settle) {
                 _handleSettleOrder(_originDomain, _sender, _orderIds[i], abi.decode(_ordersFillerData[i], (bytes32)));
+
+                if (orderStatus[_orderIds[i]] != SETTLED) revert SettlementFailed();
             } else {
                 _handleRefundOrder(_originDomain, _sender, _orderIds[i]);
+
+                if (orderStatus[_orderIds[i]] != REFUNDED) revert RefundFailed();
             }
         }
     }

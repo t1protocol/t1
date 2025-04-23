@@ -16,30 +16,23 @@ import { IT1Messenger } from "../libraries/IT1Messenger.sol";
  */
 contract T1ERC7683 is BasicSwap7683, OwnableUpgradeable {
     // ============ Constants ============
-
     uint32 internal constant DEFAULT_GAS_LIMIT = 1_000_000;
-
     uint32 public immutable localDomain;
-
     IT1Messenger public immutable messenger;
-
     address public counterpart;
 
     // ============ Upgrade Gap ============
-
     /// @dev Reserved storage slots for upgradeability.
     uint256[47] private __GAP;
 
     // ============ Errors ============
-
     error OnlyMessenger();
-
     error FunctionNotImplemented(string functionName);
-
     error EthNotAllowed();
+    error SettlementFailed();
+    error RefundFailed();
 
     // ============ Modifiers ============
-
     modifier onlyMessenger() {
         if (_msgSender() != address(messenger)) revert OnlyMessenger();
         _;
@@ -122,8 +115,12 @@ contract T1ERC7683 is BasicSwap7683, OwnableUpgradeable {
                 _handleSettleOrder(
                     _messageOrigin, _messageSender, _orderIds[i], abi.decode(_ordersFillerData[i], (bytes32))
                 );
+
+                if (orderStatus[_orderIds[i]] != SETTLED) revert SettlementFailed();
             } else {
                 _handleRefundOrder(_messageOrigin, _messageSender, _orderIds[i]);
+
+                if (orderStatus[_orderIds[i]] != REFUNDED) revert RefundFailed();
             }
         }
     }
