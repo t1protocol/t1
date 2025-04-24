@@ -92,7 +92,7 @@ contract L1MessageQueueWithGasPriceOracleTest is T1TestBase {
         assertEq(queue.estimateCrossDomainMessageFee(gasLimit), baseFee * gasLimit);
     }
 
-    function testCalculateIntrinsicGasFee(bytes memory data) external {
+    function testCalculateIntrinsicGasFee(bytes memory data) external view {
         assertEq(queue.calculateIntrinsicGasFee(data), 21_000 + data.length * 16);
     }
 }

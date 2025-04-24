@@ -1652,7 +1652,7 @@ contract T1ChainTest is Test {
      *      `"\x19Ethereum Signed Message:\n32"` prefix to match on-chain logic.
      *      This matches what T1Chain does internally with `toEthSignedMessageHash`.
      */
-    function _signWithdrawRoot(uint256 privKey, bytes32 root) internal returns (bytes memory sig) {
+    function _signWithdrawRoot(uint256 privKey, bytes32 root) internal pure returns (bytes memory sig) {
         // 1) Reproduce the prefixing: keccak256("\x19Ethereum Signed Message:\n32", root)
         bytes32 ethSignedMsg = keccak256(abi.encodePacked("\x19Ethereum Signed Message:\n32", root));
 

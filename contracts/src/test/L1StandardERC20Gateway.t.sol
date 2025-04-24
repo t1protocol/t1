@@ -111,7 +111,7 @@ contract L1StandardERC20GatewayTest is L1GatewayTestBase, DeployPermit2 {
         gateway.initialize();
     }
 
-    function testGetL2ERC20Address(address l1Address) public {
+    function testGetL2ERC20Address(address l1Address) public view {
         assertEq(
             gateway.getL2ERC20Address(l1Address), factory.computeL2TokenAddress(address(counterpartGateway), l1Address)
         );

@@ -121,7 +121,7 @@ contract L1GatewayRouterTest is L1GatewayTestBase, DeployPermit2, PermitSignatur
         router.setMM(address(this));
     }
 
-    function testOwnership() public {
+    function testOwnership() public view {
         assertEq(address(this), router.owner());
     }
 

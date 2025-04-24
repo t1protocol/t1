@@ -14,7 +14,7 @@ contract L2MessageQueueTest is Test {
         queue.initialize(address(this));
     }
 
-    function testConstructor() external {
+    function testConstructor() external view {
         assertEq(queue.messenger(), address(this));
         assertEq(queue.nextMessageIndex(), 0);
     }

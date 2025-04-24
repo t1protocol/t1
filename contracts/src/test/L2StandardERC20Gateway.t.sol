@@ -104,7 +104,7 @@ contract L2StandardERC20GatewayTest is L2GatewayTestBase {
         gateway.initialize();
     }
 
-    function testGetL2ERC20Address(address l1Address) public {
+    function testGetL2ERC20Address(address l1Address) public view {
         assertEq(gateway.getL2ERC20Address(l1Address), factory.computeL2TokenAddress(address(gateway), l1Address));
     }
 

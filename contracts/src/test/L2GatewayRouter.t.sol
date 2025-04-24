@@ -94,7 +94,7 @@ contract L2GatewayRouterTest is L2GatewayTestBase {
         vm.stopPrank();
     }
 
-    function testOwnership() public {
+    function testOwnership() public view {
         assertEq(address(this), router.owner());
     }
 
