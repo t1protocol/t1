@@ -18,7 +18,7 @@
     "@openzeppelin/contracts": "4.9.3",
     "@openzeppelin/contracts-upgradeable": "4.9.3",
     "@uniswap/permit2": "github:uniswap/permit2",
-    "intents-framework": "1.0.0"
+    "intents-framework": "github:BootNodeDev/intents-framework#main"
   },
   "devDependencies": {
     "ds-test": "github:dapphub/ds-test",

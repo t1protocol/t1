@@ -2,7 +2,6 @@
 pragma solidity ^0.8.25;
 
 import { OwnableUpgradeable } from "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
-import { ReentrancyGuardUpgradeable } from "@openzeppelin/contracts-upgradeable/security/ReentrancyGuardUpgradeable.sol";
 import { Hyperlane7683Message } from "intents-framework/libs/Hyperlane7683Message.sol";
 import { BasicSwap7683 } from "intents-framework/BasicSwap7683.sol";
 import { TypeCasts } from "@hyperlane-xyz/libs/TypeCasts.sol";
@@ -17,30 +16,23 @@ import { IT1Messenger } from "../libraries/IT1Messenger.sol";
  */
 contract T1ERC7683 is BasicSwap7683, OwnableUpgradeable {
     // ============ Constants ============
-
     uint32 internal constant DEFAULT_GAS_LIMIT = 1_000_000;
-
     uint32 public immutable localDomain;
-
     IT1Messenger public immutable messenger;
-
     address public counterpart;
 
     // ============ Upgrade Gap ============
-
     /// @dev Reserved storage slots for upgradeability.
     uint256[47] private __GAP;
 
     // ============ Errors ============
-
     error OnlyMessenger();
-
     error FunctionNotImplemented(string functionName);
-
     error EthNotAllowed();
+    error SettlementFailed();
+    error RefundFailed();
 
     // ============ Modifiers ============
-
     modifier onlyMessenger() {
         if (_msgSender() != address(messenger)) revert OnlyMessenger();
         _;
@@ -111,18 +103,24 @@ contract T1ERC7683 is BasicSwap7683, OwnableUpgradeable {
 
     /// @notice Handles incoming messages
     /// @dev Decodes the message and processes settlement or refund operations accordingly
-    /// @dev _originDomain The domain from which the message originates (unused in this implementation)
-    /// @dev _sender The address of the sender on the origin domain (unused in this implementation)
+    /// @param _messageOrigin The domain from which the message originates
+    /// @param _messageSender The address of the sender on the origin domain
     /// @param _message The encoded message received via t1
-    function _handle(uint32, bytes32, bytes calldata _message) internal {
+    function _handle(uint32 _messageOrigin, bytes32 _messageSender, bytes calldata _message) internal {
         (bool _settle, bytes32[] memory _orderIds, bytes[] memory _ordersFillerData) =
             Hyperlane7683Message.decode(_message);
 
         for (uint256 i = 0; i < _orderIds.length; i++) {
             if (_settle) {
-                _handleSettleOrder(_orderIds[i], abi.decode(_ordersFillerData[i], (bytes32)));
+                _handleSettleOrder(
+                    _messageOrigin, _messageSender, _orderIds[i], abi.decode(_ordersFillerData[i], (bytes32))
+                );
+
+                if (orderStatus[_orderIds[i]] != SETTLED) revert SettlementFailed();
             } else {
-                _handleRefundOrder(_orderIds[i]);
+                _handleRefundOrder(_messageOrigin, _messageSender, _orderIds[i]);
+
+                if (orderStatus[_orderIds[i]] != REFUNDED) revert RefundFailed();
             }
         }
     }

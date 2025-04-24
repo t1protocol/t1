@@ -7,7 +7,6 @@ import { L2MessageQueue } from "./predeploys/L2MessageQueue.sol";
 
 import { IT1Messenger } from "../libraries/IT1Messenger.sol";
 import { T1Constants } from "../libraries/constants/T1Constants.sol";
-import { AddressAliasHelper } from "../libraries/common/AddressAliasHelper.sol";
 import { T1MessengerBase } from "../libraries/T1MessengerBase.sol";
 
 // solhint-disable reason-string

@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.25;
 
+import { TypeCasts } from "@hyperlane-xyz/libs/TypeCasts.sol";
 import { OwnableUpgradeable } from "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
 import { ReentrancyGuardUpgradeable } from "@openzeppelin/contracts-upgradeable/security/ReentrancyGuardUpgradeable.sol";
 
@@ -119,7 +120,9 @@ contract T1XChainReader is OwnableUpgradeable, ReentrancyGuardUpgradeable {
 
         callbacks[requestId] = callback;
 
-        bytes memory message = T1XChainMessage.encodeRead(requestId, callData);
+        bytes memory message = T1XChainMessage.encodeRead(
+            destinationDomain, TypeCasts.addressToBytes32(targetContract), requestId, callData
+        );
 
         // Using this selector to avoid hash collision
         bytes4 requestReadSelector = bytes4(keccak256("requestRead(uint32,address,uint64,bytes,address)"));
@@ -159,25 +162,35 @@ contract T1XChainReader is OwnableUpgradeable, ReentrancyGuardUpgradeable {
      * @param _message The encoded message
      */
     function handle(bytes calldata _message) external payable onlyMessenger {
-        (bytes32 requestId, bytes memory data) = T1XChainMessage.decodeResponse(_message);
-        _handleReadResponse(requestId, data);
+        (uint32 _originDomain, bytes32 _sender, bytes32 requestId, bytes memory data) =
+            T1XChainMessage.decodeResponse(_message);
+        _handleReadResponse(_originDomain, _sender, requestId, data);
     }
 
     // ============ Internal Functions ============
 
     /**
      * @notice Handles an incoming read response
+     * @param _originDomain The origin domain
+     * @param _sender The sender address
      * @param requestId Unique identifier for the original request
      * @param result The result data from the read operation
      */
-    function _handleReadResponse(bytes32 requestId, bytes memory result) internal {
+    function _handleReadResponse(
+        uint32 _originDomain,
+        bytes32 _sender,
+        bytes32 requestId,
+        bytes memory result
+    )
+        internal
+    {
         address callback = callbacks[requestId];
 
         // If there's a valid callback, forward the result
         if (callback != address(0)) {
             delete callbacks[requestId];
 
-            IT1XChainReaderCallback(callback).onT1XChainReaderResult(requestId, result);
+            IT1XChainReaderCallback(callback).onT1XChainReaderResult(_originDomain, _sender, requestId, result);
         }
 
         emit ReadResult(requestId, result);

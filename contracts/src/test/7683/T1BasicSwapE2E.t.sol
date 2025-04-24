@@ -18,13 +18,13 @@ import {
 
 import { T1ERC7683 } from "../../7683/T1ERC7683.sol";
 import { L1MessageQueue } from "../../L1/rollup/L1MessageQueue.sol";
-import { IL1MessageQueue } from "../../L1/rollup/IL1MessageQueue.sol";
 import { L2MessageQueue } from "../../L2/predeploys/L2MessageQueue.sol";
 import { L1T1Messenger } from "../../L1/L1T1Messenger.sol";
 import { IL1T1Messenger } from "../../L1/IL1T1Messenger.sol";
 import { L2T1Messenger } from "../../L2/L2T1Messenger.sol";
 import { T1ChainMockBlob } from "../../mocks/T1ChainMockBlob.sol";
 import { MockRollupVerifier } from "../mocks/MockRollupVerifier.sol";
+import { BatchHeaders } from "../utils/BatchHeaders.sol";
 
 event Settle(bytes32[] orderIds, bytes[] ordersFillerData);
 
@@ -293,7 +293,7 @@ contract T1BasicSwapE2E is BaseTest {
         vm.stopPrank();
 
         uint256[] memory balancesBeforeSettle = _balances(inputToken);
-        handleRelayMessage(orderIds, ordersFillerData, true);
+        _handleRelayMessage(orderIds, ordersFillerData, true);
 
         uint256[] memory balancesAfterSettle = _balances(inputToken);
 
@@ -381,7 +381,7 @@ contract T1BasicSwapE2E is BaseTest {
 
         uint256[] memory balancesBeforeSettle = _balances();
 
-        handleRelayMessage(orderIds, ordersFillerData, true);
+        _handleRelayMessage(orderIds, ordersFillerData, true);
 
         uint256[] memory balancesAfterSettle = _balances();
 
@@ -475,7 +475,7 @@ contract T1BasicSwapE2E is BaseTest {
 
         uint256[] memory balancesBeforeSettle = _balances(inputToken);
 
-        handleRelayMessage(orderIds, ordersFillerData, true);
+        _handleRelayMessage(orderIds, ordersFillerData, true);
 
         uint256[] memory balancesAfterSettle = _balances(inputToken);
 
@@ -541,7 +541,7 @@ contract T1BasicSwapE2E is BaseTest {
         bytes[] memory emptyOrdersFillerData = new bytes[](1);
         emptyOrdersFillerData[0] = hex"";
 
-        handleRelayMessage(orderIds, emptyOrdersFillerData, false);
+        _handleRelayMessage(orderIds, emptyOrdersFillerData, false);
 
         uint256[] memory balancesAfterRefund = _balances(inputToken);
 
@@ -608,7 +608,7 @@ contract T1BasicSwapE2E is BaseTest {
         bytes[] memory emptyOrdersFillerData = new bytes[](1);
         emptyOrdersFillerData[0] = hex"";
 
-        handleRelayMessage(orderIds, emptyOrdersFillerData, false);
+        _handleRelayMessage(orderIds, emptyOrdersFillerData, false);
 
         uint256[] memory balancesAfterRefund = _balances();
 
@@ -685,7 +685,7 @@ contract T1BasicSwapE2E is BaseTest {
         bytes[] memory emptyOrdersFillerData = new bytes[](1);
         emptyOrdersFillerData[0] = hex"";
 
-        handleRelayMessage(orderIds, emptyOrdersFillerData, false);
+        _handleRelayMessage(orderIds, emptyOrdersFillerData, false);
 
         uint256[] memory balancesAfterRefund = _balances(inputToken);
 
@@ -697,16 +697,15 @@ contract T1BasicSwapE2E is BaseTest {
         assertEq(balancesAfterRefund[balanceId[kakaroto]], balancesBeforeRefund[balanceId[kakaroto]] + amount);
     }
 
-    function handleRelayMessage(bytes32[] memory orderIds, bytes[] memory ordersFillerData, bool isSettle) internal {
+    function _handleRelayMessage(bytes32[] memory orderIds, bytes[] memory ordersFillerData, bool isSettle) internal {
         rollup.addProver(address(0));
-        bytes memory batchHeader1 = generateBatchHeader();
+        bytes memory batchHeader1 = BatchHeaders.generateBatchHeader(rollup);
         assertEq(rollup.isBatchFinalized(1), false);
 
         bytes memory innerMessage = abi.encode(isSettle, orderIds, ordersFillerData);
 
-        bytes memory outerMessage = abi.encodeWithSelector(
-            T1ERC7683.handle.selector, origin, TypeCasts.addressToBytes32(address(destinationRouter)), innerMessage
-        );
+        bytes memory outerMessage =
+            abi.encodeWithSelector(T1ERC7683.handle.selector, destination, destinationRouterB32, innerMessage);
 
         // hash 0xcca132db240c06c148d210ceda18701a38e863e5ab2ed4638b15b6c7b30a08ae
         uint256 nonce = 0;
@@ -732,27 +731,5 @@ contract T1BasicSwapE2E is BaseTest {
         IL1T1Messenger.L2MessageProof memory messageProof =
             IL1T1Messenger.L2MessageProof({ batchIndex: 1, merkleProof: proof });
         l1t1Messenger.relayMessageWithProof(from, to, msgValue, nonce, outerMessage, messageProof);
-    }
-
-    function generateBatchHeader() internal view returns (bytes memory batchHeader1) {
-        batchHeader1 = new bytes(193);
-        bytes32 blobVersionedHash = 0x013590dc3544d56629ba81bb14d4d31248f825001653aa575eb8e3a719046757;
-        bytes32 batchHash0 = rollup.committedBatches(0);
-        bytes memory blobDataProof =
-        // solhint-disable-next-line max-line-length
-            hex"2c9d777660f14ad49803a6442935c0d24a0d83551de5995890bf70a17d24e68753ab0fe6807c7081f0885fe7da741554d658a03730b1fa006f8319f8b993bcb0a5a0c9e8a145c5ef6e415c245690effa2914ec9393f58a7251d30c0657da1453d9ad906eae8b97dd60c9a216f81b4df7af34d01e214e1ec5865f0133ecc16d7459e49dab66087340677751e82097fbdd20551d66076f425775d1758a9dfd186b";
-        assembly {
-            mstore8(add(batchHeader1, 0x20), 3) // version
-            mstore(add(batchHeader1, add(0x20, 1)), shl(192, 1)) // batchIndex
-            mstore(add(batchHeader1, add(0x20, 9)), 0) // l1MessagePopped
-            mstore(add(batchHeader1, add(0x20, 17)), 0) // totalL1MessagePopped
-            // dataHash
-            mstore(add(batchHeader1, add(0x20, 25)), 0x246394445f4fe64ed5598554d55d1682d6fb3fe04bf58eb54ef81d1189fafb51)
-            mstore(add(batchHeader1, add(0x20, 57)), blobVersionedHash) // blobVersionedHash
-            mstore(add(batchHeader1, add(0x20, 89)), batchHash0) // parentBatchHash
-            mstore(add(batchHeader1, add(0x20, 121)), 0) // lastBlockTimestamp
-            mcopy(add(batchHeader1, add(0x20, 129)), add(blobDataProof, 0x20), 64) // blobDataProof
-        }
-        batchHeader1[1] = bytes1(uint8(0)); // change back
     }
 }

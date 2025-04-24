@@ -17,32 +17,24 @@ import { IT1XChainReaderCallback } from "../libraries/xChain/IT1XChainReaderCall
  */
 contract T1ERC7683Pull is BasicSwap7683, OwnableUpgradeable, IT1XChainReaderCallback {
     // ============ Constants ============
-
     uint32 public immutable localDomain;
-
     IT1Messenger public immutable messenger;
-
     T1XChainReader public immutable xChainRead;
-
     address public counterpart;
 
     // ============ State Variables ============
-
     /// @notice Maps request IDs to order IDs for cross-chain read requests
     mapping(bytes32 => bytes32) public readRequestToOrderId;
-
     /// @notice Maps order IDs to verification status
     mapping(bytes32 => bool) public orderVerified;
 
     // ============ Events ============
-
     /**
      * @notice Emitted when an order settlement verification is requested
      * @param orderId The ID of the order
      * @param requestId The ID of the read request
      */
     event SettlementVerificationRequested(bytes32 indexed orderId, bytes32 indexed requestId);
-
     /**
      * @notice Emitted when an order settlement is verified
      * @param orderId The ID of the order
@@ -51,19 +43,18 @@ contract T1ERC7683Pull is BasicSwap7683, OwnableUpgradeable, IT1XChainReaderCall
     event SettlementVerified(bytes32 indexed orderId, bool isSettled);
 
     // ============ Upgrade Gap ============
-
     /// @dev Reserved storage slots for upgradeability.
     uint256[47] private __GAP;
 
     // ============ Errors ============
-
     error OnlyMessenger();
     error OnlyXChainRead();
     error FunctionNotImplemented(string functionName);
     error EthNotAllowed();
+    error SettlementFailed();
+    error RefundFailed();
 
     // ============ Modifiers ============
-
     modifier onlyMessenger() {
         if (_msgSender() != address(messenger)) revert OnlyMessenger();
         _;
@@ -131,9 +122,19 @@ contract T1ERC7683Pull is BasicSwap7683, OwnableUpgradeable, IT1XChainReaderCall
     }
 
     /// @notice Callback function for cross-chain read results
+    /// @param _originDomain The origin domain
+    /// @param _sender The sender address
     /// @param requestId The ID of the read request
     /// @param result The result of the read
-    function onT1XChainReaderResult(bytes32 requestId, bytes calldata result) external override onlyXChainRead {
+    function onT1XChainReaderResult(
+        uint32 _originDomain,
+        bytes32 _sender,
+        bytes32 requestId,
+        bytes calldata result
+    )
+        external
+        onlyXChainRead
+    {
         bytes32 orderId = readRequestToOrderId[requestId];
 
         // Ensure we have a valid order
@@ -148,7 +149,7 @@ contract T1ERC7683Pull is BasicSwap7683, OwnableUpgradeable, IT1XChainReaderCall
 
         // process the settlement if verified
         if (isSettled && orderStatus[orderId] == OPENED) {
-            _handle(uint32(0), bytes32(0), result);
+            _handle(_originDomain, _sender, result);
         }
 
         emit SettlementVerified(orderId, isSettled);
@@ -171,41 +172,33 @@ contract T1ERC7683Pull is BasicSwap7683, OwnableUpgradeable, IT1XChainReaderCall
     // ============ Internal Functions ============
 
     /// @notice Not implemented
-    /// @param _originDomain The domain to which the settlement message is sent.
-    /// @param _orderIds The IDs of the orders to settle.
-    /// @param _ordersFillerData The filler data for the orders.
-    function _dispatchSettle(
-        uint32 _originDomain,
-        bytes32[] memory _orderIds,
-        bytes[] memory _ordersFillerData
-    )
-        internal
-        override
-    {
+    function _dispatchSettle(uint32, bytes32[] memory, bytes[] memory) internal pure override {
         revert FunctionNotImplemented("_dispatchSettle");
     }
 
     /// @notice Not implemented
-    /// @param _originDomain The domain to which the refund message is sent.
-    /// @param _orderIds The IDs of the orders to refund.
-    function _dispatchRefund(uint32 _originDomain, bytes32[] memory _orderIds) internal override {
+    function _dispatchRefund(uint32, bytes32[] memory) internal pure override {
         revert FunctionNotImplemented("_dispatchRefund");
     }
 
     /// @notice Handles incoming messages
     /// @dev Decodes the message and processes settlement or refund operations accordingly
-    /// @dev _originDomain The domain from which the message originates (unused in this implementation)
-    /// @dev _sender The address of the sender on the origin domain (unused in this implementation)
+    /// @param _originDomain The domain from which the message originates
+    /// @param _sender The address of the sender on the origin domain
     /// @param _message The encoded message received via t1
-    function _handle(uint32, bytes32, bytes calldata _message) internal {
+    function _handle(uint32 _originDomain, bytes32 _sender, bytes calldata _message) internal {
         (bool _settle, bytes32[] memory _orderIds, bytes[] memory _ordersFillerData) =
             Hyperlane7683Message.decode(_message);
 
         for (uint256 i = 0; i < _orderIds.length; i++) {
             if (_settle) {
-                _handleSettleOrder(_orderIds[i], abi.decode(_ordersFillerData[i], (bytes32)));
+                _handleSettleOrder(_originDomain, _sender, _orderIds[i], abi.decode(_ordersFillerData[i], (bytes32)));
+
+                if (orderStatus[_orderIds[i]] != SETTLED) revert SettlementFailed();
             } else {
-                _handleRefundOrder(_orderIds[i]);
+                _handleRefundOrder(_originDomain, _sender, _orderIds[i]);
+
+                if (orderStatus[_orderIds[i]] != REFUNDED) revert RefundFailed();
             }
         }
     }

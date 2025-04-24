@@ -2,7 +2,6 @@
 pragma solidity ^0.8.25;
 
 import { Test, Vm } from "forge-std/Test.sol";
-import { console2 } from "forge-std/console2.sol";
 
 import { DeployPermit2 } from "@uniswap/permit2/test/utils/DeployPermit2.sol";
 import { IEIP712 } from "@uniswap/permit2/src/interfaces/IEIP712.sol";
@@ -10,7 +9,7 @@ import { IEIP712 } from "@uniswap/permit2/src/interfaces/IEIP712.sol";
 import { ERC20 } from "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 import { TypeCasts } from "@hyperlane-xyz/libs/TypeCasts.sol";
 import { InterchainGasPaymaster } from "@hyperlane-xyz/hooks/igp/InterchainGasPaymaster.sol";
-import { IPermit2, ISignatureTransfer } from "@uniswap/permit2/src/interfaces/IPermit2.sol";
+import { ISignatureTransfer } from "@uniswap/permit2/src/interfaces/IPermit2.sol";
 
 import { ProxyAdmin } from "@openzeppelin/contracts/proxy/transparent/ProxyAdmin.sol";
 import { TransparentUpgradeableProxy } from "@openzeppelin/contracts/proxy/transparent/TransparentUpgradeableProxy.sol";
@@ -18,12 +17,8 @@ import { TransparentUpgradeableProxy } from "@openzeppelin/contracts/proxy/trans
 import {
     GaslessCrossChainOrder,
     OnchainCrossChainOrder,
-    ResolvedCrossChainOrder,
-    Output,
-    FillInstruction
+    ResolvedCrossChainOrder
 } from "intents-framework/ERC7683/IERC7683.sol";
-
-import { OrderData, OrderEncoder } from "intents-framework/libs/OrderEncoder.sol";
 
 import { Base7683 } from "intents-framework/Base7683.sol";
 import { EmptyContract } from "../../misc/EmptyContract.sol";

@@ -6,12 +6,9 @@ import { ClonesUpgradeable } from "@openzeppelin/contracts-upgradeable/proxy/Clo
 import { IERC20MetadataUpgradeable } from
     "@openzeppelin/contracts-upgradeable/token/ERC20/extensions/IERC20MetadataUpgradeable.sol";
 
-import { IAllowanceTransfer } from "@uniswap/permit2/src/interfaces/IAllowanceTransfer.sol";
-
 import { IL2ERC20Gateway } from "../../L2/gateways/IL2ERC20Gateway.sol";
 import { IL1T1Messenger } from "../IL1T1Messenger.sol";
 import { IL1ERC20Gateway } from "./IL1ERC20Gateway.sol";
-import { IL1GatewayRouter } from "../../L1/gateways/IL1GatewayRouter.sol";
 
 import { T1Constants } from "../../libraries/constants/T1Constants.sol";
 import { T1GatewayBase } from "../../libraries/gateway/T1GatewayBase.sol";
