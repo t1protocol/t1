@@ -705,7 +705,7 @@ contract T1BasicSwapE2E is BaseTest {
         bytes memory innerMessage = abi.encode(isSettle, orderIds, ordersFillerData);
 
         bytes memory outerMessage =
-            abi.encodeWithSelector(T1ERC7683.handle.selector, destination, destinationRouterB32, innerMessage);
+            abi.encodeWithSelector(T1ERC7683.handle.selector, destination, destinationRouterB32, 1, bytes32(0), innerMessage);
 
         // hash 0xcca132db240c06c148d210ceda18701a38e863e5ab2ed4638b15b6c7b30a08ae
         uint256 nonce = 0;

@@ -30,6 +30,15 @@ interface IL1T1Messenger is IT1Messenger {
 
     /**
      *
+     * Public View Functions *
+     *
+     */
+
+    /// @notice Return the address of the rollup.
+    function rollup() external view returns (address);
+
+    /**
+     *
      * Public Mutating Functions *
      *
      */

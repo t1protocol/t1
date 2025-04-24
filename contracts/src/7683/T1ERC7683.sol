@@ -1,12 +1,15 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.25;
 
+import { console } from "forge-std/console.sol";
+
 import { OwnableUpgradeable } from "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
 import { Hyperlane7683Message } from "intents-framework/libs/Hyperlane7683Message.sol";
 import { BasicSwap7683 } from "intents-framework/BasicSwap7683.sol";
 import { TypeCasts } from "@hyperlane-xyz/libs/TypeCasts.sol";
 
-import { IT1Messenger } from "../libraries/IT1Messenger.sol";
+import { IT1Chain } from "../L1/rollup/IT1Chain.sol";
+import { IL1T1Messenger } from "../L1/IL1T1Messenger.sol";
 
 /**
  * @title T1ERC7683
@@ -18,8 +21,17 @@ contract T1ERC7683 is BasicSwap7683, OwnableUpgradeable {
     // ============ Constants ============
     uint32 internal constant DEFAULT_GAS_LIMIT = 1_000_000;
     uint32 public immutable localDomain;
-    IT1Messenger public immutable messenger;
+    IL1T1Messenger public immutable messenger;
     address public counterpart;
+
+    // ============ Structs ============
+    /// @notice Struct to represent an example order
+    struct IntentProof {
+        // The index of the batch where the PoF belongs to.
+        uint256 batchIndex;
+        // The proof of fill trie root
+        bytes32 proofOfFillRoot;
+    }
 
     // ============ Upgrade Gap ============
     /// @dev Reserved storage slots for upgradeability.
@@ -29,6 +41,8 @@ contract T1ERC7683 is BasicSwap7683, OwnableUpgradeable {
     error OnlyMessenger();
     error FunctionNotImplemented(string functionName);
     error EthNotAllowed();
+    error BatchNotFinalized();
+    error IntentProofNotFound(uint256 batchIndex, bytes32 proofOfFillRoot);
     error SettlementFailed();
     error RefundFailed();
 
@@ -45,7 +59,7 @@ contract T1ERC7683 is BasicSwap7683, OwnableUpgradeable {
     /// @param _permit2 The address of the permit2 contract.
     /// @param localDomain_ The local domain.
     constructor(address _messenger, address _permit2, uint32 localDomain_) BasicSwap7683(_permit2) {
-        messenger = IT1Messenger(_messenger);
+        messenger = IL1T1Messenger(_messenger);
         localDomain = localDomain_;
     }
 
@@ -60,9 +74,19 @@ contract T1ERC7683 is BasicSwap7683, OwnableUpgradeable {
     /// @notice Handles an incoming message
     /// @param _origin The origin domain
     /// @param _sender The sender address
+    /// @param _intentProof The intent proof containing the batch index and proof of fill root
     /// @param _message The message
-    function handle(uint32 _origin, bytes32 _sender, bytes calldata _message) external payable onlyMessenger {
-        _handle(_origin, _sender, _message);
+    function handle(
+        uint32 _origin,
+        bytes32 _sender,
+        IntentProof calldata _intentProof,
+        bytes calldata _message
+    )
+        external
+        payable
+        onlyMessenger
+    {
+        _handle(_origin, _sender, _intentProof, _message);
     }
 
     // ============ Internal Functions ============
@@ -105,8 +129,29 @@ contract T1ERC7683 is BasicSwap7683, OwnableUpgradeable {
     /// @dev Decodes the message and processes settlement or refund operations accordingly
     /// @param _messageOrigin The domain from which the message originates
     /// @param _messageSender The address of the sender on the origin domain
+    /// @param _intentProof The intent proof containing the batch index and proof of fill root
     /// @param _message The encoded message received via t1
-    function _handle(uint32 _messageOrigin, bytes32 _messageSender, bytes calldata _message) internal {
+    function _handle(
+        uint32 _messageOrigin,
+        bytes32 _messageSender,
+        IntentProof calldata _intentProof,
+        bytes calldata _message
+    )
+        internal
+    {
+        IT1Chain t1Chain = IT1Chain(IL1T1Messenger(address(messenger)).rollup());
+
+        console.log("xxxx", _intentProof.batchIndex);
+        console.logBytes32(_intentProof.proofOfFillRoot);
+
+        // Check if intent proof batch index is finalized
+        if (!t1Chain.isBatchFinalized(_intentProof.batchIndex)) revert BatchNotFinalized();
+
+        // Check intent proof exists in our rollup
+        if (t1Chain.proofOfFill7683Roots(_intentProof.batchIndex) != _intentProof.proofOfFillRoot) {
+            revert IntentProofNotFound(_intentProof.batchIndex, _intentProof.proofOfFillRoot);
+        }
+
         (bool _settle, bytes32[] memory _orderIds, bytes[] memory _ordersFillerData) =
             Hyperlane7683Message.decode(_message);
 
