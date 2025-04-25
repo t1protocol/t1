@@ -1,6 +1,8 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.25;
 
+import { Test, Vm } from "forge-std/Test.sol";
+
 import {
     TransparentUpgradeableProxy,
     ITransparentUpgradeableProxy
@@ -21,6 +23,7 @@ import { L1MessageQueue } from "../../L1/rollup/L1MessageQueue.sol";
 import { L2MessageQueue } from "../../L2/predeploys/L2MessageQueue.sol";
 import { L1T1Messenger } from "../../L1/L1T1Messenger.sol";
 import { IL1T1Messenger } from "../../L1/IL1T1Messenger.sol";
+import { IT1Messenger } from "../../libraries/IT1Messenger.sol";
 import { L2T1Messenger } from "../../L2/L2T1Messenger.sol";
 import { T1ChainMockBlob } from "../../mocks/T1ChainMockBlob.sol";
 import { MockRollupVerifier } from "../mocks/MockRollupVerifier.sol";
@@ -293,7 +296,7 @@ contract T1BasicSwapE2E is BaseTest {
         vm.stopPrank();
 
         uint256[] memory balancesBeforeSettle = _balances(inputToken);
-        _handleRelayMessage(orderIds, ordersFillerData, true);
+        _handleRelayMessage(orderIds, ordersFillerData, true, origin, 1);
 
         uint256[] memory balancesAfterSettle = _balances(inputToken);
 
@@ -308,6 +311,45 @@ contract T1BasicSwapE2E is BaseTest {
             balancesBeforeSettle[balanceId[address(originRouter)]] - amount,
             "originRouter balance after fill"
         );
+    }
+
+    function test_fill_settle_failure() public {
+        // open
+        OrderData memory orderData = _prepareOrderData();
+        OnchainCrossChainOrder memory order =
+            _prepareOnchainOrder(OrderEncoder.encode(orderData), orderData.fillDeadline, OrderEncoder.orderDataType());
+        vm.startPrank(kakaroto);
+        inputToken.approve(address(originRouter), amount);
+        vm.recordLogs();
+        originRouter.open(order);
+        (bytes32 orderId, ResolvedCrossChainOrder memory resolvedOrder) = _getOrderIDFromLogs();
+        vm.stopPrank();
+
+        // fill
+        vm.startPrank(vegeta);
+        outputToken.approve(address(destinationRouter), amount);
+        bytes memory fillerData = abi.encode(TypeCasts.addressToBytes32(vegeta));
+        destinationRouter.fill(orderId, resolvedOrder.fillInstructions[0].originData, fillerData);
+
+        // settle
+        bytes32[] memory orderIds = new bytes32[](1);
+        orderIds[0] = orderId;
+        bytes[] memory ordersFillerData = new bytes[](1);
+        ordersFillerData[0] = fillerData;
+        destinationRouter.settle(orderIds);
+        vm.stopPrank();
+
+        vm.recordLogs();
+        // wrongly set origin instead of destination
+        _handleRelayMessage(orderIds, ordersFillerData, true, origin, 1);
+        Vm.Log[] memory _logs = vm.getRecordedLogs();
+        for (uint256 i = 0; i < _logs.length; i++) {
+            Vm.Log memory _log = _logs[i];
+            if (_log.topics[0] == IT1Messenger.FailedRelayedMessage.selector) {
+                return;
+            }
+        }
+        revert("There was not a FailedRelayedMessage event");
     }
 
     function test_native_open_fill_settle() public {
@@ -381,7 +423,7 @@ contract T1BasicSwapE2E is BaseTest {
 
         uint256[] memory balancesBeforeSettle = _balances();
 
-        _handleRelayMessage(orderIds, ordersFillerData, true);
+        _handleRelayMessage(orderIds, ordersFillerData, true, destination, 1);
 
         uint256[] memory balancesAfterSettle = _balances();
 
@@ -475,7 +517,7 @@ contract T1BasicSwapE2E is BaseTest {
 
         uint256[] memory balancesBeforeSettle = _balances(inputToken);
 
-        _handleRelayMessage(orderIds, ordersFillerData, true);
+        _handleRelayMessage(orderIds, ordersFillerData, true, destination, 1);
 
         uint256[] memory balancesAfterSettle = _balances(inputToken);
 
@@ -541,7 +583,7 @@ contract T1BasicSwapE2E is BaseTest {
         bytes[] memory emptyOrdersFillerData = new bytes[](1);
         emptyOrdersFillerData[0] = hex"";
 
-        _handleRelayMessage(orderIds, emptyOrdersFillerData, false);
+        _handleRelayMessage(orderIds, emptyOrdersFillerData, false, origin, 1);
 
         uint256[] memory balancesAfterRefund = _balances(inputToken);
 
@@ -551,6 +593,41 @@ contract T1BasicSwapE2E is BaseTest {
             balancesBeforeRefund[balanceId[address(originRouter)]] - amount
         );
         assertEq(balancesAfterRefund[balanceId[kakaroto]], balancesBeforeRefund[balanceId[kakaroto]] + amount);
+    }
+
+    function test_refund_failure() public {
+        // open
+        OrderData memory orderData = _prepareOrderData();
+        OnchainCrossChainOrder memory order =
+            _prepareOnchainOrder(OrderEncoder.encode(orderData), orderData.fillDeadline, OrderEncoder.orderDataType());
+        vm.startPrank(kakaroto);
+        inputToken.approve(address(originRouter), amount);
+        vm.recordLogs();
+        originRouter.open(order);
+        (bytes32 orderId,) = _getOrderIDFromLogs();
+
+        // refund
+        vm.warp(orderData.fillDeadline + 1);
+        bytes32[] memory orderIds = new bytes32[](1);
+        orderIds[0] = orderId;
+        OnchainCrossChainOrder[] memory orders = new OnchainCrossChainOrder[](1);
+        orders[0] = order;
+        destinationRouter.refund(orders);
+        vm.stopPrank();
+        bytes[] memory emptyOrdersFillerData = new bytes[](1);
+        emptyOrdersFillerData[0] = hex"";
+
+        vm.recordLogs();
+        // wrongly set origin instead of destination
+        _handleRelayMessage(orderIds, emptyOrdersFillerData, false, origin, 1);
+        Vm.Log[] memory _logs = vm.getRecordedLogs();
+        for (uint256 i = 0; i < _logs.length; i++) {
+            Vm.Log memory _log = _logs[i];
+            if (_log.topics[0] == IT1Messenger.FailedRelayedMessage.selector) {
+                return;
+            }
+        }
+        revert("There was not a FailedRelayedMessage event");
     }
 
     function test_native_open_refund() public {
@@ -608,7 +685,7 @@ contract T1BasicSwapE2E is BaseTest {
         bytes[] memory emptyOrdersFillerData = new bytes[](1);
         emptyOrdersFillerData[0] = hex"";
 
-        _handleRelayMessage(orderIds, emptyOrdersFillerData, false);
+        _handleRelayMessage(orderIds, emptyOrdersFillerData, false, destination, 1);
 
         uint256[] memory balancesAfterRefund = _balances();
 
@@ -685,7 +762,7 @@ contract T1BasicSwapE2E is BaseTest {
         bytes[] memory emptyOrdersFillerData = new bytes[](1);
         emptyOrdersFillerData[0] = hex"";
 
-        _handleRelayMessage(orderIds, emptyOrdersFillerData, false);
+        _handleRelayMessage(orderIds, emptyOrdersFillerData, false, destination, 1);
 
         uint256[] memory balancesAfterRefund = _balances(inputToken);
 
@@ -697,15 +774,24 @@ contract T1BasicSwapE2E is BaseTest {
         assertEq(balancesAfterRefund[balanceId[kakaroto]], balancesBeforeRefund[balanceId[kakaroto]] + amount);
     }
 
-    function _handleRelayMessage(bytes32[] memory orderIds, bytes[] memory ordersFillerData, bool isSettle) internal {
+    function _handleRelayMessage(
+        bytes32[] memory orderIds,
+        bytes[] memory ordersFillerData,
+        bool isSettle,
+        uint32 _destination,
+        uint256 batchIndex
+    )
+        internal
+    {
         rollup.addProver(address(0));
         bytes memory batchHeader1 = BatchHeaders.generateBatchHeader(rollup);
         assertEq(rollup.isBatchFinalized(1), false);
 
         bytes memory innerMessage = abi.encode(isSettle, orderIds, ordersFillerData);
 
-        bytes memory outerMessage =
-            abi.encodeWithSelector(T1ERC7683.handle.selector, destination, destinationRouterB32, 1, bytes32(0), innerMessage);
+        bytes memory outerMessage = abi.encodeWithSelector(
+            T1ERC7683.handle.selector, _destination, destinationRouterB32, batchIndex, bytes32(0), innerMessage
+        );
 
         // hash 0xcca132db240c06c148d210ceda18701a38e863e5ab2ed4638b15b6c7b30a08ae
         uint256 nonce = 0;

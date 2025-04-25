@@ -39,7 +39,6 @@ contract T1ERC7683 is BasicSwap7683, OwnableUpgradeable {
 
     // ============ Errors ============
     error OnlyMessenger();
-    error FunctionNotImplemented(string functionName);
     error EthNotAllowed();
     error BatchNotFinalized();
     error IntentProofNotFound(uint256 batchIndex, bytes32 proofOfFillRoot);
@@ -140,9 +139,6 @@ contract T1ERC7683 is BasicSwap7683, OwnableUpgradeable {
         internal
     {
         IT1Chain t1Chain = IT1Chain(IL1T1Messenger(address(messenger)).rollup());
-
-        console.log("xxxx", _intentProof.batchIndex);
-        console.logBytes32(_intentProof.proofOfFillRoot);
 
         // Check if intent proof batch index is finalized
         if (!t1Chain.isBatchFinalized(_intentProof.batchIndex)) revert BatchNotFinalized();
