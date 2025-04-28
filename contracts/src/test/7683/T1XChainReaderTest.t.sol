@@ -26,13 +26,13 @@ contract T1XChainReaderTest is T1BasicSwapE2E {
         originReader = T1XChainReader(payable(_deployProxy(address(0))));
         admin.upgrade(
             ITransparentUpgradeableProxy(address(originReader)),
-            address(new T1XChainReader(address(l1t1Messenger), origin))
+            address(new T1XChainReader(address(l1t1Messenger), address(this), origin))
         );
 
         destinationReader = T1XChainReader(payable(_deployProxy(address(0))));
         admin.upgrade(
             ITransparentUpgradeableProxy(address(destinationReader)),
-            address(new T1XChainReader(address(l2t1Messenger), destination))
+            address(new T1XChainReader(address(l2t1Messenger), address(this), destination))
         );
 
         L1T17683Pull = T1ERC7683Pull(payable(_deployProxy(address(0))));
@@ -84,18 +84,15 @@ contract T1XChainReaderTest is T1BasicSwapE2E {
 
         // 3. Filler initiates settlement verification from L1
         vm.startPrank(vegeta);
-        bytes32 requestId = L1T17683Pull.verifySettlement(destination, orderId);
+        bytes32 requestId = L1T17683Pull.verifySettlement(destination, address(0), orderId);
         vm.stopPrank();
 
         // 4. Process the read request on L2 (destination chain) & Relay the result back to L1
         {
             // Construct the read request calldata
             bytes memory orderStatus = L2T17683Pull.getFilledOrderStatus(orderId);
-            bytes memory readMessage =
-                T1XChainMessage.encodeRead(destination, destinationRouterB32, requestId, orderStatus);
             uint256 balanceSolverBeforeSettle = inputToken.balanceOf(address(vegeta));
-            vm.prank(address(l1t1Messenger));
-            originReader.handle(readMessage);
+            originReader.handle(destination, destinationRouterB32, requestId, orderStatus);
             uint256 balanceSolverAfterSettle = inputToken.balanceOf(address(vegeta));
 
             assertEq(
