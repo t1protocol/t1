@@ -116,7 +116,7 @@ contract SolverFillScript is Script {
 contract SettlementScript is Script {
     function run() external {
         vm.createSelectFork(vm.rpcUrl("sepolia"));
-        // TODO - should be TEST_PK - but does setler need funds on source chain then?
+        // TODO - should be TEST_PK - but does settler need funds on source chain then?
         uint256 settlerPk = vm.envUint("ALICE_PRIVATE_KEY");
 
         vm.startBroadcast(settlerPk);
@@ -126,7 +126,7 @@ contract SettlementScript is Script {
         // NOTE - orderId logged from the first step goes here (remove 0x first)
         bytes32 orderId = hex"";
 
-        l1Router.verifySettlement(DESTINATION_CHAIN, orderId);
+        l1Router.verifySettlement(DESTINATION_CHAIN, address(0), orderId);
 
         vm.stopBroadcast();
     }
