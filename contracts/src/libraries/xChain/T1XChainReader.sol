@@ -44,8 +44,11 @@ contract T1XChainReader is OwnableUpgradeable, ReentrancyGuardUpgradeable {
 
     // ============ State Variables ============
 
-    /// @notice The T1 messenger contract used for cross-chain communication
     IT1Messenger public immutable messenger;
+    /// @notice The T1 messenger contract used for cross-chain communication
+
+    /// @notice The T1 prover
+    address public immutable prover;
 
     /// @notice The local domain ID
     uint32 public immutable localDomain;
@@ -63,15 +66,15 @@ contract T1XChainReader is OwnableUpgradeable, ReentrancyGuardUpgradeable {
 
     // ============ Errors ============
 
-    error OnlyMessenger();
+    error OnlyProver();
     error OnlyCounterpart();
     error InvalidCallback();
     error ZeroAddress();
 
     // ============ Modifiers ============
 
-    modifier onlyMessenger() {
-        if (msg.sender != address(messenger)) revert OnlyMessenger();
+    modifier onlyProver() {
+        if (msg.sender != address(prover)) revert OnlyProver();
         _;
     }
 
@@ -80,11 +83,12 @@ contract T1XChainReader is OwnableUpgradeable, ReentrancyGuardUpgradeable {
      * @param _messenger Address of the T1 messenger contract
      * @param _localDomain ID of the local domain
      */
-    constructor(address _messenger, uint32 _localDomain) {
+    constructor(address _messenger, address _prover, uint32 _localDomain) {
         if (_messenger == address(0)) revert ZeroAddress();
 
         messenger = IT1Messenger(_messenger);
         localDomain = _localDomain;
+        prover = _prover;
     }
 
     // ============ External Functions ============
@@ -159,12 +163,13 @@ contract T1XChainReader is OwnableUpgradeable, ReentrancyGuardUpgradeable {
 
     /**
      * @notice Handles incoming messages from other chains
-     * @param _message The encoded message
+     * @param _originDomain The origin domain
+     * @param _sender The sender address on the target chain
+     * @param _requestId The ID assigned to the request when it was dispatched
+     * @param _data The data to relay to the callback contract
      */
-    function handle(bytes calldata _message) external payable onlyMessenger {
-        (uint32 _originDomain, bytes32 _sender, bytes32 requestId, bytes memory data) =
-            T1XChainMessage.decodeResponse(_message);
-        _handleReadResponse(_originDomain, _sender, requestId, data);
+    function handle(uint32 _originDomain, bytes32 _sender, bytes32 _requestId, bytes memory _data) external payable onlyProver {
+        _handleReadResponse(_originDomain, _sender, _requestId, _data);
     }
 
     // ============ Internal Functions ============
