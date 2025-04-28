@@ -18,6 +18,7 @@ contract AliceSetupScript is Script {
     T1ERC7683 public l1Router;
 
     function run() external {
+        vm.createSelectFork(vm.rpcUrl("sepolia"));
         l1Router = T1ERC7683(vm.envAddress("L1_T1_7683_PROXY_ADDR"));
         // Load Alice's private key from env
         uint256 alicePk = vm.envUint("ALICE_PRIVATE_KEY");
@@ -83,6 +84,7 @@ contract AliceSetupScript is Script {
 // Step 2: Solver fills on L2
 contract SolverFillScript is Script {
     function run() external {
+        vm.createSelectFork(vm.rpcUrl("t1"));
         uint256 solverPk = vm.envUint("TEST_PRIVATE_KEY");
         address solver = vm.addr(solverPk);
 
@@ -113,6 +115,7 @@ contract SolverFillScript is Script {
 // Step 3: Settlement and Relay
 contract SettlementScript is Script {
     function run() external {
+        vm.createSelectFork(vm.rpcUrl("t1"));
         uint256 settlerPk = vm.envUint("TEST_PRIVATE_KEY");
 
         vm.startBroadcast(settlerPk);
