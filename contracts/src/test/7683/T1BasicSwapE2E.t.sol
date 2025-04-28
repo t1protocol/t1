@@ -296,7 +296,8 @@ contract T1BasicSwapE2E is BaseTest {
         vm.stopPrank();
 
         uint256[] memory balancesBeforeSettle = _balances(inputToken);
-        _handleRelayMessage(orderIds, ordersFillerData, true, destination, 1);
+        bytes memory innerMessage = abi.encode(true, orderIds, ordersFillerData);
+        _handleRelayMessage(destination, 1, innerMessage, keccak256(innerMessage));
 
         uint256[] memory balancesAfterSettle = _balances(inputToken);
 
@@ -340,8 +341,9 @@ contract T1BasicSwapE2E is BaseTest {
         vm.stopPrank();
 
         vm.recordLogs();
+        bytes memory innerMessage = abi.encode(true, orderIds, ordersFillerData);
         // wrongly set origin instead of destination
-        _handleRelayMessage(orderIds, ordersFillerData, true, origin, 1);
+        _handleRelayMessage(origin, 1, innerMessage, keccak256(innerMessage));
         Vm.Log[] memory _logs = vm.getRecordedLogs();
         for (uint256 i = 0; i < _logs.length; i++) {
             Vm.Log memory _log = _logs[i];
@@ -422,8 +424,8 @@ contract T1BasicSwapE2E is BaseTest {
         vm.stopPrank();
 
         uint256[] memory balancesBeforeSettle = _balances();
-
-        _handleRelayMessage(orderIds, ordersFillerData, true, destination, 1);
+        bytes memory innerMessage = abi.encode(true, orderIds, ordersFillerData);
+        _handleRelayMessage(destination, 1, innerMessage, keccak256(innerMessage));
 
         uint256[] memory balancesAfterSettle = _balances();
 
@@ -516,8 +518,8 @@ contract T1BasicSwapE2E is BaseTest {
         vm.stopPrank();
 
         uint256[] memory balancesBeforeSettle = _balances(inputToken);
-
-        _handleRelayMessage(orderIds, ordersFillerData, true, destination, 1);
+        bytes memory innerMessage = abi.encode(true, orderIds, ordersFillerData);
+        _handleRelayMessage(destination, 1, innerMessage, keccak256(innerMessage));
 
         uint256[] memory balancesAfterSettle = _balances(inputToken);
 
@@ -582,8 +584,8 @@ contract T1BasicSwapE2E is BaseTest {
 
         bytes[] memory emptyOrdersFillerData = new bytes[](1);
         emptyOrdersFillerData[0] = hex"";
-
-        _handleRelayMessage(orderIds, emptyOrdersFillerData, false, destination, 1);
+        bytes memory innerMessage = abi.encode(false, orderIds, emptyOrdersFillerData);
+        _handleRelayMessage(destination, 1, innerMessage, keccak256(innerMessage));
 
         uint256[] memory balancesAfterRefund = _balances(inputToken);
 
@@ -618,8 +620,9 @@ contract T1BasicSwapE2E is BaseTest {
         emptyOrdersFillerData[0] = hex"";
 
         vm.recordLogs();
+        bytes memory innerMessage = abi.encode(false, orderIds, emptyOrdersFillerData);
         // wrongly set origin instead of destination
-        _handleRelayMessage(orderIds, emptyOrdersFillerData, false, origin, 1);
+        _handleRelayMessage(origin, 1, innerMessage, keccak256(innerMessage));
         Vm.Log[] memory _logs = vm.getRecordedLogs();
         for (uint256 i = 0; i < _logs.length; i++) {
             Vm.Log memory _log = _logs[i];
@@ -684,8 +687,8 @@ contract T1BasicSwapE2E is BaseTest {
 
         bytes[] memory emptyOrdersFillerData = new bytes[](1);
         emptyOrdersFillerData[0] = hex"";
-
-        _handleRelayMessage(orderIds, emptyOrdersFillerData, false, destination, 1);
+        bytes memory innerMessage = abi.encode(false, orderIds, emptyOrdersFillerData);
+        _handleRelayMessage(destination, 1, innerMessage, keccak256(innerMessage));
 
         uint256[] memory balancesAfterRefund = _balances();
 
@@ -761,8 +764,8 @@ contract T1BasicSwapE2E is BaseTest {
 
         bytes[] memory emptyOrdersFillerData = new bytes[](1);
         emptyOrdersFillerData[0] = hex"";
-
-        _handleRelayMessage(orderIds, emptyOrdersFillerData, false, destination, 1);
+        bytes memory innerMessage = abi.encode(false, orderIds, emptyOrdersFillerData);
+        _handleRelayMessage(destination, 1, innerMessage, keccak256(innerMessage));
 
         uint256[] memory balancesAfterRefund = _balances(inputToken);
 
@@ -774,20 +777,57 @@ contract T1BasicSwapE2E is BaseTest {
         assertEq(balancesAfterRefund[balanceId[kakaroto]], balancesBeforeRefund[balanceId[kakaroto]] + amount);
     }
 
+    function test_fill_settle_failure_invalid_proof() public {
+        // open
+        OrderData memory orderData = _prepareOrderData();
+        OnchainCrossChainOrder memory order =
+            _prepareOnchainOrder(OrderEncoder.encode(orderData), orderData.fillDeadline, OrderEncoder.orderDataType());
+        vm.startPrank(kakaroto);
+        inputToken.approve(address(originRouter), amount);
+        vm.recordLogs();
+        originRouter.open(order);
+        (bytes32 orderId, ResolvedCrossChainOrder memory resolvedOrder) = _getOrderIDFromLogs();
+        vm.stopPrank();
+
+        // fill
+        vm.startPrank(vegeta);
+        outputToken.approve(address(destinationRouter), amount);
+        bytes memory fillerData = abi.encode(TypeCasts.addressToBytes32(vegeta));
+        destinationRouter.fill(orderId, resolvedOrder.fillInstructions[0].originData, fillerData);
+
+        // settle
+        bytes32[] memory orderIds = new bytes32[](1);
+        orderIds[0] = orderId;
+        bytes[] memory ordersFillerData = new bytes[](1);
+        ordersFillerData[0] = fillerData;
+        destinationRouter.settle(orderIds);
+        vm.stopPrank();
+
+        bytes memory innerMessage = abi.encode(true, orderIds, ordersFillerData);
+
+        vm.recordLogs();
+        _handleRelayMessage(destination, 1, innerMessage, bytes32(0));
+        Vm.Log[] memory _logs = vm.getRecordedLogs();
+        for (uint256 i = 0; i < _logs.length; i++) {
+            Vm.Log memory _log = _logs[i];
+            if (_log.topics[0] == IT1Messenger.FailedRelayedMessage.selector) {
+                return;
+            }
+        }
+        revert("There was not a FailedRelayedMessage event");
+    }
+
     function _handleRelayMessage(
-        bytes32[] memory orderIds,
-        bytes[] memory ordersFillerData,
-        bool isSettle,
         uint32 _destination,
-        uint256 batchIndex
+        uint256 batchIndex,
+        bytes memory innerMessage,
+        bytes32 proofOfFill7683Root
     )
         internal
     {
         rollup.addProver(address(0));
         bytes memory batchHeader1 = BatchHeaders.generateBatchHeader(rollup);
         assertEq(rollup.isBatchFinalized(1), false);
-
-        bytes memory innerMessage = abi.encode(isSettle, orderIds, ordersFillerData);
 
         // hash 0xcca132db240c06c148d210ceda18701a38e863e5ab2ed4638b15b6c7b30a08ae
         uint256 nonce = 0;
@@ -804,7 +844,7 @@ contract T1BasicSwapE2E is BaseTest {
             "relayMessage(address,address,uint256,uint256,bytes)", from, to, msgValue, nonce, outerMessage
         );
 
-        rollup.setProofOfFill7683Root(batchIndex, keccak256(innerMessage));
+        rollup.setProofOfFill7683Root(batchIndex, proofOfFill7683Root);
 
         bytes32 withdrawRoot = keccak256(xDomainCalldata);
         vm.startPrank(address(0));
