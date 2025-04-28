@@ -168,7 +168,16 @@ contract T1XChainReader is OwnableUpgradeable, ReentrancyGuardUpgradeable {
      * @param _requestId The ID assigned to the request when it was dispatched
      * @param _data The data to relay to the callback contract
      */
-    function handle(uint32 _originDomain, bytes32 _sender, bytes32 _requestId, bytes memory _data) external payable onlyProver {
+    function handle(
+        uint32 _originDomain,
+        bytes32 _sender,
+        bytes32 _requestId,
+        bytes memory _data
+    )
+        external
+        payable
+        onlyProver
+    {
         _handleReadResponse(_originDomain, _sender, _requestId, _data);
     }
 
