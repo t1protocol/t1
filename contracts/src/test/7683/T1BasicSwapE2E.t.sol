@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.25;
 
-import { Test, Vm } from "forge-std/Test.sol";
+import { Vm } from "forge-std/Test.sol";
 
 import {
     TransparentUpgradeableProxy,

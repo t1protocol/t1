@@ -1,8 +1,6 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.25;
 
-import { console } from "forge-std/console.sol";
-
 import { OwnableUpgradeable } from "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
 import { Hyperlane7683Message } from "intents-framework/libs/Hyperlane7683Message.sol";
 import { BasicSwap7683 } from "intents-framework/BasicSwap7683.sol";
