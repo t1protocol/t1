@@ -10,6 +10,7 @@ import { TypeCasts } from "@hyperlane-xyz/libs/TypeCasts.sol";
 
 import { IT1Chain } from "../L1/rollup/IT1Chain.sol";
 import { IL1T1Messenger } from "../L1/IL1T1Messenger.sol";
+import { WithdrawTrieVerifier } from "../libraries/verifier/WithdrawTrieVerifier.sol";
 
 /**
  * @title T1ERC7683
@@ -24,15 +25,6 @@ contract T1ERC7683 is BasicSwap7683, OwnableUpgradeable {
     IL1T1Messenger public immutable messenger;
     address public counterpart;
 
-    // ============ Structs ============
-    /// @notice Struct to represent an example order
-    struct IntentProof {
-        // The index of the batch where the PoF belongs to.
-        uint256 batchIndex;
-        // The proof of fill trie root
-        bytes32 proofOfFillRoot;
-    }
-
     // ============ Upgrade Gap ============
     /// @dev Reserved storage slots for upgradeability.
     uint256[47] private __GAP;
@@ -44,6 +36,7 @@ contract T1ERC7683 is BasicSwap7683, OwnableUpgradeable {
     error IntentProofNotFound(uint256 batchIndex, bytes32 proofOfFillRoot);
     error SettlementFailed();
     error RefundFailed();
+    error InvalidProof();
 
     // ============ Modifiers ============
     modifier onlyMessenger() {
@@ -73,19 +66,23 @@ contract T1ERC7683 is BasicSwap7683, OwnableUpgradeable {
     /// @notice Handles an incoming message
     /// @param _origin The origin domain
     /// @param _sender The sender address
-    /// @param _intentProof The intent proof containing the batch index and proof of fill root
+    /// @param _batchIndex The index of the batch where the PoF belongs to
+    /// @param _proofOfFillMerkleProof The proof of fill Merkle root
+    /// @param _nonce The nonce of the message
     /// @param _message The message
     function handle(
         uint32 _origin,
         bytes32 _sender,
-        IntentProof calldata _intentProof,
+        uint256 _batchIndex,
+        bytes calldata _proofOfFillMerkleProof,
+        uint256 _nonce,
         bytes calldata _message
     )
         external
         payable
         onlyMessenger
     {
-        _handle(_origin, _sender, _intentProof, _message);
+        _handle(_origin, _sender, _batchIndex, _proofOfFillMerkleProof, _nonce, _message);
     }
 
     // ============ Internal Functions ============
@@ -128,12 +125,16 @@ contract T1ERC7683 is BasicSwap7683, OwnableUpgradeable {
     /// @dev Decodes the message and processes settlement or refund operations accordingly
     /// @param _messageOrigin The domain from which the message originates
     /// @param _messageSender The address of the sender on the origin domain
-    /// @param _intentProof The intent proof containing the batch index and proof of fill root
+    /// @param _batchIndex The index of the batch where the PoF belongs to
+    /// @param _proofOfFillMerkleProof The proof of fill merkle root
+    /// @param _nonce The nonce of the message
     /// @param _message The encoded message received via t1
     function _handle(
         uint32 _messageOrigin,
         bytes32 _messageSender,
-        IntentProof calldata _intentProof,
+        uint256 _batchIndex,
+        bytes calldata _proofOfFillMerkleProof,
+        uint256 _nonce,
         bytes calldata _message
     )
         internal
@@ -141,15 +142,28 @@ contract T1ERC7683 is BasicSwap7683, OwnableUpgradeable {
         IT1Chain t1Chain = IT1Chain(IL1T1Messenger(address(messenger)).rollup());
 
         // Check if intent proof batch index is finalized
-        if (!t1Chain.isBatchFinalized(_intentProof.batchIndex)) revert BatchNotFinalized();
+        if (!t1Chain.isBatchFinalized(_batchIndex)) revert BatchNotFinalized();
+
+        bytes32 _proofOfFillRoot = t1Chain.proofOfFill7683Roots(_batchIndex);
 
         // Check intent proof exists in our rollup
-        if (t1Chain.proofOfFill7683Roots(_intentProof.batchIndex) != _intentProof.proofOfFillRoot) {
-            revert IntentProofNotFound(_intentProof.batchIndex, _intentProof.proofOfFillRoot);
+        if (_proofOfFillRoot != _proofOfFillRoot) {
+            revert IntentProofNotFound(_batchIndex, _proofOfFillRoot);
         }
 
         (bool _settle, bytes32[] memory _orderIds, bytes[] memory _ordersFillerData) =
             Hyperlane7683Message.decode(_message);
+
+        if (
+            !WithdrawTrieVerifier.verifyMerkleProof(
+                _proofOfFillRoot,
+                keccak256(abi.encode(_settle, _orderIds, _ordersFillerData)),
+                _nonce,
+                _proofOfFillMerkleProof
+            )
+        ) {
+            revert InvalidProof();
+        }
 
         for (uint256 i = 0; i < _orderIds.length; i++) {
             if (_settle) {

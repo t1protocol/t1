@@ -30,11 +30,6 @@ contract T1ChainMockBlob is T1Chain {
         T1Chain(_chainId, _messageQueue, _verifier)
     { }
 
-    /**
-     *
-     * Internal Functions *
-     *
-     */
     function setBlobVersionedHash(bytes32 _blobVersionedHash) external {
         blobVersionedHash = _blobVersionedHash;
     }
@@ -55,6 +50,15 @@ contract T1ChainMockBlob is T1Chain {
         overrideBatchHashCheck = status;
     }
 
+    function setProofOfFill7683Root(uint256 _batchIndex, bytes32 _proofOfFill7683Root) external {
+        proofOfFill7683Roots[_batchIndex] = _proofOfFill7683Root;
+    }
+
+    /**
+     *
+     * Internal Functions *
+     *
+     */
     function _getBlobVersionedHash() internal virtual override returns (bytes32 _blobVersionedHash) {
         _blobVersionedHash = blobVersionedHash;
     }

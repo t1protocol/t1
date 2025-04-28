@@ -296,7 +296,7 @@ contract T1BasicSwapE2E is BaseTest {
         vm.stopPrank();
 
         uint256[] memory balancesBeforeSettle = _balances(inputToken);
-        _handleRelayMessage(orderIds, ordersFillerData, true, origin, 1);
+        _handleRelayMessage(orderIds, ordersFillerData, true, destination, 1);
 
         uint256[] memory balancesAfterSettle = _balances(inputToken);
 
@@ -583,7 +583,7 @@ contract T1BasicSwapE2E is BaseTest {
         bytes[] memory emptyOrdersFillerData = new bytes[](1);
         emptyOrdersFillerData[0] = hex"";
 
-        _handleRelayMessage(orderIds, emptyOrdersFillerData, false, origin, 1);
+        _handleRelayMessage(orderIds, emptyOrdersFillerData, false, destination, 1);
 
         uint256[] memory balancesAfterRefund = _balances(inputToken);
 
@@ -789,19 +789,22 @@ contract T1BasicSwapE2E is BaseTest {
 
         bytes memory innerMessage = abi.encode(isSettle, orderIds, ordersFillerData);
 
-        bytes memory outerMessage = abi.encodeWithSelector(
-            T1ERC7683.handle.selector, _destination, destinationRouterB32, batchIndex, bytes32(0), innerMessage
-        );
-
         // hash 0xcca132db240c06c148d210ceda18701a38e863e5ab2ed4638b15b6c7b30a08ae
         uint256 nonce = 0;
         uint256 msgValue = 0;
         address from = address(destinationRouter);
         address to = address(originRouter);
+        bytes memory proof = hex"";
+
+        bytes memory outerMessage = abi.encodeWithSelector(
+            T1ERC7683.handle.selector, _destination, destinationRouterB32, batchIndex, proof, nonce, innerMessage
+        );
 
         bytes memory xDomainCalldata = abi.encodeWithSignature(
             "relayMessage(address,address,uint256,uint256,bytes)", from, to, msgValue, nonce, outerMessage
         );
+
+        rollup.setProofOfFill7683Root(batchIndex, keccak256(innerMessage));
 
         bytes32 withdrawRoot = keccak256(xDomainCalldata);
         vm.startPrank(address(0));
@@ -813,7 +816,6 @@ contract T1BasicSwapE2E is BaseTest {
         bytes32 withdrawRootBatch1 = rollup.withdrawRoots(1);
         assertEq(withdrawRoot, withdrawRootBatch1, "withdraw root");
 
-        bytes memory proof = hex"";
         IL1T1Messenger.L2MessageProof memory messageProof =
             IL1T1Messenger.L2MessageProof({ batchIndex: 1, merkleProof: proof });
         l1t1Messenger.relayMessageWithProof(from, to, msgValue, nonce, outerMessage, messageProof);
