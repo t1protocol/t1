@@ -31,7 +31,6 @@ contract T1ERC7683 is BasicSwap7683, OwnableUpgradeable {
     error OnlyMessenger();
     error EthNotAllowed();
     error BatchNotFinalized();
-    error IntentProofNotFound(uint256 batchIndex, bytes32 proofOfFillRoot);
     error SettlementFailed();
     error RefundFailed();
     error InvalidProof();
@@ -142,19 +141,12 @@ contract T1ERC7683 is BasicSwap7683, OwnableUpgradeable {
         // Check if intent proof batch index is finalized
         if (!t1Chain.isBatchFinalized(_batchIndex)) revert BatchNotFinalized();
 
-        bytes32 _proofOfFillRoot = t1Chain.proofOfFill7683Roots(_batchIndex);
-
-        // Check intent proof exists in our rollup
-        if (_proofOfFillRoot != _proofOfFillRoot) {
-            revert IntentProofNotFound(_batchIndex, _proofOfFillRoot);
-        }
-
         (bool _settle, bytes32[] memory _orderIds, bytes[] memory _ordersFillerData) =
             Hyperlane7683Message.decode(_message);
 
         if (
             !WithdrawTrieVerifier.verifyMerkleProof(
-                _proofOfFillRoot,
+                t1Chain.proofOfFill7683Roots(_batchIndex),
                 keccak256(abi.encode(_settle, _orderIds, _ordersFillerData)),
                 _nonce,
                 _proofOfFillMerkleProof
