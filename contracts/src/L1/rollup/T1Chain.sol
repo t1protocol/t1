@@ -167,7 +167,7 @@ contract T1Chain is OwnableUpgradeable, PausableUpgradeable, IT1Chain {
     mapping(uint256 => bytes32) public override withdrawRoots;
 
     /// @inheritdoc IT1Chain
-    mapping(uint256 => bytes32) public override proofOfFill7683Roots;
+    mapping(uint256 => bytes32) public override intentFilledMerkleProofs;
     /**
      *
      * Function Modifiers *
@@ -434,8 +434,8 @@ contract T1Chain is OwnableUpgradeable, PausableUpgradeable, IT1Chain {
         //        bytes32 _postStateRoot,
         bytes32 _withdrawRoot,
         bytes calldata withdrawRootSignature,
-        bytes32 _proofOfFill7683Root,
-        bytes calldata proofOfFillRootSignature
+        bytes32 _intentFilledMerkleProof,
+        bytes calldata intentFilledMerkleProofSignature
     )
         //        bytes calldata _aggrProof
         external
@@ -460,10 +460,10 @@ contract T1Chain is OwnableUpgradeable, PausableUpgradeable, IT1Chain {
         //        _afterFinalizeBatch(_totalL1MessagesPoppedOverall, _batchIndex, _batchHash, _postStateRoot,
         // _withdrawRoot);
         _checkSignedByProver(withdrawRootSignature, _withdrawRoot);
-        _checkSignedByProver(proofOfFillRootSignature, _proofOfFill7683Root);
+        _checkSignedByProver(intentFilledMerkleProofSignature, _intentFilledMerkleProof);
 
         // Now that the signature is verified, perform your internal logic
-        _afterFinalizeBatch(0, batchIndex, "", "", _withdrawRoot, _proofOfFill7683Root);
+        _afterFinalizeBatch(0, batchIndex, "", "", _withdrawRoot, _intentFilledMerkleProof);
     }
 
     /// @inheritdoc IT1Chain
@@ -707,14 +707,14 @@ contract T1Chain is OwnableUpgradeable, PausableUpgradeable, IT1Chain {
     /// @param _batchHash The hash of current batch.
     /// @param _postStateRoot The state root after current batch.
     /// @param _withdrawRoot The withdraw trie root after current batch.
-    /// @param _proofOfFill7683Root The proof of fill trie root after current batch.
+    /// @param _intentFilledMerkleProof The intent filled Merkle proof after current batch.
     function _afterFinalizeBatch(
         uint256, /*_totalL1MessagesPoppedOverall*/
         uint256 _batchIndex,
         bytes32 _batchHash,
         bytes32 _postStateRoot,
         bytes32 _withdrawRoot,
-        bytes32 _proofOfFill7683Root
+        bytes32 _intentFilledMerkleProof
     )
         internal
     {
@@ -727,7 +727,7 @@ contract T1Chain is OwnableUpgradeable, PausableUpgradeable, IT1Chain {
         //        // record state root and withdraw root
         //        finalizedStateRoots[_batchIndex] = _postStateRoot;
         withdrawRoots[_batchIndex] = _withdrawRoot;
-        proofOfFill7683Roots[_batchIndex] = _proofOfFill7683Root;
+        intentFilledMerkleProofs[_batchIndex] = _intentFilledMerkleProof;
 
         //        // Pop finalized and non-skipped message from L1MessageQueue.
         //        _finalizePoppedL1Messages(_totalL1MessagesPoppedOverall);

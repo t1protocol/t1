@@ -806,7 +806,7 @@ contract T1BasicSwapE2E is BaseTest {
         bytes memory innerMessage = abi.encode(true, orderIds, ordersFillerData);
 
         vm.recordLogs();
-        _handleRelayMessage(destination, 1, innerMessage, bytes32(0));
+        _handleRelayMessage(destination, 1, innerMessage, bytes32(0)); //bad intent filled proof
         Vm.Log[] memory _logs = vm.getRecordedLogs();
         for (uint256 i = 0; i < _logs.length; i++) {
             Vm.Log memory _log = _logs[i];
@@ -821,7 +821,7 @@ contract T1BasicSwapE2E is BaseTest {
         uint32 _destination,
         uint256 batchIndex,
         bytes memory innerMessage,
-        bytes32 proofOfFill7683Root
+        bytes32 intentFilledMerkleProof
     )
         internal
     {
@@ -837,14 +837,14 @@ contract T1BasicSwapE2E is BaseTest {
         bytes memory proof = hex"";
 
         bytes memory outerMessage = abi.encodeWithSelector(
-            T1ERC7683.handle.selector, _destination, destinationRouterB32, batchIndex, proof, nonce, innerMessage
+            T1ERC7683.handle.selector, _destination, destinationRouterB32, batchIndex, proof, 1, innerMessage
         );
 
         bytes memory xDomainCalldata = abi.encodeWithSignature(
             "relayMessage(address,address,uint256,uint256,bytes)", from, to, msgValue, nonce, outerMessage
         );
 
-        rollup.setProofOfFill7683Root(batchIndex, proofOfFill7683Root);
+        rollup.setIntentFilledMerkleProof(batchIndex, intentFilledMerkleProof);
 
         bytes32 withdrawRoot = keccak256(xDomainCalldata);
         vm.startPrank(address(0));

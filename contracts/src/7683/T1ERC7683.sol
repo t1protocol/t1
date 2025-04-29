@@ -64,14 +64,14 @@ contract T1ERC7683 is BasicSwap7683, OwnableUpgradeable {
     /// @param _origin The origin domain
     /// @param _sender The sender address
     /// @param _batchIndex The index of the batch where the PoF belongs to
-    /// @param _proofOfFillMerkleProof The proof of fill Merkle root
+    /// @param _intentFilledMerkleProof The intent filled Merkle proof
     /// @param _nonce The nonce of the message
     /// @param _message The message
     function handle(
         uint32 _origin,
         bytes32 _sender,
         uint256 _batchIndex,
-        bytes calldata _proofOfFillMerkleProof,
+        bytes calldata _intentFilledMerkleProof,
         uint256 _nonce,
         bytes calldata _message
     )
@@ -79,7 +79,7 @@ contract T1ERC7683 is BasicSwap7683, OwnableUpgradeable {
         payable
         onlyMessenger
     {
-        _handle(_origin, _sender, _batchIndex, _proofOfFillMerkleProof, _nonce, _message);
+        _handle(_origin, _sender, _batchIndex, _intentFilledMerkleProof, _nonce, _message);
     }
 
     // ============ Internal Functions ============
@@ -123,14 +123,14 @@ contract T1ERC7683 is BasicSwap7683, OwnableUpgradeable {
     /// @param _messageOrigin The domain from which the message originates
     /// @param _messageSender The address of the sender on the origin domain
     /// @param _batchIndex The index of the batch where the PoF belongs to
-    /// @param _proofOfFillMerkleProof The proof of fill merkle root
+    /// @param _intentFilledMerkleProof The intent filled Merkle proof
     /// @param _nonce The nonce of the message
     /// @param _message The encoded message received via t1
     function _handle(
         uint32 _messageOrigin,
         bytes32 _messageSender,
         uint256 _batchIndex,
-        bytes calldata _proofOfFillMerkleProof,
+        bytes calldata _intentFilledMerkleProof,
         uint256 _nonce,
         bytes calldata _message
     )
@@ -146,10 +146,10 @@ contract T1ERC7683 is BasicSwap7683, OwnableUpgradeable {
 
         if (
             !WithdrawTrieVerifier.verifyMerkleProof(
-                t1Chain.proofOfFill7683Roots(_batchIndex),
+                t1Chain.intentFilledMerkleProofs(_batchIndex),
                 keccak256(abi.encode(_settle, _orderIds, _ordersFillerData)),
                 _nonce,
-                _proofOfFillMerkleProof
+                _intentFilledMerkleProof
             )
         ) {
             revert InvalidProof();

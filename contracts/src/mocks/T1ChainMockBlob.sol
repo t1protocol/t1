@@ -50,8 +50,8 @@ contract T1ChainMockBlob is T1Chain {
         overrideBatchHashCheck = status;
     }
 
-    function setProofOfFill7683Root(uint256 _batchIndex, bytes32 _proofOfFill7683Root) external {
-        proofOfFill7683Roots[_batchIndex] = _proofOfFill7683Root;
+    function setIntentFilledMerkleProof(uint256 _batchIndex, bytes32 _intentFilledMerkleProof) external {
+        intentFilledMerkleProofs[_batchIndex] = _intentFilledMerkleProof;
     }
 
     /**

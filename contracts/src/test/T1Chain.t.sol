@@ -1702,17 +1702,17 @@ contract T1ChainTest is Test {
         // Sign with VALID_SIGNER_KEY to produce a valid signature
         bytes memory withdrawSig = _signWithdrawRoot(VALID_SIGNER_KEY, withdrawRoot);
 
-        bytes32 proofOfFillRoot = keccak256(abi.encode("some proofOfFillRoot"));
+        bytes32 intentFilledMerkleProof = keccak256(abi.encode("some intentFilledMerkleProof"));
         // Sign with VALID_SIGNER_KEY to produce a valid signature
-        bytes memory proofOfFillSig = _signWithdrawRoot(VALID_SIGNER_KEY, proofOfFillRoot);
+        bytes memory intentFilledSig = _signWithdrawRoot(VALID_SIGNER_KEY, intentFilledMerkleProof);
 
         // Expect it to succeed
         uint256 batchIndex = 1;
-        rollup.finalizeBatchWithProof(batchIndex, withdrawRoot, withdrawSig, proofOfFillRoot, proofOfFillSig);
+        rollup.finalizeBatchWithProof(batchIndex, withdrawRoot, withdrawSig, intentFilledMerkleProof, intentFilledSig);
 
         assertEq(rollup.lastFinalizedBatchIndex(), batchIndex);
         assertEq(rollup.withdrawRoots(batchIndex), withdrawRoot);
-        assertEq(rollup.proofOfFill7683Roots(batchIndex), proofOfFillRoot);
+        assertEq(rollup.intentFilledMerkleProofs(batchIndex), intentFilledMerkleProof);
     }
 
     /**
