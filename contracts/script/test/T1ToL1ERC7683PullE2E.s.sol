@@ -10,37 +10,38 @@ import { OnchainCrossChainOrder } from "intents-framework/ERC7683/IERC7683.sol";
 import { T1ERC7683Pull } from "../../src/7683/T1ERC7683Pull.sol";
 import { T1Constants } from "../../src/libraries/constants/T1Constants.sol";
 
-uint32 constant DESTINATION_CHAIN = uint32(T1Constants.T1_DEVNET_CHAIN_ID);
-uint32 constant ORIGIN_CHAIN = uint32(T1Constants.L1_CHAIN_ID);
+uint32 constant DESTINATION_CHAIN = uint32(T1Constants.L1_CHAIN_ID);
+uint32 constant ORIGIN_CHAIN = uint32(T1Constants.T1_DEVNET_CHAIN_ID);
 
 // Step 1: Setup Alice's account, sign and relay intent
 contract AliceSetupScript is Script {
-    T1ERC7683Pull public l1Router;
+    T1ERC7683Pull public l2Router;
 
     function run() external {
-        vm.createSelectFork(vm.rpcUrl("sepolia"));
-        l1Router = T1ERC7683Pull(vm.envAddress("L1_T1_PULL_BASED_7683_PROXY_ADDR"));
+        vm.createSelectFork(vm.rpcUrl("t1"));
+        l2Router = T1ERC7683Pull(vm.envAddress("L2_T1_PULL_BASED_7683_PROXY_ADDR"));
         uint256 alicePk = vm.envUint("ALICE_PRIVATE_KEY");
         address alice = vm.addr(alicePk);
+
         vm.startBroadcast(alicePk);
 
-        ERC20 inputToken = ERC20(vm.envAddress("L1_USDT_ADDR"));
-        ERC20 outputToken = ERC20(vm.envAddress("L2_USDT_ADDR"));
-        inputToken.approve(address(l1Router), type(uint256).max);
+        ERC20 inputToken = ERC20(vm.envAddress("L2_USDT_ADDR"));
+        ERC20 outputToken = ERC20(vm.envAddress("L1_USDT_ADDR"));
+        inputToken.approve(address(l2Router), type(uint256).max);
 
         OrderData memory orderData = OrderData({
             sender: TypeCasts.addressToBytes32(alice),
             recipient: TypeCasts.addressToBytes32(alice),
             inputToken: TypeCasts.addressToBytes32(address(inputToken)),
             outputToken: TypeCasts.addressToBytes32(address(outputToken)),
-            amountIn: 100,
-            amountOut: 100,
+            amountIn: 1,
+            amountOut: 1,
             senderNonce: uint32(
                 uint256(keccak256(abi.encodePacked(block.timestamp, block.prevrandao, msg.sender))) % 10_000
             ), // Random number between 0 and 9999
             originDomain: ORIGIN_CHAIN,
             destinationDomain: DESTINATION_CHAIN,
-            destinationSettler: TypeCasts.addressToBytes32(vm.envAddress("L2_T1_PULL_BASED_7683_PROXY_ADDR")),
+            destinationSettler: TypeCasts.addressToBytes32(vm.envAddress("L1_T1_PULL_BASED_7683_PROXY_ADDR")),
             fillDeadline: uint32(block.timestamp + 24 hours),
             data: new bytes(0)
         });
@@ -50,7 +51,7 @@ contract AliceSetupScript is Script {
         OnchainCrossChainOrder memory order =
             _prepareOnchainOrder(encodedOrder, orderData.fillDeadline, OrderEncoder.orderDataType());
 
-        l1Router.open(order);
+        l2Router.open(order);
 
         bytes32 id = OrderEncoder.id(orderData);
         console2.logString("orderId: ");
@@ -76,31 +77,31 @@ contract AliceSetupScript is Script {
     }
 }
 
-// Step 2: Solver fills on L2
+// Step 2: Solver fills
 contract SolverFillScript is Script {
     function run() external {
-        vm.createSelectFork(vm.rpcUrl("t1"));
+        vm.createSelectFork(vm.rpcUrl("sepolia"));
         uint256 solverPk = vm.envUint("TEST_PRIVATE_KEY");
         address solver = vm.addr(solverPk);
 
         vm.startBroadcast(solverPk);
 
-        T1ERC7683Pull l2Router = T1ERC7683Pull(vm.envAddress("L2_T1_PULL_BASED_7683_PROXY_ADDR"));
+        T1ERC7683Pull l1Router = T1ERC7683Pull(vm.envAddress("L1_T1_PULL_BASED_7683_PROXY_ADDR"));
         // NOTE - orderId logged from the first step goes here (remove 0x first)
-        bytes32 orderId = 0xdeef3767ee47d2021a90a4c596b682f9468ccf7ee56e011cb35cf011039d20e4;
+        bytes32 orderId = 0x14c33931a4c1f0bff0839b4ab5e0d8205bd3c2efc864339245db9fdb773c17ec;
 
-        // NOTE - encodedOrder logged from the first step goes here (remove 0x first)
         bytes memory originData =
-            hex"0000000000000000000000000000000000000000000000000000000000000020000000000000000000000000d5b9fc2fb05a3b95cf6c9eb6ad75707d43397d57000000000000000000000000d5b9fc2fb05a3b95cf6c9eb6ad75707d43397d5700000000000000000000000030e9b6b0d161cbd5ff8cf904ff4fa43ce66ac3460000000000000000000000001c0abee8d63d7281860a5fc9f9251f14f4045b4c00000000000000000000000000000000000000000000000000000000000000640000000000000000000000000000000000000000000000000000000000000064000000000000000000000000000000000000000000000000000000000000258e0000000000000000000000000000000000000000000000000000000000aa36a70000000000000000000000000000000000000000000000000000000000049310000000000000000000000000d3a9e8fb22fe8be7a15f9ee33bff69986a1ef427000000000000000000000000000000000000000000000000000000006812341800000000000000000000000000000000000000000000000000000000000001800000000000000000000000000000000000000000000000000000000000000000";
+            hex"0000000000000000000000000000000000000000000000000000000000000020000000000000000000000000d5b9fc2fb05a3b95cf6c9eb6ad75707d43397d57000000000000000000000000d5b9fc2fb05a3b95cf6c9eb6ad75707d43397d570000000000000000000000001c0abee8d63d7281860a5fc9f9251f14f4045b4c00000000000000000000000030e9b6b0d161cbd5ff8cf904ff4fa43ce66ac34600000000000000000000000000000000000000000000000000000000000000010000000000000000000000000000000000000000000000000000000000000001000000000000000000000000000000000000000000000000000000000000102d00000000000000000000000000000000000000000000000000000000000493100000000000000000000000000000000000000000000000000000000000aa36a7000000000000000000000000e55a7504713c6150d9923def50a9d20a59a9791900000000000000000000000000000000000000000000000000000000681235dc00000000000000000000000000000000000000000000000000000000000001800000000000000000000000000000000000000000000000000000000000000000";
 
         // Approve output tokens
-        ERC20(vm.envAddress("L2_USDT_ADDR")).approve(
-            address(l2Router),
+        ERC20(vm.envAddress("L1_USDT_ADDR")).approve(
+            address(l1Router),
             100 // match amount from order
         );
 
+        // Fill the order
         bytes memory fillerData = abi.encode(TypeCasts.addressToBytes32(solver));
-        l2Router.fill(orderId, originData, fillerData);
+        l1Router.fill(orderId, originData, fillerData);
 
         vm.stopBroadcast();
     }
@@ -109,17 +110,17 @@ contract SolverFillScript is Script {
 // Step 3: Pull Based Settlement and Relay
 contract SettlementScript is Script {
     function run() external {
-        vm.createSelectFork(vm.rpcUrl("sepolia"));
+        vm.createSelectFork(vm.rpcUrl("t1"));
         uint256 settlerPk = vm.envUint("ALICE_PRIVATE_KEY");
 
         vm.startBroadcast(settlerPk);
 
-        T1ERC7683Pull l1Router = T1ERC7683Pull(vm.envAddress("L1_T1_PULL_BASED_7683_PROXY_ADDR"));
+        T1ERC7683Pull l2Router = T1ERC7683Pull(vm.envAddress("L2_T1_PULL_BASED_7683_PROXY_ADDR"));
 
         // NOTE - orderId logged from the first step goes here (remove 0x first)
-        bytes32 orderId = 0xdeef3767ee47d2021a90a4c596b682f9468ccf7ee56e011cb35cf011039d20e4;
+        bytes32 orderId = 0x14c33931a4c1f0bff0839b4ab5e0d8205bd3c2efc864339245db9fdb773c17ec;
 
-        l1Router.verifySettlement(DESTINATION_CHAIN, orderId);
+        l2Router.verifySettlement(DESTINATION_CHAIN, orderId);
 
         vm.stopBroadcast();
     }
