@@ -7,6 +7,7 @@ import { BasicSwap7683 } from "intents-framework/BasicSwap7683.sol";
 
 import { IT1Messenger } from "../libraries/IT1Messenger.sol";
 import { T1XChainReader } from "../libraries/xChain/T1XChainReader.sol";
+import { BaseT1XChainReader } from "../libraries/xChain/BaseT1XChainReader.sol";
 import { IT1XChainReaderCallback } from "../libraries/xChain/IT1XChainReaderCallback.sol";
 
 /**
@@ -47,18 +48,11 @@ contract T1ERC7683Pull is BasicSwap7683, OwnableUpgradeable, IT1XChainReaderCall
     uint256[47] private __GAP;
 
     // ============ Errors ============
-    error OnlyMessenger();
     error OnlyXChainRead();
     error FunctionNotImplemented(string functionName);
     error EthNotAllowed();
     error SettlementFailed();
     error RefundFailed();
-
-    // ============ Modifiers ============
-    modifier onlyMessenger() {
-        if (_msgSender() != address(messenger)) revert OnlyMessenger();
-        _;
-    }
 
     modifier onlyXChainRead() {
         if (msg.sender != address(xChainRead)) revert OnlyXChainRead();
@@ -103,7 +97,7 @@ contract T1ERC7683Pull is BasicSwap7683, OwnableUpgradeable, IT1XChainReaderCall
         // Create the calldata to check the order status on the destination chain
         bytes memory callData = abi.encodeWithSelector(this.getFilledOrderStatus.selector, orderId);
 
-        T1XChainReader.ReadRequest memory readRequest = T1XChainReader.ReadRequest({
+        BaseT1XChainReader.ReadRequest memory readRequest = BaseT1XChainReader.ReadRequest({
             destinationDomain: destinationDomain,
             targetContract: counterpart,
             minBlock: 0,
