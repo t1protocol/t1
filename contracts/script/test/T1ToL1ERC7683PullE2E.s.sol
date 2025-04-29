@@ -90,8 +90,7 @@ contract SolverFillScript is Script {
         // NOTE - orderId logged from the first step goes here (remove 0x first)
         bytes32 orderId = 0x1d389a744d845f38d45c8563d3cacefea4277382a23794d370ab3c3cff9cb27d;
 
-        bytes memory originData =
-            hex"";
+        bytes memory originData = hex"";
 
         // Approve output tokens
         ERC20(vm.envAddress("L1_USDT_ADDR")).approve(
