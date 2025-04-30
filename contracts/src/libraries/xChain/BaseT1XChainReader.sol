@@ -93,11 +93,6 @@ abstract contract BaseT1XChainReader is OwnableUpgradeable, ReentrancyGuardUpgra
 
     // ============ External Functions ============
 
-    // function setProver(address _prover) external onlyProver {
-    //     if (_prover == address(0)) revert ZeroAddress();
-    //     prover = _prover;
-    // }
-
     /**
      * @notice Initiates a cross-chain read request
      * @param request ReadRequest
