@@ -1,0 +1,14 @@
+{
+  "metadata": {
+    "version": "v0.2.2",
+    "date": "25-04-2025",
+    "by": "Evan",
+    "from_machine": "Evan's Macbook",
+    "from_branch": "canary",
+    "from_tag": "v0.2.2",
+    "from_release": "v0.2.0"
+  },
+  "addresses": {
+    "L1_T1_CHAIN_IMPLEMENTATION_ADDR": "0x3e8cBA65503AeE9DAEDaa37436C7FCc0e8f3c17f"
+  }
+}
