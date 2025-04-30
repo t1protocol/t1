@@ -22,6 +22,17 @@ function updateCargoVersion(filePath) {
   console.log(`Updated ${filePath}`);
 }
 
+function updateCargoLockVersion(filePath) {
+  const content = fs.readFileSync(filePath, 'utf8');
+  const updated = content.replace(
+    /name\s*=\s*"t1-reth"[\s\S]*?version\s*=\s*"[^"]+"/,
+    match => match.replace(/version\s*=\s*"[^"]+"/, `version = "${newVersion}"`)
+  );
+  fs.writeFileSync(filePath, updated);
+  console.log(`Updated ${filePath}`);
+}
+
+
 // Bump all package.json
 glob.sync('**/package.json', { ignore: ['**/node_modules/**'], cwd: path.resolve(__dirname, '..') })
   .map(f => path.resolve(__dirname, '..', f))
@@ -32,7 +43,7 @@ glob.sync('**/Cargo.toml', { ignore: ['**/target/**'], cwd: path.resolve(__dirna
   .map(f => path.resolve(__dirname, '..', f))
   .forEach(updateCargoVersion);
 
-// Bump all Cargo.toml
+// Bump all Cargo.lock
 glob.sync('**/Cargo.lock', { ignore: ['**/target/**'], cwd: path.resolve(__dirname, '..') })
   .map(f => path.resolve(__dirname, '..', f))
-  .forEach(updateCargoVersion);
+  .forEach(updateCargoLockVersion);
