@@ -61,13 +61,7 @@ contract T1ERC7683Pull is BasicSwap7683, OwnableUpgradeable, IT1XChainReaderCall
     /// @param _permit2 The address of the permit2 contract
     /// @param _xChainRead The address of the cross-chain read contract
     /// @param localDomain_ The local domain
-    constructor(
-        address _permit2,
-        address _xChainRead,
-        uint32 localDomain_
-    )
-        BasicSwap7683(_permit2)
-    {
+    constructor(address _permit2, address _xChainRead, uint32 localDomain_) BasicSwap7683(_permit2) {
         xChainRead = T1XChainReader(_xChainRead);
         localDomain = localDomain_;
     }

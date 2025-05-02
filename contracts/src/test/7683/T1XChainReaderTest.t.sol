@@ -7,7 +7,7 @@ import { OrderData, OrderEncoder } from "intents-framework/libs/OrderEncoder.sol
 import { OnchainCrossChainOrder } from "intents-framework/ERC7683/IERC7683.sol";
 
 import { T1XChainReader } from "../../libraries/xChain/T1XChainReader.sol";
-import { T1XChainMessage } from "../../libraries/xChain/T1XChainMessage.sol";
+import { BaseT1XChainReader } from "../../libraries/xChain/BaseT1XChainReader.sol";
 import { T1BasicSwapE2E } from "./T1BasicSwapE2E.t.sol";
 import { T1ERC7683Pull } from "../../7683/T1ERC7683Pull.sol";
 
@@ -43,9 +43,7 @@ contract T1XChainReaderTest is T1BasicSwapE2E {
         );
         admin.upgrade(
             ITransparentUpgradeableProxy(address(L2T17683Pull)),
-            address(
-                new T1ERC7683Pull(address(0), address(destinationReader), uint32(destination))
-            )
+            address(new T1ERC7683Pull(address(0), address(destinationReader), uint32(destination)))
         );
         L1T17683Pull.initialize(address(L2T17683Pull));
         L2T17683Pull.initialize(address(L1T17683Pull));
@@ -102,5 +100,15 @@ contract T1XChainReaderTest is T1BasicSwapE2E {
 
         // Verify the final state on L1
         assertTrue(L1T17683Pull.orderVerified(orderId), "Order should be verified");
+    }
+
+    function test_onlyProver_revert() public {
+        bytes32 requestId = hex"";
+        bytes memory orderStatus = hex"";
+
+        vm.prank(address(0xbeef));
+        vm.expectRevert(BaseT1XChainReader.OnlyProver.selector);
+        originReader.handle(destination, destinationRouterB32, requestId, orderStatus);
+
     }
 }
