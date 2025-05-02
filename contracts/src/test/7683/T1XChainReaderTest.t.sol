@@ -109,6 +109,5 @@ contract T1XChainReaderTest is T1BasicSwapE2E {
         vm.prank(address(0xbeef));
         vm.expectRevert(BaseT1XChainReader.OnlyProver.selector);
         originReader.handle(destination, destinationRouterB32, requestId, orderStatus);
-
     }
 }
