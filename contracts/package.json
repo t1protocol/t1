@@ -43,6 +43,7 @@
   "scripts": {
     "format": "forge fmt",
     "clean": "rm -rf cache out artifacts coverage lcov.info",
+    "commit": "cd ../ && bun run commit",
     "build": "forge build",
     "lint": "bun run lint:sol && bun run prettier:check",
     "lint:sol": "forge fmt --check && bun solhint \"{script,src,test}/**/*.sol\"",
