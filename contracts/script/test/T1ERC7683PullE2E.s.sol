@@ -87,7 +87,7 @@ contract SolverFillScript is Script {
 
         T1ERC7683Pull l2Router = T1ERC7683Pull(vm.envAddress("L2_T1_PULL_BASED_7683_PROXY_ADDR"));
         // NOTE - orderId logged from the first step goes here (remove 0x first)
-        bytes32 orderId = 0xdeef3767ee47d2021a90a4c596b682f9468ccf7ee56e011cb35cf011039d20e4;
+        bytes32 orderId = hex"";
 
         // NOTE - encodedOrder logged from the first step goes here (remove 0x first)
         bytes memory originData = hex"";
@@ -116,7 +116,7 @@ contract SettlementScript is Script {
         T1ERC7683Pull l1Router = T1ERC7683Pull(vm.envAddress("L1_T1_PULL_BASED_7683_PROXY_ADDR"));
 
         // NOTE - orderId logged from the first step goes here (remove 0x first)
-        bytes32 orderId = 0xdeef3767ee47d2021a90a4c596b682f9468ccf7ee56e011cb35cf011039d20e4;
+        bytes32 orderId = hex"";
 
         l1Router.verifySettlement(DESTINATION_CHAIN, orderId);
 
