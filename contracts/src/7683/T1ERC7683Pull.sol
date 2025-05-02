@@ -5,8 +5,8 @@ import { OwnableUpgradeable } from "@openzeppelin/contracts-upgradeable/access/O
 import { Hyperlane7683Message } from "intents-framework/libs/Hyperlane7683Message.sol";
 import { BasicSwap7683 } from "intents-framework/BasicSwap7683.sol";
 
-import { IT1Messenger } from "../libraries/IT1Messenger.sol";
 import { T1XChainReader } from "../libraries/xChain/T1XChainReader.sol";
+import { BaseT1XChainReader } from "../libraries/xChain/BaseT1XChainReader.sol";
 import { IT1XChainReaderCallback } from "../libraries/xChain/IT1XChainReaderCallback.sol";
 
 /**
@@ -18,7 +18,6 @@ import { IT1XChainReaderCallback } from "../libraries/xChain/IT1XChainReaderCall
 contract T1ERC7683Pull is BasicSwap7683, OwnableUpgradeable, IT1XChainReaderCallback {
     // ============ Constants ============
     uint32 public immutable localDomain;
-    IT1Messenger public immutable messenger;
     T1XChainReader public immutable xChainRead;
     address public counterpart;
 
@@ -47,18 +46,11 @@ contract T1ERC7683Pull is BasicSwap7683, OwnableUpgradeable, IT1XChainReaderCall
     uint256[47] private __GAP;
 
     // ============ Errors ============
-    error OnlyMessenger();
     error OnlyXChainRead();
     error FunctionNotImplemented(string functionName);
     error EthNotAllowed();
     error SettlementFailed();
     error RefundFailed();
-
-    // ============ Modifiers ============
-    modifier onlyMessenger() {
-        if (_msgSender() != address(messenger)) revert OnlyMessenger();
-        _;
-    }
 
     modifier onlyXChainRead() {
         if (msg.sender != address(xChainRead)) revert OnlyXChainRead();
@@ -66,19 +58,10 @@ contract T1ERC7683Pull is BasicSwap7683, OwnableUpgradeable, IT1XChainReaderCall
     }
 
     /// @notice Initializes the contract with the specified dependencies
-    /// @param _messenger The address of the messenger contract
     /// @param _permit2 The address of the permit2 contract
     /// @param _xChainRead The address of the cross-chain read contract
     /// @param localDomain_ The local domain
-    constructor(
-        address _messenger,
-        address _permit2,
-        address _xChainRead,
-        uint32 localDomain_
-    )
-        BasicSwap7683(_permit2)
-    {
-        messenger = IT1Messenger(_messenger);
+    constructor(address _permit2, address _xChainRead, uint32 localDomain_) BasicSwap7683(_permit2) {
         xChainRead = T1XChainReader(_xChainRead);
         localDomain = localDomain_;
     }
@@ -103,7 +86,7 @@ contract T1ERC7683Pull is BasicSwap7683, OwnableUpgradeable, IT1XChainReaderCall
         // Create the calldata to check the order status on the destination chain
         bytes memory callData = abi.encodeWithSelector(this.getFilledOrderStatus.selector, orderId);
 
-        T1XChainReader.ReadRequest memory readRequest = T1XChainReader.ReadRequest({
+        BaseT1XChainReader.ReadRequest memory readRequest = BaseT1XChainReader.ReadRequest({
             destinationDomain: destinationDomain,
             targetContract: counterpart,
             minBlock: 0,
