@@ -83,7 +83,7 @@ run_script script/deploy/InitializeL1BridgeContracts.s.sol InitializeL1BridgeCon
 run_script script/deploy/InitializeL2BridgeContracts.s.sol InitializeL2BridgeContracts
 run_script script/deploy/InitializeL1T1Owner.s.sol InitializeL1T1Owner
 run_script script/deploy/DeployL2T1XChainReader.s.sol DeployL2T1XChainReader
-run_script script/deploy/DeployPR1T1XChainReader.s.sol DeployPR1T1XChainReader
+run_script script/deploy/DeployL1T1XChainReader.s.sol DeployL1T1XChainReader
 
 # Configuration contracts
 forge script script/configure/FirstUsdtDepositFromL1ToL2.s.sol --rpc-url "$T1_L1_RPC" --broadcast

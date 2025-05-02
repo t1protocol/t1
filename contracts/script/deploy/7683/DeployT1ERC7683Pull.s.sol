@@ -11,11 +11,11 @@ import { T1Constants } from "../../../src/libraries/constants/T1Constants.sol";
 
 contract DeployT1ERC7683Pull is DeploymentUtils {
     uint32 internal constant T1 = uint32(T1Constants.T1_DEVNET_CHAIN_ID);
-    uint32 internal constant PR1 = uint32(T1Constants.L1_CHAIN_ID);
+    uint32 internal constant L1 = uint32(T1Constants.L1_CHAIN_ID);
     ProxyAdmin private proxyAdmin;
 
-    function pr1_deploy() external {
-        logStart("DeployRouterPullBasedERC7683 to PR1");
+    function l1_deploy() external {
+        logStart("DeployRouterPullBasedERC7683 to L1");
         uint256 deployerPk = vm.envUint("L1_DEPLOYER_PRIVATE_KEY");
         address L1_T1_X_CHAIN_READ_PROXY_ADDR = vm.envAddress("L1_T1_X_CHAIN_READ_PROXY_ADDR");
         address L1_PROXY_ADMIN_ADDR = vm.envAddress("L1_PROXY_ADMIN_ADDR");
@@ -27,7 +27,7 @@ contract DeployT1ERC7683Pull is DeploymentUtils {
         T1ERC7683Pull impl = new T1ERC7683Pull(
             address(0), // No Permit2 for now
             L1_T1_X_CHAIN_READ_PROXY_ADDR,
-            PR1
+            L1
         );
 
         // Deploy and initialize proxy
@@ -39,10 +39,10 @@ contract DeployT1ERC7683Pull is DeploymentUtils {
         logAddress("L1_T1_PULL_BASED_7683_IMPLEMENTATION_ADDR", address(impl));
         logAddress("L1_T1_PULL_BASED_7683_PROXY_ADDR", address(proxy));
 
-        logEnd("DeployRouterPullBasedERC7683 to PR1");
+        logEnd("DeployRouterPullBasedERC7683 to L1");
     }
 
-    function pr1_init() external {
+    function l1_init() external {
         uint256 deployerPk = vm.envUint("L1_DEPLOYER_PRIVATE_KEY");
         address L1_T1_7683_PROXY_ADDR = vm.envAddress("L1_T1_PULL_BASED_7683_PROXY_ADDR");
         address L2_T1_7683_PROXY_ADDR = vm.envAddress("L2_T1_PULL_BASED_7683_PROXY_ADDR");

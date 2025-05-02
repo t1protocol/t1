@@ -30,7 +30,7 @@ The magical deploy order is as follows:
 12. [FirstUsdtDepositFromL1ToL2.s.sol](./configure/FirstUsdtDepositFromL1ToL2.s.sol)
 13. [SetMM.s.sol](./configure/SetMM.s.sol)
 14. [AllowRouterToTransfer.s.sol](./configure/AllowRouterToTransfer.s.sol)
-15. [DeployPR1T1XChainReader.s.sol](./deploy/DeployPR1T1XChainReader.s.sol)
+15. [DeployL1T1XChainReader.s.sol](./deploy/DeployL1T1XChainReader.s.sol)
 16. [DeployL2T1XChainReader.s.sol](./deploy/DeployL2T1XChainReader.s.sol)
 17. [DeployT1ERC7683Pull.s.sol](./deploy/7683/DeployT1ERC7683Pull.s.sol)
 
