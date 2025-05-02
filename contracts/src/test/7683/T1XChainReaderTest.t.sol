@@ -39,12 +39,12 @@ contract T1XChainReaderTest is T1BasicSwapE2E {
         L2T17683Pull = T1ERC7683Pull(payable(_deployProxy(address(0))));
         admin.upgrade(
             ITransparentUpgradeableProxy(address(L1T17683Pull)),
-            address(new T1ERC7683Pull(address(l1t1Messenger), address(0), address(originReader), uint32(origin)))
+            address(new T1ERC7683Pull(address(0), address(originReader), uint32(origin)))
         );
         admin.upgrade(
             ITransparentUpgradeableProxy(address(L2T17683Pull)),
             address(
-                new T1ERC7683Pull(address(l2t1Messenger), address(0), address(destinationReader), uint32(destination))
+                new T1ERC7683Pull(address(0), address(destinationReader), uint32(destination))
             )
         );
         L1T17683Pull.initialize(address(L2T17683Pull));

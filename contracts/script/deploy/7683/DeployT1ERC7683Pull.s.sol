@@ -17,7 +17,6 @@ contract DeployT1ERC7683Pull is DeploymentUtils {
     function pr1_deploy() external {
         logStart("DeployRouterPullBasedERC7683 to PR1");
         uint256 deployerPk = vm.envUint("L1_DEPLOYER_PRIVATE_KEY");
-        address L1_T1_MESSENGER_PROXY_ADDR = vm.envAddress("L1_T1_MESSENGER_PROXY_ADDR");
         address L1_T1_X_CHAIN_READ_PROXY_ADDR = vm.envAddress("L1_T1_X_CHAIN_READ_PROXY_ADDR");
         address L1_PROXY_ADMIN_ADDR = vm.envAddress("L1_PROXY_ADMIN_ADDR");
         proxyAdmin = ProxyAdmin(L1_PROXY_ADMIN_ADDR);
@@ -26,7 +25,6 @@ contract DeployT1ERC7683Pull is DeploymentUtils {
 
         // Deploy L1 router implementation
         T1ERC7683Pull impl = new T1ERC7683Pull(
-            L1_T1_MESSENGER_PROXY_ADDR,
             address(0), // No Permit2 for now
             L1_T1_X_CHAIN_READ_PROXY_ADDR,
             PR1
@@ -60,7 +58,6 @@ contract DeployT1ERC7683Pull is DeploymentUtils {
         logStart("DeployRouterPullBasedERC7683 to t1");
         vm.createSelectFork(vm.rpcUrl("t1"));
         uint256 deployerPk = vm.envUint("L2_DEPLOYER_PRIVATE_KEY");
-        address L2_T1_MESSENGER_PROXY_ADDR = vm.envAddress("L2_T1_MESSENGER_PROXY_ADDR");
         address L2_T1_X_CHAIN_READ_PROXY_ADDR = vm.envAddress("L2_T1_X_CHAIN_READ_PROXY_ADDR");
         address L2_PROXY_ADMIN_ADDR = vm.envAddress("L2_PROXY_ADMIN_ADDR");
 
@@ -70,7 +67,6 @@ contract DeployT1ERC7683Pull is DeploymentUtils {
 
         // Deploy L2 router implementation
         T1ERC7683Pull impl = new T1ERC7683Pull(
-            L2_T1_MESSENGER_PROXY_ADDR,
             address(0), // No Permit2 for now
             L2_T1_X_CHAIN_READ_PROXY_ADDR,
             T1
