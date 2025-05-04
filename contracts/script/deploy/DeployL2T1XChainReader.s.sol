@@ -20,11 +20,12 @@ contract DeployL2T1XChainReader is DeploymentUtils {
         uint256 L2_DEPLOYER_PRIVATE_KEY = vm.envUint("L2_DEPLOYER_PRIVATE_KEY");
         address L2_T1_MESSENGER = vm.envAddress("L2_T1_MESSENGER_PROXY_ADDR");
         address L2_T1_PROXY_ADMIN_ADDR = vm.envAddress("L2_PROXY_ADMIN_ADDR");
+        address L2_SIGNER = vm.envAddress("L2_SIGNER");
         ProxyAdmin proxyAdmin = ProxyAdmin(L2_T1_PROXY_ADMIN_ADDR);
 
         vm.startBroadcast(L2_DEPLOYER_PRIVATE_KEY);
 
-        T1XChainReader impl = new T1XChainReader(address(L2_T1_MESSENGER), ORIGIN_CHAIN);
+        T1XChainReader impl = new T1XChainReader(address(L2_T1_MESSENGER), L2_SIGNER, ORIGIN_CHAIN);
         logAddress("L2_T1_X_CHAIN_READ_IMPLEMENTATION_ADDR", address(impl));
 
         TransparentUpgradeableProxy proxy =

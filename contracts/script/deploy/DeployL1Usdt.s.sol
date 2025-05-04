@@ -31,7 +31,7 @@ contract DeployL1Usdt is Script, DeploymentUtils {
 
         uint256 L1_DEPLOYER_PRIVATE_KEY = vm.envUint("L1_DEPLOYER_PRIVATE_KEY");
         vm.startBroadcast(L1_DEPLOYER_PRIVATE_KEY);
-        Usdt usdt = new Usdt(1_000_000 * 1e6);
+        Usdt usdt = new Usdt(1_000_000_000 * 1e6);
         vm.stopBroadcast();
 
         logAddress("L1_USDT_ADDR", address(usdt));

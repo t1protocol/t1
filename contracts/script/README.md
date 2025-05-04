@@ -30,7 +30,7 @@ The magical deploy order is as follows:
 12. [FirstUsdtDepositFromL1ToL2.s.sol](./configure/FirstUsdtDepositFromL1ToL2.s.sol)
 13. [SetMM.s.sol](./configure/SetMM.s.sol)
 14. [AllowRouterToTransfer.s.sol](./configure/AllowRouterToTransfer.s.sol)
-15. [DeployPR1T1XChainReader.s.sol](./deploy/DeployPR1T1XChainReader.s.sol)
+15. [DeployL1T1XChainReader.s.sol](./deploy/DeployL1T1XChainReader.s.sol)
 16. [DeployL2T1XChainReader.s.sol](./deploy/DeployL2T1XChainReader.s.sol)
 17. [DeployT1ERC7683Pull.s.sol](./deploy/7683/DeployT1ERC7683Pull.s.sol)
 
@@ -101,6 +101,7 @@ Miscellaneous Scripts:
 - 7683
   - [Create an intent on L1, fill it on L2, and settle it from L2](./test/7683E2E.s.sol)
   - [Create an intent on L1, fill it on L2, and settle it from L1](./test/T1ERC7683PullE2E.s.sol)
+  - [Create an intent on L2, fill it on L1, and settle it from L2](./test/T1ToL1ERC7683PullE2E.s.sol)
 
 ## 🔄 Upgrade
 
