@@ -21,9 +21,9 @@ contract DepositUsdtFromL1ToL2 is Script {
 
         uint256 gasLimit = 1_000_000;
 
-        T1StandardERC20(L1_USDT_ADDR).approve(L1_GATEWAY_ROUTER_PROXY_ADDR, 1000 ether);
-
-        IL1GatewayRouter(L1_GATEWAY_ROUTER_PROXY_ADDR).depositERC20(L1_USDT_ADDR, 1000 ether, gasLimit);
+       uint256 depositAmount = 1_000 * 1e6;
+        T1StandardERC20(L1_USDT_ADDR).approve(L1_GATEWAY_ROUTER_PROXY_ADDR, depositAmount);
+        IL1GatewayRouter(L1_GATEWAY_ROUTER_PROXY_ADDR).depositERC20(L1_USDT_ADDR, depositAmount, gasLimit);
 
         address l2usdtAddress = IL1GatewayRouter(L1_GATEWAY_ROUTER_PROXY_ADDR).getL2ERC20Address(L1_USDT_ADDR);
         logAddress("L2_USDT_ADDR", l2usdtAddress);
