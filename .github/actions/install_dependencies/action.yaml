@@ -1,0 +1,18 @@
+name: 'Install dependencies'
+description: 'Install dependencies'
+
+runs:
+  using: composite
+  steps:
+    - name: Install Foundry
+      uses: foundry-rs/foundry-toolchain@v1
+
+    - name: Install Bun
+      uses: oven-sh/setup-bun@v2
+      with:
+        bun-version: 1.2.2
+
+    - name: Install Node.js dependencies
+      working-directory: contracts
+      shell: bash
+      run: bun install
