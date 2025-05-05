@@ -9,12 +9,12 @@ import { DeploymentUtils } from "../../lib/DeploymentUtils.sol";
 import { T1ERC7683Pull } from "../../../src/7683/T1ERC7683Pull.sol";
 import { T1Constants } from "../../../src/libraries/constants/T1Constants.sol";
 
-contract DeployT1ERC7683Pull is DeploymentUtils {
-    uint32 internal constant T1 = uint32(T1Constants.T1_DEVNET_CHAIN_ID);
-    uint32 internal constant L1 = uint32(T1Constants.L1_CHAIN_ID);
-    ProxyAdmin private proxyAdmin;
+uint32 constant T1 = uint32(T1Constants.T1_DEVNET_CHAIN_ID);
+uint32 constant L1 = uint32(T1Constants.L1_CHAIN_ID);
 
-    function l1_deploy() external {
+contract DeployT1ERC7683PullL1 is DeploymentUtils {
+    ProxyAdmin private proxyAdmin;
+    function run() external {
         logStart("DeployRouterPullBasedERC7683 to L1");
         uint256 deployerPk = vm.envUint("L1_DEPLOYER_PRIVATE_KEY");
         address L1_T1_X_CHAIN_READ_PROXY_ADDR = vm.envAddress("L1_T1_X_CHAIN_READ_PROXY_ADDR");
@@ -41,20 +41,10 @@ contract DeployT1ERC7683Pull is DeploymentUtils {
 
         logEnd("DeployRouterPullBasedERC7683 to L1");
     }
-
-    function l1_init() external {
-        uint256 deployerPk = vm.envUint("L1_DEPLOYER_PRIVATE_KEY");
-        address L1_T1_7683_PROXY_ADDR = vm.envAddress("L1_T1_PULL_BASED_7683_PROXY_ADDR");
-        address L2_T1_7683_PROXY_ADDR = vm.envAddress("L2_T1_PULL_BASED_7683_PROXY_ADDR");
-
-        vm.startBroadcast(deployerPk);
-
-        T1ERC7683Pull(L1_T1_7683_PROXY_ADDR).initialize(L2_T1_7683_PROXY_ADDR);
-
-        vm.stopBroadcast();
-    }
-
-    function t1_deploy() external {
+}
+contract DeployT1ERC7683PullT1 is DeploymentUtils {
+    ProxyAdmin private proxyAdmin;
+    function run() external {
         logStart("DeployRouterPullBasedERC7683 to t1");
         vm.createSelectFork(vm.rpcUrl("t1"));
         uint256 deployerPk = vm.envUint("L2_DEPLOYER_PRIVATE_KEY");
@@ -83,8 +73,22 @@ contract DeployT1ERC7683Pull is DeploymentUtils {
 
         logEnd("DeployRouterPullBasedERC7683 to t1");
     }
+}
+contract InitT1ERC7683PullL1 is DeploymentUtils {
+    function run() external {
+        uint256 deployerPk = vm.envUint("L1_DEPLOYER_PRIVATE_KEY");
+        address L1_T1_7683_PROXY_ADDR = vm.envAddress("L1_T1_PULL_BASED_7683_PROXY_ADDR");
+        address L2_T1_7683_PROXY_ADDR = vm.envAddress("L2_T1_PULL_BASED_7683_PROXY_ADDR");
 
-    function t1_init() external {
+        vm.startBroadcast(deployerPk);
+
+        T1ERC7683Pull(L1_T1_7683_PROXY_ADDR).initialize(L2_T1_7683_PROXY_ADDR);
+
+        vm.stopBroadcast();
+    }
+}
+contract InitT1ERC7683PullT1 is DeploymentUtils {
+    function run() external {
         vm.createSelectFork(vm.rpcUrl("t1"));
         uint256 deployerPk = vm.envUint("L2_DEPLOYER_PRIVATE_KEY");
         address L1_T1_7683_PROXY_ADDR = vm.envAddress("L1_T1_PULL_BASED_7683_PROXY_ADDR");

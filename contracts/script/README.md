@@ -33,6 +33,10 @@ The magical deploy order is as follows:
 15. [DeployL1T1XChainReader.s.sol](./deploy/DeployL1T1XChainReader.s.sol)
 16. [DeployL2T1XChainReader.s.sol](./deploy/DeployL2T1XChainReader.s.sol)
 17. [DeployT1ERC7683Pull.s.sol](./deploy/7683/DeployT1ERC7683Pull.s.sol)
+  - a. DeployT1ERC7683PullL1
+  - b. DeployT1ERC7683PullT1
+  - c. InitT1ERC7683PullL1
+  - d. InitT1ERC7683PullT1
 
 ## Deploy 7683 Contract
 
