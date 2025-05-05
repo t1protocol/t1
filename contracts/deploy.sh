@@ -89,6 +89,15 @@ run_script script/deploy/7683/DeployT1ERC7683Pull.s.sol DeployT1ERC7683PullT1
 run_script script/deploy/7683/DeployT1ERC7683Pull.s.sol InitT1ERC7683PullL1
 run_script script/deploy/7683/DeployT1ERC7683Pull.s.sol InitT1ERC7683PullT1
 
+# 7683 config
+forge script ./script/deploy/7683/DeployT1ERC7683Pull.s.sol:DeployT1ERC7683Pull --sig "l1_deploy()" --broadcast --rpc-url $T1_L1_RPC --verify --verifier etherscan --verifier-url https://api-sepolia.etherscan.io/api --etherscan-api-key $ETHERSCAN_API_KEY
+
+forge script ./script/deploy/7683/DeployT1ERC7683Pull.s.sol:DeployT1ERC7683Pull --sig "t1_deploy()" --broadcast --rpc-url $T1_L2_RPC --chain 299992 --verifier blockscout --verifier-url https://explorer.v030.t1protocol.com/api
+
+forge script ./script/deploy/7683/DeployT1ERC7683Pull.s.sol:DeployT1ERC7683Pull --sig "l1_init()" --broadcast --rpc-url $T1_L1_RPC
+
+forge script ./script/deploy/7683/DeployT1ERC7683Pull.s.sol:DeployT1ERC7683Pull --sig "t1_init()" --broadcast --rpc-url $T1_L2_RPC
+
 # Configuration contracts
 forge script script/configure/FirstUsdtDepositFromL1ToL2.s.sol --rpc-url "$T1_L1_RPC" --broadcast
 forge script script/configure/SetMM.s.sol --rpc-url "$T1_L1_RPC" --broadcast
