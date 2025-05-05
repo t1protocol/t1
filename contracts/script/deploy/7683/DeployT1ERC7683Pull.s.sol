@@ -14,6 +14,7 @@ uint32 constant L1 = uint32(T1Constants.L1_CHAIN_ID);
 
 contract DeployT1ERC7683PullL1 is DeploymentUtils {
     ProxyAdmin private proxyAdmin;
+
     function run() external {
         logStart("DeployRouterPullBasedERC7683 to L1");
         uint256 deployerPk = vm.envUint("L1_DEPLOYER_PRIVATE_KEY");
@@ -42,8 +43,10 @@ contract DeployT1ERC7683PullL1 is DeploymentUtils {
         logEnd("DeployRouterPullBasedERC7683 to L1");
     }
 }
+
 contract DeployT1ERC7683PullT1 is DeploymentUtils {
     ProxyAdmin private proxyAdmin;
+
     function run() external {
         logStart("DeployRouterPullBasedERC7683 to t1");
         vm.createSelectFork(vm.rpcUrl("t1"));
@@ -74,6 +77,7 @@ contract DeployT1ERC7683PullT1 is DeploymentUtils {
         logEnd("DeployRouterPullBasedERC7683 to t1");
     }
 }
+
 contract InitT1ERC7683PullL1 is DeploymentUtils {
     function run() external {
         uint256 deployerPk = vm.envUint("L1_DEPLOYER_PRIVATE_KEY");
@@ -87,6 +91,7 @@ contract InitT1ERC7683PullL1 is DeploymentUtils {
         vm.stopBroadcast();
     }
 }
+
 contract InitT1ERC7683PullT1 is DeploymentUtils {
     function run() external {
         vm.createSelectFork(vm.rpcUrl("t1"));
