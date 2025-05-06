@@ -35,11 +35,27 @@ abstract contract BaseT1XChainReader is OwnableUpgradeable, ReentrancyGuardUpgra
     );
 
     /**
-     * @notice Emitted when a cross-chain read response is received
+     * @notice Emitted when a cross-chain read response succeeds
      * @param requestId Unique identifier for the original request
      * @param result The result data from the read operation
      */
-    event ReadResult(bytes32 indexed requestId, bytes result);
+    event ReadSucceeded(bytes32 indexed requestId, bytes result);
+
+    /**
+     * @notice Emitted when a cross-chain read response fails with bytes revert
+     * @param requestId Unique identifier for the original request
+     * @param result The result data from the read operation
+     * @param reason The reason the call failed
+     */
+    event ReadFailed(bytes32 indexed requestId, bytes result, bytes reason);
+
+    /**
+     * @notice Emitted when a cross-chain read response fails with string revert
+     * @param requestId Unique identifier for the original request
+     * @param result The result data from the read operation
+     * @param reason The reason the call failed
+     */
+    event ReadFailed(bytes32 indexed requestId, bytes result, string reason);
 
     // ============ State Variables ============
 
@@ -189,10 +205,14 @@ abstract contract BaseT1XChainReader is OwnableUpgradeable, ReentrancyGuardUpgra
         // If there's a valid callback, forward the result
         if (callback != address(0)) {
             delete callbacks[requestId];
-
-            IT1XChainReaderCallback(callback).onT1XChainReaderResult(_originDomain, _sender, requestId, result);
+            try IT1XChainReaderCallback(callback).onT1XChainReaderResult(_originDomain, _sender, requestId, result) {
+                emit ReadSucceeded(requestId, result);
+            } catch Error(string memory reason) {
+                emit ReadFailed(requestId, result, reason);
+            } catch (bytes memory reason) {
+                emit ReadFailed(requestId, result, reason);
+            }
         }
 
-        emit ReadResult(requestId, result);
     }
 }
