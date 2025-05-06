@@ -213,6 +213,5 @@ abstract contract BaseT1XChainReader is OwnableUpgradeable, ReentrancyGuardUpgra
                 emit ReadFailed(requestId, result, reason);
             }
         }
-
     }
 }
