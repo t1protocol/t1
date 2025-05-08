@@ -7,7 +7,7 @@ import { BasicSwap7683 } from "intents-framework/BasicSwap7683.sol";
 
 import { T1XChainReader } from "../libraries/xChain/T1XChainReader.sol";
 import { BaseT1XChainReader } from "../libraries/xChain/BaseT1XChainReader.sol";
-import { IT1XChainReaderCallback } from "../libraries/xChain/IT1XChainReaderCallback.sol";
+import { IT1XChainReaderCallback } from "../libraries/callbacks/IT1XChainReaderCallback.sol";
 
 /**
  * @title T1ERC7683Pull

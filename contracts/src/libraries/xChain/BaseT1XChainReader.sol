@@ -7,7 +7,7 @@ import { ReentrancyGuardUpgradeable } from "@openzeppelin/contracts-upgradeable/
 
 import { IT1Messenger } from "../IT1Messenger.sol";
 import { T1XChainMessage } from "./T1XChainMessage.sol";
-import { IT1XChainReaderCallback } from "./IT1XChainReaderCallback.sol";
+import { IT1XChainReaderCallback } from "../callbacks/IT1XChainReaderCallback.sol";
 
 /**
  * @title T1XChainReader
