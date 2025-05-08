@@ -7,7 +7,6 @@ import { OrderData, OrderEncoder } from "intents-framework/libs/OrderEncoder.sol
 import { OnchainCrossChainOrder } from "intents-framework/ERC7683/IERC7683.sol";
 
 import { T1XChainReader } from "../../libraries/xChain/T1XChainReader.sol";
-import { BaseT1XChainReader } from "../../libraries/xChain/BaseT1XChainReader.sol";
 import { T1BasicSwapE2E } from "./T1BasicSwapE2E.t.sol";
 import { T1ERC7683Pull } from "../../7683/T1ERC7683Pull.sol";
 
@@ -107,7 +106,7 @@ contract T1XChainReaderTest is T1BasicSwapE2E {
         bytes memory orderStatus = hex"";
 
         vm.prank(address(0xbeef));
-        vm.expectRevert(BaseT1XChainReader.OnlyProver.selector);
+        vm.expectRevert(T1XChainReader.OnlyProver.selector);
         originReader.handle(destination, destinationRouterB32, requestId, orderStatus);
     }
 }

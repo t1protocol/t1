@@ -6,7 +6,6 @@ import { Hyperlane7683Message } from "intents-framework/libs/Hyperlane7683Messag
 import { BasicSwap7683 } from "intents-framework/BasicSwap7683.sol";
 
 import { T1XChainReader } from "../libraries/xChain/T1XChainReader.sol";
-import { BaseT1XChainReader } from "../libraries/xChain/BaseT1XChainReader.sol";
 import { IT1XChainReaderCallback } from "../libraries/callbacks/IT1XChainReaderCallback.sol";
 
 /**
@@ -86,9 +85,10 @@ contract T1ERC7683Pull is BasicSwap7683, OwnableUpgradeable, IT1XChainReaderCall
         // Create the calldata to check the order status on the destination chain
         bytes memory callData = abi.encodeWithSelector(this.getFilledOrderStatus.selector, orderId);
 
-        BaseT1XChainReader.ReadRequest memory readRequest = BaseT1XChainReader.ReadRequest({
+        T1XChainReader.ReadRequest memory readRequest = T1XChainReader.ReadRequest({
             destinationDomain: destinationDomain,
             targetContract: counterpart,
+            gasLimit: 1_000_000,
             minBlock: 0,
             callData: callData,
             callback: address(this)
