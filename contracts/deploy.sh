@@ -84,16 +84,20 @@ run_script script/deploy/InitializeL2BridgeContracts.s.sol InitializeL2BridgeCon
 run_script script/deploy/InitializeL1T1Owner.s.sol InitializeL1T1Owner
 run_script script/deploy/DeployL2T1XChainReader.s.sol DeployL2T1XChainReader
 run_script script/deploy/DeployL1T1XChainReader.s.sol DeployL1T1XChainReader
+run_script script/deploy/DeployPR1T1XChainReader.s.sol DeployPR1T1XChainReader
 
-# 7683 config
+# 7683 L1<>L2
 forge script ./script/deploy/7683/DeployT1ERC7683Pull.s.sol:DeployT1ERC7683Pull --sig "l1_deploy()" --broadcast --rpc-url $T1_L1_RPC --verify --verifier etherscan --verifier-url https://api-sepolia.etherscan.io/api --etherscan-api-key $ETHERSCAN_API_KEY
+forge script ./script/deploy/7683/DeployT1ERC7683Pull.s.sol:DeployT1ERC7683Pull --sig "t1_deploy(string)" "L1_L2" --broadcast --rpc-url $T1_L2_RPC --chain 299992 --verifier blockscout --verifier-url https://explorer.v030.t1protocol.com/api
+forge script ./script/deploy/7683/DeployT1ERC7683Pull.s.sol:DeployT1ERC7683Pull --sig "l1_init" --broadcast --rpc-url $T1_L1_RPC
+forge script ./script/deploy/7683/DeployT1ERC7683Pull.s.sol:DeployT1ERC7683Pull --sig "t1_init(string, string)" "L1" "L1_L2" --broadcast --rpc-url $T1_L2_RPC
 
-forge script ./script/deploy/7683/DeployT1ERC7683Pull.s.sol:DeployT1ERC7683Pull --sig "t1_deploy()" --broadcast --rpc-url $T1_L2_RPC --chain 299992 --verifier blockscout --verifier-url https://explorer.v030.t1protocol.com/api
-
-forge script ./script/deploy/7683/DeployT1ERC7683Pull.s.sol:DeployT1ERC7683Pull --sig "l1_init()" --broadcast --rpc-url $T1_L1_RPC
-
-forge script ./script/deploy/7683/DeployT1ERC7683Pull.s.sol:DeployT1ERC7683Pull --sig "t1_init()" --broadcast --rpc-url $T1_L2_RPC
-
+# 7683 PR1<>L2
+forge script ./script/deploy/7683/DeployT1ERC7683Pull.s.sol:DeployT1ERC7683Pull --sig "pr1_deploy()" --broadcast --rpc-url $T1_PR1_RPC
+forge script ./script/deploy/7683/DeployT1ERC7683Pull.s.sol:DeployT1ERC7683Pull --sig "t1_deploy(string)" "PR1_L2"--broadcast --rpc-url $T1_L2_RPC --chain 299992 --verifier blockscout --verifier-url https://explorer.v030.t1protocol.com/api
+forge script ./script/deploy/7683/DeployT1ERC7683Pull.s.sol:DeployT1ERC7683Pull --sig "pr1_init" --broadcast --rpc-url $T1_PR1_RPC
+forge script ./script/deploy/7683/DeployT1ERC7683Pull.s.sol:DeployT1ERC7683Pull --sig "t1_init(string, string)" "PR1" "PR1_L2"--broadcast --rpc-url $T1_L2_RPC
+ 
 # Configuration contracts
 forge script script/configure/FirstUsdtDepositFromL1ToL2.s.sol --rpc-url "$T1_L1_RPC" --broadcast
 forge script script/configure/SetMM.s.sol --rpc-url "$T1_L1_RPC" --broadcast

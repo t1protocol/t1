@@ -16,6 +16,9 @@ library T1Constants {
     /// @notice Chain ID of the T1 devnet
     uint64 internal constant T1_DEVNET_CHAIN_ID = 299_892;
 
+    /// @notice Chain ID of the PR1 network
+    uint64 internal constant PR1_CHAIN_ID = 84_532;
+
     /// @notice The EIP-712 type string for the remaining after the witness.
     string internal constant WITNESS_TYPE_STRING =
     // solhint-disable-next-line max-line-length

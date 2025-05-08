@@ -40,7 +40,7 @@ contract AliceSetupScript is Script {
             ), // Random number between 0 and 9999
             originDomain: ORIGIN_CHAIN,
             destinationDomain: DESTINATION_CHAIN,
-            destinationSettler: TypeCasts.addressToBytes32(vm.envAddress("L2_T1_PULL_BASED_7683_PROXY_ADDR")),
+            destinationSettler: TypeCasts.addressToBytes32(vm.envAddress("L1_L2_T1_PULL_BASED_7683_PROXY_ADDR")),
             fillDeadline: uint32(block.timestamp + 24 hours),
             data: new bytes(0)
         });
@@ -85,7 +85,7 @@ contract SolverFillScript is Script {
 
         vm.startBroadcast(solverPk);
 
-        T1ERC7683Pull l2Router = T1ERC7683Pull(vm.envAddress("L2_T1_PULL_BASED_7683_PROXY_ADDR"));
+        T1ERC7683Pull l2Router = T1ERC7683Pull(vm.envAddress("L1_L2_T1_PULL_BASED_7683_PROXY_ADDR"));
         // NOTE - orderId logged from the first step goes here (remove 0x first)
         bytes32 orderId = hex"";
 

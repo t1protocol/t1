@@ -32,7 +32,8 @@ The magical deploy order is as follows:
 14. [AllowRouterToTransfer.s.sol](./configure/AllowRouterToTransfer.s.sol)
 15. [DeployL1T1XChainReader.s.sol](./deploy/DeployL1T1XChainReader.s.sol)
 16. [DeployL2T1XChainReader.s.sol](./deploy/DeployL2T1XChainReader.s.sol)
-17. [DeployT1ERC7683Pull.s.sol](./deploy/7683/DeployT1ERC7683Pull.s.sol)
+17. [DeployPR1T1XChainReader.s.sol](./deploy/DeployPR1T1XChainReader.s.sol)
+18. [DeployT1ERC7683Pull.s.sol](./deploy/7683/DeployT1ERC7683Pull.s.sol)
 
 ## Deploy 7683 Contract
 
