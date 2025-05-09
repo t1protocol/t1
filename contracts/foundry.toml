@@ -61,4 +61,5 @@
 
 [etherscan]
 sepolia = { key = "${ETHERSCAN_API_KEY}" }
+base_sepolia = { key = "${BASECAN_API_KEY}" }
 

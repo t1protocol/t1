@@ -25,8 +25,10 @@ get_rpc_and_verifier() {
   if [[ $script_name == *"L1"* ]]; then
     rpc_url="$T1_L1_RPC"
     verifier="etherscan"
-    verifier_url="https://api-sepolia.etherscan.io/api"
-    api_key_flag="--etherscan-api-key $ETHERSCAN_API_KEY" # Only needed for Etherscan
+    #verifier_url="https://api-sepolia.etherscan.io/api"
+    #api_key_flag="--etherscan-api-key $ETHERSCAN_API_KEY"
+    verifier_url="https://api-sepolia.basescan.org/api"
+    api_key_flag="--etherscan-api-key $BASECAN_API_KEY"
     private_key="$L1_DEPLOYER_PRIVATE_KEY"
   elif [[ $script_name == *"L2"* ]]; then
     rpc_url="$T1_L2_RPC"
