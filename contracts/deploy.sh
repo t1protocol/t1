@@ -36,6 +36,12 @@ get_rpc_and_verifier() {
     verifier_url="$BLOCKSCOUT_API_URL"  # Ensure this is set in your .env
     api_key_flag=""  # Blockscout does not require an API key
     private_key="$L2_DEPLOYER_PRIVATE_KEY"
+  elif [[ $script_name == *"PR1"* ]]; then
+    rpc_url="$T1_PR1_RPC"
+    verifier="etherscan"
+    verifier_url="https://api-sepolia.basescan.org/api"  # Ensure this is set in your .env
+    api_key_flag="--etherscan-api-key $BASECAN_API_KEY"
+    private_key="$PR1_DEPLOYER_PRIVATE_KEY"
   else
     echo "ERROR: Could not determine RPC URL for script: $script_name" >&2
     exit 1
@@ -85,7 +91,7 @@ run_script script/deploy/InitializeL1BridgeContracts.s.sol InitializeL1BridgeCon
 run_script script/deploy/InitializeL2BridgeContracts.s.sol InitializeL2BridgeContracts
 run_script script/deploy/InitializeL1T1Owner.s.sol InitializeL1T1Owner
 run_script script/deploy/DeployL2T1XChainReader.s.sol DeployL2T1XChainReader
-run_script script/deploy/DeployL1T1XChainReader.s.sol DeployL1T1XChainReader
+# run_script script/deploy/DeployL1T1XChainReader.s.sol DeployL1T1XChainReader
 run_script script/deploy/DeployPR1T1XChainReader.s.sol DeployPR1T1XChainReader
 
 # 7683 L1<>L2
