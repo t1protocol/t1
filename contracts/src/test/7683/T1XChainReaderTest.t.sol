@@ -81,7 +81,7 @@ contract T1XChainReaderTest is T1BasicSwapE2E {
 
         // 3. Filler initiates settlement verification from L1
         vm.startPrank(vegeta);
-        bytes32 requestId = L1T17683Pull.verifySettlement(destination, orderId);
+        bytes32 requestId = L1T17683Pull.verifySettlement(destination, 1_000_000, orderId);
         vm.stopPrank();
 
         // 4. Process the read request on L2 (destination chain) & Relay the result back to L1

@@ -138,7 +138,7 @@ contract T1XChainReader is OwnableUpgradeable, ReentrancyGuardUpgradeable {
         );
 
         // Using this selector to avoid hash collision
-        bytes4 requestReadSelector = bytes4(keccak256("requestRead(uint32,address,uint64,bytes,address)"));
+        bytes4 requestReadSelector = bytes4(keccak256("requestRead(uint32,address,uint256,uint64,bytes,address)"));
 
         _sendMessage(destinationDomain, targetContract, gasLimit, requestReadSelector, message);
 
