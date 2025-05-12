@@ -100,9 +100,9 @@ Scripts to test the canonical bridge functionalities:
 Miscellaneous Scripts:
 
 - 7683
-  - [Create an intent on L1, fill it on L2, and settle it from L2](./test/7683E2E.s.sol)
-  - [Create an intent on L1, fill it on L2, and settle it from L1](./test/T1ERC7683PullE2E.s.sol)
-  - [Create an intent on L2, fill it on L1, and settle it from L2](./test/T1ToL1ERC7683PullE2E.s.sol)
+  - [Create an intent on L1, fill it on L2, and settle it from L2](./test/7683/T1ERC7683L1ToL2.s.s.sol)
+  - [Create an intent on L1, fill it on L2, and settle it from L1](./test/7683/T1ERC7683PullL1ToL2.s.sol)
+  - [Create an intent on L2, fill it on L1, and settle it from L2](./test/7683/T1ERC7683PullL2ToL1.s.sol)
 
 ## 🔄 Upgrade
 
