@@ -59,8 +59,8 @@ abstract contract BaseT1XChainReader is OwnableUpgradeable, ReentrancyGuardUpgra
 
     // ============ State Variables ============
 
-    IT1Messenger public immutable messenger;
     /// @notice The T1 messenger contract used for cross-chain communication
+    IT1Messenger public immutable messenger;
 
     /// @notice The T1 prover
     address public immutable prover;
