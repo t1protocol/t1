@@ -19,7 +19,7 @@ contract AliceSetupScript is Script {
 
     function run() external {
         vm.createSelectFork(vm.rpcUrl("t1"));
-        l2Router = T1ERC7683Pull(vm.envAddress("L1_L2_T1_PULL_BASED_7683_PROXY_ADDR"));
+        l2Router = T1ERC7683Pull(vm.envAddress("L2_L1_T1_PULL_BASED_7683_PROXY_ADDR"));
         uint256 alicePk = vm.envUint("ALICE_PRIVATE_KEY");
         address alice = vm.addr(alicePk);
 
@@ -114,7 +114,7 @@ contract SettlementScript is Script {
 
         vm.startBroadcast(settlerPk);
 
-        T1ERC7683Pull l2Router = T1ERC7683Pull(vm.envAddress("L1_L2_T1_PULL_BASED_7683_PROXY_ADDR"));
+        T1ERC7683Pull l2Router = T1ERC7683Pull(vm.envAddress("L2_L1_T1_PULL_BASED_7683_PROXY_ADDR"));
 
         // NOTE - orderId logged from the first step goes here (remove 0x first)
         bytes32 orderId = hex"";
