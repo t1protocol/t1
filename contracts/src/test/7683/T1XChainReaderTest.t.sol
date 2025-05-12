@@ -13,181 +13,179 @@ import { T1BasicSwapE2E } from "./T1BasicSwapE2E.t.sol";
 import { T1ERC7683Pull } from "../../7683/T1ERC7683Pull.sol";
 
 contract MockCallbackContract is IT1XChainReaderCallback {
-  function onT1XChainReaderResult(
-    uint32 _originDomain,
-    bytes32 _sender,
-    bytes32 requestId,
-    bytes calldata result
-  ) external override {
-    require(false, "revert!");
-  }
+    function onT1XChainReaderResult(
+        uint32 _originDomain,
+        bytes32 _sender,
+        bytes32 requestId,
+        bytes calldata result
+    )
+        external
+        override
+    {
+        require(false, "revert!");
+    }
 }
 
 contract T1XChainReaderTest is T1BasicSwapE2E {
-  using TypeCasts for address;
+    using TypeCasts for address;
 
-  T1XChainReader internal originReader;
-  T1XChainReader internal destinationReader;
-  T1ERC7683Pull internal L1T17683Pull;
-  T1ERC7683Pull internal L2T17683Pull;
-  MockCallbackContract internal mockCallbackContract;
+    T1XChainReader internal originReader;
+    T1XChainReader internal destinationReader;
+    T1ERC7683Pull internal L1T17683Pull;
+    T1ERC7683Pull internal L2T17683Pull;
+    MockCallbackContract internal mockCallbackContract;
 
-  function setUp() public virtual override {
-    super.setUp();
+    function setUp() public virtual override {
+        super.setUp();
 
-    // Deploy T1XChainReader on both chains
-    originReader = T1XChainReader(payable(_deployProxy(address(0))));
-    admin.upgrade(
-      ITransparentUpgradeableProxy(address(originReader)),
-      address(new T1XChainReader(address(l1t1Messenger), address(this), origin))
-    );
+        // Deploy T1XChainReader on both chains
+        originReader = T1XChainReader(payable(_deployProxy(address(0))));
+        admin.upgrade(
+            ITransparentUpgradeableProxy(address(originReader)),
+            address(new T1XChainReader(address(l1t1Messenger), address(this), origin))
+        );
 
-    destinationReader = T1XChainReader(payable(_deployProxy(address(0))));
-    admin.upgrade(
-      ITransparentUpgradeableProxy(address(destinationReader)),
-      address(new T1XChainReader(address(l2t1Messenger), address(this), destination))
-    );
+        destinationReader = T1XChainReader(payable(_deployProxy(address(0))));
+        admin.upgrade(
+            ITransparentUpgradeableProxy(address(destinationReader)),
+            address(new T1XChainReader(address(l2t1Messenger), address(this), destination))
+        );
 
-    L1T17683Pull = T1ERC7683Pull(payable(_deployProxy(address(0))));
-    L2T17683Pull = T1ERC7683Pull(payable(_deployProxy(address(0))));
-    admin.upgrade(
-      ITransparentUpgradeableProxy(address(L1T17683Pull)),
-      address(new T1ERC7683Pull(address(0), address(originReader), uint32(origin)))
-    );
-    admin.upgrade(
-      ITransparentUpgradeableProxy(address(L2T17683Pull)),
-      address(new T1ERC7683Pull(address(0), address(destinationReader), uint32(destination)))
-    );
-    L1T17683Pull.initialize(address(L2T17683Pull));
-    L2T17683Pull.initialize(address(L1T17683Pull));
-    mockCallbackContract = new MockCallbackContract();
-  }
-
-  // 1. user opens intent on source chain
-  // 2. solver fills intent on destination chain
-  // 3a. solver calls 7683 verifySettlement on source chain, triggering T1XChainReader.requestRead
-  // 4a. relayer picks up message and calls getFilledOrderStatus on destination chain
-  // 4b. relayer calls T1XChainReader.handle with the result of the read which calls
-  // onT1XChainReaderResult on callback address
-  // 4c. onT1XChainReaderResult on 7683 contract settles intent and releases funds to solver
-  function test_ERC7683PullSettlementFlow() public {
-    (, bytes32 orderId, bytes32 requestId) = _openAndFillOrder();
-
-    // 4. Process the read request on L2 (destination chain) & Relay the result back to L1
-    {
-      // Construct the read request calldata
-      bytes memory orderStatus = L2T17683Pull.getFilledOrderStatus(orderId);
-      uint256 balanceSolverBeforeSettle = inputToken.balanceOf(address(vegeta));
-      originReader.handle(destination, destinationRouterB32, requestId, orderStatus);
-      uint256 balanceSolverAfterSettle = inputToken.balanceOf(address(vegeta));
-
-      assertEq(
-        balanceSolverBeforeSettle + amount,
-        balanceSolverAfterSettle,
-        "vegeta balance increased by input amount"
-      );
+        L1T17683Pull = T1ERC7683Pull(payable(_deployProxy(address(0))));
+        L2T17683Pull = T1ERC7683Pull(payable(_deployProxy(address(0))));
+        admin.upgrade(
+            ITransparentUpgradeableProxy(address(L1T17683Pull)),
+            address(new T1ERC7683Pull(address(0), address(originReader), uint32(origin)))
+        );
+        admin.upgrade(
+            ITransparentUpgradeableProxy(address(L2T17683Pull)),
+            address(new T1ERC7683Pull(address(0), address(destinationReader), uint32(destination)))
+        );
+        L1T17683Pull.initialize(address(L2T17683Pull));
+        L2T17683Pull.initialize(address(L1T17683Pull));
+        mockCallbackContract = new MockCallbackContract();
     }
 
-    // Verify the final state on L1
-    assertTrue(L1T17683Pull.orderVerified(orderId), "Order should be verified");
-  }
+    // 1. user opens intent on source chain
+    // 2. solver fills intent on destination chain
+    // 3a. solver calls 7683 verifySettlement on source chain, triggering T1XChainReader.requestRead
+    // 4a. relayer picks up message and calls getFilledOrderStatus on destination chain
+    // 4b. relayer calls T1XChainReader.handle with the result of the read which calls
+    // onT1XChainReaderResult on callback address
+    // 4c. onT1XChainReaderResult on 7683 contract settles intent and releases funds to solver
+    function test_ERC7683PullSettlementFlow() public {
+        (, bytes32 orderId, bytes32 requestId) = _openAndFillOrder();
 
-  function test_handleSucceededCallback() public {
-    (, bytes32 orderId, bytes32 requestId) = _openAndFillOrder();
+        // 4. Process the read request on L2 (destination chain) & Relay the result back to L1
+        {
+            // Construct the read request calldata
+            bytes memory orderStatus = L2T17683Pull.getFilledOrderStatus(orderId);
+            uint256 balanceSolverBeforeSettle = inputToken.balanceOf(address(vegeta));
+            originReader.handle(destination, destinationRouterB32, requestId, orderStatus);
+            uint256 balanceSolverAfterSettle = inputToken.balanceOf(address(vegeta));
 
-    // 4. Process the read request on L2 (destination chain) & Relay the result back to L1
-    {
-      // Construct the read request calldata
-      bytes memory orderStatus = L2T17683Pull.getFilledOrderStatus(orderId);
+            assertEq(
+                balanceSolverBeforeSettle + amount, balanceSolverAfterSettle, "vegeta balance increased by input amount"
+            );
+        }
 
-      vm.expectEmit(true, true, true, true);
-      emit BaseT1XChainReader.ReadSucceeded(requestId, orderStatus);
-      originReader.handle(destination, destinationRouterB32, requestId, orderStatus);
+        // Verify the final state on L1
+        assertTrue(L1T17683Pull.orderVerified(orderId), "Order should be verified");
     }
-  }
 
-  function test_handleGenericFailedCallback() public {
-    (, , bytes32 requestId) = _openAndFillOrder();
+    function test_handleSucceededCallback() public {
+        (, bytes32 orderId, bytes32 requestId) = _openAndFillOrder();
 
-    // 4. Attempt to process the read request on L2
-    {
-      // Construct bad read request calldata
-      bytes memory orderStatus = hex"11";
-      bytes memory revertReason = hex"";
-      vm.expectEmit(true, true, true, true);
-      emit BaseT1XChainReader.ReadFailed(requestId, orderStatus, revertReason);
-      originReader.handle(destination, destinationRouterB32, requestId, orderStatus);
+        // 4. Process the read request on L2 (destination chain) & Relay the result back to L1
+        {
+            // Construct the read request calldata
+            bytes memory orderStatus = L2T17683Pull.getFilledOrderStatus(orderId);
+
+            vm.expectEmit(true, true, true, true);
+            emit BaseT1XChainReader.ReadSucceeded(requestId, orderStatus);
+            originReader.handle(destination, destinationRouterB32, requestId, orderStatus);
+        }
     }
-  }
 
-  function test_handleCustomFailedCallback() public {
-    (, bytes32 orderId, bytes32 requestId) = _openAndFillOrder();
-    bytes32 badSender = TypeCasts.addressToBytes32(address(0xbeef));
-    // 4. Attempt to process the read request on L2
-    {
-      // Construct bad read request calldata
-      bytes memory orderStatus = L2T17683Pull.getFilledOrderStatus(orderId);
-      bytes memory revertReason = abi.encodeWithSelector(T1ERC7683Pull.SettlementFailed.selector);
-      vm.expectEmit(true, true, true, true);
-      emit BaseT1XChainReader.ReadFailed(requestId, orderStatus, revertReason);
-      originReader.handle(destination, badSender, requestId, orderStatus);
+    function test_handleGenericFailedCallback() public {
+        (,, bytes32 requestId) = _openAndFillOrder();
+
+        // 4. Attempt to process the read request on L2
+        {
+            // Construct bad read request calldata
+            bytes memory orderStatus = hex"11";
+            bytes memory revertReason = hex"";
+            vm.expectEmit(true, true, true, true);
+            emit BaseT1XChainReader.ReadFailed(requestId, orderStatus, revertReason);
+            originReader.handle(destination, destinationRouterB32, requestId, orderStatus);
+        }
     }
-  }
 
-  function test_handleRevertStringFailedCallback() public {
-    BaseT1XChainReader.ReadRequest memory readRequest = BaseT1XChainReader.ReadRequest({
+    function test_handleCustomFailedCallback() public {
+        (, bytes32 orderId, bytes32 requestId) = _openAndFillOrder();
+        bytes32 badSender = TypeCasts.addressToBytes32(address(0xbeef));
+        // 4. Attempt to process the read request on L2
+        {
+            // Construct bad read request calldata
+            bytes memory orderStatus = L2T17683Pull.getFilledOrderStatus(orderId);
+            bytes memory revertReason = abi.encodeWithSelector(T1ERC7683Pull.SettlementFailed.selector);
+            vm.expectEmit(true, true, true, true);
+            emit BaseT1XChainReader.ReadFailed(requestId, orderStatus, revertReason);
+            originReader.handle(destination, badSender, requestId, orderStatus);
+        }
+    }
+
+    function test_handleRevertStringFailedCallback() public {
+        BaseT1XChainReader.ReadRequest memory readRequest = BaseT1XChainReader.ReadRequest({
             destinationDomain: uint32(0),
             targetContract: address(0),
             minBlock: 0,
             callData: hex"",
             callback: address(mockCallbackContract)
-    });
-    bytes32 requestId = originReader.requestRead(readRequest);
+        });
+        bytes32 requestId = originReader.requestRead(readRequest);
 
-    string memory revertReason = "revert!";
-    vm.expectEmit(true, true, true, true);
-    emit BaseT1XChainReader.ReadFailed(requestId, hex"", revertReason);
-    originReader.handle(destination, bytes32(0), requestId, hex"");
-  }
+        string memory revertReason = "revert!";
+        vm.expectEmit(true, true, true, true);
+        emit BaseT1XChainReader.ReadFailed(requestId, hex"", revertReason);
+        originReader.handle(destination, bytes32(0), requestId, hex"");
+    }
 
-  function test_onlyProver_revert() public {
-    bytes32 requestId = hex"";
-    bytes memory orderStatus = hex"";
+    function test_onlyProver_revert() public {
+        bytes32 requestId = hex"";
+        bytes memory orderStatus = hex"";
 
-    vm.prank(address(0xbeef));
-    vm.expectRevert(BaseT1XChainReader.OnlyProver.selector);
-    originReader.handle(destination, destinationRouterB32, requestId, orderStatus);
-  }
+        vm.prank(address(0xbeef));
+        vm.expectRevert(BaseT1XChainReader.OnlyProver.selector);
+        originReader.handle(destination, destinationRouterB32, requestId, orderStatus);
+    }
 
-  function _openAndFillOrder() internal returns (OrderData memory, bytes32 orderId, bytes32 requestId) {
-    OrderData memory orderData = _prepareOrderData();
-    OnchainCrossChainOrder memory order = _prepareOnchainOrder(
-      OrderEncoder.encode(orderData),
-      orderData.fillDeadline,
-      OrderEncoder.orderDataType()
-    );
+    function _openAndFillOrder() internal returns (OrderData memory, bytes32 orderId, bytes32 requestId) {
+        OrderData memory orderData = _prepareOrderData();
+        OnchainCrossChainOrder memory order =
+            _prepareOnchainOrder(OrderEncoder.encode(orderData), orderData.fillDeadline, OrderEncoder.orderDataType());
 
-    vm.startPrank(kakaroto);
-    inputToken.approve(address(L1T17683Pull), amount);
-    vm.recordLogs();
-    L1T17683Pull.open(order);
-    vm.stopPrank();
+        vm.startPrank(kakaroto);
+        inputToken.approve(address(L1T17683Pull), amount);
+        vm.recordLogs();
+        L1T17683Pull.open(order);
+        vm.stopPrank();
 
-    (bytes32 orderId_, ) = _getOrderIDFromLogs();
-    assertEq(L1T17683Pull.orderStatus(orderId_), _base7683.OPENED());
+        (bytes32 orderId_,) = _getOrderIDFromLogs();
+        assertEq(L1T17683Pull.orderStatus(orderId_), _base7683.OPENED());
 
-    vm.startPrank(vegeta);
-    outputToken.approve(address(L2T17683Pull), amount);
-    bytes memory originData = OrderEncoder.encode(orderData);
-    bytes memory fillerData = abi.encode(TypeCasts.addressToBytes32(vegeta));
-    L2T17683Pull.fill(orderId_, originData, fillerData);
-    assertEq(L2T17683Pull.orderStatus(orderId_), L2T17683Pull.FILLED());
-    vm.stopPrank();
+        vm.startPrank(vegeta);
+        outputToken.approve(address(L2T17683Pull), amount);
+        bytes memory originData = OrderEncoder.encode(orderData);
+        bytes memory fillerData = abi.encode(TypeCasts.addressToBytes32(vegeta));
+        L2T17683Pull.fill(orderId_, originData, fillerData);
+        assertEq(L2T17683Pull.orderStatus(orderId_), L2T17683Pull.FILLED());
+        vm.stopPrank();
 
-    vm.startPrank(vegeta);
-    bytes32 requestId_ = L1T17683Pull.verifySettlement(destination, orderId_);
-    vm.stopPrank();
+        vm.startPrank(vegeta);
+        bytes32 requestId_ = L1T17683Pull.verifySettlement(destination, orderId_);
+        vm.stopPrank();
 
-    return (orderData, orderId_, requestId_);
-  }
+        return (orderData, orderId_, requestId_);
+    }
 }
