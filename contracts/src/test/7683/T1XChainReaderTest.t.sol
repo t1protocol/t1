@@ -25,13 +25,13 @@ contract T1XChainReaderTest is T1BasicSwapE2E {
         originReader = T1XChainReader(payable(_deployProxy(address(0))));
         admin.upgrade(
             ITransparentUpgradeableProxy(address(originReader)),
-            address(new T1XChainReader(address(l1t1Messenger), address(this), origin))
+            address(new T1XChainReader(address(l1t1Messenger), address(this)))
         );
 
         destinationReader = T1XChainReader(payable(_deployProxy(address(0))));
         admin.upgrade(
             ITransparentUpgradeableProxy(address(destinationReader)),
-            address(new T1XChainReader(address(l2t1Messenger), address(this), destination))
+            address(new T1XChainReader(address(l2t1Messenger), address(this)))
         );
 
         L1T17683Pull = T1ERC7683Pull(payable(_deployProxy(address(0))));

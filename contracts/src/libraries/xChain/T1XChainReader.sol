@@ -51,9 +51,6 @@ contract T1XChainReader is OwnableUpgradeable, ReentrancyGuardUpgradeable {
     /// @notice The T1 prover
     address public immutable prover;
 
-    /// @notice The local domain ID
-    uint32 public immutable localDomain;
-
     /// @notice Maps request IDs to their callback addresses
     mapping(bytes32 => address) public callbacks;
 
@@ -83,14 +80,12 @@ contract T1XChainReader is OwnableUpgradeable, ReentrancyGuardUpgradeable {
     /**
      * @notice Sets up the T1XChainReader contract
      * @param _messenger Address of the T1 messenger contract
-     * @param _localDomain ID of the local domain
      */
-    constructor(address _messenger, address _prover, uint32 _localDomain) {
+    constructor(address _messenger, address _prover) {
         if (_messenger == address(0)) revert ZeroAddress();
         if (_prover == address(0)) revert ZeroAddress();
 
         messenger = IT1Messenger(_messenger);
-        localDomain = _localDomain;
         prover = _prover;
     }
 

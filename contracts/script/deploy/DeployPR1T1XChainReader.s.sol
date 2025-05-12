@@ -11,8 +11,6 @@ import { T1XChainReader } from "../../src/libraries/xChain/T1XChainReader.sol";
 import { T1Constants } from "../../src/libraries/constants/T1Constants.sol";
 
 contract DeployPR1T1XChainReader is DeploymentUtils {
-    uint32 internal constant ORIGIN_CHAIN = uint32(T1Constants.T1_DEVNET_CHAIN_ID);
-
     function run() external {
         vm.createSelectFork(vm.rpcUrl("base_sepolia"));
         logStart("DeployXChainRead to Base Sepolia (PR1)");
@@ -25,7 +23,7 @@ contract DeployPR1T1XChainReader is DeploymentUtils {
 
         vm.startBroadcast(PR1_DEPLOYER_PRIVATE_KEY);
 
-        T1XChainReader impl = new T1XChainReader(address(PR1_T1_MESSENGER), PR1_SIGNER, ORIGIN_CHAIN);
+        T1XChainReader impl = new T1XChainReader(address(PR1_T1_MESSENGER), PR1_SIGNER);
         logAddress("PR1_T1_X_CHAIN_READ_IMPLEMENTATION_ADDR", address(impl));
 
         TransparentUpgradeableProxy proxy =
