@@ -103,6 +103,8 @@ Miscellaneous Scripts:
   - [Create an intent on L1, fill it on L2, and settle it from L2](./test/7683/T1ERC7683L1ToL2.s.s.sol)
   - [Create an intent on L1, fill it on L2, and settle it from L1](./test/7683/T1ERC7683PullL1ToL2.s.sol)
   - [Create an intent on L2, fill it on L1, and settle it from L2](./test/7683/T1ERC7683PullL2ToL1.s.sol)
+  - [Create an intent on PR1, fill it on L2, and settle it from PR1](./test/7683/T1ERC7683PullPR1ToL2.s.sol)
+  - [Create an intent on L2, fill it on PR1, and settle it from L2](./test/7683/T1ERC7683PullL2ToPR1.s.sol)
 
 ## 🔄 Upgrade
 
