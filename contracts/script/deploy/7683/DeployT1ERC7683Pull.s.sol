@@ -46,16 +46,16 @@ contract DeployT1ERC7683Pull is DeploymentUtils {
     function l1_init() external {
         uint256 deployerPk = vm.envUint("L1_DEPLOYER_PRIVATE_KEY");
         address L1_T1_7683_PROXY_ADDR = vm.envAddress("L1_T1_PULL_BASED_7683_PROXY_ADDR");
-        address L2_T1_7683_PROXY_ADDR = vm.envAddress("L1_L2_T1_PULL_BASED_7683_PROXY_ADDR");
+        address counterpart = vm.envAddress("L2_L1_T1_PULL_BASED_7683_PROXY_ADDR");
 
         vm.startBroadcast(deployerPk);
 
-        T1ERC7683Pull(L1_T1_7683_PROXY_ADDR).initialize(L2_T1_7683_PROXY_ADDR);
+        T1ERC7683Pull(L1_T1_7683_PROXY_ADDR).initialize(counterpart);
 
         vm.stopBroadcast();
     }
 
-    function t1_deploy(string calldata bridgePrefix) external {
+    function t1_deploy(string calldata counterpartPrefix) external {
         logStart("DeployT1ERC7683Pull to t1");
         vm.createSelectFork(vm.rpcUrl("t1"));
         uint256 deployerPk = vm.envUint("L2_DEPLOYER_PRIVATE_KEY");
@@ -79,23 +79,25 @@ contract DeployT1ERC7683Pull is DeploymentUtils {
 
         vm.stopBroadcast();
 
-        logAddress(string(abi.encodePacked(bridgePrefix, "_T1_PULL_BASED_7683_IMPLEMENTATION_ADDR")), address(impl));
-        logAddress(string(abi.encodePacked(bridgePrefix, "_T1_PULL_BASED_7683_PROXY_ADDR")), address(proxy));
+        logAddress(
+            string(abi.encodePacked("L2_", counterpartPrefix, "_T1_PULL_BASED_7683_IMPLEMENTATION_ADDR")), address(impl)
+        );
+        logAddress(string(abi.encodePacked("L2_", counterpartPrefix, "_T1_PULL_BASED_7683_PROXY_ADDR")), address(proxy));
 
         logEnd("DeployT1ERC7683Pull to t1");
     }
 
-    function t1_init(string calldata counterpartPrefix, string calldata bridgePrefix) external {
+    function t1_init(string calldata counterpartPrefix) external {
         vm.createSelectFork(vm.rpcUrl("t1"));
         uint256 deployerPk = vm.envUint("L2_DEPLOYER_PRIVATE_KEY");
         address counterpart =
             vm.envAddress(string(abi.encodePacked(counterpartPrefix, "_T1_PULL_BASED_7683_PROXY_ADDR")));
-        address L2_T1_7683_PROXY_ADDR =
-            vm.envAddress(string(abi.encodePacked(bridgePrefix, "_T1_PULL_BASED_7683_PROXY_ADDR")));
+        address proxy7683 =
+            vm.envAddress(string(abi.encodePacked("L2_", counterpartPrefix, "_T1_PULL_BASED_7683_PROXY_ADDR")));
 
         vm.startBroadcast(deployerPk);
 
-        T1ERC7683Pull(L2_T1_7683_PROXY_ADDR).initialize(counterpart);
+        T1ERC7683Pull(proxy7683).initialize(counterpart);
 
         vm.stopBroadcast();
     }
@@ -134,11 +136,11 @@ contract DeployT1ERC7683Pull is DeploymentUtils {
         vm.createSelectFork(vm.rpcUrl("base_sepolia"));
         uint256 deployerPk = vm.envUint("PR1_DEPLOYER_PRIVATE_KEY");
         address PR1_T1_7683_PROXY_ADDR = vm.envAddress("PR1_T1_PULL_BASED_7683_PROXY_ADDR");
-        address L2_T1_7683_PROXY_ADDR = vm.envAddress("PR1_L2_T1_PULL_BASED_7683_PROXY_ADDR");
+        address counterpart = vm.envAddress("L2_PR1_T1_PULL_BASED_7683_PROXY_ADDR");
 
         vm.startBroadcast(deployerPk);
 
-        T1ERC7683Pull(PR1_T1_7683_PROXY_ADDR).initialize(L2_T1_7683_PROXY_ADDR);
+        T1ERC7683Pull(PR1_T1_7683_PROXY_ADDR).initialize(counterpart);
 
         vm.stopBroadcast();
     }
