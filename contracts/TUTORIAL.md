@@ -139,17 +139,17 @@ To execute the scripts defined in `L1toT17683E2E.s.sol`, follow these steps:
 1. Setup Alice's Account
 
 ```bash
-forge script ./script/test/7683/T1ERC7683L1ToL2.s.s.sol:AliceSetupScript --rpc-url $T1_L1_RPC --broadcast
+forge script ./script/test/7683/T1ERC7683L1ToL2.s.sol:AliceSetupScript --rpc-url $T1_L1_RPC --broadcast
 ```
 
 2. Solver Fills on L2
 
 ```bash
-forge script ./script/test/7683/T1ERC7683L1ToL2.s.s.sol:SolverFillScript --rpc-url $T1_L2_RPC --broadcast
+forge script ./script/test/7683/T1ERC7683L1ToL2.s.sol:SolverFillScript --rpc-url $T1_L2_RPC --broadcast
 ```
 
 3. Settlement and Relay
 
 ```bash
-forge script ./script/test/7683/T1ERC7683L1ToL2.s.s.sol:SettlementScript --rpc-url $T1_L2_RPC --broadcast
+forge script ./script/test/7683/T1ERC7683L1ToL2.s.sol:SettlementScript --rpc-url $T1_L2_RPC --broadcast
 ```

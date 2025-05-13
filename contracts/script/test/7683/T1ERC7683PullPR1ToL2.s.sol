@@ -20,7 +20,7 @@ contract AliceSetupScript is Script {
     T1ERC7683Pull public pr1Router;
 
     function run() external {
-        vm.createSelectFork(vm.rpcUrl("bsae_sepolia"));
+        vm.createSelectFork(vm.rpcUrl("base_sepolia"));
         pr1Router = T1ERC7683Pull(vm.envAddress("PR1_T1_PULL_BASED_7683_PROXY_ADDR"));
         uint256 alicePk = vm.envUint("ALICE_PRIVATE_KEY");
         address alice = vm.addr(alicePk);
