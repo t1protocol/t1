@@ -8,7 +8,6 @@ import { TransparentUpgradeableProxy } from "@openzeppelin/contracts/proxy/trans
 import { DeploymentUtils } from "../lib/DeploymentUtils.sol";
 
 import { T1XChainReader } from "../../src/libraries/xChain/T1XChainReader.sol";
-import { T1Constants } from "../../src/libraries/constants/T1Constants.sol";
 
 contract DeployL1T1XChainReader is DeploymentUtils {
     function run() external {

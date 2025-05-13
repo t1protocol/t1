@@ -125,6 +125,7 @@ contract T1ERC7683Pull is BasicSwap7683, OwnableUpgradeable, IT1XChainReaderCall
         bytes calldata result
     )
         external
+        override
         onlyXChainRead
     {
         bytes32 orderId = readRequestToOrderId[requestId];
