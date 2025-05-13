@@ -24,7 +24,6 @@ contract AliceSetupScript is Script {
         l2Router = T1ERC7683Pull(vm.envAddress("L2_PR1_T1_PULL_BASED_7683_PROXY_ADDR"));
         uint256 alicePk = vm.envUint("ALICE_PRIVATE_KEY");
         address alice = vm.addr(alicePk);
-
         vm.startBroadcast(alicePk);
 
         ERC20 inputToken = ERC20(vm.envAddress("L2_USDT_ADDR"));
