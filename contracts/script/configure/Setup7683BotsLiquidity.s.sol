@@ -46,6 +46,7 @@ contract Setup7683BotsLiquidity is Script, DeploymentUtils {
         // grant USDT to bot
         T1StandardERC20(L1_USDT_ADDR).transfer(l1botAddr, usdtAmount); // 2M USDT
 
+        vm.stopBroadcast();
         vm.startBroadcast(L1_7683_BOT_PRIVATE_KEY);
 
         // bridge half of bot's ETH to L2
@@ -64,6 +65,7 @@ contract Setup7683BotsLiquidity is Script, DeploymentUtils {
         // approve L1 7683 Escrow to transfer USDT in the bot's name
         WrappedEther(L1_WETH_ADDR).approve(L1_T1_7683_PROXY_ADDR, usdtAmount / 2);
 
+        vm.stopBroadcast();
         vm.createSelectFork(vm.rpcUrl("t1"));
         vm.startBroadcast(L2_7683_BOT_PRIVATE_KEY);
 
