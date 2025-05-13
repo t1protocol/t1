@@ -14,13 +14,13 @@ contract DeployPR1T1XChainReader is DeploymentUtils {
         vm.createSelectFork(vm.rpcUrl("base_sepolia"));
         logStart("DeployXChainRead to Base Sepolia (PR1)");
 
-        uint256 PR1_DEPLOYER_PRIVATE_KEY = vm.envUint("PR1_DEPLOYER_PRIVATE_KEY");
+        uint256 BASE_DEPLOYER_PRIVATE_KEY = vm.envUint("BASE_DEPLOYER_PRIVATE_KEY");
         address PR1_T1_MESSENGER = vm.envAddress("PR1_T1_MESSENGER_PROXY_ADDR");
         address PR1_T1_PROXY_ADMIN_ADDR = vm.envAddress("PR1_PROXY_ADMIN_ADDR");
         address PR1_SIGNER = vm.envAddress("PR1_SIGNER");
         ProxyAdmin proxyAdmin = ProxyAdmin(PR1_T1_PROXY_ADMIN_ADDR);
 
-        vm.startBroadcast(PR1_DEPLOYER_PRIVATE_KEY);
+        vm.startBroadcast(BASE_DEPLOYER_PRIVATE_KEY);
 
         T1XChainReader impl = new T1XChainReader(address(PR1_T1_MESSENGER), PR1_SIGNER);
         logAddress("PR1_T1_X_CHAIN_READ_IMPLEMENTATION_ADDR", address(impl));

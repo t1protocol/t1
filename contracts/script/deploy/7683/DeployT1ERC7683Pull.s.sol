@@ -105,7 +105,7 @@ contract DeployT1ERC7683Pull is DeploymentUtils {
     function pr1_deploy() external {
         logStart("DeployT1ERC7683Pull to PR1");
         vm.createSelectFork(vm.rpcUrl("base_sepolia"));
-        uint256 deployerPk = vm.envUint("PR1_DEPLOYER_PRIVATE_KEY");
+        uint256 deployerPk = vm.envUint("BASE_DEPLOYER_PRIVATE_KEY");
         address PR1_T1_X_CHAIN_READ_PROXY_ADDR = vm.envAddress("PR1_T1_X_CHAIN_READ_PROXY_ADDR");
         address PR1_PROXY_ADMIN_ADDR = vm.envAddress("PR1_PROXY_ADMIN_ADDR");
 
@@ -134,7 +134,7 @@ contract DeployT1ERC7683Pull is DeploymentUtils {
 
     function pr1_init() external {
         vm.createSelectFork(vm.rpcUrl("base_sepolia"));
-        uint256 deployerPk = vm.envUint("PR1_DEPLOYER_PRIVATE_KEY");
+        uint256 deployerPk = vm.envUint("BASE_DEPLOYER_PRIVATE_KEY");
         address PR1_T1_7683_PROXY_ADDR = vm.envAddress("PR1_T1_PULL_BASED_7683_PROXY_ADDR");
         address counterpart = vm.envAddress("L2_PR1_T1_PULL_BASED_7683_PROXY_ADDR");
 
