@@ -63,7 +63,7 @@ contract Setup7683BotsLiquidity is Script, DeploymentUtils {
         // approve L1 7683 Escrow to transfer USDT in the bot's name
         T1StandardERC20(L1_USDT_ADDR).approve(L1_T1_7683_PROXY_ADDR, usdtAmount / 2);
 
-        // approve L1 7683 Escrow to transfer USDT in the bot's name
+        // approve L1 7683 Escrow to transfer WETH in the bot's name
         WrappedEther(L1_WETH_ADDR).approve(L1_T1_7683_PROXY_ADDR, usdtAmount / 2);
 
         vm.stopBroadcast();
@@ -73,7 +73,7 @@ contract Setup7683BotsLiquidity is Script, DeploymentUtils {
         // approve L2 7683 Escrow to transfer USDT in the bot's name
         T1StandardERC20(L2_USDT_ADDR).approve(L2_T1_7683_PROXY_ADDR, usdtAmount / 2);
 
-        // approve L2 7683 Escrow to transfer USDT in the bot's name
+        // approve L2 7683 Escrow to transfer WETH in the bot's name
         WrappedEther(L2_WETH_ADDR).approve(L2_T1_7683_PROXY_ADDR, usdtAmount / 2);
 
         vm.stopBroadcast();
