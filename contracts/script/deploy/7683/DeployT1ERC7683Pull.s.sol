@@ -12,7 +12,7 @@ import { T1Constants } from "../../../src/libraries/constants/T1Constants.sol";
 contract DeployT1ERC7683Pull is DeploymentUtils {
     uint32 internal constant T1 = uint32(T1Constants.T1_DEVNET_CHAIN_ID);
     uint32 internal constant L1 = uint32(T1Constants.L1_CHAIN_ID);
-    uint32 internal constant PR1 = uint32(T1Constants.PR1_CHAIN_ID);
+    uint32 internal constant PR1 = uint32(T1Constants.BASE_SEPOLIA_CHAIN_ID);
     ProxyAdmin private proxyAdmin;
 
     function l1_deploy() external {

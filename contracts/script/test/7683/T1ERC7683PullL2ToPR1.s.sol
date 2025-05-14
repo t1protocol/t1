@@ -10,7 +10,7 @@ import { OnchainCrossChainOrder } from "intents-framework/ERC7683/IERC7683.sol";
 import { T1ERC7683Pull } from "../../../src/7683/T1ERC7683Pull.sol";
 import { T1Constants } from "../../../src/libraries/constants/T1Constants.sol";
 
-uint32 constant DESTINATION_CHAIN = uint32(T1Constants.PR1_CHAIN_ID);
+uint32 constant DESTINATION_CHAIN = uint32(T1Constants.BASE_SEPOLIA_CHAIN_ID);
 uint32 constant ORIGIN_CHAIN = uint32(T1Constants.T1_DEVNET_CHAIN_ID);
 
 // T1ERC7683PullL2ToPR1
