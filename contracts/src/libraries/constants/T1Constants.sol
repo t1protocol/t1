@@ -14,7 +14,7 @@ library T1Constants {
     uint64 internal constant L1_CHAIN_ID = 11_155_111;
 
     /// @notice Chain ID of the T1 devnet
-    uint64 internal constant T1_DEVNET_CHAIN_ID = 299_892;
+    uint64 internal constant T1_DEVNET_CHAIN_ID = 299_992;
 
     /// @notice Chain ID of the Base Sepolia network
     uint64 internal constant BASE_SEPOLIA_CHAIN_ID = 84_532;

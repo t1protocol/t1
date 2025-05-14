@@ -88,6 +88,7 @@ run_script script/deploy/DeployL1BridgeContracts.s.sol DeployL1BridgeContracts
 run_script script/deploy/InitializeL1BridgeContracts.s.sol InitializeL1BridgeContracts
 run_script script/deploy/InitializeL2BridgeContracts.s.sol InitializeL2BridgeContracts
 run_script script/deploy/InitializeL1T1Owner.s.sol InitializeL1T1Owner
+run_script script/deploy/InitializeL2T1Owner.s.sol InitializeL2T1Owner
 run_script script/deploy/DeployL2T1XChainReader.s.sol DeployL2T1XChainReader
 # run_script script/deploy/DeployL1T1XChainReader.s.sol DeployL1T1XChainReader
 run_script script/deploy/DeployPR1T1XChainReader.s.sol DeployPR1T1XChainReader
