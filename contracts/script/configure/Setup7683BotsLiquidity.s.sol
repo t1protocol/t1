@@ -53,6 +53,7 @@ contract Setup7683BotsLiquidity is Script, DeploymentUtils {
         IL1GatewayRouter(L1_GATEWAY_ROUTER_PROXY_ADDR).depositETH{ value: ethAmount / 2 }(ethAmount / 2, gasLimit);
 
         // bridge half of bot's WETH to L2
+        WrappedEther(L1_WETH_ADDR).approve(L1_GATEWAY_ROUTER_PROXY_ADDR, wethAmount / 2);
         IL1GatewayRouter(L1_GATEWAY_ROUTER_PROXY_ADDR).depositERC20(L1_WETH_ADDR, wethAmount / 2, gasLimit);
 
         // bridge half of bot's USDT to L2
