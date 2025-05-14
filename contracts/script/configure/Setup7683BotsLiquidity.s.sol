@@ -10,7 +10,7 @@ import { IL1ERC20Gateway } from "../../src/L1/gateways/IL1ERC20Gateway.sol";
 
 import { T1StandardERC20 } from "../../src/libraries/token/T1StandardERC20.sol";
 import { WrappedEther } from "../../src/L2/predeploys/WrappedEther.sol";
-import {Usdt} from "../deploy/DeployL1Usdt.s.sol";
+import { Usdt } from "../deploy/DeployL1Usdt.s.sol";
 
 contract Setup7683BotsLiquidity is Script, DeploymentUtils {
     uint256 private L1_DEPLOYER_PRIVATE_KEY = vm.envUint("L1_DEPLOYER_PRIVATE_KEY");
