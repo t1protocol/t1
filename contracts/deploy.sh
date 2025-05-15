@@ -26,14 +26,20 @@ get_rpc_and_verifier() {
     rpc_url="$T1_L1_RPC"
     verifier="etherscan"
     verifier_url="https://api-sepolia.etherscan.io/api"
-    api_key_flag="--etherscan-api-key $ETHERSCAN_API_KEY" # Only needed for Etherscan
+    api_key_flag="--etherscan-api-key $ETHERSCAN_API_KEY"
     private_key="$L1_DEPLOYER_PRIVATE_KEY"
   elif [[ $script_name == *"L2"* ]]; then
     rpc_url="$T1_L2_RPC"
     verifier="blockscout"
-    verifier_url="$BLOCKSCOUT_API_URL"  # Ensure this is set in your .env
+    verifier_url="$BLOCKSCOUT_API_URL"
     api_key_flag=""  # Blockscout does not require an API key
     private_key="$L2_DEPLOYER_PRIVATE_KEY"
+  elif [[ $script_name == *"PR1"* ]]; then
+    rpc_url="$BASE_SEPOLIA_RPC"
+    verifier="etherscan"
+    verifier_url="https://api-sepolia.basescan.org/api"
+    api_key_flag="--etherscan-api-key $BASESCAN_API_KEY"
+    private_key="$BASE_DEPLOYER_PRIVATE_KEY"
   else
     echo "ERROR: Could not determine RPC URL for script: $script_name" >&2
     exit 1
@@ -82,21 +88,26 @@ run_script script/deploy/DeployL1BridgeContracts.s.sol DeployL1BridgeContracts
 run_script script/deploy/InitializeL1BridgeContracts.s.sol InitializeL1BridgeContracts
 run_script script/deploy/InitializeL2BridgeContracts.s.sol InitializeL2BridgeContracts
 run_script script/deploy/InitializeL1T1Owner.s.sol InitializeL1T1Owner
+run_script script/deploy/InitializeL2T1Owner.s.sol InitializeL2T1Owner
 run_script script/deploy/DeployL2T1XChainReader.s.sol DeployL2T1XChainReader
 run_script script/deploy/DeployL1T1XChainReader.s.sol DeployL1T1XChainReader
+run_script script/deploy/DeployPR1T1XChainReader.s.sol DeployPR1T1XChainReader
 run_script script/deploy/7683/DeployT1ERC7683Pull.s.sol DeployT1ERC7683PullL1
 run_script script/deploy/7683/DeployT1ERC7683Pull.s.sol DeployT1ERC7683PullT1
 run_script script/deploy/7683/DeployT1ERC7683Pull.s.sol InitT1ERC7683PullL1
 run_script script/deploy/7683/DeployT1ERC7683Pull.s.sol InitT1ERC7683PullT1
 
-# 7683 config
+# 7683 L1<>L2
 forge script ./script/deploy/7683/DeployT1ERC7683Pull.s.sol:DeployT1ERC7683Pull --sig "l1_deploy()" --broadcast --rpc-url $T1_L1_RPC --verify --verifier etherscan --verifier-url https://api-sepolia.etherscan.io/api --etherscan-api-key $ETHERSCAN_API_KEY
+forge script ./script/deploy/7683/DeployT1ERC7683Pull.s.sol:DeployT1ERC7683Pull --sig "t1_deploy(string)" "L1" --broadcast --rpc-url $T1_L2_RPC --chain 299992 --verifier blockscout --verifier-url https://explorer.v030.t1protocol.com/api
+forge script ./script/deploy/7683/DeployT1ERC7683Pull.s.sol:DeployT1ERC7683Pull --sig "l1_init" --broadcast --rpc-url $T1_L1_RPC
+forge script ./script/deploy/7683/DeployT1ERC7683Pull.s.sol:DeployT1ERC7683Pull --sig "t1_init(string)" "L1" --broadcast --rpc-url $T1_L2_RPC
 
-forge script ./script/deploy/7683/DeployT1ERC7683Pull.s.sol:DeployT1ERC7683Pull --sig "t1_deploy()" --broadcast --rpc-url $T1_L2_RPC --chain 299992 --verifier blockscout --verifier-url https://explorer.v030.t1protocol.com/api
-
-forge script ./script/deploy/7683/DeployT1ERC7683Pull.s.sol:DeployT1ERC7683Pull --sig "l1_init()" --broadcast --rpc-url $T1_L1_RPC
-
-forge script ./script/deploy/7683/DeployT1ERC7683Pull.s.sol:DeployT1ERC7683Pull --sig "t1_init()" --broadcast --rpc-url $T1_L2_RPC
+# 7683 PR1<>L2
+forge script ./script/deploy/7683/DeployT1ERC7683Pull.s.sol:DeployT1ERC7683Pull --sig "pr1_deploy()" --broadcast --rpc-url $BASE_SEPOLIA_RPC
+forge script ./script/deploy/7683/DeployT1ERC7683Pull.s.sol:DeployT1ERC7683Pull --sig "t1_deploy(string)" "PR1" --broadcast --rpc-url $T1_L2_RPC --chain 299992 --verifier blockscout --verifier-url https://explorer.v030.t1protocol.com/api
+forge script ./script/deploy/7683/DeployT1ERC7683Pull.s.sol:DeployT1ERC7683Pull --sig "pr1_init" --broadcast --rpc-url $BASE_SEPOLIA_RPC
+forge script ./script/deploy/7683/DeployT1ERC7683Pull.s.sol:DeployT1ERC7683Pull --sig "t1_init(string)" "PR1" --broadcast --rpc-url $T1_L2_RPC
 
 # Configuration contracts
 forge script script/configure/FirstUsdtDepositFromL1ToL2.s.sol --rpc-url "$T1_L1_RPC" --broadcast

@@ -6,8 +6,7 @@ import { Hyperlane7683Message } from "intents-framework/libs/Hyperlane7683Messag
 import { BasicSwap7683 } from "intents-framework/BasicSwap7683.sol";
 
 import { T1XChainReader } from "../libraries/xChain/T1XChainReader.sol";
-import { BaseT1XChainReader } from "../libraries/xChain/BaseT1XChainReader.sol";
-import { IT1XChainReaderCallback } from "../libraries/xChain/IT1XChainReaderCallback.sol";
+import { IT1XChainReaderCallback } from "../libraries/callbacks/IT1XChainReaderCallback.sol";
 
 /**
  * @title T1ERC7683Pull
@@ -77,18 +76,28 @@ contract T1ERC7683Pull is BasicSwap7683, OwnableUpgradeable, IT1XChainReaderCall
 
     /// @notice Initiates a pull-based settlement verification for an order
     /// @param destinationDomain The domain of the destination chain
+    /// @param gasLimit The gas limit for the read operation
     /// @param orderId The ID of the order to verify
     /// @return requestId The ID of the read request
-    function verifySettlement(uint32 destinationDomain, bytes32 orderId) external payable returns (bytes32 requestId) {
+    function verifySettlement(
+        uint32 destinationDomain,
+        uint256 gasLimit,
+        bytes32 orderId
+    )
+        external
+        payable
+        returns (bytes32 requestId)
+    {
         // Check if the order exists and is in a valid state
         if (orderStatus[orderId] != OPENED) revert InvalidOrderStatus();
 
         // Create the calldata to check the order status on the destination chain
         bytes memory callData = abi.encodeWithSelector(this.getFilledOrderStatus.selector, orderId);
 
-        BaseT1XChainReader.ReadRequest memory readRequest = BaseT1XChainReader.ReadRequest({
+        T1XChainReader.ReadRequest memory readRequest = T1XChainReader.ReadRequest({
             destinationDomain: destinationDomain,
             targetContract: counterpart,
+            gasLimit: gasLimit,
             minBlock: 0,
             callData: callData,
             callback: address(this)
@@ -116,6 +125,7 @@ contract T1ERC7683Pull is BasicSwap7683, OwnableUpgradeable, IT1XChainReaderCall
         bytes calldata result
     )
         external
+        override
         onlyXChainRead
     {
         bytes32 orderId = readRequestToOrderId[requestId];

@@ -7,12 +7,9 @@ import { TransparentUpgradeableProxy } from "@openzeppelin/contracts/proxy/trans
 
 import { DeploymentUtils } from "../lib/DeploymentUtils.sol";
 
-import { T1L1XChainReader } from "../../src/libraries/xChain/T1L1XChainReader.sol";
-import { T1Constants } from "../../src/libraries/constants/T1Constants.sol";
+import { T1XChainReader } from "../../src/libraries/xChain/T1XChainReader.sol";
 
 contract DeployL1T1XChainReader is DeploymentUtils {
-    uint32 internal constant L1 = uint32(T1Constants.L1_CHAIN_ID);
-
     function run() external {
         vm.createSelectFork(vm.rpcUrl("sepolia"));
         logStart("DeployXChainRead to L1");
@@ -25,7 +22,7 @@ contract DeployL1T1XChainReader is DeploymentUtils {
 
         vm.startBroadcast(L1_DEPLOYER_PRIVATE_KEY);
 
-        T1L1XChainReader impl = new T1L1XChainReader(address(L1_T1_MESSENGER), L1_SIGNER, L1);
+        T1XChainReader impl = new T1XChainReader(address(L1_T1_MESSENGER), L1_SIGNER);
         logAddress("L1_T1_X_CHAIN_READ_IMPLEMENTATION_ADDR", address(impl));
 
         TransparentUpgradeableProxy proxy =
