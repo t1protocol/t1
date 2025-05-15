@@ -42,7 +42,7 @@ contract AliceSetupScript is Script {
             ), // Random number between 0 and 9999
             originDomain: ORIGIN_CHAIN,
             destinationDomain: DESTINATION_CHAIN,
-            destinationSettler: TypeCasts.addressToBytes32(vm.envAddress("L2_L1_T1_PULL_BASED_7683_PROXY_ADDR")),
+            destinationSettler: TypeCasts.addressToBytes32(vm.envAddress("L2_T1_PULL_BASED_7683_PROXY_ADDR")),
             fillDeadline: uint32(block.timestamp + 24 hours),
             data: new bytes(0)
         });
