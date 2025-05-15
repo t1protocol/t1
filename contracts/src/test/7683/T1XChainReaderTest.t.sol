@@ -7,17 +7,16 @@ import { OrderData, OrderEncoder } from "intents-framework/libs/OrderEncoder.sol
 import { OnchainCrossChainOrder } from "intents-framework/ERC7683/IERC7683.sol";
 
 import { T1XChainReader } from "../../libraries/xChain/T1XChainReader.sol";
-import { BaseT1XChainReader } from "../../libraries/xChain/BaseT1XChainReader.sol";
-import { IT1XChainReaderCallback } from "../../libraries/xChain/IT1XChainReaderCallback.sol";
+import { IT1XChainReaderCallback } from "../../libraries/callbacks/IT1XChainReaderCallback.sol";
 import { T1BasicSwapE2E } from "./T1BasicSwapE2E.t.sol";
 import { T1ERC7683Pull } from "../../7683/T1ERC7683Pull.sol";
 
 contract MockCallbackContract is IT1XChainReaderCallback {
     function onT1XChainReaderResult(
-        uint32 _originDomain,
-        bytes32 _sender,
-        bytes32 requestId,
-        bytes calldata result
+        uint32, /*_originDomain*/
+        bytes32, /*_sender*/
+        bytes32, /*requestId*/
+        bytes calldata /*result*/
     )
         external
         override
@@ -42,13 +41,13 @@ contract T1XChainReaderTest is T1BasicSwapE2E {
         originReader = T1XChainReader(payable(_deployProxy(address(0))));
         admin.upgrade(
             ITransparentUpgradeableProxy(address(originReader)),
-            address(new T1XChainReader(address(l1t1Messenger), address(this), origin))
+            address(new T1XChainReader(address(l1t1Messenger), address(this)))
         );
 
         destinationReader = T1XChainReader(payable(_deployProxy(address(0))));
         admin.upgrade(
             ITransparentUpgradeableProxy(address(destinationReader)),
-            address(new T1XChainReader(address(l2t1Messenger), address(this), destination))
+            address(new T1XChainReader(address(l2t1Messenger), address(this)))
         );
 
         L1T17683Pull = T1ERC7683Pull(payable(_deployProxy(address(0))));
@@ -102,7 +101,7 @@ contract T1XChainReaderTest is T1BasicSwapE2E {
             bytes memory orderStatus = L2T17683Pull.getFilledOrderStatus(orderId);
 
             vm.expectEmit(true, true, true, true);
-            emit BaseT1XChainReader.ReadSucceeded(requestId, orderStatus);
+            emit T1XChainReader.ReadSucceeded(requestId, orderStatus);
             originReader.handle(destination, destinationRouterB32, requestId, orderStatus);
         }
     }
@@ -116,7 +115,7 @@ contract T1XChainReaderTest is T1BasicSwapE2E {
             bytes memory orderStatus = hex"11";
             bytes memory revertReason = hex"";
             vm.expectEmit(true, true, true, true);
-            emit BaseT1XChainReader.ReadFailed(requestId, orderStatus, revertReason);
+            emit T1XChainReader.ReadFailed(requestId, orderStatus, revertReason);
             originReader.handle(destination, destinationRouterB32, requestId, orderStatus);
         }
     }
@@ -130,15 +129,16 @@ contract T1XChainReaderTest is T1BasicSwapE2E {
             bytes memory orderStatus = L2T17683Pull.getFilledOrderStatus(orderId);
             bytes memory revertReason = abi.encodeWithSelector(T1ERC7683Pull.SettlementFailed.selector);
             vm.expectEmit(true, true, true, true);
-            emit BaseT1XChainReader.ReadFailed(requestId, orderStatus, revertReason);
+            emit T1XChainReader.ReadFailed(requestId, orderStatus, revertReason);
             originReader.handle(destination, badSender, requestId, orderStatus);
         }
     }
 
     function test_handleRevertStringFailedCallback() public {
-        BaseT1XChainReader.ReadRequest memory readRequest = BaseT1XChainReader.ReadRequest({
+        T1XChainReader.ReadRequest memory readRequest = T1XChainReader.ReadRequest({
             destinationDomain: uint32(0),
             targetContract: address(0),
+            gasLimit: 100_000,
             minBlock: 0,
             callData: hex"",
             callback: address(mockCallbackContract)
@@ -147,7 +147,7 @@ contract T1XChainReaderTest is T1BasicSwapE2E {
 
         string memory revertReason = "revert!";
         vm.expectEmit(true, true, true, true);
-        emit BaseT1XChainReader.ReadFailed(requestId, hex"", revertReason);
+        emit T1XChainReader.ReadFailed(requestId, hex"", revertReason);
         originReader.handle(destination, bytes32(0), requestId, hex"");
     }
 
@@ -156,7 +156,7 @@ contract T1XChainReaderTest is T1BasicSwapE2E {
         bytes memory orderStatus = hex"";
 
         vm.prank(address(0xbeef));
-        vm.expectRevert(BaseT1XChainReader.OnlyProver.selector);
+        vm.expectRevert(T1XChainReader.OnlyProver.selector);
         originReader.handle(destination, destinationRouterB32, requestId, orderStatus);
     }
 
@@ -183,7 +183,7 @@ contract T1XChainReaderTest is T1BasicSwapE2E {
         vm.stopPrank();
 
         vm.startPrank(vegeta);
-        bytes32 requestId_ = L1T17683Pull.verifySettlement(destination, orderId_);
+        bytes32 requestId_ = L1T17683Pull.verifySettlement(destination, 1_000_000, orderId_);
         vm.stopPrank();
 
         return (orderData, orderId_, requestId_);

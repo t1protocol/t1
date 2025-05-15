@@ -7,11 +7,13 @@ import { ERC20 } from "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 import { TypeCasts } from "@hyperlane-xyz/libs/TypeCasts.sol";
 import { OrderData, OrderEncoder } from "intents-framework/libs/OrderEncoder.sol";
 import { OnchainCrossChainOrder } from "intents-framework/ERC7683/IERC7683.sol";
-import { T1ERC7683 } from "../../src/7683/T1ERC7683.sol";
-import { T1Constants } from "../../src/libraries/constants/T1Constants.sol";
+import { T1ERC7683 } from "../../../src/7683/T1ERC7683.sol";
+import { T1Constants } from "../../../src/libraries/constants/T1Constants.sol";
 
 uint32 constant ORIGIN_CHAIN = uint32(T1Constants.L1_CHAIN_ID);
 uint32 constant DESTINATION_CHAIN = uint32(T1Constants.T1_DEVNET_CHAIN_ID);
+
+// T1ERC7683L1ToL2
 
 // Step 1: Setup Alice's account, sign and relay intent
 contract AliceSetupScript is Script {
