@@ -44,7 +44,7 @@ To deploy the 7683 contract, follow these steps:
 First, deploy the L1 router by running the following command:
 
 ```bash
-forge script ./script/deploy/7683/DeployT1ERC7683.s.sol:RouterDeployScript --sig "deployL1Router()" --rpc-url $T1_L1_RPC --broadcast --verify --verifier etherscan --verifier-url https://api-sepolia.etherscan.io/api
+forge script ./script/deploy/7683/DeployT1ERC7683.s.sol:RouterDeployScript --sig "deployL1Router()" --rpc-url $T1_L1_RPC --broadcast --broadcast --verify --verifier etherscan --verifier-url https://api-sepolia.etherscan.io/api
 ```
 
 ### Deploy L2 Router
@@ -52,7 +52,7 @@ forge script ./script/deploy/7683/DeployT1ERC7683.s.sol:RouterDeployScript --sig
 Next, deploy the L2 router with the following command:
 
 ```bash
-forge script ./script/deploy/7683/DeployT1ERC7683.s.sol:RouterDeployScript --sig "deployL2Router()" --rpc-url $T1_L2_RPC --broadcast --verify --verifier blockscout --verifier-url https://explorer.devnet.t1protocol.com/api
+forge script ./script/deploy/7683/DeployT1ERC7683.s.sol:RouterDeployScript --sig "deployL2Router()" --rpc-url $T1_L2_RPC --broadcast --broadcast --verify --verifier blockscout --verifier-url https://explorer.devnet.t1protocol.com/api
 ```
 
 ### Initialize Functions
@@ -119,24 +119,29 @@ Scripts to upgrade contract implementations:
 
 ### Deploying Messengers & Friends
 ```bash
-forge script DeployArbT1Messenger.s.sol:DeployArbT1Messenger --sig "deployProxy()" --verify --verifier etherscan --verifier-url https://api-sepolia.arbiscan.io/api --etherscan-api-key $ARBISCAN_API_KEY
+forge script ./deploy/DeployArbT1Messenger.s.sol:DeployArbT1MessengerProxy --broadcast --verify --verifier etherscan --verifier-url https://api-sepolia.arbiscan.io/api --etherscan-api-key $ARBISCAN_API_KEY
 ```
 ```bash
-forge script DeployBaseT1Messenger.s.sol:DeployBaseT1Messenger --sig "deployProxy()" --verify --verifier etherscan --verifier-url https://api-base.arbiscan.io/api --etherscan-api-key $BASESCAN_API_KEY
+forge script ./deploy/DeployBaseT1Messenger.s.sol:DeployBaseT1MessengerProxy --broadcast --verify --verifier etherscan --verifier-url https://api-sepolia.basescan.org/api --etherscan-api-key $BASESCAN_API_KEY
 ```
 ```bash
-forge script DeployArbT1Messenger.s.sol:DeployArbT1Messenger --sig "deployImplAndInit()" --verify --verifier etherscan --verifier-url https://api-sepolia.arbiscan.io/api --etherscan-api-key $ARBISCAN_API_KEY
+forge script ./deploy/DeployArbT1Messenger.s.sol:DeployArbT1MessengerImplAndInit --broadcast --verify --verifier etherscan --verifier-url https://api-sepolia.arbiscan.io/api --etherscan-api-key $ARBISCAN_API_KEY
 ```
 ```bash
-forge script DeployBaseT1Messenger.s.sol:DeployBaseT1Messenger --sig "deployImplAndInit()" --verify --verifier etherscan --verifier-url https://api-base.arbiscan.io/api --etherscan-api-key $BASESCAN_API_KEY
+forge script ./deploy/DeployBaseT1Messenger.s.sol:DeployBaseT1MessengerImplAndInit --broadcast --verify --verifier etherscan --verifier-url https://api-sepolia.basescan.org/api --etherscan-api-key $BASESCAN_API_KEY
 ```
 ```bash
-forge script DeployArbT1Messenger.s.sol:DeployArbT1Messenger --sig "deployOwnerAndTransferOwnership()" --verify --verifier etherscan --verifier-url https://api-sepolia.arbiscan.io/api --etherscan-api-key $ARBISCAN_API_KEY
+forge script ./deploy/DeployArbT1Messenger.s.sol:DeployArbT1MessengerOwnerAndTransferOwnership --broadcast --verify --verifier etherscan --verifier-url https://api-sepolia.arbiscan.io/api --etherscan-api-key $ARBISCAN_API_KEY
 ```
 ```bash
-forge script DeployBaseT1Messenger.s.sol:DeployBaseT1Messenger --sig "deployOwnerAndTransferOwnership()" --verify --verifier etherscan --verifier-url https://api-base.arbiscan.io/api --etherscan-api-key $BASESCAN_API_KEY
+forge script ./deploy/DeployBaseT1Messenger.s.sol:DeployBaseT1MessengerOwnerAndTransferOwnership --broadcast --verify --verifier etherscan --verifier-url https://api-sepolia.basescan.org/api --etherscan-api-key $BASESCAN_API_KEY
 ```
 
 ### Deploying xChainRead
-
+```bash
+forge script ./deploy/DeployArbT1XChainReader.s.sol:DeployArbT1XChainReader  --broadcast --verify --verifier etherscan --verifier-url https://api-sepolia.arbiscan.io/api --etherscan-api-key $ARBISCAN_API_KEY
+```
+```bash
+forge script ./deploy/DeployBaseT1XChainReader.s.sol:DeployBaseT1XChainReader  --broadcast --verify --verifier etherscan --verifier-url https://api-sepolia.basescan.org/api --etherscan-api-key $BASESCAN_API_KEY
+```
 ### Deploying 7683Pull
