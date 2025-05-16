@@ -23,10 +23,10 @@ contract Setup7683BotsLiquidity is Script, DeploymentUtils {
     address payable private L2_WETH_ADDR = payable(vm.envAddress("L2_WETH_ADDR"));
     address private L2_USDT_ADDR = vm.envAddress("L2_USDT_ADDR");
     address private L1_GATEWAY_ROUTER_PROXY_ADDR = vm.envAddress("L1_GATEWAY_ROUTER_PROXY_ADDR");
-    address private L1_T1_7683_PROXY_ADDR = vm.addr(uint256(vm.envInt("L1_T1_7683_PROXY_ADDR")));
-    address private L2_T1_7683_PROXY_ADDR = vm.addr(uint256(vm.envInt("L2_T1_7683_PROXY_ADDR")));
-    address private L1_T1_PULL_BASED_7683_PROXY_ADDR = vm.addr(uint256(vm.envInt("L1_T1_PULL_BASED_7683_PROXY_ADDR")));
-    address private L2_T1_PULL_BASED_7683_PROXY_ADDR = vm.addr(uint256(vm.envInt("L2_T1_PULL_BASED_7683_PROXY_ADDR")));
+    address private L1_T1_7683_PROXY_ADDR = vm.envAddress("L1_T1_7683_PROXY_ADDR");
+    address private L2_T1_7683_PROXY_ADDR = vm.envAddress("L2_T1_7683_PROXY_ADDR");
+    address private L1_T1_PULL_BASED_7683_PROXY_ADDR = vm.envAddress("L1_T1_PULL_BASED_7683_PROXY_ADDR");
+    address private L2_T1_PULL_BASED_7683_PROXY_ADDR = vm.envAddress("L2_T1_PULL_BASED_7683_PROXY_ADDR");
 
     function run() external {
         uint256 gasLimit = 1_000_000;
