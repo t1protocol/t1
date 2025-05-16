@@ -114,3 +114,29 @@ Scripts to upgrade contract implementations:
   ```bash
   forge script ./script/upgrade/UpgradeT1Chain.s.sol:UpgradeT1Chain --rpc-url $T1_L1_RPC --broadcast
   ```
+
+## Deploying 7683Pull to Arbitrum Sepolia and Base Sepolia
+
+### Deploying Messengers & Friends
+```bash
+forge script DeployArbT1Messenger.s.sol:DeployArbT1Messenger --sig "deployProxy()" --verify --verifier etherscan --verifier-url https://api-sepolia.arbiscan.io/api --etherscan-api-key $ARBISCAN_API_KEY
+```
+```bash
+forge script DeployBaseT1Messenger.s.sol:DeployBaseT1Messenger --sig "deployProxy()" --verify --verifier etherscan --verifier-url https://api-base.arbiscan.io/api --etherscan-api-key $BASESCAN_API_KEY
+```
+```bash
+forge script DeployArbT1Messenger.s.sol:DeployArbT1Messenger --sig "deployImplAndInit()" --verify --verifier etherscan --verifier-url https://api-sepolia.arbiscan.io/api --etherscan-api-key $ARBISCAN_API_KEY
+```
+```bash
+forge script DeployBaseT1Messenger.s.sol:DeployBaseT1Messenger --sig "deployImplAndInit()" --verify --verifier etherscan --verifier-url https://api-base.arbiscan.io/api --etherscan-api-key $BASESCAN_API_KEY
+```
+```bash
+forge script DeployArbT1Messenger.s.sol:DeployArbT1Messenger --sig "deployOwnerAndTransferOwnership()" --verify --verifier etherscan --verifier-url https://api-sepolia.arbiscan.io/api --etherscan-api-key $ARBISCAN_API_KEY
+```
+```bash
+forge script DeployBaseT1Messenger.s.sol:DeployBaseT1Messenger --sig "deployOwnerAndTransferOwnership()" --verify --verifier etherscan --verifier-url https://api-base.arbiscan.io/api --etherscan-api-key $BASESCAN_API_KEY
+```
+
+### Deploying xChainRead
+
+### Deploying 7683Pull
