@@ -14,44 +14,19 @@ import { ProxyAdmin } from "@openzeppelin/contracts/proxy/transparent/ProxyAdmin
 import { TransparentUpgradeableProxy } from "@openzeppelin/contracts/proxy/transparent/TransparentUpgradeableProxy.sol";
 import { ITransparentUpgradeableProxy } from "@openzeppelin/contracts/proxy/transparent/TransparentUpgradeableProxy.sol";
 
-contract DeployArbT1Messenger is Script, DeploymentUtils  {
-    uint256 private deployerPrivateKey = vm.envUint("L1_DEPLOYER_PRIVATE_KEY");
-    address private ARB_T1_PROXY_ADMIN_ADDR = vm.envAddress("ARB_T1_PROXY_ADMIN_ADDR");
-    address private ARB_T1_MESSENGER_PROXY_ADDR = vm.envAddress("ARB_T1_MESSENGER_PROXY_ADDR");
-    address private ARB_T1_MESSENGER_IMPLEMENTATION_ADDR = vm.envAddress("ARB_T1_MESSENGER_IMPLEMENTATION_ADDR");
-    address private BASE_T1_MESSENGER_PROXY_ADDR = vm.envAddress("BASE_T1_MESSENGER_PROXY_ADDR");
+contract DeployArbT1MessengerProxy is Script, DeploymentUtils  {
+    uint256 private deployerPrivateKey = vm.envUint("DEPLOYER_PRIVATE_KEY");
 
     ProxyAdmin private proxyAdmin;
     EmptyContract private placeholder;
-    L2MessageQueue private queue;
-    L2T1Messenger private impl;
     TransparentUpgradeableProxy private proxy;
-    T1Owner private owner;
 
-    function deployProxy() external {
+    function run() external {
         vm.createSelectFork(vm.rpcUrl("arbitrum_sepolia"));
         vm.startBroadcast(deployerPrivateKey);
         deployProxyAdmin();
         deployPlaceHolder();
         deployT1MessengerProxy();
-    }
-
-    function deployImplAndInit() external {
-        vm.createSelectFork(vm.rpcUrl("arbitrum_sepolia"));
-        vm.startBroadcast(deployerPrivateKey);
-        proxyAdmin = ProxyAdmin(ARB_T1_PROXY_ADMIN_ADDR);
-        proxy = TransparentUpgradeableProxy(payable(ARB_T1_MESSENGER_PROXY_ADDR));
-        deployMessageQueue();
-        deployT1MessengerImpl();
-        upgradeAndInitializeT1MessengerProxy();
-    }
-
-    function deployOwnerAndTransferOwnership() internal {
-        vm.createSelectFork(vm.rpcUrl("arbitrum_sepolia"));
-        vm.startBroadcast(deployerPrivateKey);
-        proxyAdmin = ProxyAdmin(ARB_T1_PROXY_ADMIN_ADDR);
-        deployT1Owner();
-        transferOwnership();
     }
 
     function deployProxyAdmin() internal {
@@ -72,6 +47,28 @@ contract DeployArbT1Messenger is Script, DeploymentUtils  {
 
         logAddress("ARB_T1_MESSENGER_PROXY_ADDR", address(proxy));
     }
+}
+
+contract DeployArbT1MessengerImplAndInit is Script, DeploymentUtils  {
+    uint256 private deployerPrivateKey = vm.envUint("DEPLOYER_PRIVATE_KEY");
+    address private ARB_T1_PROXY_ADMIN_ADDR = vm.envAddress("ARB_T1_PROXY_ADMIN_ADDR");
+    address private ARB_T1_MESSENGER_PROXY_ADDR = vm.envAddress("ARB_T1_MESSENGER_PROXY_ADDR");
+    address private BASE_T1_MESSENGER_PROXY_ADDR = vm.envAddress("BASE_T1_MESSENGER_PROXY_ADDR");
+
+    ProxyAdmin private proxyAdmin;
+    L2MessageQueue private queue;
+    L2T1Messenger private impl;
+    TransparentUpgradeableProxy private proxy;
+
+    function run() external {
+        vm.createSelectFork(vm.rpcUrl("arbitrum_sepolia"));
+        vm.startBroadcast(deployerPrivateKey);
+        proxyAdmin = ProxyAdmin(ARB_T1_PROXY_ADMIN_ADDR);
+        proxy = TransparentUpgradeableProxy(payable(ARB_T1_MESSENGER_PROXY_ADDR));
+        deployMessageQueue();
+        deployT1MessengerImpl();
+        upgradeAndInitializeT1MessengerProxy();
+    }
 
     function deployMessageQueue() internal {
         address deployer = vm.addr(deployerPrivateKey);
@@ -87,7 +84,6 @@ contract DeployArbT1Messenger is Script, DeploymentUtils  {
     }
 
     function upgradeAndInitializeT1MessengerProxy() internal {
-
         proxyAdmin.upgrade(
             ITransparentUpgradeableProxy(address(proxy)), address(impl)
         );
@@ -95,6 +91,22 @@ contract DeployArbT1Messenger is Script, DeploymentUtils  {
         uint64[] memory network = new uint64[](1);
         network[0] = T1Constants.BASE_SEPOLIA_CHAIN_ID;
         L2T1Messenger(payable(address(proxy))).initialize(BASE_T1_MESSENGER_PROXY_ADDR, network);
+    }
+}
+
+contract DeployArbT1MessengerOwnerAndTransferOwnership is Script, DeploymentUtils  {
+    uint256 private deployerPrivateKey = vm.envUint("DEPLOYER_PRIVATE_KEY");
+    address private ARB_T1_PROXY_ADMIN_ADDR = vm.envAddress("ARB_T1_PROXY_ADMIN_ADDR");
+
+    ProxyAdmin private proxyAdmin;
+    T1Owner private owner;
+
+    function run() external {
+        vm.createSelectFork(vm.rpcUrl("arbitrum_sepolia"));
+        vm.startBroadcast(deployerPrivateKey);
+        proxyAdmin = ProxyAdmin(ARB_T1_PROXY_ADMIN_ADDR);
+        deployT1Owner();
+        transferOwnership();
     }
 
     function deployT1Owner() internal {
