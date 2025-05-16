@@ -10,13 +10,13 @@ import { OnchainCrossChainOrder } from "intents-framework/ERC7683/IERC7683.sol";
 import { T1ERC7683Pull } from "../../../src/7683/T1ERC7683Pull.sol";
 import { T1Constants } from "../../../src/libraries/constants/T1Constants.sol";
 
-uint32 constant DESTINATION_CHAIN = uint32(T1Constants.T1_DEVNET_CHAIN_ID);
 uint32 constant ORIGIN_CHAIN = uint32(T1Constants.L1_CHAIN_ID);
 
 // T1ERC7683PullL1ToL2
 
 // Step 1: Setup Alice's account, sign and relay intent
 contract AliceSetupScript is Script {
+    uint32 private DESTINATION_CHAIN = uint32(vm.envUint("CHAIN_ID_L2"));
     T1ERC7683Pull public l1Router;
 
     function run() external {
@@ -109,6 +109,7 @@ contract SolverFillScript is Script {
 
 // Step 3: Pull Based Settlement and Relay
 contract SettlementScript is Script {
+    uint32 private DESTINATION_CHAIN = uint32(vm.envUint("CHAIN_ID_L2"));
     function run() external {
         vm.createSelectFork(vm.rpcUrl("sepolia"));
         uint256 settlerPk = vm.envUint("ALICE_PRIVATE_KEY");

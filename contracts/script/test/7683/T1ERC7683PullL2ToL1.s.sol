@@ -11,12 +11,12 @@ import { T1ERC7683Pull } from "../../../src/7683/T1ERC7683Pull.sol";
 import { T1Constants } from "../../../src/libraries/constants/T1Constants.sol";
 
 uint32 constant DESTINATION_CHAIN = uint32(T1Constants.L1_CHAIN_ID);
-uint32 constant ORIGIN_CHAIN = uint32(T1Constants.T1_DEVNET_CHAIN_ID);
 
 // T1ERC7683PullL2ToL1
 
 // Step 1: Setup Alice's account, sign and relay intent
 contract AliceSetupScript is Script {
+    uint32 private ORIGIN_CHAIN = uint32(vm.envUint("CHAIN_ID_L2"));
     T1ERC7683Pull public l2Router;
 
     function run() external {
