@@ -19,6 +19,9 @@ library T1Constants {
     /// @notice Chain ID of the Base Sepolia network
     uint64 internal constant BASE_SEPOLIA_CHAIN_ID = 84_532;
 
+    /// @notice Chain ID of the Arbitrum Sepolia network
+    uint64 internal constant ARBITRUM_SEPOLIA_CHAIN_ID = 421_614;
+
     /// @notice The EIP-712 type string for the remaining after the witness.
     string internal constant WITNESS_TYPE_STRING =
     // solhint-disable-next-line max-line-length
