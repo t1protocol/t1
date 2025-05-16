@@ -72,17 +72,21 @@ contract Setup7683BotsLiquidity is Script, DeploymentUtils {
         vm.createSelectFork(vm.rpcUrl("t1"));
         vm.startBroadcast(L2_7683_BOT_PRIVATE_KEY);
 
+        // approve L1 7683 Escrow to transfer USDT in the bot's name
+        T1StandardERC20(L1_USDT_ADDR).approve(L1_T1_7683_PROXY_ADDR, usdtAmount / 2);
+        T1StandardERC20(L1_USDT_ADDR).approve(L1_T1_PULL_BASED_7683_PROXY_ADDR, usdtAmount / 2);
+
+        // approve L1 7683 Escrow to transfer WETH in the bot's name
+        WrappedEther(L1_WETH_ADDR).approve(L1_T1_7683_PROXY_ADDR, wethAmount / 2);
+        WrappedEther(L1_WETH_ADDR).approve(L1_T1_PULL_BASED_7683_PROXY_ADDR, wethAmount / 2);
+
         // approve L2 7683 Escrow to transfer USDT in the bot's name
-        T1StandardERC20(L2_USDT_ADDR).approve(L1_T1_7683_PROXY_ADDR, usdtAmount / 2);
         T1StandardERC20(L2_USDT_ADDR).approve(L2_T1_7683_PROXY_ADDR, usdtAmount / 2);
-        T1StandardERC20(L2_USDT_ADDR).approve(L1_T1_PULL_BASED_7683_PROXY_ADDR, usdtAmount / 2);
         T1StandardERC20(L2_USDT_ADDR).approve(L2_T1_PULL_BASED_7683_PROXY_ADDR, usdtAmount / 2);
 
         // approve L2 7683 Escrow to transfer WETH in the bot's name
-        WrappedEther(L2_WETH_ADDR).approve(L1_T1_7683_PROXY_ADDR, usdtAmount / 2);
-        WrappedEther(L2_WETH_ADDR).approve(L2_T1_7683_PROXY_ADDR, usdtAmount / 2);
-        WrappedEther(L2_WETH_ADDR).approve(L1_T1_PULL_BASED_7683_PROXY_ADDR, usdtAmount / 2);
-        WrappedEther(L2_WETH_ADDR).approve(L2_T1_PULL_BASED_7683_PROXY_ADDR, usdtAmount / 2);
+        WrappedEther(L2_WETH_ADDR).approve(L2_T1_7683_PROXY_ADDR, wethAmount / 2);
+        WrappedEther(L2_WETH_ADDR).approve(L2_T1_PULL_BASED_7683_PROXY_ADDR, wethAmount / 2);
 
         vm.stopBroadcast();
 
