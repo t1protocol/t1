@@ -46,7 +46,7 @@ contract DeployT1ERC7683Pull is DeploymentUtils {
     function l1_init() external {
         uint256 deployerPk = vm.envUint("L1_DEPLOYER_PRIVATE_KEY");
         address L1_T1_7683_PROXY_ADDR = vm.envAddress("L1_T1_PULL_BASED_7683_PROXY_ADDR");
-        address counterpart = vm.envAddress("L2_L1_T1_PULL_BASED_7683_PROXY_ADDR");
+        address counterpart = vm.envAddress("L2_T1_PULL_BASED_7683_PROXY_ADDR");
 
         vm.startBroadcast(deployerPk);
 
