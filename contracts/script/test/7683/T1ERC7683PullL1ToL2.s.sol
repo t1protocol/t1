@@ -111,6 +111,7 @@ contract SolverFillScript is Script {
 // Step 3: Pull Based Settlement and Relay
 contract SettlementScript is Script {
     uint32 private DESTINATION_CHAIN = uint32(vm.envUint("CHAIN_ID_L2"));
+
     function run() external {
         vm.createSelectFork(vm.rpcUrl("sepolia"));
         uint256 settlerPk = vm.envUint("ALICE_PRIVATE_KEY");
