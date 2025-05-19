@@ -25,14 +25,12 @@ contract DeployBaseT1ERC7683Pull is DeploymentUtils {
 
         proxyAdmin = ProxyAdmin(BASE_T1_PROXY_ADMIN_ADDR);
 
-        // Deploy 7683 implementation
         T1ERC7683Pull impl = new T1ERC7683Pull(
             address(0), // No Permit2 for now
             BASE_T1_X_CHAIN_READ_PROXY_ADDR,
             BASE
         );
 
-        // Deploy and initialize proxy
         TransparentUpgradeableProxy proxy =
             new TransparentUpgradeableProxy(address(impl), address(proxyAdmin), new bytes(0));
 

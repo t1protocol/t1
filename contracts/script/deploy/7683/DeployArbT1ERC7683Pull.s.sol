@@ -24,14 +24,12 @@ contract DeployArbT1ERC7683Pull is DeploymentUtils {
 
         vm.startBroadcast(deployerPk);
 
-        // Deploy 7683 implementation
         T1ERC7683Pull impl = new T1ERC7683Pull(
             address(0), // No Permit2 for now
             ARB_T1_X_CHAIN_READ_PROXY_ADDR,
             ARB
         );
 
-        // Deploy and initialize proxy
         TransparentUpgradeableProxy proxy =
             new TransparentUpgradeableProxy(address(impl), address(proxyAdmin), new bytes(0));
 

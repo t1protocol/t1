@@ -24,14 +24,12 @@ contract DeployT1ERC7683 is Script {
 
         proxyAdmin = ProxyAdmin(L1_PROXY_ADMIN_ADDR);
 
-        // Deploy L1 router implementation
         T1ERC7683 implementation = new T1ERC7683(
             l1Messenger,
             address(0), // No Permit2 for now
             ORIGIN_CHAIN
         );
 
-        // Deploy and initialize proxy
         TransparentUpgradeableProxy proxy =
             new TransparentUpgradeableProxy(address(implementation), address(proxyAdmin), new bytes(0));
 
@@ -71,7 +69,6 @@ contract DeployT1ERC7683 is Script {
             DESTINATION_CHAIN
         );
 
-        // Deploy and initialize proxy
         TransparentUpgradeableProxy proxy =
             new TransparentUpgradeableProxy(address(implementation), address(proxyAdmin), new bytes(0));
 
