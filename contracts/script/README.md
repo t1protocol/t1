@@ -144,4 +144,16 @@ forge script ./deploy/DeployArbT1XChainReader.s.sol:DeployArbT1XChainReader  --b
 ```bash
 forge script ./deploy/DeployBaseT1XChainReader.s.sol:DeployBaseT1XChainReader  --broadcast --verify --verifier etherscan --verifier-url https://api-sepolia.basescan.org/api --etherscan-api-key $BASESCAN_API_KEY
 ```
-### Deploying 7683Pull
+### Deploying 7683
+```
+forge script ./deploy/7683/DeployArbT1ERC7683Pull.s.sol:DeployArbT1ERC7683Pull --sig "deploy()"  --broadcast --verify --verifier etherscan --verifier-url https://api-sepolia.arbiscan.io/api --etherscan-api-key $ARBISCAN_API_KEY
+```
+```
+forge script ./deploy/7683/DeployBaseT1ERC7683Pull.s.sol:DeployBaseT1ERC7683Pull --sig "deploy()" --broadcast --verify --verifier etherscan --verifier-url https://api-sepolia.basescan.org/api --etherscan-api-key $BASESCAN_API_KEY
+```
+```
+forge script ./deploy/7683/DeployArbT1ERC7683Pull.s.sol:DeployArbT1ERC7683Pull --sig "init()" --broadcast
+```
+```
+forge script ./deploy/7683/DeployBaseT1ERC7683Pull.s.sol:DeployBaseT1ERC7683Pull --sig "init()" --broadcast
+```
