@@ -14,7 +14,7 @@ import { ProxyAdmin } from "@openzeppelin/contracts/proxy/transparent/ProxyAdmin
 import { TransparentUpgradeableProxy } from "@openzeppelin/contracts/proxy/transparent/TransparentUpgradeableProxy.sol";
 import { ITransparentUpgradeableProxy } from "@openzeppelin/contracts/proxy/transparent/TransparentUpgradeableProxy.sol";
 
-contract DeployBaseT1MessengerProxy is Script, DeploymentUtils  {
+contract DeployBaseT1MessengerProxy is Script, DeploymentUtils {
     uint256 private deployerPrivateKey = vm.envUint("DEPLOYER_PRIVATE_KEY");
 
     ProxyAdmin private proxyAdmin;
@@ -41,15 +41,13 @@ contract DeployBaseT1MessengerProxy is Script, DeploymentUtils  {
     }
 
     function deployT1MessengerProxy() internal {
-        proxy = new TransparentUpgradeableProxy(
-            address(placeholder), address(proxyAdmin), new bytes(0)
-        );
+        proxy = new TransparentUpgradeableProxy(address(placeholder), address(proxyAdmin), new bytes(0));
 
         logAddress("BASE_T1_MESSENGER_PROXY_ADDR", address(proxy));
     }
 }
 
-contract DeployBaseT1MessengerImplAndInit is Script, DeploymentUtils  {
+contract DeployBaseT1MessengerImplAndInit is Script, DeploymentUtils {
     uint256 private deployerPrivateKey = vm.envUint("DEPLOYER_PRIVATE_KEY");
     address private BASE_T1_PROXY_ADMIN_ADDR = vm.envAddress("BASE_T1_PROXY_ADMIN_ADDR");
     address private BASE_T1_MESSENGER_PROXY_ADDR = vm.envAddress("BASE_T1_MESSENGER_PROXY_ADDR");
@@ -84,9 +82,7 @@ contract DeployBaseT1MessengerImplAndInit is Script, DeploymentUtils  {
     }
 
     function upgradeAndInitializeT1MessengerProxy() internal {
-        proxyAdmin.upgrade(
-            ITransparentUpgradeableProxy(address(proxy)), address(impl)
-        );
+        proxyAdmin.upgrade(ITransparentUpgradeableProxy(address(proxy)), address(impl));
 
         uint64[] memory network = new uint64[](1);
         network[0] = T1Constants.ARBITRUM_SEPOLIA_CHAIN_ID;
@@ -94,7 +90,7 @@ contract DeployBaseT1MessengerImplAndInit is Script, DeploymentUtils  {
     }
 }
 
-contract DeployBaseT1MessengerOwnerAndTransferOwnership is Script, DeploymentUtils  {
+contract DeployBaseT1MessengerOwnerAndTransferOwnership is Script, DeploymentUtils {
     uint256 private deployerPrivateKey = vm.envUint("DEPLOYER_PRIVATE_KEY");
     address private BASE_T1_PROXY_ADMIN_ADDR = vm.envAddress("BASE_T1_PROXY_ADMIN_ADDR");
 
