@@ -117,43 +117,104 @@ Scripts to upgrade contract implementations:
 
 ## Deploying 7683Pull to Arbitrum Sepolia and Base Sepolia
 
+This section walks you through deploying all pieces of the 7683Pull system to both Arbitrum Sepolia and Base Sepolia
+testnets. You’ll deploy messenger proxies, their implementations (with initialization), ownership transfers, the
+cross-chain reader, and finally the ERC-7683 pull modules. Each Forge script broadcasts the tx, verifies it on the right
+explorer API, and uses your API key to confirm source code.
+
 ### Deploying Messengers & Friends
+
+Deploy the proxy, impl, init and ownership hand-off for the t1 messenger contract on each network.
+
+#### Arbitrum Sepolia Messenger Proxy
+
+Deploys the upgradeable proxy that fronts the messenger logic and verifies it on Arbiscan.
+
 ```bash
 forge script ./deploy/DeployArbT1Messenger.s.sol:DeployArbT1MessengerProxy --broadcast --verify --verifier etherscan --verifier-url https://api-sepolia.arbiscan.io/api --etherscan-api-key $ARBISCAN_API_KEY
 ```
+
+#### Base Sepolia Messenger Proxy
+
+Same as above, but targets Base Sepolia and verifies on Basescan.
+
 ```bash
 forge script ./deploy/DeployBaseT1Messenger.s.sol:DeployBaseT1MessengerProxy --broadcast --verify --verifier etherscan --verifier-url https://api-sepolia.basescan.org/api --etherscan-api-key $BASESCAN_API_KEY
 ```
+
+#### Arbitrum Sepolia Messenger Impl & Init
+
+Deploys the messenger implementation, runs its init() to set up state, then verifies on Arbiscan.
+
 ```bash
 forge script ./deploy/DeployArbT1Messenger.s.sol:DeployArbT1MessengerImplAndInit --broadcast --verify --verifier etherscan --verifier-url https://api-sepolia.arbiscan.io/api --etherscan-api-key $ARBISCAN_API_KEY
 ```
+
+#### Base Sepolia Messenger Impl & Init
+
+Same deployment and init flow for Base Sepolia, verified on Basescan.
+
 ```bash
 forge script ./deploy/DeployBaseT1Messenger.s.sol:DeployBaseT1MessengerImplAndInit --broadcast --verify --verifier etherscan --verifier-url https://api-sepolia.basescan.org/api --etherscan-api-key $BASESCAN_API_KEY
 ```
+
+#### Arbitrum Sepolia Ownership Transfer
+
+Deploys a short‐lived owner contract and immediately hands proxy ownership to the governance module.
+
 ```bash
 forge script ./deploy/DeployArbT1Messenger.s.sol:DeployArbT1MessengerOwnerAndTransferOwnership --broadcast --verify --verifier etherscan --verifier-url https://api-sepolia.arbiscan.io/api --etherscan-api-key $ARBISCAN_API_KEY
 ```
+
+#### Base Sepolia Ownership Transfer
+
+Mirror of the above on Base Sepolia.
+
 ```bash
 forge script ./deploy/DeployBaseT1Messenger.s.sol:DeployBaseT1MessengerOwnerAndTransferOwnership --broadcast --verify --verifier etherscan --verifier-url https://api-sepolia.basescan.org/api --etherscan-api-key $BASESCAN_API_KEY
 ```
 
 ### Deploying xChainRead
+
+Deploys the xChainReader contract, which packages cross-chain read requests and handles callbacks to the requesting
+contracts.
+
+#### Arbitrum Sepolia XChain Reader
+
 ```bash
 forge script ./deploy/DeployArbT1XChainReader.s.sol:DeployArbT1XChainReader  --broadcast --verify --verifier etherscan --verifier-url https://api-sepolia.arbiscan.io/api --etherscan-api-key $ARBISCAN_API_KEY
 ```
+
+#### Base Sepolia XChain Reader
+
 ```bash
 forge script ./deploy/DeployBaseT1XChainReader.s.sol:DeployBaseT1XChainReader  --broadcast --verify --verifier etherscan --verifier-url https://api-sepolia.basescan.org/api --etherscan-api-key $BASESCAN_API_KEY
 ```
+
 ### Deploying 7683
+
+Deploys ERC-7683 contracts to the target chain, verifies and initializes them.
+
+#### Arbitrum Sepolia Pull Module Deployment
+
 ```bash
 forge script ./deploy/7683/DeployArbT1ERC7683Pull.s.sol:DeployArbT1ERC7683Pull --sig "deploy()"  --broadcast --verify --verifier etherscan --verifier-url https://api-sepolia.arbiscan.io/api --etherscan-api-key $ARBISCAN_API_KEY
 ```
+
+#### Base Sepolia Pull Module Deployment
+
 ```bash
 forge script ./deploy/7683/DeployBaseT1ERC7683Pull.s.sol:DeployBaseT1ERC7683Pull --sig "deploy()" --broadcast --verify --verifier etherscan --verifier-url https://api-sepolia.basescan.org/api --etherscan-api-key $BASESCAN_API_KEY
 ```
+
+#### Arbitrum Sepolia Pull Module Init
+
 ```bash
 forge script ./deploy/7683/DeployArbT1ERC7683Pull.s.sol:DeployArbT1ERC7683Pull --sig "init()" --broadcast
 ```
+
+#### Base Sepolia Pull Module Init
+
 ```bash
 forge script ./deploy/7683/DeployBaseT1ERC7683Pull.s.sol:DeployBaseT1ERC7683Pull --sig "init()" --broadcast
 ```
