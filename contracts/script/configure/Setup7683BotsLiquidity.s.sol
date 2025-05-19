@@ -23,8 +23,6 @@ contract Setup7683BotsLiquidity is Script, DeploymentUtils {
     address payable private L2_WETH_ADDR = payable(vm.envAddress("L2_WETH_ADDR"));
     address private L2_USDT_ADDR = vm.envAddress("L2_USDT_ADDR");
     address private L1_GATEWAY_ROUTER_PROXY_ADDR = vm.envAddress("L1_GATEWAY_ROUTER_PROXY_ADDR");
-    address private L1_T1_7683_PROXY_ADDR = vm.envAddress("L1_T1_7683_PROXY_ADDR");
-    address private L2_T1_7683_PROXY_ADDR = vm.envAddress("L2_T1_7683_PROXY_ADDR");
     address private L1_T1_PULL_BASED_7683_PROXY_ADDR = vm.envAddress("L1_T1_PULL_BASED_7683_PROXY_ADDR");
     address private L2_T1_PULL_BASED_7683_PROXY_ADDR = vm.envAddress("L2_T1_PULL_BASED_7683_PROXY_ADDR");
 
@@ -64,11 +62,9 @@ contract Setup7683BotsLiquidity is Script, DeploymentUtils {
         IL1GatewayRouter(L1_GATEWAY_ROUTER_PROXY_ADDR).depositERC20(L1_USDT_ADDR, usdtAmount / 2, gasLimit);
 
         // approve L1 7683 Escrow to transfer USDT in the bot's name
-        T1StandardERC20(L1_USDT_ADDR).approve(L1_T1_7683_PROXY_ADDR, usdtAmount / 2);
         T1StandardERC20(L1_USDT_ADDR).approve(L1_T1_PULL_BASED_7683_PROXY_ADDR, usdtAmount / 2);
 
         // approve L1 7683 Escrow to transfer WETH in the bot's name
-        WrappedEther(L1_WETH_ADDR).approve(L1_T1_7683_PROXY_ADDR, wethAmount / 2);
         WrappedEther(L1_WETH_ADDR).approve(L1_T1_PULL_BASED_7683_PROXY_ADDR, wethAmount / 2);
 
         vm.stopBroadcast();
@@ -76,11 +72,9 @@ contract Setup7683BotsLiquidity is Script, DeploymentUtils {
         vm.startBroadcast(L2_7683_BOT_PRIVATE_KEY);
 
         // approve L2 7683 Escrow to transfer USDT in the bot's name
-        T1StandardERC20(L2_USDT_ADDR).approve(L2_T1_7683_PROXY_ADDR, usdtAmount / 2);
         T1StandardERC20(L2_USDT_ADDR).approve(L2_T1_PULL_BASED_7683_PROXY_ADDR, usdtAmount / 2);
 
         // approve L2 7683 Escrow to transfer WETH in the bot's name
-        WrappedEther(L2_WETH_ADDR).approve(L2_T1_7683_PROXY_ADDR, wethAmount / 2);
         WrappedEther(L2_WETH_ADDR).approve(L2_T1_PULL_BASED_7683_PROXY_ADDR, wethAmount / 2);
 
         vm.stopBroadcast();
