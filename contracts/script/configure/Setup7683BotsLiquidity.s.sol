@@ -14,6 +14,7 @@ import { Usdt } from "../deploy/DeployL1Usdt.s.sol";
 
 contract Setup7683BotsLiquidity is Script, DeploymentUtils {
     uint256 private L1_DEPLOYER_PRIVATE_KEY = vm.envUint("L1_DEPLOYER_PRIVATE_KEY");
+    uint256 private L2_DEPLOYER_PRIVATE_KEY = vm.envUint("L2_DEPLOYER_PRIVATE_KEY");
     uint256 private L1_7683_BOT_PRIVATE_KEY = vm.envUint("L1_7683_BOT_PRIVATE_KEY");
     uint256 private L2_7683_BOT_PRIVATE_KEY = vm.envUint("L2_7683_BOT_PRIVATE_KEY");
 
@@ -22,8 +23,8 @@ contract Setup7683BotsLiquidity is Script, DeploymentUtils {
     address payable private L2_WETH_ADDR = payable(vm.envAddress("L2_WETH_ADDR"));
     address private L2_USDT_ADDR = vm.envAddress("L2_USDT_ADDR");
     address private L1_GATEWAY_ROUTER_PROXY_ADDR = vm.envAddress("L1_GATEWAY_ROUTER_PROXY_ADDR");
-    address private L1_T1_7683_PROXY_ADDR = vm.addr(uint256(vm.envInt("L1_T1_7683_PROXY_ADDR")));
-    address private L2_T1_7683_PROXY_ADDR = vm.addr(uint256(vm.envInt("L2_T1_7683_PROXY_ADDR")));
+    address private L1_T1_PULL_BASED_7683_PROXY_ADDR = vm.envAddress("L1_T1_PULL_BASED_7683_PROXY_ADDR");
+    address private L2_T1_PULL_BASED_7683_PROXY_ADDR = vm.envAddress("L2_T1_PULL_BASED_7683_PROXY_ADDR");
 
     function run() external {
         uint256 gasLimit = 1_000_000;
@@ -61,20 +62,20 @@ contract Setup7683BotsLiquidity is Script, DeploymentUtils {
         IL1GatewayRouter(L1_GATEWAY_ROUTER_PROXY_ADDR).depositERC20(L1_USDT_ADDR, usdtAmount / 2, gasLimit);
 
         // approve L1 7683 Escrow to transfer USDT in the bot's name
-        T1StandardERC20(L1_USDT_ADDR).approve(L1_T1_7683_PROXY_ADDR, usdtAmount / 2);
+        T1StandardERC20(L1_USDT_ADDR).approve(L1_T1_PULL_BASED_7683_PROXY_ADDR, usdtAmount / 2);
 
         // approve L1 7683 Escrow to transfer WETH in the bot's name
-        WrappedEther(L1_WETH_ADDR).approve(L1_T1_7683_PROXY_ADDR, usdtAmount / 2);
+        WrappedEther(L1_WETH_ADDR).approve(L1_T1_PULL_BASED_7683_PROXY_ADDR, wethAmount / 2);
 
         vm.stopBroadcast();
         vm.createSelectFork(vm.rpcUrl("t1"));
         vm.startBroadcast(L2_7683_BOT_PRIVATE_KEY);
 
         // approve L2 7683 Escrow to transfer USDT in the bot's name
-        T1StandardERC20(L2_USDT_ADDR).approve(L2_T1_7683_PROXY_ADDR, usdtAmount / 2);
+        T1StandardERC20(L2_USDT_ADDR).approve(L2_T1_PULL_BASED_7683_PROXY_ADDR, usdtAmount / 2);
 
         // approve L2 7683 Escrow to transfer WETH in the bot's name
-        WrappedEther(L2_WETH_ADDR).approve(L2_T1_7683_PROXY_ADDR, usdtAmount / 2);
+        WrappedEther(L2_WETH_ADDR).approve(L2_T1_PULL_BASED_7683_PROXY_ADDR, wethAmount / 2);
 
         vm.stopBroadcast();
 

@@ -10,13 +10,14 @@ import { OnchainCrossChainOrder } from "intents-framework/ERC7683/IERC7683.sol";
 import { T1ERC7683Pull } from "../../../src/7683/T1ERC7683Pull.sol";
 import { T1Constants } from "../../../src/libraries/constants/T1Constants.sol";
 
-uint32 constant DESTINATION_CHAIN = uint32(T1Constants.T1_DEVNET_CHAIN_ID);
 uint32 constant ORIGIN_CHAIN = uint32(T1Constants.L1_CHAIN_ID);
+uint32 constant HUNDRED_USDT = 100 * 1e6;
 
 // T1ERC7683PullL1ToL2
 
 // Step 1: Setup Alice's account, sign and relay intent
 contract AliceSetupScript is Script {
+    uint32 private DESTINATION_CHAIN = uint32(vm.envUint("CHAIN_ID_L2"));
     T1ERC7683Pull public l1Router;
 
     function run() external {
@@ -35,14 +36,14 @@ contract AliceSetupScript is Script {
             recipient: TypeCasts.addressToBytes32(alice),
             inputToken: TypeCasts.addressToBytes32(address(inputToken)),
             outputToken: TypeCasts.addressToBytes32(address(outputToken)),
-            amountIn: 100,
-            amountOut: 100,
+            amountIn: HUNDRED_USDT,
+            amountOut: HUNDRED_USDT,
             senderNonce: uint32(
                 uint256(keccak256(abi.encodePacked(block.timestamp, block.prevrandao, msg.sender))) % 10_000
             ), // Random number between 0 and 9999
             originDomain: ORIGIN_CHAIN,
             destinationDomain: DESTINATION_CHAIN,
-            destinationSettler: TypeCasts.addressToBytes32(vm.envAddress("L2_L1_T1_PULL_BASED_7683_PROXY_ADDR")),
+            destinationSettler: TypeCasts.addressToBytes32(vm.envAddress("L2_T1_PULL_BASED_7683_PROXY_ADDR")),
             fillDeadline: uint32(block.timestamp + 24 hours),
             data: new bytes(0)
         });
@@ -87,7 +88,7 @@ contract SolverFillScript is Script {
 
         vm.startBroadcast(solverPk);
 
-        T1ERC7683Pull l2Router = T1ERC7683Pull(vm.envAddress("L2_L1_T1_PULL_BASED_7683_PROXY_ADDR"));
+        T1ERC7683Pull l2Router = T1ERC7683Pull(vm.envAddress("L1_T1_PULL_BASED_7683_PROXY_ADDR"));
         // NOTE - orderId logged from the first step goes here (remove 0x first)
         bytes32 orderId = hex"";
 
@@ -97,7 +98,7 @@ contract SolverFillScript is Script {
         // Approve output tokens
         ERC20(vm.envAddress("L2_USDT_ADDR")).approve(
             address(l2Router),
-            100 // match amount from order
+            HUNDRED_USDT // match amount from order
         );
 
         bytes memory fillerData = abi.encode(TypeCasts.addressToBytes32(solver));
@@ -109,6 +110,8 @@ contract SolverFillScript is Script {
 
 // Step 3: Pull Based Settlement and Relay
 contract SettlementScript is Script {
+    uint32 private DESTINATION_CHAIN = uint32(vm.envUint("CHAIN_ID_L2"));
+
     function run() external {
         vm.createSelectFork(vm.rpcUrl("sepolia"));
         uint256 settlerPk = vm.envUint("ALICE_PRIVATE_KEY");
