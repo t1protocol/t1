@@ -1,0 +1,49 @@
+{
+  "metadata": {
+    "version": "v0.4.0",
+    "date": "2025-05-19",
+    "by": "Evan",
+    "from_machine": "Evan's machine",
+    "from_branch": "feature/deploy-messengers-to-arb-and-base",
+    "from_tag": "v0.4.0"
+  },
+  "addresses": {
+    "arbitrum_sepolia": {
+      "signer": "0xD99c1b45708a4E94c6230f6A77BD7fa729f5398B",
+      "usdt": "0xF6232a871BF3B33F5bc181f55d770F9FB062A457",
+      "t1ProxyAdmin": "0xaec234f08C3acE19cE1FA477e4DcBdEFd9000ecb",
+      "proxyImplementationPlaceholder": "0x0C80EC2129C72fE022fe33DEE826983DBEC72452",
+      "t1MessengerProxy": "0xd31aDB0eF8A31e081f29A9f07F594a71B88848c1",
+      "t1MessageQueue": "0x5Fe327F7268f38f4a964DaFdFB709826F1C2a409",
+      "t1MessengerImplementation": "0x2Ae1A629e64337F540f4E8eD94e665BF792656a3",
+      "t1Owner": "0xFc30645d98ecF37823BeCbf0CDf86f09e886365a",
+      "t1XChainRead": {
+        "implementation": "0x65949C0471cb12A4b82Dc0Cef4d52553f4a9A2aE",
+        "proxy": "0x0fD87D072B5C7E51bD1Bc3B1c75B2a9F9fE9Fe58"
+      },
+      "t1PullBased7683": {
+        "implementation": "0xfab428425a128245a489bc22f729A673eaeAb719",
+        "proxy": "0x172F4579F1927c12b6bC38A1D19bB841a704b81B"
+      }
+    },
+    "base_sepolia": {
+      "signer": "0xD99c1b45708a4E94c6230f6A77BD7fa729f5398B",
+      "usdt": "0x228eE6c1C297E2Eba0e95A71684B26f89385b4eC",
+      "t1ProxyAdmin": "0xaec234f08C3acE19cE1FA477e4DcBdEFd9000ecb",
+      "proxyImplementationPlaceholder": "0x0C80EC2129C72fE022fe33DEE826983DBEC72452",
+      "t1MessengerProxy": "0xd31aDB0eF8A31e081f29A9f07F594a71B88848c1",
+      "t1MessageQueue": "0x5Fe327F7268f38f4a964DaFdFB709826F1C2a409",
+      "t1MessengerImplementation": "0x2Ae1A629e64337F540f4E8eD94e665BF792656a3",
+      "t1Owner": "0xFc30645d98ecF37823BeCbf0CDf86f09e886365a",
+      "t1XChainRead": {
+        "implementation": "0x65949C0471cb12A4b82Dc0Cef4d52553f4a9A2aE",
+        "proxy": "0x0fD87D072B5C7E51bD1Bc3B1c75B2a9F9fE9Fe58"
+      },
+      "t1PullBased7683": {
+        "implementation": "0xfab428425a128245a489bc22f729A673eaeAb719",
+        "proxy": "0x172F4579F1927c12b6bC38A1D19bB841a704b81B"
+      }
+    },
+    "deployerAddress": "0xD99c1b45708a4E94c6230f6A77BD7fa729f5398B"
+  }
+}
