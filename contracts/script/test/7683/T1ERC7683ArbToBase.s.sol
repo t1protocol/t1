@@ -85,7 +85,7 @@ contract AliceSetupScript is Script {
 contract SolverFillScript is Script {
     function run() external {
         vm.createSelectFork(vm.rpcUrl("base_sepolia"));
-        uint256 solverPk = vm.envUint("TEST_PRIVATE_KEY");  // TODO CHANGE
+        uint256 solverPk = vm.envUint("TEST_PRIVATE_KEY");
         address solver = vm.addr(solverPk);
 
         vm.startBroadcast(solverPk);
