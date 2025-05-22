@@ -11,12 +11,13 @@ import { T1ERC7683Pull } from "../../../src/7683/T1ERC7683Pull.sol";
 import { T1Constants } from "../../../src/libraries/constants/T1Constants.sol";
 
 uint32 constant DESTINATION_CHAIN = uint32(T1Constants.BASE_SEPOLIA_CHAIN_ID);
-uint32 constant ORIGIN_CHAIN = uint32(T1Constants.T1_DEVNET_CHAIN_ID);
+uint32 constant HUNDRED_USDT = 100 * 1e6;
 
 // T1ERC7683PullL2ToPR1
 
 // Step 1: Setup Alice's account, sign and relay intent
 contract AliceSetupScript is Script {
+    uint32 private ORIGIN_CHAIN = uint32(vm.envUint("CHAIN_ID_L2"));
     T1ERC7683Pull public l2Router;
 
     function run() external {
@@ -35,8 +36,8 @@ contract AliceSetupScript is Script {
             recipient: TypeCasts.addressToBytes32(alice),
             inputToken: TypeCasts.addressToBytes32(address(inputToken)),
             outputToken: TypeCasts.addressToBytes32(address(outputToken)),
-            amountIn: 1,
-            amountOut: 1,
+            amountIn: HUNDRED_USDT,
+            amountOut: HUNDRED_USDT,
             senderNonce: uint32(
                 uint256(keccak256(abi.encodePacked(block.timestamp, block.prevrandao, msg.sender))) % 10_000
             ), // Random number between 0 and 9999
@@ -96,7 +97,7 @@ contract SolverFillScript is Script {
         // Approve output tokens
         ERC20(vm.envAddress("PR1_USDT_ADDR")).approve(
             address(pr1Router),
-            100 // match amount from order
+            HUNDRED_USDT // match amount from order
         );
 
         // Fill the order
