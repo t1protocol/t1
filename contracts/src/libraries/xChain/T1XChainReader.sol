@@ -21,6 +21,7 @@ contract T1XChainReader is OwnableUpgradeable, ReentrancyGuardUpgradeable {
      * @param requestId Unique identifier for the request
      * @param destinationDomain Domain ID of the target chain
      * @param targetContract Address of the contract to read from
+     * @param requester Address who initiated the read request
      * @param gasLimit The gas limit for the read operation
      * @param minBlock the minimum block on the target chain that you will accept the read to be executed
      * @param callData The encoded function call
@@ -30,6 +31,7 @@ contract T1XChainReader is OwnableUpgradeable, ReentrancyGuardUpgradeable {
         bytes32 indexed requestId,
         uint32 indexed destinationDomain,
         address targetContract,
+        address requester,
         uint256 gasLimit,
         uint64 minBlock,
         bytes callData,
@@ -160,7 +162,7 @@ contract T1XChainReader is OwnableUpgradeable, ReentrancyGuardUpgradeable {
 
         _sendMessage(destinationDomain, targetContract, gasLimit, requestReadSelector, message);
 
-        emit ReadRequested(requestId, destinationDomain, targetContract, gasLimit, minBlock, callData, callback);
+        emit ReadRequested(requestId, destinationDomain, targetContract, tx.origin, gasLimit, minBlock, callData, callback);
 
         return requestId;
     }
