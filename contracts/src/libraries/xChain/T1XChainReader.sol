@@ -162,7 +162,9 @@ contract T1XChainReader is OwnableUpgradeable, ReentrancyGuardUpgradeable {
 
         _sendMessage(destinationDomain, targetContract, gasLimit, requestReadSelector, message);
 
-        emit ReadRequested(requestId, destinationDomain, targetContract, tx.origin, gasLimit, minBlock, callData, callback);
+        emit ReadRequested(
+            requestId, destinationDomain, targetContract, tx.origin, gasLimit, minBlock, callData, callback
+        );
 
         return requestId;
     }
