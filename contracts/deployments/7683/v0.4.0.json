@@ -11,6 +11,7 @@
     "arbitrum_sepolia": {
       "signer": "0xD99c1b45708a4E94c6230f6A77BD7fa729f5398B",
       "usdt": "0xF6232a871BF3B33F5bc181f55d770F9FB062A457",
+      "weth": "0x2836ae2eA2c013acD38028fD0C77B92cccFa2EE4",
       "t1ProxyAdmin": "0xaec234f08C3acE19cE1FA477e4DcBdEFd9000ecb",
       "proxyImplementationPlaceholder": "0x0C80EC2129C72fE022fe33DEE826983DBEC72452",
       "t1MessengerProxy": "0xd31aDB0eF8A31e081f29A9f07F594a71B88848c1",
@@ -29,6 +30,7 @@
     "base_sepolia": {
       "signer": "0xD99c1b45708a4E94c6230f6A77BD7fa729f5398B",
       "usdt": "0x228eE6c1C297E2Eba0e95A71684B26f89385b4eC",
+      "weth": "0x4200000000000000000000000000000000000006",
       "t1ProxyAdmin": "0xaec234f08C3acE19cE1FA477e4DcBdEFd9000ecb",
       "proxyImplementationPlaceholder": "0x0C80EC2129C72fE022fe33DEE826983DBEC72452",
       "t1MessengerProxy": "0xd31aDB0eF8A31e081f29A9f07F594a71B88848c1",
