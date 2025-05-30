@@ -41,25 +41,25 @@ contract T1XChainReader is OwnableUpgradeable, ReentrancyGuardUpgradeable {
     /**
      * @notice Emitted when a cross-chain read response succeeds
      * @param requestId Unique identifier for the original request
-     * @param result The result data from the read operation
+     * @param batchIndex The batch index of the read request
      */
-    event ReadSucceeded(bytes32 indexed requestId, bytes result);
+    event ReadSucceeded(bytes32 indexed requestId, uint256 batchIndex);
 
     /**
      * @notice Emitted when a cross-chain read response fails with bytes revert
      * @param requestId Unique identifier for the original request
-     * @param result The result data from the read operation
+     * @param batchIndex The batch index of the read request
      * @param reason The reason the call failed
      */
-    event ReadFailed(bytes32 indexed requestId, bytes result, bytes reason);
+    event ReadFailed(bytes32 indexed requestId, uint256 batchIndex, bytes reason);
 
     /**
      * @notice Emitted when a cross-chain read response fails with string revert
      * @param requestId Unique identifier for the original request
-     * @param result The result data from the read operation
+     * @param batchIndex The batch index of the read request
      * @param reason The reason the call failed
      */
-    event ReadFailed(bytes32 indexed requestId, bytes result, string reason);
+    event ReadFailed(bytes32 indexed requestId, uint256 batchIndex, string reason);
 
     /**
      * @notice Emitted when a cross-chain read response is received
@@ -191,53 +191,35 @@ contract T1XChainReader is OwnableUpgradeable, ReentrancyGuardUpgradeable {
 
     /**
      * @notice Handles incoming messages from other chains
-     * @param _originDomain The origin domain
-     * @param _sender The sender address on the target chain
-     * @param _requestId The ID assigned to the request when it was dispatched
-     * @param _data The data to relay to the callback contract
+     * @param requestId The ID assigned to the request when it was dispatched
+     * @param batchIndex The batch index of the read request
+     * @param newRoot The root of the proof of read merkle tree
      */
-    function handle(
-        uint32 _originDomain,
-        bytes32 _sender,
-        bytes32 _requestId,
-        bytes memory _data
-    )
-        external
-        payable
-        onlyProver
-    {
-        _handleReadResponse(_originDomain, _sender, _requestId, _data);
+    function handle(bytes32 requestId, uint256 batchIndex, bytes32 newRoot) external payable onlyProver {
+        _handleReadResponse(requestId, batchIndex, newRoot);
     }
 
     // ============ Internal Functions ============
 
     /**
      * @notice Handles an incoming read response
-     * @param _originDomain The origin domain
-     * @param _sender The sender address
-     * @param requestId Unique identifier for the original request
-     * @param result The result data from the read operation
+     * @param requestId The ID assigned to the request when it was dispatched
+     * @param batchIndex The batch index of the read request
+     * @param newRoot The root of the proof of read merkle tree
      */
-    function _handleReadResponse(
-        uint32 _originDomain,
-        bytes32 _sender,
-        bytes32 requestId,
-        bytes memory result
-    )
-        internal
-    {
+    function _handleReadResponse(bytes32 requestId, uint256 batchIndex, bytes32 newRoot) internal {
         address callback = callbacks[requestId];
 
         // If there's a valid callback, forward the result
         if (callback != address(0)) {
             delete callbacks[requestId];
 
-            try IT1XChainReaderCallback(callback).onT1XChainReaderResult(_originDomain, _sender, requestId, result) {
-                emit ReadSucceeded(requestId, result);
+            try IT1XChainReaderCallback(callback).onT1XChainReaderResult(requestId, batchIndex, newRoot) {
+                emit ReadSucceeded(requestId, batchIndex);
             } catch Error(string memory reason) {
-                emit ReadFailed(requestId, result, reason);
+                emit ReadFailed(requestId, batchIndex, reason);
             } catch (bytes memory reason) {
-                emit ReadFailed(requestId, result, reason);
+                emit ReadFailed(requestId, batchIndex, reason);
             }
         }
     }

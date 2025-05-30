@@ -8,16 +8,9 @@ pragma solidity ^0.8.25;
 interface IT1XChainReaderCallback {
     /**
      * @notice Called when a cross-chain read response is received
-     * @param _originDomain The origin domain
-     * @param _sender The sender address
-     * @param requestId Unique identifier for the original request
-     * @param result The result data from the read operation
+     * @param requestId The ID assigned to the request when it was dispatched
+     * @param batchIndex The batch index of the read request
+     * @param newRoot The root of the proof of read merkle tree
      */
-    function onT1XChainReaderResult(
-        uint32 _originDomain,
-        bytes32 _sender,
-        bytes32 requestId,
-        bytes calldata result
-    )
-        external;
+    function onT1XChainReaderResult(bytes32 requestId, uint256 batchIndex, bytes32 newRoot) external;
 }

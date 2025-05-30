@@ -7,6 +7,7 @@ import { BasicSwap7683 } from "intents-framework/BasicSwap7683.sol";
 
 import { T1XChainReader } from "../libraries/xChain/T1XChainReader.sol";
 import { IT1XChainReaderCallback } from "../libraries/callbacks/IT1XChainReaderCallback.sol";
+import { WithdrawTrieVerifier } from "../libraries/verifier/WithdrawTrieVerifier.sol";
 
 /**
  * @title T1ERC7683Pull
@@ -21,6 +22,8 @@ contract T1ERC7683Pull is BasicSwap7683, OwnableUpgradeable, IT1XChainReaderCall
     address public counterpart;
 
     // ============ State Variables ============
+    mapping(uint256 batchIndex => bytes32 root) public proofOfReadRoots;
+    mapping(bytes32 requestId => uint256 batchIndex) public requestIdToBatchIndex;
     /// @notice Maps request IDs to order IDs for cross-chain read requests
     mapping(bytes32 => bytes32) public readRequestToOrderId;
     /// @notice Maps order IDs to verification status
@@ -39,6 +42,10 @@ contract T1ERC7683Pull is BasicSwap7683, OwnableUpgradeable, IT1XChainReaderCall
      * @param isSettled Whether the order is settled
      */
     event SettlementVerified(bytes32 indexed orderId, bool isSettled);
+    /**
+     * @notice Emitted when a proof of read root is committed
+     */
+    event ProofOfReadRootCommitted(uint256 batchIndex);
 
     // ============ Upgrade Gap ============
     /// @dev Reserved storage slots for upgradeability.
@@ -50,6 +57,7 @@ contract T1ERC7683Pull is BasicSwap7683, OwnableUpgradeable, IT1XChainReaderCall
     error EthNotAllowed();
     error SettlementFailed();
     error RefundFailed();
+    error InvalidProof();
 
     modifier onlyXChainRead() {
         if (msg.sender != address(xChainRead)) revert OnlyXChainRead();
@@ -109,25 +117,44 @@ contract T1ERC7683Pull is BasicSwap7683, OwnableUpgradeable, IT1XChainReaderCall
         readRequestToOrderId[requestId] = orderId;
 
         emit SettlementVerificationRequested(orderId, requestId);
-
-        return requestId;
     }
 
-    /// @notice Callback function for cross-chain read results
-    /// @param _originDomain The origin domain
-    /// @param _sender The sender address
-    /// @param requestId The ID of the read request
-    /// @param result The result of the read
-    function onT1XChainReaderResult(
-        uint32 _originDomain,
-        bytes32 _sender,
-        bytes32 requestId,
-        bytes calldata result
+    function onT1XChainReaderResult(bytes32 requestId, uint256 batchIndex, bytes32 newRoot) external onlyXChainRead {
+        requestIdToBatchIndex[requestId] = batchIndex;
+        proofOfReadRoots[batchIndex] = newRoot;
+
+        emit ProofOfReadRootCommitted(batchIndex);
+    }
+
+    // @notice Callback function for cross-chain read results
+    // @param _originDomain The origin domain
+    // @param _sender The sender address
+    // @param requestId The ID of the read request
+    // @param result The result of the read
+    function handleReadResultWithProof(
+        uint32 destinationDomain,
+        address targetContract,
+        bytes calldata callData,
+        address callback,
+        uint256 timestamp,
+        bytes32 sender,
+        bytes calldata result,
+        uint256 nonce,
+        bytes calldata proof
     )
         external
-        override
-        onlyXChainRead
     {
+        bytes32 xChainReadResultHash = keccak256(result);
+        bytes32 requestId = keccak256(
+            abi.encodePacked(block.chainid, destinationDomain, targetContract, callData, callback, timestamp, sender)
+        );
+        bytes32 leaf = keccak256(abi.encodePacked(xChainReadResultHash, requestId));
+        uint256 batchIndex = requestIdToBatchIndex[requestId];
+
+        if (!WithdrawTrieVerifier.verifyMerkleProof(proofOfReadRoots[batchIndex], leaf, nonce, proof)) {
+            revert InvalidProof();
+        }
+
         bytes32 orderId = readRequestToOrderId[requestId];
 
         // Ensure we have a valid order
@@ -142,7 +169,7 @@ contract T1ERC7683Pull is BasicSwap7683, OwnableUpgradeable, IT1XChainReaderCall
 
         // process the settlement if verified
         if (isSettled && orderStatus[orderId] == OPENED) {
-            _handle(_originDomain, _sender, result);
+            _handle(uint32(block.chainid), sender, result);
         }
 
         emit SettlementVerified(orderId, isSettled);
