@@ -4,10 +4,12 @@ pragma solidity ^0.8.25;
 import { OwnableUpgradeable } from "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
 import { Hyperlane7683Message } from "intents-framework/libs/Hyperlane7683Message.sol";
 import { BasicSwap7683 } from "intents-framework/BasicSwap7683.sol";
+import { OrderData, OrderEncoder } from "intents-framework/libs/OrderEncoder.sol";
 
 import { T1XChainReader } from "../libraries/xChain/T1XChainReader.sol";
 import { IT1XChainReaderCallback } from "../libraries/callbacks/IT1XChainReaderCallback.sol";
 import { WithdrawTrieVerifier } from "../libraries/verifier/WithdrawTrieVerifier.sol";
+import { TypeCasts } from "@hyperlane-xyz/libs/TypeCasts.sol";
 
 /**
  * @title T1ERC7683Pull
@@ -132,12 +134,7 @@ contract T1ERC7683Pull is BasicSwap7683, OwnableUpgradeable, IT1XChainReaderCall
     // @param requestId The ID of the read request
     // @param result The result of the read
     function handleReadResultWithProof(
-        uint32 destinationDomain,
-        address targetContract,
-        bytes calldata callData,
-        address callback,
-        uint256 timestamp,
-        bytes32 sender,
+        bytes32 requestId,
         bytes calldata result,
         uint256 nonce,
         bytes calldata proof
@@ -145,9 +142,6 @@ contract T1ERC7683Pull is BasicSwap7683, OwnableUpgradeable, IT1XChainReaderCall
         external
     {
         bytes32 xChainReadResultHash = keccak256(result);
-        bytes32 requestId = keccak256(
-            abi.encodePacked(block.chainid, destinationDomain, targetContract, callData, callback, timestamp, sender)
-        );
         bytes32 leaf = keccak256(abi.encodePacked(xChainReadResultHash, requestId));
         uint256 batchIndex = requestIdToBatchIndex[requestId];
 
@@ -169,13 +163,17 @@ contract T1ERC7683Pull is BasicSwap7683, OwnableUpgradeable, IT1XChainReaderCall
 
         // process the settlement if verified
         if (isSettled && orderStatus[orderId] == OPENED) {
-            _handle(uint32(block.chainid), sender, result);
+            // Get the order data to extract the destination domain and settler
+            (, bytes memory _orderData) = abi.decode(openOrders[orderId], (bytes32, bytes));
+            OrderData memory orderData = OrderEncoder.decode(_orderData);
+
+            _handle(orderData.destinationDomain, orderData.destinationSettler, result);
         }
 
         emit SettlementVerified(orderId, isSettled);
     }
 
-    function getFilledOrderStatus(bytes32 orderId) public view returns (bytes memory) {
+    function getFilledOrderStatus(bytes32 orderId) external view returns (bytes memory) {
         FilledOrder memory filledOrder = filledOrders[orderId];
         bytes memory _orderStatus;
         if (filledOrder.fillerData.length != 0) {
