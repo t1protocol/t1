@@ -7,7 +7,7 @@ import { ReentrancyGuardUpgradeable } from "@openzeppelin/contracts-upgradeable/
 
 import { IT1Messenger } from "../IT1Messenger.sol";
 import { T1XChainMessage } from "./T1XChainMessage.sol";
-import { IT1XChainReaderCallback } from "../callbacks/IT1XChainReaderCallback.sol";
+import { WithdrawTrieVerifier } from "../verifier/WithdrawTrieVerifier.sol";
 
 /**
  * @title T1XChainReader
@@ -25,7 +25,7 @@ contract T1XChainReader is OwnableUpgradeable, ReentrancyGuardUpgradeable {
      * @param gasLimit The gas limit for the read operation
      * @param minBlock the minimum block on the target chain that you will accept the read to be executed
      * @param callData The encoded function call
-     * @param callback Address that will receive the response
+     * @param nonce The nonce of the read request
      */
     event ReadRequested(
         bytes32 indexed requestId,
@@ -35,7 +35,7 @@ contract T1XChainReader is OwnableUpgradeable, ReentrancyGuardUpgradeable {
         uint256 gasLimit,
         uint64 minBlock,
         bytes callData,
-        address indexed callback
+        uint256 nonce
     );
 
     /**
@@ -67,6 +67,11 @@ contract T1XChainReader is OwnableUpgradeable, ReentrancyGuardUpgradeable {
      * @param result The result data from the read operation
      */
     event ReadResult(bytes32 indexed requestId, bytes result);
+    /**
+     * @notice Emitted when a proof of read root is committed
+     * @param batchIndex The batch index of the proof of read root
+     */
+    event ProofOfReadRootCommitted(uint256 batchIndex);
 
     // ============ State Variables ============
 
@@ -76,8 +81,8 @@ contract T1XChainReader is OwnableUpgradeable, ReentrancyGuardUpgradeable {
     /// @notice The T1 prover
     address public immutable prover;
 
-    /// @notice Maps request IDs to their callback addresses
-    mapping(bytes32 => address) public callbacks;
+    /// @notice Maps batch indices to their proof of read root
+    mapping(uint256 batchIndex => bytes32 root) public proofOfReadRoots;
 
     struct ReadRequest {
         uint32 destinationDomain;
@@ -85,7 +90,6 @@ contract T1XChainReader is OwnableUpgradeable, ReentrancyGuardUpgradeable {
         uint256 gasLimit;
         uint64 minBlock;
         bytes callData;
-        address callback;
     }
 
     // ============ Errors ============
@@ -94,6 +98,9 @@ contract T1XChainReader is OwnableUpgradeable, ReentrancyGuardUpgradeable {
     error OnlyCounterpart();
     error InvalidCallback();
     error ZeroAddress();
+
+    // ============ Variables ============
+    uint256 public nonce;
 
     // ============ Modifiers ============
 
@@ -123,12 +130,7 @@ contract T1XChainReader is OwnableUpgradeable, ReentrancyGuardUpgradeable {
      */
     function requestRead(ReadRequest calldata request) external payable nonReentrant returns (bytes32 requestId) {
         return _processReadRequest(
-            request.destinationDomain,
-            request.targetContract,
-            request.gasLimit,
-            request.minBlock,
-            request.callData,
-            request.callback
+            request.destinationDomain, request.targetContract, request.gasLimit, request.minBlock, request.callData
         );
     }
 
@@ -137,21 +139,18 @@ contract T1XChainReader is OwnableUpgradeable, ReentrancyGuardUpgradeable {
         address targetContract,
         uint256 gasLimit,
         uint64 minBlock,
-        bytes calldata callData,
-        address callback
+        bytes calldata callData
     )
         internal
         returns (bytes32 requestId)
     {
-        if (callback.code.length == 0) revert InvalidCallback();
-
         requestId = keccak256(
             abi.encodePacked(
-                block.chainid, destinationDomain, targetContract, callData, callback, block.timestamp, msg.sender
+                block.chainid, destinationDomain, targetContract, callData, block.timestamp, msg.sender, nonce
             )
         );
 
-        callbacks[requestId] = callback;
+        nonce++;
 
         bytes memory message = T1XChainMessage.encodeRead(
             destinationDomain, TypeCasts.addressToBytes32(targetContract), requestId, callData
@@ -162,9 +161,7 @@ contract T1XChainReader is OwnableUpgradeable, ReentrancyGuardUpgradeable {
 
         _sendMessage(destinationDomain, targetContract, gasLimit, requestReadSelector, message);
 
-        emit ReadRequested(
-            requestId, destinationDomain, targetContract, tx.origin, gasLimit, minBlock, callData, callback
-        );
+        emit ReadRequested(requestId, destinationDomain, targetContract, tx.origin, gasLimit, minBlock, callData, nonce);
     }
 
     function _sendMessage(
@@ -188,37 +185,31 @@ contract T1XChainReader is OwnableUpgradeable, ReentrancyGuardUpgradeable {
     }
 
     /**
-     * @notice Handles incoming messages from other chains
-     * @param requestId The ID assigned to the request when it was dispatched
+     * @notice Commit a new proof of read root
+     * @dev Access limited to the prover
      * @param batchIndex The batch index of the read request
      * @param newRoot The root of the proof of read merkle tree
      */
-    function handle(bytes32 requestId, uint256 batchIndex, bytes32 newRoot) external payable onlyProver {
-        _handleReadResponse(requestId, batchIndex, newRoot);
+    function commitProofOfReadRoot(uint256 batchIndex, bytes32 newRoot) external payable onlyProver {
+        proofOfReadRoots[batchIndex] = newRoot;
+        emit ProofOfReadRootCommitted(batchIndex);
     }
 
-    // ============ Internal Functions ============
+    function verifyProofOfRead(
+        uint256 batchIndex,
+        bytes32 requestId,
+        uint256 position,
+        bytes calldata result,
+        bytes calldata proof
+    )
+        external
+        view
+        returns (bool)
+    {
+        bytes32 root = proofOfReadRoots[batchIndex];
+        bytes32 xChainReadResultHash = keccak256(result);
+        bytes32 leaf = keccak256(abi.encodePacked(xChainReadResultHash, requestId));
 
-    /**
-     * @notice Handles an incoming read response
-     * @param requestId The ID assigned to the request when it was dispatched
-     * @param batchIndex The batch index of the read request
-     * @param newRoot The root of the proof of read merkle tree
-     */
-    function _handleReadResponse(bytes32 requestId, uint256 batchIndex, bytes32 newRoot) internal {
-        address callback = callbacks[requestId];
-
-        // If there's a valid callback, forward the result
-        if (callback != address(0)) {
-            delete callbacks[requestId];
-
-            try IT1XChainReaderCallback(callback).onT1XChainReaderResult(requestId, batchIndex, newRoot) {
-                emit ReadSucceeded(requestId, batchIndex);
-            } catch Error(string memory reason) {
-                emit ReadFailed(requestId, batchIndex, reason);
-            } catch (bytes memory reason) {
-                emit ReadFailed(requestId, batchIndex, reason);
-            }
-        }
+        return WithdrawTrieVerifier.verifyMerkleProof(root, leaf, position, proof);
     }
 }

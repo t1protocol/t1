@@ -7,24 +7,20 @@ import { BasicSwap7683 } from "intents-framework/BasicSwap7683.sol";
 import { OrderData, OrderEncoder } from "intents-framework/libs/OrderEncoder.sol";
 
 import { T1XChainReader } from "../libraries/xChain/T1XChainReader.sol";
-import { IT1XChainReaderCallback } from "../libraries/callbacks/IT1XChainReaderCallback.sol";
-import { WithdrawTrieVerifier } from "../libraries/verifier/WithdrawTrieVerifier.sol";
-import { TypeCasts } from "@hyperlane-xyz/libs/TypeCasts.sol";
-
 /**
  * @title T1ERC7683Pull
  * @author t1 Labs
  * @notice This contract extends BasicSwap7683 with pull-based settlement using t1 cross-chain reads
  * @dev Implements both push-based messaging and pull-based verification for orders
  */
-contract T1ERC7683Pull is BasicSwap7683, OwnableUpgradeable, IT1XChainReaderCallback {
+
+contract T1ERC7683Pull is BasicSwap7683, OwnableUpgradeable {
     // ============ Constants ============
     uint32 public immutable localDomain;
     T1XChainReader public immutable xChainRead;
     address public counterpart;
 
     // ============ State Variables ============
-    mapping(uint256 batchIndex => bytes32 root) public proofOfReadRoots;
     mapping(bytes32 requestId => uint256 batchIndex) public requestIdToBatchIndex;
     /// @notice Maps request IDs to order IDs for cross-chain read requests
     mapping(bytes32 => bytes32) public readRequestToOrderId;
@@ -44,27 +40,17 @@ contract T1ERC7683Pull is BasicSwap7683, OwnableUpgradeable, IT1XChainReaderCall
      * @param isSettled Whether the order is settled
      */
     event SettlementVerified(bytes32 indexed orderId, bool isSettled);
-    /**
-     * @notice Emitted when a proof of read root is committed
-     */
-    event ProofOfReadRootCommitted(uint256 batchIndex);
 
     // ============ Upgrade Gap ============
     /// @dev Reserved storage slots for upgradeability.
     uint256[47] private __GAP;
 
     // ============ Errors ============
-    error OnlyXChainRead();
     error FunctionNotImplemented(string functionName);
     error EthNotAllowed();
     error SettlementFailed();
     error RefundFailed();
     error InvalidProof();
-
-    modifier onlyXChainRead() {
-        if (msg.sender != address(xChainRead)) revert OnlyXChainRead();
-        _;
-    }
 
     /// @notice Initializes the contract with the specified dependencies
     /// @param _permit2 The address of the permit2 contract
@@ -109,8 +95,7 @@ contract T1ERC7683Pull is BasicSwap7683, OwnableUpgradeable, IT1XChainReaderCall
             targetContract: counterpart,
             gasLimit: gasLimit,
             minBlock: 0,
-            callData: callData,
-            callback: address(this)
+            callData: callData
         });
 
         // Request the cross-chain read
@@ -121,31 +106,22 @@ contract T1ERC7683Pull is BasicSwap7683, OwnableUpgradeable, IT1XChainReaderCall
         emit SettlementVerificationRequested(orderId, requestId);
     }
 
-    function onT1XChainReaderResult(bytes32 requestId, uint256 batchIndex, bytes32 newRoot) external onlyXChainRead {
-        requestIdToBatchIndex[requestId] = batchIndex;
-        proofOfReadRoots[batchIndex] = newRoot;
-
-        emit ProofOfReadRootCommitted(batchIndex);
-    }
-
-    // @notice Callback function for cross-chain read results
-    // @param _originDomain The origin domain
-    // @param _sender The sender address
-    // @param requestId The ID of the read request
-    // @param result The result of the read
+    /// @notice Use result of proof of read to handle the order depending on the result
+    /// @param batchIndex The batch index of the read request
+    /// @param requestId The ID of the read request
+    /// @param result The result of the read
+    /// @param position The position of the read request in the merkle tree
+    /// @param proof The proof of the read request
     function handleReadResultWithProof(
+        uint256 batchIndex,
         bytes32 requestId,
+        uint256 position,
         bytes calldata result,
-        uint256 nonce,
         bytes calldata proof
     )
         external
     {
-        bytes32 xChainReadResultHash = keccak256(result);
-        bytes32 leaf = keccak256(abi.encodePacked(xChainReadResultHash, requestId));
-        uint256 batchIndex = requestIdToBatchIndex[requestId];
-
-        if (!WithdrawTrieVerifier.verifyMerkleProof(proofOfReadRoots[batchIndex], leaf, nonce, proof)) {
+        if (!xChainRead.verifyProofOfRead(batchIndex, requestId, position, result, proof)) {
             revert InvalidProof();
         }
 

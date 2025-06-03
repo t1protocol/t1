@@ -7,22 +7,8 @@ import { OrderData, OrderEncoder } from "intents-framework/libs/OrderEncoder.sol
 import { OnchainCrossChainOrder } from "intents-framework/ERC7683/IERC7683.sol";
 
 import { T1XChainReader } from "../../libraries/xChain/T1XChainReader.sol";
-import { IT1XChainReaderCallback } from "../../libraries/callbacks/IT1XChainReaderCallback.sol";
 import { T1BasicSwapE2E } from "./T1BasicSwapE2E.t.sol";
 import { T1ERC7683Pull } from "../../7683/T1ERC7683Pull.sol";
-
-contract MockCallbackContract is IT1XChainReaderCallback {
-    function onT1XChainReaderResult(
-        bytes32, /*requestId*/
-        uint256, /*batchIndex*/
-        bytes32 /*newRoot*/
-    )
-        external
-        override
-    {
-        require(false, "revert!");
-    }
-}
 
 contract T1XChainReaderTest is T1BasicSwapE2E {
     using TypeCasts for address;
@@ -31,7 +17,6 @@ contract T1XChainReaderTest is T1BasicSwapE2E {
     T1XChainReader internal destinationReader;
     T1ERC7683Pull internal L1T17683Pull;
     T1ERC7683Pull internal L2T17683Pull;
-    MockCallbackContract internal mockCallbackContract;
 
     function setUp() public virtual override {
         super.setUp();
@@ -61,20 +46,19 @@ contract T1XChainReaderTest is T1BasicSwapE2E {
         );
         L1T17683Pull.initialize(address(L2T17683Pull));
         L2T17683Pull.initialize(address(L1T17683Pull));
-        mockCallbackContract = new MockCallbackContract();
     }
 
     // 1. user opens intent on source chain
     // 2. solver fills intent on destination chain
     // 3a. solver calls 7683 verifySettlement on source chain, triggering T1XChainReader.requestRead
     // 4a. relayer picks up message and calls getFilledOrderStatus on destination chain
-    // 4b. relayer calls T1XChainReader.handle with the merkle proof containing the result of the read which calls
-    // onT1XChainReaderResult on callback address
-    // 4c. onT1XChainReaderResult on 7683 contract writes the new merkle root for the target batch
+    // 4b. relayer calls T1XChainReader.commitProofOfReadRoot with the merkle proof containing the result of the read
+    // that
+    // writes the new merkle root for the target batch
     // 5. Solver calls handleReadResultWithProof on 7683 contract with merkle proof, settles intent and releases funds
     function test_ERC7683PullSettlementFlow() public {
         uint256 batchIndex = 0;
-        uint256 nonce = 0;
+        uint256 position = 0;
 
         (, bytes32 orderId, bytes32 requestId) = _openAndFillOrder();
 
@@ -84,11 +68,11 @@ contract T1XChainReaderTest is T1BasicSwapE2E {
             bytes memory result = L2T17683Pull.getFilledOrderStatus(orderId);
 
             // Generate merkle tree and proof for the result
-            (bytes32 root, bytes memory proof) = _generateMerkleTree(requestId, result, nonce);
+            (bytes32 root, bytes memory proof) = _generateMerkleTree(requestId, result, position);
 
             uint256 balanceSolverBeforeSettle = inputToken.balanceOf(address(vegeta));
-            originReader.handle(requestId, batchIndex, root);
-            L1T17683Pull.handleReadResultWithProof(requestId, result, nonce, proof);
+            originReader.commitProofOfReadRoot(batchIndex, root);
+            L1T17683Pull.handleReadResultWithProof(batchIndex, requestId, position, result, proof);
             uint256 balanceSolverAfterSettle = inputToken.balanceOf(address(vegeta));
 
             assertEq(
@@ -102,7 +86,7 @@ contract T1XChainReaderTest is T1BasicSwapE2E {
 
     function test_ERC7683PullSettlementFlowWithAnotherTreePosition() public {
         uint256 batchIndex = 0;
-        uint256 nonce = 3;
+        uint256 position = 3;
 
         (, bytes32 orderId, bytes32 requestId) = _openAndFillOrder();
 
@@ -111,11 +95,11 @@ contract T1XChainReaderTest is T1BasicSwapE2E {
             // Construct the read request calldata
             bytes memory result = L2T17683Pull.getFilledOrderStatus(orderId);
             // Generate merkle tree and proof for the result
-            (bytes32 root, bytes memory proof) = _generateMerkleTree(requestId, result, nonce);
+            (bytes32 root, bytes memory proof) = _generateMerkleTree(requestId, result, position);
 
             uint256 balanceSolverBeforeSettle = inputToken.balanceOf(address(vegeta));
-            originReader.handle(requestId, batchIndex, root);
-            L1T17683Pull.handleReadResultWithProof(requestId, result, nonce, proof);
+            originReader.commitProofOfReadRoot(batchIndex, root);
+            L1T17683Pull.handleReadResultWithProof(batchIndex, requestId, position, result, proof);
             uint256 balanceSolverAfterSettle = inputToken.balanceOf(address(vegeta));
 
             assertEq(
@@ -129,29 +113,29 @@ contract T1XChainReaderTest is T1BasicSwapE2E {
 
     function test_revertWithInvalidProofData() public {
         uint256 batchIndex = 0;
-        uint256 nonce = 0;
+        uint256 position = 0;
 
         (, bytes32 orderId, bytes32 requestId) = _openAndFillOrder();
 
         bytes memory result = L2T17683Pull.getFilledOrderStatus(orderId);
-        (bytes32 root,) = _generateMerkleTree(requestId, result, nonce);
-        originReader.handle(requestId, batchIndex, root);
+        (bytes32 root,) = _generateMerkleTree(requestId, result, position);
+        originReader.commitProofOfReadRoot(batchIndex, root);
 
         bytes memory invalidProof = hex"11";
 
         vm.expectRevert("Invalid proof");
-        L1T17683Pull.handleReadResultWithProof(requestId, result, nonce, invalidProof);
+        L1T17683Pull.handleReadResultWithProof(batchIndex, requestId, position, result, invalidProof);
     }
 
     function test_revertWithInvalidProof() public {
         uint256 batchIndex = 0;
-        uint256 nonce = 0;
+        uint256 position = 0;
 
         (, bytes32 orderId, bytes32 requestId) = _openAndFillOrder();
 
         bytes memory result = L2T17683Pull.getFilledOrderStatus(orderId);
-        (bytes32 root,) = _generateMerkleTree(requestId, result, nonce);
-        originReader.handle(requestId, batchIndex, root);
+        (bytes32 root,) = _generateMerkleTree(requestId, result, position);
+        originReader.commitProofOfReadRoot(batchIndex, root);
 
         // Use an invalid proof that is the correct length (64 bytes) but contains wrong data
         bytes memory invalidProof = abi.encodePacked(
@@ -160,12 +144,12 @@ contract T1XChainReaderTest is T1BasicSwapE2E {
         );
 
         vm.expectRevert(T1ERC7683Pull.InvalidProof.selector);
-        L1T17683Pull.handleReadResultWithProof(requestId, result, nonce, invalidProof);
+        L1T17683Pull.handleReadResultWithProof(batchIndex, requestId, position, result, invalidProof);
     }
 
     function test_revertWithInvalidResultData() public {
         uint256 batchIndex = 0;
-        uint256 nonce = 0;
+        uint256 position = 0;
 
         (,, bytes32 requestId) = _openAndFillOrder();
 
@@ -174,31 +158,31 @@ contract T1XChainReaderTest is T1BasicSwapE2E {
         // Construct read request calldata
         bytes memory result = hex"11";
         // Generate merkle tree and proof for the result
-        (bytes32 root, bytes memory proof) = _generateMerkleTree(requestId, result, nonce);
+        (bytes32 root, bytes memory proof) = _generateMerkleTree(requestId, result, position);
 
         // Set up the proof root in the T1ERC7683Pull contract
-        originReader.handle(requestId, batchIndex, root);
+        originReader.commitProofOfReadRoot(batchIndex, root);
 
         // 5. Now test handleReadResultWithProof with invalid result data
         vm.expectRevert();
-        L1T17683Pull.handleReadResultWithProof(requestId, result, nonce, proof);
+        L1T17683Pull.handleReadResultWithProof(batchIndex, requestId, position, result, proof);
     }
 
     function test_SameProofShouldNotSettleTwice() public {
         uint256 batchIndex = 0;
-        uint256 nonce = 0;
+        uint256 position = 0;
 
         (, bytes32 orderId, bytes32 requestId) = _openAndFillOrder();
 
         {
             bytes memory result = L2T17683Pull.getFilledOrderStatus(orderId);
-            (bytes32 root, bytes memory proof) = _generateMerkleTree(requestId, result, nonce);
+            (bytes32 root, bytes memory proof) = _generateMerkleTree(requestId, result, position);
 
-            originReader.handle(requestId, batchIndex, root);
-            L1T17683Pull.handleReadResultWithProof(requestId, result, nonce, proof);
+            originReader.commitProofOfReadRoot(batchIndex, root);
+            L1T17683Pull.handleReadResultWithProof(batchIndex, requestId, position, result, proof);
 
             uint256 balanceSolverBeforeSecondSettle = inputToken.balanceOf(address(vegeta));
-            L1T17683Pull.handleReadResultWithProof(requestId, result, nonce, proof);
+            L1T17683Pull.handleReadResultWithProof(batchIndex, requestId, position, result, proof);
             uint256 balanceSolverAfterSecondSettle = inputToken.balanceOf(address(vegeta));
 
             assertEq(
@@ -212,7 +196,7 @@ contract T1XChainReaderTest is T1BasicSwapE2E {
 
     function test_settlementWithEmptyResultData() public {
         uint256 batchIndex = 0;
-        uint256 nonce = 0;
+        uint256 position = 0;
 
         (, bytes32 orderId, bytes32 requestId) = _openAndFillOrder();
 
@@ -221,57 +205,21 @@ contract T1XChainReaderTest is T1BasicSwapE2E {
         // Construct read request calldata
         bytes memory result = hex"";
         // Generate merkle tree and proof for the result
-        (bytes32 root, bytes memory proof) = _generateMerkleTree(requestId, result, nonce);
+        (bytes32 root, bytes memory proof) = _generateMerkleTree(requestId, result, position);
 
         // Set up the proof root in the T1ERC7683Pull contract
-        originReader.handle(requestId, batchIndex, root);
+        originReader.commitProofOfReadRoot(batchIndex, root);
 
         // 5. Now test handleReadResultWithProof with empty result data
         uint256 balanceSolverBeforeSettle = inputToken.balanceOf(address(vegeta));
 
         vm.expectEmit(true, true, true, true);
         emit T1ERC7683Pull.SettlementVerified(orderId, false);
-        L1T17683Pull.handleReadResultWithProof(requestId, result, nonce, proof);
+        L1T17683Pull.handleReadResultWithProof(batchIndex, requestId, position, result, proof);
 
         uint256 balanceSolverAfterSettle = inputToken.balanceOf(address(vegeta));
 
         assertEq(balanceSolverBeforeSettle, balanceSolverAfterSettle, "vegeta balance should not change");
-    }
-
-    function test_handleSucceededCallback() public {
-        uint256 batchIndex = 0;
-        (, bytes32 orderId, bytes32 requestId) = _openAndFillOrder();
-
-        // 4. Process the read request on L2 (destination chain) & Relay the result back to L1
-        {
-            // Construct the read request calldata
-            bytes memory result = L2T17683Pull.getFilledOrderStatus(orderId);
-            // Generate merkle tree and proof for the result
-            (bytes32 root,) = _generateMerkleTree(requestId, result, 0);
-
-            vm.expectEmit(true, true, true, true);
-            emit T1XChainReader.ReadSucceeded(requestId, batchIndex);
-            originReader.handle(requestId, batchIndex, root);
-        }
-    }
-
-    function test_handleRevertStringFailedCallback() public {
-        uint256 batchIndex = 0;
-
-        T1XChainReader.ReadRequest memory readRequest = T1XChainReader.ReadRequest({
-            destinationDomain: uint32(0),
-            targetContract: address(0),
-            gasLimit: 100_000,
-            minBlock: 0,
-            callData: hex"",
-            callback: address(mockCallbackContract)
-        });
-        bytes32 requestId = originReader.requestRead(readRequest);
-
-        string memory revertReason = "revert!";
-        vm.expectEmit(true, true, true, true);
-        emit T1XChainReader.ReadFailed(requestId, batchIndex, revertReason);
-        originReader.handle(requestId, batchIndex, hex"");
     }
 
     function test_onlyProver_revert() public {
@@ -283,7 +231,7 @@ contract T1XChainReaderTest is T1BasicSwapE2E {
 
         vm.prank(address(0xbeef));
         vm.expectRevert(T1XChainReader.OnlyProver.selector);
-        originReader.handle(requestId, batchIndex, root);
+        originReader.commitProofOfReadRoot(batchIndex, root);
     }
 
     function _openAndFillOrder() internal returns (OrderData memory, bytes32 orderId, bytes32 requestId) {
@@ -318,24 +266,24 @@ contract T1XChainReaderTest is T1BasicSwapE2E {
     /// @dev Generate a merkle tree with depth 2 (4 leaves) including the result value and a proof
     /// @param requestId Proof of read request id
     /// @param result Result of the read
-    /// @param nonce Nonce of the leaf where result is stored (0-3)
+    /// @param position position of the leaf where result is stored (0-3)
     /// @return root Root of the merkle tree
     /// @return proof Proof of for the leaf where result is stored
     function _generateMerkleTree(
         bytes32 requestId,
         bytes memory result,
-        uint256 nonce
+        uint256 position
     )
         private
         pure
         returns (bytes32 root, bytes memory proof)
     {
-        require(nonce < 4, "Nonce must be < 4 for depth 2 tree");
+        require(position < 4, "position must be < 4 for depth 2 tree");
 
         // Generate 4 leaves, one for the result and three for the mock leaves
         bytes32[] memory leafs = new bytes32[](4);
         for (uint256 i = 0; i < leafs.length; i++) {
-            if (i == nonce) {
+            if (i == position) {
                 bytes32 xChainReadResultHash = keccak256(result);
                 // Use abi.encodePacked to match T1ERC7683Pull.sol line 138
                 leafs[i] = keccak256(abi.encodePacked(xChainReadResultHash, requestId));
@@ -352,23 +300,23 @@ contract T1XChainReaderTest is T1BasicSwapE2E {
 
         root = _efficientHash(level1[0], level1[1]);
 
-        // Generate proof for the target leaf at position nonce
+        // Generate proof for the target leaf at position position
         bytes32[] memory proofElements = new bytes32[](2);
-        uint256 currentNonce = nonce;
+        uint256 currentposition = position;
 
         // Leaf sibling
-        if (currentNonce % 2 == 0) {
-            proofElements[0] = leafs[currentNonce + 1];
+        if (currentposition % 2 == 0) {
+            proofElements[0] = leafs[currentposition + 1];
         } else {
-            proofElements[0] = leafs[currentNonce - 1];
+            proofElements[0] = leafs[currentposition - 1];
         }
-        currentNonce /= 2;
+        currentposition /= 2;
 
         // Intermediate node sibling
-        if (currentNonce % 2 == 0) {
-            proofElements[1] = level1[currentNonce + 1];
+        if (currentposition % 2 == 0) {
+            proofElements[1] = level1[currentposition + 1];
         } else {
-            proofElements[1] = level1[currentNonce - 1];
+            proofElements[1] = level1[currentposition - 1];
         }
 
         // Encode proof as concatenated bytes32 values (WithdrawTrieVerifier expects this format)
