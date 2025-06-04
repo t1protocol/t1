@@ -7,29 +7,29 @@ import { ERC20 } from "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 import { TypeCasts } from "@hyperlane-xyz/libs/TypeCasts.sol";
 import { OrderData, OrderEncoder } from "intents-framework/libs/OrderEncoder.sol";
 import { OnchainCrossChainOrder } from "intents-framework/ERC7683/IERC7683.sol";
-import { T1ERC7683Pull } from "../../../src/7683/T1ERC7683Pull.sol";
+import { T1ERC7683 } from "../../../src/7683/T1ERC7683.sol";
 import { T1Constants } from "../../../src/libraries/constants/T1Constants.sol";
 
 uint32 constant ORIGIN_CHAIN = uint32(T1Constants.L1_CHAIN_ID);
 uint32 constant HUNDRED_USDT = 100 * 1e6;
 
-// T1ERC7683PullL1ToL2
+// T1ERC7683L1ToL2
 
 // Step 1: Setup Alice's account, sign and relay intent
 contract AliceSetupScript is Script {
     uint32 private DESTINATION_CHAIN = uint32(vm.envUint("CHAIN_ID_L2"));
-    T1ERC7683Pull public l1Router;
+    T1ERC7683 public l1_7683;
 
     function run() external {
         vm.createSelectFork(vm.rpcUrl("sepolia"));
-        l1Router = T1ERC7683Pull(vm.envAddress("L1_T1_PULL_BASED_7683_PROXY_ADDR"));
+        l1_7683 = T1ERC7683(vm.envAddress("L1_T1_PULL_BASED_7683_PROXY_ADDR"));
         uint256 alicePk = vm.envUint("ALICE_PRIVATE_KEY");
         address alice = vm.addr(alicePk);
         vm.startBroadcast(alicePk);
 
         ERC20 inputToken = ERC20(vm.envAddress("L1_USDT_ADDR"));
         ERC20 outputToken = ERC20(vm.envAddress("L2_USDT_ADDR"));
-        inputToken.approve(address(l1Router), type(uint256).max);
+        inputToken.approve(address(l1_7683), type(uint256).max);
 
         OrderData memory orderData = OrderData({
             sender: TypeCasts.addressToBytes32(alice),
@@ -53,7 +53,7 @@ contract AliceSetupScript is Script {
         OnchainCrossChainOrder memory order =
             _prepareOnchainOrder(encodedOrder, orderData.fillDeadline, OrderEncoder.orderDataType());
 
-        l1Router.open(order);
+        l1_7683.open(order);
 
         bytes32 id = OrderEncoder.id(orderData);
         console2.logString("orderId: ");
@@ -88,7 +88,7 @@ contract SolverFillScript is Script {
 
         vm.startBroadcast(solverPk);
 
-        T1ERC7683Pull l2Router = T1ERC7683Pull(vm.envAddress("L1_T1_PULL_BASED_7683_PROXY_ADDR"));
+        T1ERC7683 l2_7683 = T1ERC7683(vm.envAddress("L1_T1_PULL_BASED_7683_PROXY_ADDR"));
         // NOTE - orderId logged from the first step goes here (remove 0x first)
         bytes32 orderId = hex"";
 
@@ -97,18 +97,18 @@ contract SolverFillScript is Script {
 
         // Approve output tokens
         ERC20(vm.envAddress("L2_USDT_ADDR")).approve(
-            address(l2Router),
+            address(l2_7683),
             HUNDRED_USDT // match amount from order
         );
 
         bytes memory fillerData = abi.encode(TypeCasts.addressToBytes32(solver));
-        l2Router.fill(orderId, originData, fillerData);
+        l2_7683.fill(orderId, originData, fillerData);
 
         vm.stopBroadcast();
     }
 }
 
-// Step 3: Pull Based Settlement and Relay
+// Step 3:  Based Settlement and Relay
 contract SettlementScript is Script {
     uint32 private DESTINATION_CHAIN = uint32(vm.envUint("CHAIN_ID_L2"));
 
@@ -118,12 +118,12 @@ contract SettlementScript is Script {
 
         vm.startBroadcast(settlerPk);
 
-        T1ERC7683Pull l1Router = T1ERC7683Pull(vm.envAddress("L1_T1_PULL_BASED_7683_PROXY_ADDR"));
+        T1ERC7683 l1_7683 = T1ERC7683(vm.envAddress("L1_T1_PULL_BASED_7683_PROXY_ADDR"));
 
         // NOTE - orderId logged from the first step goes here (remove 0x first)
         bytes32 orderId = hex"";
 
-        l1Router.verifySettlement(DESTINATION_CHAIN, 1_000_000, orderId);
+        l1_7683.verifySettlement(DESTINATION_CHAIN, 1_000_000, orderId);
 
         vm.stopBroadcast();
     }

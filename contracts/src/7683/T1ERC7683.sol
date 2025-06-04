@@ -8,13 +8,13 @@ import { OrderData, OrderEncoder } from "intents-framework/libs/OrderEncoder.sol
 
 import { T1XChainReader } from "../libraries/xChain/T1XChainReader.sol";
 /**
- * @title T1ERC7683Pull
+ * @title T1ERC7683
  * @author t1 Labs
  * @notice This contract extends BasicSwap7683 with pull-based settlement using t1 cross-chain reads
  * @dev Implements both push-based messaging and pull-based verification for orders
  */
 
-contract T1ERC7683Pull is BasicSwap7683, OwnableUpgradeable {
+contract T1ERC7683 is BasicSwap7683, OwnableUpgradeable {
     // ============ Constants ============
     uint32 public immutable localDomain;
     T1XChainReader public immutable xChainRead;
