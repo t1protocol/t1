@@ -4,23 +4,24 @@ pragma solidity ^0.8.25;
 import { OwnableUpgradeable } from "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
 import { Hyperlane7683Message } from "intents-framework/libs/Hyperlane7683Message.sol";
 import { BasicSwap7683 } from "intents-framework/BasicSwap7683.sol";
+import { OrderData, OrderEncoder } from "intents-framework/libs/OrderEncoder.sol";
 
 import { T1XChainReader } from "../libraries/xChain/T1XChainReader.sol";
-import { IT1XChainReaderCallback } from "../libraries/callbacks/IT1XChainReaderCallback.sol";
-
 /**
  * @title T1ERC7683Pull
  * @author t1 Labs
  * @notice This contract extends BasicSwap7683 with pull-based settlement using t1 cross-chain reads
  * @dev Implements both push-based messaging and pull-based verification for orders
  */
-contract T1ERC7683Pull is BasicSwap7683, OwnableUpgradeable, IT1XChainReaderCallback {
+
+contract T1ERC7683Pull is BasicSwap7683, OwnableUpgradeable {
     // ============ Constants ============
     uint32 public immutable localDomain;
     T1XChainReader public immutable xChainRead;
     address public counterpart;
 
     // ============ State Variables ============
+    mapping(bytes32 requestId => uint256 batchIndex) public requestIdToBatchIndex;
     /// @notice Maps request IDs to order IDs for cross-chain read requests
     mapping(bytes32 => bytes32) public readRequestToOrderId;
     /// @notice Maps order IDs to verification status
@@ -45,16 +46,10 @@ contract T1ERC7683Pull is BasicSwap7683, OwnableUpgradeable, IT1XChainReaderCall
     uint256[47] private __GAP;
 
     // ============ Errors ============
-    error OnlyXChainRead();
     error FunctionNotImplemented(string functionName);
     error EthNotAllowed();
     error SettlementFailed();
     error RefundFailed();
-
-    modifier onlyXChainRead() {
-        if (msg.sender != address(xChainRead)) revert OnlyXChainRead();
-        _;
-    }
 
     /// @notice Initializes the contract with the specified dependencies
     /// @param _permit2 The address of the permit2 contract
@@ -99,8 +94,7 @@ contract T1ERC7683Pull is BasicSwap7683, OwnableUpgradeable, IT1XChainReaderCall
             targetContract: counterpart,
             gasLimit: gasLimit,
             minBlock: 0,
-            callData: callData,
-            callback: address(this)
+            callData: callData
         });
 
         // Request the cross-chain read
@@ -109,25 +103,14 @@ contract T1ERC7683Pull is BasicSwap7683, OwnableUpgradeable, IT1XChainReaderCall
         readRequestToOrderId[requestId] = orderId;
 
         emit SettlementVerificationRequested(orderId, requestId);
-
-        return requestId;
     }
 
-    /// @notice Callback function for cross-chain read results
-    /// @param _originDomain The origin domain
-    /// @param _sender The sender address
-    /// @param requestId The ID of the read request
-    /// @param result The result of the read
-    function onT1XChainReaderResult(
-        uint32 _originDomain,
-        bytes32 _sender,
-        bytes32 requestId,
-        bytes calldata result
-    )
-        external
-        override
-        onlyXChainRead
-    {
+    /// @notice Use result of proof of read to handle the order depending on the result
+    /// @param encodedProofOfRead The encoded proof of read which is formatted as following:
+    /// abi.encode(uint256 batchIndex, bytes32 requestId, uint256 position, bytes result, bytes proof)
+    function handleReadResultWithProof(bytes calldata encodedProofOfRead) external {
+        (bytes32 requestId, bytes memory result) = xChainRead.verifyProofOfRead(encodedProofOfRead);
+
         bytes32 orderId = readRequestToOrderId[requestId];
 
         // Ensure we have a valid order
@@ -142,13 +125,17 @@ contract T1ERC7683Pull is BasicSwap7683, OwnableUpgradeable, IT1XChainReaderCall
 
         // process the settlement if verified
         if (isSettled && orderStatus[orderId] == OPENED) {
-            _handle(_originDomain, _sender, result);
+            // Get the order data to extract the destination domain and settler
+            (, bytes memory _orderData) = abi.decode(openOrders[orderId], (bytes32, bytes));
+            OrderData memory orderData = OrderEncoder.decode(_orderData);
+
+            _handle(orderData.destinationDomain, orderData.destinationSettler, result);
         }
 
         emit SettlementVerified(orderId, isSettled);
     }
 
-    function getFilledOrderStatus(bytes32 orderId) public view returns (bytes memory) {
+    function getFilledOrderStatus(bytes32 orderId) external view returns (bytes memory) {
         FilledOrder memory filledOrder = filledOrders[orderId];
         bytes memory _orderStatus;
         if (filledOrder.fillerData.length != 0) {
@@ -179,9 +166,9 @@ contract T1ERC7683Pull is BasicSwap7683, OwnableUpgradeable, IT1XChainReaderCall
     /// @param _originDomain The domain from which the message originates
     /// @param _sender The address of the sender on the origin domain
     /// @param _message The encoded message received via t1
-    function _handle(uint32 _originDomain, bytes32 _sender, bytes calldata _message) internal {
+    function _handle(uint32 _originDomain, bytes32 _sender, bytes memory _message) internal {
         (bool _settle, bytes32[] memory _orderIds, bytes[] memory _ordersFillerData) =
-            Hyperlane7683Message.decode(_message);
+            abi.decode(_message, (bool, bytes32[], bytes[]));
 
         for (uint256 i = 0; i < _orderIds.length; i++) {
             if (_settle) {

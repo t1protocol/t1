@@ -7,7 +7,7 @@ import { ReentrancyGuardUpgradeable } from "@openzeppelin/contracts-upgradeable/
 
 import { IT1Messenger } from "../IT1Messenger.sol";
 import { T1XChainMessage } from "./T1XChainMessage.sol";
-import { IT1XChainReaderCallback } from "../callbacks/IT1XChainReaderCallback.sol";
+import { WithdrawTrieVerifier } from "../verifier/WithdrawTrieVerifier.sol";
 
 /**
  * @title T1XChainReader
@@ -25,7 +25,7 @@ contract T1XChainReader is OwnableUpgradeable, ReentrancyGuardUpgradeable {
      * @param gasLimit The gas limit for the read operation
      * @param minBlock the minimum block on the target chain that you will accept the read to be executed
      * @param callData The encoded function call
-     * @param callback Address that will receive the response
+     * @param nonce The nonce of the read request
      */
     event ReadRequested(
         bytes32 indexed requestId,
@@ -35,38 +35,14 @@ contract T1XChainReader is OwnableUpgradeable, ReentrancyGuardUpgradeable {
         uint256 gasLimit,
         uint64 minBlock,
         bytes callData,
-        address indexed callback
+        uint256 nonce
     );
 
     /**
-     * @notice Emitted when a cross-chain read response succeeds
-     * @param requestId Unique identifier for the original request
-     * @param result The result data from the read operation
+     * @notice Emitted when a proof of read root is committed
+     * @param batchIndex The batch index of the proof of read root
      */
-    event ReadSucceeded(bytes32 indexed requestId, bytes result);
-
-    /**
-     * @notice Emitted when a cross-chain read response fails with bytes revert
-     * @param requestId Unique identifier for the original request
-     * @param result The result data from the read operation
-     * @param reason The reason the call failed
-     */
-    event ReadFailed(bytes32 indexed requestId, bytes result, bytes reason);
-
-    /**
-     * @notice Emitted when a cross-chain read response fails with string revert
-     * @param requestId Unique identifier for the original request
-     * @param result The result data from the read operation
-     * @param reason The reason the call failed
-     */
-    event ReadFailed(bytes32 indexed requestId, bytes result, string reason);
-
-    /**
-     * @notice Emitted when a cross-chain read response is received
-     * @param requestId Unique identifier for the original request
-     * @param result The result data from the read operation
-     */
-    event ReadResult(bytes32 indexed requestId, bytes result);
+    event ProofOfReadRootCommitted(uint256 batchIndex);
 
     // ============ State Variables ============
 
@@ -75,9 +51,11 @@ contract T1XChainReader is OwnableUpgradeable, ReentrancyGuardUpgradeable {
 
     /// @notice The T1 prover
     address public immutable prover;
+    /// @notice The next batch index to use by the proverfor the proof of read
+    uint256 public nextBatchIndex;
 
-    /// @notice Maps request IDs to their callback addresses
-    mapping(bytes32 => address) public callbacks;
+    /// @notice Maps batch indices to their proof of read root
+    mapping(uint256 batchIndex => bytes32 root) public proofOfReadRoots;
 
     struct ReadRequest {
         uint32 destinationDomain;
@@ -85,15 +63,17 @@ contract T1XChainReader is OwnableUpgradeable, ReentrancyGuardUpgradeable {
         uint256 gasLimit;
         uint64 minBlock;
         bytes callData;
-        address callback;
     }
 
     // ============ Errors ============
 
     error OnlyProver();
-    error OnlyCounterpart();
-    error InvalidCallback();
     error ZeroAddress();
+    error InvalidBatchIndex();
+    error InvalidProof();
+
+    // ============ Variables ============
+    uint256 public nonce;
 
     // ============ Modifiers ============
 
@@ -123,12 +103,7 @@ contract T1XChainReader is OwnableUpgradeable, ReentrancyGuardUpgradeable {
      */
     function requestRead(ReadRequest calldata request) external payable nonReentrant returns (bytes32 requestId) {
         return _processReadRequest(
-            request.destinationDomain,
-            request.targetContract,
-            request.gasLimit,
-            request.minBlock,
-            request.callData,
-            request.callback
+            request.destinationDomain, request.targetContract, request.gasLimit, request.minBlock, request.callData
         );
     }
 
@@ -137,21 +112,18 @@ contract T1XChainReader is OwnableUpgradeable, ReentrancyGuardUpgradeable {
         address targetContract,
         uint256 gasLimit,
         uint64 minBlock,
-        bytes calldata callData,
-        address callback
+        bytes calldata callData
     )
         internal
         returns (bytes32 requestId)
     {
-        if (callback.code.length == 0) revert InvalidCallback();
-
         requestId = keccak256(
             abi.encodePacked(
-                block.chainid, destinationDomain, targetContract, callData, callback, block.timestamp, msg.sender
+                block.chainid, destinationDomain, targetContract, callData, block.timestamp, msg.sender, nonce
             )
         );
 
-        callbacks[requestId] = callback;
+        nonce++;
 
         bytes memory message = T1XChainMessage.encodeRead(
             destinationDomain, TypeCasts.addressToBytes32(targetContract), requestId, callData
@@ -162,11 +134,7 @@ contract T1XChainReader is OwnableUpgradeable, ReentrancyGuardUpgradeable {
 
         _sendMessage(destinationDomain, targetContract, gasLimit, requestReadSelector, message);
 
-        emit ReadRequested(
-            requestId, destinationDomain, targetContract, tx.origin, gasLimit, minBlock, callData, callback
-        );
-
-        return requestId;
+        emit ReadRequested(requestId, destinationDomain, targetContract, tx.origin, gasLimit, minBlock, callData, nonce);
     }
 
     function _sendMessage(
@@ -190,55 +158,35 @@ contract T1XChainReader is OwnableUpgradeable, ReentrancyGuardUpgradeable {
     }
 
     /**
-     * @notice Handles incoming messages from other chains
-     * @param _originDomain The origin domain
-     * @param _sender The sender address on the target chain
-     * @param _requestId The ID assigned to the request when it was dispatched
-     * @param _data The data to relay to the callback contract
+     * @notice Commit a new proof of read root
+     * @dev Access limited to the prover
+     * @param batchIndex The batch index of the read request
+     * @param newRoot The root of the proof of read merkle tree
      */
-    function handle(
-        uint32 _originDomain,
-        bytes32 _sender,
-        bytes32 _requestId,
-        bytes memory _data
-    )
-        external
-        payable
-        onlyProver
-    {
-        _handleReadResponse(_originDomain, _sender, _requestId, _data);
+    function commitProofOfReadRoot(uint256 batchIndex, bytes32 newRoot) external payable onlyProver {
+        if (batchIndex > nextBatchIndex) revert InvalidBatchIndex();
+        proofOfReadRoots[batchIndex] = newRoot;
+        nextBatchIndex++;
+        emit ProofOfReadRootCommitted(batchIndex);
     }
 
-    // ============ Internal Functions ============
-
     /**
-     * @notice Handles an incoming read response
-     * @param _originDomain The origin domain
-     * @param _sender The sender address
-     * @param requestId Unique identifier for the original request
-     * @param result The result data from the read operation
+     * @notice Verifies a proof of read
+     * @param encodedProofOfRead The encoded proof of read which is formatted as following:
+     * abi.encode(uint256 batchIndex, bytes32 requestId, uint256 position, bytes result, bytes proof)
+     * @return requestId the request id of the proof of read
+     * @return result the result of the proof of read
      */
-    function _handleReadResponse(
-        uint32 _originDomain,
-        bytes32 _sender,
-        bytes32 requestId,
-        bytes memory result
-    )
-        internal
-    {
-        address callback = callbacks[requestId];
+    function verifyProofOfRead(bytes calldata encodedProofOfRead) external view returns (bytes32, bytes memory) {
+        (uint256 batchIndex, bytes32 requestId, uint256 position, bytes memory result, bytes memory proof) =
+            abi.decode(encodedProofOfRead, (uint256, bytes32, uint256, bytes, bytes));
 
-        // If there's a valid callback, forward the result
-        if (callback != address(0)) {
-            delete callbacks[requestId];
+        bytes32 root = proofOfReadRoots[batchIndex];
+        bytes32 xChainReadResultHash = keccak256(result);
+        bytes32 leaf = keccak256(abi.encodePacked(xChainReadResultHash, requestId));
 
-            try IT1XChainReaderCallback(callback).onT1XChainReaderResult(_originDomain, _sender, requestId, result) {
-                emit ReadSucceeded(requestId, result);
-            } catch Error(string memory reason) {
-                emit ReadFailed(requestId, result, reason);
-            } catch (bytes memory reason) {
-                emit ReadFailed(requestId, result, reason);
-            }
-        }
+        if (!WithdrawTrieVerifier.verifyMerkleProof(root, leaf, position, proof)) revert InvalidProof();
+
+        return (requestId, result);
     }
 }
