@@ -32,43 +32,42 @@ The magical deploy order is as follows:
 14. [AllowRouterToTransfer.s.sol](./configure/AllowRouterToTransfer.s.sol)
 15. [DeployL1T1XChainReader.s.sol](./deploy/DeployL1T1XChainReader.s.sol)
 16. [DeployL2T1XChainReader.s.sol](./deploy/DeployL2T1XChainReader.s.sol)
-17. [DeployPR1T1XChainReader.s.sol](./deploy/DeployPR1T1XChainReader.s.sol)
-18. [DeployT1ERC7683Pull.s.sol](./deploy/7683/DeployT1ERC7683Pull.s.sol)
+18. [DeployT1ERC7683.s.sol](./deploy/7683/DeployT1ERC7683.s.sol)
 
 ## Deploy 7683 Contract
 
 To deploy the 7683 contract, follow these steps:
 
-### Deploy L1 Router
+### Deploy L1_7683
 
 First, deploy the L1 router by running the following command:
 
 ```bash
-forge script ./script/deploy/7683/DeployT1ERC7683.s.sol:RouterDeployScript --sig "deployL1Router()" --rpc-url $T1_L1_RPC --broadcast --verify --verifier etherscan --verifier-url https://api-sepolia.etherscan.io/api
+forge script ./script/deploy/7683/DeployT1ERC7683.s.sol:DeployT1ERC7683 --sig "deploy_7683()" --rpc-url $T1_L1_RPC --broadcast --verify --verifier etherscan --verifier-url https://api-sepolia.etherscan.io/api
 ```
 
-### Deploy L2 Router
+### Deploy L2_7683
 
 Next, deploy the L2 router with the following command:
 
 ```bash
-forge script ./script/deploy/7683/DeployT1ERC7683.s.sol:RouterDeployScript --sig "deployL2Router()" --rpc-url $T1_L2_RPC --broadcast --verify --verifier blockscout --verifier-url https://explorer.devnet.t1protocol.com/api
+forge script ./script/deploy/7683/DeployT1ERC7683.s.sol:DeployT1ERC7683 --sig "deploy_7683()" --rpc-url $T1_L2_RPC --broadcast --verify --verifier blockscout --verifier-url https://explorer.devnet.t1protocol.com/api
 ```
 
 ### Initialize Functions
 
 After deploying the routers, you will need to initialize them by running the following commands:
 
-Initialize L1 Router:
+Initialize L1_7683:
 
 ```bash
-forge script ./script/deploy/7683/DeployT1ERC7683.s.sol:RouterDeployScript --sig "initializeL1Router()" --rpc-url $T1_L1_RPC --broadcast
+forge script ./script/deploy/7683/DeployT1ERC7683.s.sol:DeployT1ERC7683 --sig "initialize_7683()" --rpc-url $T1_L1_RPC --broadcast
 ```
 
-Initialize L2 Router:
+Initialize L2_7683:
 
 ```bash
-forge script ./script/deploy/7683/DeployT1ERC7683.s.sol:RouterDeployScript --sig "initializeL2Router()" --rpc-url $T1_L2_RPC --broadcast
+forge script ./script/deploy/7683/DeployT1ERC7683.s.sol:DeployT1ERC7683 --sig "initialize_7683()" --rpc-url $T1_L2_RPC --broadcast
 ```
 
 ## Configure
@@ -100,11 +99,11 @@ Scripts to test the canonical bridge functionalities:
 Miscellaneous Scripts:
 
 - 7683
-  - [Create an intent on L1, fill it on L2, and settle it from L2](./test/7683/T1ERC7683L1ToL2.s.s.sol)
-  - [Create an intent on L1, fill it on L2, and settle it from L1](./test/7683/T1ERC7683PullL1ToL2.s.sol)
-  - [Create an intent on L2, fill it on L1, and settle it from L2](./test/7683/T1ERC7683PullL2ToL1.s.sol)
-  - [Create an intent on PR1, fill it on L2, and settle it from PR1](./test/7683/T1ERC7683PullPR1ToL2.s.sol)
-  - [Create an intent on L2, fill it on PR1, and settle it from L2](./test/7683/T1ERC7683PullL2ToPR1.s.sol)
+  - [Create an intent on L1, fill it on L2, and settle it from L2](./test/7683/T1ERC7683L1ToL2.s.sol)
+  - [Create an intent on L1, fill it on L2, and settle it from L1](./test/7683/T1ERC7683L1ToL2.s.sol)
+  - [Create an intent on L2, fill it on L1, and settle it from L2](./test/7683/T1ERC7683L2ToL1.s.sol)
+  - [Create an intent on Arb, fill it on Base, and settle it from Arb](./test/7683/T1ERC7683ArbToBase.s.sol)
+  - [Create an intent on Base, fill it on Arb, and settle it from Base](./test/7683/T1ERC7683BaseToArb.s.sol)
 
 ## 🔄 Upgrade
 
@@ -115,9 +114,9 @@ Scripts to upgrade contract implementations:
   forge script ./script/upgrade/UpgradeT1Chain.s.sol:UpgradeT1Chain --rpc-url $T1_L1_RPC --broadcast
   ```
 
-## Deploying 7683Pull to Arbitrum Sepolia and Base Sepolia
+## Deploying 7683 to Arbitrum Sepolia and Base Sepolia
 
-This section walks you through deploying all pieces of the 7683Pull system to both Arbitrum Sepolia and Base Sepolia
+This section walks you through deploying all pieces of the 7683 system to both Arbitrum Sepolia and Base Sepolia
 testnets. You’ll deploy messenger proxies, their implementations (with initialization), ownership transfers, the
 cross-chain reader, and finally the ERC-7683 pull modules. Each Forge script broadcasts the tx, verifies it on the right
 explorer API, and uses your API key to confirm source code.
@@ -195,26 +194,62 @@ forge script ./deploy/DeployBaseT1XChainReader.s.sol:DeployBaseT1XChainReader  -
 
 Deploys ERC-7683 contracts to the target chain, verifies and initializes them.
 
-#### Arbitrum Sepolia Pull Module Deployment
+#### Arbitrum Sepolia 7683 Module Deployment
 
 ```bash
-forge script ./deploy/7683/DeployArbT1ERC7683Pull.s.sol:DeployArbT1ERC7683Pull --sig "deploy()"  --broadcast --verify --verifier etherscan --verifier-url https://api-sepolia.arbiscan.io/api --etherscan-api-key $ARBISCAN_API_KEY
+forge script ./deploy/7683/DeployArbT1ERC7683.s.sol:DeployArbT1ERC7683 --sig "deploy()"  --broadcast --verify --verifier etherscan --verifier-url https://api-sepolia.arbiscan.io/api --etherscan-api-key $ARBISCAN_API_KEY
 ```
 
-#### Base Sepolia Pull Module Deployment
+#### Base Sepolia 7683 Module Deployment
 
 ```bash
-forge script ./deploy/7683/DeployBaseT1ERC7683Pull.s.sol:DeployBaseT1ERC7683Pull --sig "deploy()" --broadcast --verify --verifier etherscan --verifier-url https://api-sepolia.basescan.org/api --etherscan-api-key $BASESCAN_API_KEY
+forge script ./deploy/7683/DeployBaseT1ERC7683.s.sol:DeployBaseT1ERC7683 --sig "deploy()" --broadcast --verify --verifier etherscan --verifier-url https://api-sepolia.basescan.org/api --etherscan-api-key $BASESCAN_API_KEY
 ```
 
-#### Arbitrum Sepolia Pull Module Init
+#### Arbitrum Sepolia 7683 Module Init
 
 ```bash
-forge script ./deploy/7683/DeployArbT1ERC7683Pull.s.sol:DeployArbT1ERC7683Pull --sig "init()" --broadcast
+forge script ./deploy/7683/DeployArbT1ERC7683.s.sol:DeployArbT1ERC7683 --sig "init()" --broadcast
 ```
 
-#### Base Sepolia Pull Module Init
+#### Base Sepolia 7683 Module Init
 
 ```bash
-forge script ./deploy/7683/DeployBaseT1ERC7683Pull.s.sol:DeployBaseT1ERC7683Pull --sig "init()" --broadcast
+forge script ./deploy/7683/DeployBaseT1ERC7683.s.sol:DeployBaseT1ERC7683 --sig "init()" --broadcast
+```
+
+## Testing 7683 on Arbitrum Sepolia and Base Sepolia
+
+### Testing 7683 on Arbitrum Sepolia
+
+1. Open an intent on Arbitrum Sepolia.
+```bash
+forge script ./test/7683/T1ERC7683ArbToBase.s.sol:AliceSetupScript --rpc-url $T1_L1_RPC --broadcast
+```
+
+2. If a solver does not immediately fill the intent, you can fill it on Base Sepolia.
+```bash
+forge script ./test/7683/T1ERC7683ArbToBase.s.sol:SolverFillScript --rpc-url $T1_L2_RPC --broadcast
+```
+
+3. If you filled your own intent, you must also settle it by calling `verifySettlement` on Arbitrum Sepolia.
+```bash
+forge script ./test/7683/T1ERC7683ArbToBase.s.sol:SettlementScript --rpc-url $T1_L1_RPC --broadcast
+```
+
+### Testing 7683 on Base Sepolia
+
+1. Open an intent on Base Sepolia.
+```bash
+forge script ./test/7683/T1ERC7683BaseToArb.s.sol:AliceSetupScript --rpc-url $T1_L1_RPC --broadcast
+```
+
+2. If a solver does not immediately fill the intent, you can fill it on Arbitrum Sepolia.
+```bash
+forge script ./test/7683/T1ERC7683BaseToArb.s.sol:SolverFillScript --rpc-url $T1_L2_RPC --broadcast
+```
+
+3. If you filled your own intent, you must also settle it by calling `verifySettlement` on Base Sepolia.
+```bash
+forge script ./test/7683/T1ERC7683BaseToArb.s.sol:SettlementScript --rpc-url $T1_L1_RPC --broadcast
 ```
