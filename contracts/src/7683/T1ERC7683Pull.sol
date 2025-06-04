@@ -50,7 +50,6 @@ contract T1ERC7683Pull is BasicSwap7683, OwnableUpgradeable {
     error EthNotAllowed();
     error SettlementFailed();
     error RefundFailed();
-    error InvalidProof();
 
     /// @notice Initializes the contract with the specified dependencies
     /// @param _permit2 The address of the permit2 contract
@@ -110,8 +109,7 @@ contract T1ERC7683Pull is BasicSwap7683, OwnableUpgradeable {
     /// @param encodedProofOfRead The encoded proof of read which is formatted as following:
     /// abi.encode(uint256 batchIndex, bytes32 requestId, uint256 position, bytes result, bytes proof)
     function handleReadResultWithProof(bytes calldata encodedProofOfRead) external {
-        (bool isValid, bytes32 requestId, bytes memory result) = xChainRead.verifyProofOfRead(encodedProofOfRead);
-        if (!isValid) revert InvalidProof();
+        (bytes32 requestId, bytes memory result) = xChainRead.verifyProofOfRead(encodedProofOfRead);
 
         bytes32 orderId = readRequestToOrderId[requestId];
 

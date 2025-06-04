@@ -70,6 +70,7 @@ contract T1XChainReader is OwnableUpgradeable, ReentrancyGuardUpgradeable {
     error OnlyProver();
     error ZeroAddress();
     error InvalidBatchIndex();
+    error InvalidProof();
 
     // ============ Variables ============
     uint256 public nonce;
@@ -173,11 +174,10 @@ contract T1XChainReader is OwnableUpgradeable, ReentrancyGuardUpgradeable {
      * @notice Verifies a proof of read
      * @param encodedProofOfRead The encoded proof of read which is formatted as following:
      * abi.encode(uint256 batchIndex, bytes32 requestId, uint256 position, bytes result, bytes proof)
-     * @return isValid true if the proof of read is valid, false otherwise
      * @return requestId the request id of the proof of read
      * @return result the result of the proof of read
      */
-    function verifyProofOfRead(bytes calldata encodedProofOfRead) external view returns (bool, bytes32, bytes memory) {
+    function verifyProofOfRead(bytes calldata encodedProofOfRead) external view returns (bytes32, bytes memory) {
         (uint256 batchIndex, bytes32 requestId, uint256 position, bytes memory result, bytes memory proof) =
             abi.decode(encodedProofOfRead, (uint256, bytes32, uint256, bytes, bytes));
 
@@ -185,8 +185,8 @@ contract T1XChainReader is OwnableUpgradeable, ReentrancyGuardUpgradeable {
         bytes32 xChainReadResultHash = keccak256(result);
         bytes32 leaf = keccak256(abi.encodePacked(xChainReadResultHash, requestId));
 
-        bool isValid = WithdrawTrieVerifier.verifyMerkleProof(root, leaf, position, proof);
+        if (!WithdrawTrieVerifier.verifyMerkleProof(root, leaf, position, proof)) revert InvalidProof();
 
-        return (isValid, requestId, result);
+        return (requestId, result);
     }
 }

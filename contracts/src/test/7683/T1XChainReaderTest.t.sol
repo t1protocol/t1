@@ -165,7 +165,7 @@ contract T1XChainReaderTest is T1BasicSwapE2E {
             bytes32(0x2222222222222222222222222222222222222222222222222222222222222222)
         );
 
-        vm.expectRevert(T1ERC7683Pull.InvalidProof.selector);
+        vm.expectRevert(T1XChainReader.InvalidProof.selector);
         L1T17683Pull.handleReadResultWithProof(abi.encode(batchIndex, requestId, position, result, invalidProof));
     }
 
