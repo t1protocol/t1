@@ -72,7 +72,7 @@ contract T1XChainReaderTest is T1BasicSwapE2E {
 
             uint256 balanceSolverBeforeSettle = inputToken.balanceOf(address(vegeta));
             originReader.commitProofOfReadRoot(batchIndex, root);
-            L1T17683Pull.handleReadResultWithProof(batchIndex, requestId, position, result, proof);
+            L1T17683Pull.handleReadResultWithProof(abi.encode(batchIndex, requestId, position, result, proof));
             uint256 balanceSolverAfterSettle = inputToken.balanceOf(address(vegeta));
 
             assertEq(
@@ -99,7 +99,7 @@ contract T1XChainReaderTest is T1BasicSwapE2E {
 
             uint256 balanceSolverBeforeSettle = inputToken.balanceOf(address(vegeta));
             originReader.commitProofOfReadRoot(batchIndex, root);
-            L1T17683Pull.handleReadResultWithProof(batchIndex, requestId, position, result, proof);
+            L1T17683Pull.handleReadResultWithProof(abi.encode(batchIndex, requestId, position, result, proof));
             uint256 balanceSolverAfterSettle = inputToken.balanceOf(address(vegeta));
 
             assertEq(
@@ -124,7 +124,7 @@ contract T1XChainReaderTest is T1BasicSwapE2E {
         bytes memory invalidProof = hex"11";
 
         vm.expectRevert("Invalid proof");
-        L1T17683Pull.handleReadResultWithProof(batchIndex, requestId, position, result, invalidProof);
+        L1T17683Pull.handleReadResultWithProof(abi.encode(batchIndex, requestId, position, result, invalidProof));
     }
 
     function test_revertWithInvalidProof() public {
@@ -144,7 +144,7 @@ contract T1XChainReaderTest is T1BasicSwapE2E {
         );
 
         vm.expectRevert(T1ERC7683Pull.InvalidProof.selector);
-        L1T17683Pull.handleReadResultWithProof(batchIndex, requestId, position, result, invalidProof);
+        L1T17683Pull.handleReadResultWithProof(abi.encode(batchIndex, requestId, position, result, invalidProof));
     }
 
     function test_revertWithInvalidResultData() public {
@@ -165,7 +165,7 @@ contract T1XChainReaderTest is T1BasicSwapE2E {
 
         // 5. Now test handleReadResultWithProof with invalid result data
         vm.expectRevert();
-        L1T17683Pull.handleReadResultWithProof(batchIndex, requestId, position, result, proof);
+        L1T17683Pull.handleReadResultWithProof(abi.encode(batchIndex, requestId, position, result, proof));
     }
 
     function test_SameProofShouldNotSettleTwice() public {
@@ -179,10 +179,10 @@ contract T1XChainReaderTest is T1BasicSwapE2E {
             (bytes32 root, bytes memory proof) = _generateMerkleTree(requestId, result, position);
 
             originReader.commitProofOfReadRoot(batchIndex, root);
-            L1T17683Pull.handleReadResultWithProof(batchIndex, requestId, position, result, proof);
+            L1T17683Pull.handleReadResultWithProof(abi.encode(batchIndex, requestId, position, result, proof));
 
             uint256 balanceSolverBeforeSecondSettle = inputToken.balanceOf(address(vegeta));
-            L1T17683Pull.handleReadResultWithProof(batchIndex, requestId, position, result, proof);
+            L1T17683Pull.handleReadResultWithProof(abi.encode(batchIndex, requestId, position, result, proof));
             uint256 balanceSolverAfterSecondSettle = inputToken.balanceOf(address(vegeta));
 
             assertEq(
@@ -215,7 +215,7 @@ contract T1XChainReaderTest is T1BasicSwapE2E {
 
         vm.expectEmit(true, true, true, true);
         emit T1ERC7683Pull.SettlementVerified(orderId, false);
-        L1T17683Pull.handleReadResultWithProof(batchIndex, requestId, position, result, proof);
+        L1T17683Pull.handleReadResultWithProof(abi.encode(batchIndex, requestId, position, result, proof));
 
         uint256 balanceSolverAfterSettle = inputToken.balanceOf(address(vegeta));
 

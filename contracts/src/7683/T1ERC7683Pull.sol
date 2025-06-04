@@ -107,23 +107,11 @@ contract T1ERC7683Pull is BasicSwap7683, OwnableUpgradeable {
     }
 
     /// @notice Use result of proof of read to handle the order depending on the result
-    /// @param batchIndex The batch index of the read request
-    /// @param requestId The ID of the read request
-    /// @param result The result of the read
-    /// @param position The position of the read request in the merkle tree
-    /// @param proof The proof of the read request
-    function handleReadResultWithProof(
-        uint256 batchIndex,
-        bytes32 requestId,
-        uint256 position,
-        bytes calldata result,
-        bytes calldata proof
-    )
-        external
-    {
-        if (!xChainRead.verifyProofOfRead(batchIndex, requestId, position, result, proof)) {
-            revert InvalidProof();
-        }
+    /// @param encodedProofOfRead The encoded proof of read which is formatted as following:
+    /// abi.encode(uint256 batchIndex, bytes32 requestId, uint256 position, bytes result, bytes proof)
+    function handleReadResultWithProof(bytes calldata encodedProofOfRead) external {
+        (bool isValid, bytes32 requestId, bytes memory result) = xChainRead.verifyProofOfRead(encodedProofOfRead);
+        if (!isValid) revert InvalidProof();
 
         bytes32 orderId = readRequestToOrderId[requestId];
 
@@ -180,9 +168,9 @@ contract T1ERC7683Pull is BasicSwap7683, OwnableUpgradeable {
     /// @param _originDomain The domain from which the message originates
     /// @param _sender The address of the sender on the origin domain
     /// @param _message The encoded message received via t1
-    function _handle(uint32 _originDomain, bytes32 _sender, bytes calldata _message) internal {
+    function _handle(uint32 _originDomain, bytes32 _sender, bytes memory _message) internal {
         (bool _settle, bytes32[] memory _orderIds, bytes[] memory _ordersFillerData) =
-            Hyperlane7683Message.decode(_message);
+            abi.decode(_message, (bool, bytes32[], bytes[]));
 
         for (uint256 i = 0; i < _orderIds.length; i++) {
             if (_settle) {
