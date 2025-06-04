@@ -80,6 +80,8 @@ contract T1XChainReader is OwnableUpgradeable, ReentrancyGuardUpgradeable {
 
     /// @notice The T1 prover
     address public immutable prover;
+    /// @notice The next batch index to use by the proverfor the proof of read
+    uint256 public nextBatchIndex;
 
     /// @notice Maps batch indices to their proof of read root
     mapping(uint256 batchIndex => bytes32 root) public proofOfReadRoots;
@@ -98,6 +100,7 @@ contract T1XChainReader is OwnableUpgradeable, ReentrancyGuardUpgradeable {
     error OnlyCounterpart();
     error InvalidCallback();
     error ZeroAddress();
+    error InvalidBatchIndex();
 
     // ============ Variables ============
     uint256 public nonce;
@@ -191,6 +194,7 @@ contract T1XChainReader is OwnableUpgradeable, ReentrancyGuardUpgradeable {
      * @param newRoot The root of the proof of read merkle tree
      */
     function commitProofOfReadRoot(uint256 batchIndex, bytes32 newRoot) external payable onlyProver {
+        if (batchIndex > nextBatchIndex) revert InvalidBatchIndex();
         proofOfReadRoots[batchIndex] = newRoot;
         emit ProofOfReadRootCommitted(batchIndex);
     }

@@ -222,7 +222,7 @@ contract T1XChainReaderTest is T1BasicSwapE2E {
         assertEq(balanceSolverBeforeSettle, balanceSolverAfterSettle, "vegeta balance should not change");
     }
 
-    function test_onlyProver_revert() public {
+    function test_revertIfNotProver() public {
         uint256 batchIndex = 0;
         bytes32 requestId = hex"";
         bytes memory orderStatus = hex"";
@@ -231,6 +231,17 @@ contract T1XChainReaderTest is T1BasicSwapE2E {
 
         vm.prank(address(0xbeef));
         vm.expectRevert(T1XChainReader.OnlyProver.selector);
+        originReader.commitProofOfReadRoot(batchIndex, root);
+    }
+
+    function test_revertWithInvalidBatchIndex() public {
+        uint256 batchIndex = 1;
+        bytes32 requestId = hex"";
+        bytes memory orderStatus = hex"";
+
+        (bytes32 root,) = _generateMerkleTree(requestId, orderStatus, 0);
+
+        vm.expectRevert(T1XChainReader.InvalidBatchIndex.selector);
         originReader.commitProofOfReadRoot(batchIndex, root);
     }
 
