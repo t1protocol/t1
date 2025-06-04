@@ -32,7 +32,7 @@ The magical deploy order is as follows:
 14. [AllowRouterToTransfer.s.sol](./configure/AllowRouterToTransfer.s.sol)
 15. [DeployL1T1XChainReader.s.sol](./deploy/DeployL1T1XChainReader.s.sol)
 16. [DeployL2T1XChainReader.s.sol](./deploy/DeployL2T1XChainReader.s.sol)
-18. [DeployT1ERC7683.s.sol](./deploy/7683/DeployT1ERC7683.s.sol)
+17. [DeployT1ERC7683.s.sol](./deploy/7683/DeployT1ERC7683.s.sol)
 
 ## Deploy 7683 Contract
 
@@ -223,16 +223,19 @@ forge script ./deploy/7683/DeployBaseT1ERC7683.s.sol:DeployBaseT1ERC7683 --sig "
 ### Testing 7683 on Arbitrum Sepolia
 
 1. Open an intent on Arbitrum Sepolia.
+
 ```bash
 forge script ./test/7683/T1ERC7683ArbToBase.s.sol:AliceSetupScript --rpc-url $T1_L1_RPC --broadcast
 ```
 
 2. If a solver does not immediately fill the intent, you can fill it on Base Sepolia.
+
 ```bash
 forge script ./test/7683/T1ERC7683ArbToBase.s.sol:SolverFillScript --rpc-url $T1_L2_RPC --broadcast
 ```
 
 3. If you filled your own intent, you must also settle it by calling `verifySettlement` on Arbitrum Sepolia.
+
 ```bash
 forge script ./test/7683/T1ERC7683ArbToBase.s.sol:SettlementScript --rpc-url $T1_L1_RPC --broadcast
 ```
@@ -240,16 +243,19 @@ forge script ./test/7683/T1ERC7683ArbToBase.s.sol:SettlementScript --rpc-url $T1
 ### Testing 7683 on Base Sepolia
 
 1. Open an intent on Base Sepolia.
+
 ```bash
 forge script ./test/7683/T1ERC7683BaseToArb.s.sol:AliceSetupScript --rpc-url $T1_L1_RPC --broadcast
 ```
 
 2. If a solver does not immediately fill the intent, you can fill it on Arbitrum Sepolia.
+
 ```bash
 forge script ./test/7683/T1ERC7683BaseToArb.s.sol:SolverFillScript --rpc-url $T1_L2_RPC --broadcast
 ```
 
 3. If you filled your own intent, you must also settle it by calling `verifySettlement` on Base Sepolia.
+
 ```bash
 forge script ./test/7683/T1ERC7683BaseToArb.s.sol:SettlementScript --rpc-url $T1_L1_RPC --broadcast
 ```
