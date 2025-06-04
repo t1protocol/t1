@@ -39,35 +39,6 @@ contract T1XChainReader is OwnableUpgradeable, ReentrancyGuardUpgradeable {
     );
 
     /**
-     * @notice Emitted when a cross-chain read response succeeds
-     * @param requestId Unique identifier for the original request
-     * @param batchIndex The batch index of the read request
-     */
-    event ReadSucceeded(bytes32 indexed requestId, uint256 batchIndex);
-
-    /**
-     * @notice Emitted when a cross-chain read response fails with bytes revert
-     * @param requestId Unique identifier for the original request
-     * @param batchIndex The batch index of the read request
-     * @param reason The reason the call failed
-     */
-    event ReadFailed(bytes32 indexed requestId, uint256 batchIndex, bytes reason);
-
-    /**
-     * @notice Emitted when a cross-chain read response fails with string revert
-     * @param requestId Unique identifier for the original request
-     * @param batchIndex The batch index of the read request
-     * @param reason The reason the call failed
-     */
-    event ReadFailed(bytes32 indexed requestId, uint256 batchIndex, string reason);
-
-    /**
-     * @notice Emitted when a cross-chain read response is received
-     * @param requestId Unique identifier for the original request
-     * @param result The result data from the read operation
-     */
-    event ReadResult(bytes32 indexed requestId, bytes result);
-    /**
      * @notice Emitted when a proof of read root is committed
      * @param batchIndex The batch index of the proof of read root
      */
@@ -97,8 +68,6 @@ contract T1XChainReader is OwnableUpgradeable, ReentrancyGuardUpgradeable {
     // ============ Errors ============
 
     error OnlyProver();
-    error OnlyCounterpart();
-    error InvalidCallback();
     error ZeroAddress();
     error InvalidBatchIndex();
 
@@ -196,6 +165,7 @@ contract T1XChainReader is OwnableUpgradeable, ReentrancyGuardUpgradeable {
     function commitProofOfReadRoot(uint256 batchIndex, bytes32 newRoot) external payable onlyProver {
         if (batchIndex > nextBatchIndex) revert InvalidBatchIndex();
         proofOfReadRoots[batchIndex] = newRoot;
+        nextBatchIndex++;
         emit ProofOfReadRootCommitted(batchIndex);
     }
 

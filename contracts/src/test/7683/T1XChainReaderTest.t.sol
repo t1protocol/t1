@@ -111,6 +111,28 @@ contract T1XChainReaderTest is T1BasicSwapE2E {
         assertTrue(L1T17683Pull.orderVerified(orderId), "Order should be verified");
     }
 
+    function test_incrementBatchIndex() public {
+        uint256 batchIndex = 0;
+        bytes32 root = bytes32(vm.randomBytes(32));
+
+        uint256 precommitBatchIndex = originReader.nextBatchIndex();
+        originReader.commitProofOfReadRoot(batchIndex, root);
+        uint256 postcommitBatchIndex = originReader.nextBatchIndex();
+
+        assertEq(precommitBatchIndex + 1, postcommitBatchIndex, "Batch index should be incremented");
+    }
+
+    function test_proverAbleToUpdatePreviousBatchIndexRoot() public {
+        uint256 batchIndex = 0;
+        bytes32 root = bytes32(vm.randomBytes(32));
+        bytes32 root2 = bytes32(vm.randomBytes(32));
+
+        originReader.commitProofOfReadRoot(batchIndex, root);
+        originReader.commitProofOfReadRoot(batchIndex, root2);
+
+        assertEq(originReader.proofOfReadRoots(batchIndex), root2, "Root should be updated");
+    }
+
     function test_revertWithInvalidProofData() public {
         uint256 batchIndex = 0;
         uint256 position = 0;
@@ -236,8 +258,8 @@ contract T1XChainReaderTest is T1BasicSwapE2E {
 
     function test_revertWithInvalidBatchIndex() public {
         uint256 batchIndex = 1;
-        bytes32 requestId = hex"";
-        bytes memory orderStatus = hex"";
+        bytes32 requestId = bytes32(vm.randomBytes(32));
+        bytes memory orderStatus = vm.randomBytes(10);
 
         (bytes32 root,) = _generateMerkleTree(requestId, orderStatus, 0);
 
