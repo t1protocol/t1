@@ -134,7 +134,7 @@ Set the following private key addresses. For the purpose of this demo, they can 
 - `ALICE_PRIVATE_KEY`: Alice's private key for signing the transaction.
 - `TEST_PRIVATE_KEY`: Solver's private key for signing the transaction.
 
-To execute the scripts defined in `L1toT17683E2E.s.sol`, follow these steps:
+To execute the scripts defined in `T1ERC7683L1ToL2.s.sol`, follow these steps:
 
 1. Setup Alice's Account
 
