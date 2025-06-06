@@ -8,15 +8,15 @@ import { OnchainCrossChainOrder } from "intents-framework/ERC7683/IERC7683.sol";
 
 import { T1XChainReader } from "../../libraries/xChain/T1XChainReader.sol";
 import { T1BasicSwapE2E } from "./T1BasicSwapE2E.t.sol";
-import { T1ERC7683Pull } from "../../7683/T1ERC7683Pull.sol";
+import { T1ERC7683 } from "../../7683/T1ERC7683.sol";
 
 contract T1XChainReaderTest is T1BasicSwapE2E {
     using TypeCasts for address;
 
     T1XChainReader internal originReader;
     T1XChainReader internal destinationReader;
-    T1ERC7683Pull internal L1T17683Pull;
-    T1ERC7683Pull internal L2T17683Pull;
+    T1ERC7683 internal l1T1ERC7683;
+    T1ERC7683 internal l2T1ERC7683;
 
     function setUp() public virtual override {
         super.setUp();
@@ -34,18 +34,18 @@ contract T1XChainReaderTest is T1BasicSwapE2E {
             address(new T1XChainReader(address(l2t1Messenger), address(this)))
         );
 
-        L1T17683Pull = T1ERC7683Pull(payable(_deployProxy(address(0))));
-        L2T17683Pull = T1ERC7683Pull(payable(_deployProxy(address(0))));
+        l1T1ERC7683 = T1ERC7683(payable(_deployProxy(address(0))));
+        l2T1ERC7683 = T1ERC7683(payable(_deployProxy(address(0))));
         admin.upgrade(
-            ITransparentUpgradeableProxy(address(L1T17683Pull)),
-            address(new T1ERC7683Pull(address(0), address(originReader), uint32(origin)))
+            ITransparentUpgradeableProxy(address(l1T1ERC7683)),
+            address(new T1ERC7683(address(0), address(originReader), uint32(origin)))
         );
         admin.upgrade(
-            ITransparentUpgradeableProxy(address(L2T17683Pull)),
-            address(new T1ERC7683Pull(address(0), address(destinationReader), uint32(destination)))
+            ITransparentUpgradeableProxy(address(l2T1ERC7683)),
+            address(new T1ERC7683(address(0), address(destinationReader), uint32(destination)))
         );
-        L1T17683Pull.initialize(address(L2T17683Pull));
-        L2T17683Pull.initialize(address(L1T17683Pull));
+        l1T1ERC7683.initialize(address(l2T1ERC7683));
+        l2T1ERC7683.initialize(address(l1T1ERC7683));
     }
 
     // 1. user opens intent on source chain
@@ -56,7 +56,7 @@ contract T1XChainReaderTest is T1BasicSwapE2E {
     // that
     // writes the new merkle root for the target batch
     // 5. Solver calls handleReadResultWithProof on 7683 contract with merkle proof, settles intent and releases funds
-    function test_ERC7683PullSettlementFlow() public {
+    function test_ERC7683SettlementFlow() public {
         uint256 batchIndex = 0;
         uint256 position = 0;
 
@@ -65,14 +65,14 @@ contract T1XChainReaderTest is T1BasicSwapE2E {
         // 4. Process the read request on L2 (destination chain) & Relay the result back to L1
         {
             // Construct the read request calldata
-            bytes memory result = L2T17683Pull.getFilledOrderStatus(orderId);
+            bytes memory result = l2T1ERC7683.getFilledOrderStatus(orderId);
 
             // Generate merkle tree and proof for the result
             (bytes32 root, bytes memory proof) = _generateMerkleTree(requestId, result, position);
 
             uint256 balanceSolverBeforeSettle = inputToken.balanceOf(address(vegeta));
             originReader.commitProofOfReadRoot(batchIndex, root);
-            L1T17683Pull.handleReadResultWithProof(abi.encode(batchIndex, requestId, position, result, proof));
+            l1T1ERC7683.handleReadResultWithProof(abi.encode(batchIndex, requestId, position, result, proof));
             uint256 balanceSolverAfterSettle = inputToken.balanceOf(address(vegeta));
 
             assertEq(
@@ -81,10 +81,10 @@ contract T1XChainReaderTest is T1BasicSwapE2E {
         }
 
         // Verify the final state on L1
-        assertTrue(L1T17683Pull.orderVerified(orderId), "Order should be verified");
+        assertTrue(l1T1ERC7683.orderVerified(orderId), "Order should be verified");
     }
 
-    function test_ERC7683PullSettlementFlowWithAnotherTreePosition() public {
+    function test_ERC7683SettlementFlowWithAnotherTreePosition() public {
         uint256 batchIndex = 0;
         uint256 position = 3;
 
@@ -93,13 +93,13 @@ contract T1XChainReaderTest is T1BasicSwapE2E {
         // 4. Process the read request on L2 (destination chain) & Relay the result back to L1
         {
             // Construct the read request calldata
-            bytes memory result = L2T17683Pull.getFilledOrderStatus(orderId);
+            bytes memory result = l2T1ERC7683.getFilledOrderStatus(orderId);
             // Generate merkle tree and proof for the result
             (bytes32 root, bytes memory proof) = _generateMerkleTree(requestId, result, position);
 
             uint256 balanceSolverBeforeSettle = inputToken.balanceOf(address(vegeta));
             originReader.commitProofOfReadRoot(batchIndex, root);
-            L1T17683Pull.handleReadResultWithProof(abi.encode(batchIndex, requestId, position, result, proof));
+            l1T1ERC7683.handleReadResultWithProof(abi.encode(batchIndex, requestId, position, result, proof));
             uint256 balanceSolverAfterSettle = inputToken.balanceOf(address(vegeta));
 
             assertEq(
@@ -108,7 +108,7 @@ contract T1XChainReaderTest is T1BasicSwapE2E {
         }
 
         // Verify the final state on L1
-        assertTrue(L1T17683Pull.orderVerified(orderId), "Order should be verified");
+        assertTrue(l1T1ERC7683.orderVerified(orderId), "Order should be verified");
     }
 
     function test_incrementBatchIndex() public {
@@ -139,14 +139,14 @@ contract T1XChainReaderTest is T1BasicSwapE2E {
 
         (, bytes32 orderId, bytes32 requestId) = _openAndFillOrder();
 
-        bytes memory result = L2T17683Pull.getFilledOrderStatus(orderId);
+        bytes memory result = l2T1ERC7683.getFilledOrderStatus(orderId);
         (bytes32 root,) = _generateMerkleTree(requestId, result, position);
         originReader.commitProofOfReadRoot(batchIndex, root);
 
         bytes memory invalidProof = hex"11";
 
         vm.expectRevert("Invalid proof");
-        L1T17683Pull.handleReadResultWithProof(abi.encode(batchIndex, requestId, position, result, invalidProof));
+        l1T1ERC7683.handleReadResultWithProof(abi.encode(batchIndex, requestId, position, result, invalidProof));
     }
 
     function test_revertWithInvalidProof() public {
@@ -155,7 +155,7 @@ contract T1XChainReaderTest is T1BasicSwapE2E {
 
         (, bytes32 orderId, bytes32 requestId) = _openAndFillOrder();
 
-        bytes memory result = L2T17683Pull.getFilledOrderStatus(orderId);
+        bytes memory result = l2T1ERC7683.getFilledOrderStatus(orderId);
         (bytes32 root,) = _generateMerkleTree(requestId, result, position);
         originReader.commitProofOfReadRoot(batchIndex, root);
 
@@ -166,7 +166,7 @@ contract T1XChainReaderTest is T1BasicSwapE2E {
         );
 
         vm.expectRevert(T1XChainReader.InvalidProof.selector);
-        L1T17683Pull.handleReadResultWithProof(abi.encode(batchIndex, requestId, position, result, invalidProof));
+        l1T1ERC7683.handleReadResultWithProof(abi.encode(batchIndex, requestId, position, result, invalidProof));
     }
 
     function test_revertWithInvalidResultData() public {
@@ -182,12 +182,12 @@ contract T1XChainReaderTest is T1BasicSwapE2E {
         // Generate merkle tree and proof for the result
         (bytes32 root, bytes memory proof) = _generateMerkleTree(requestId, result, position);
 
-        // Set up the proof root in the T1ERC7683Pull contract
+        // Set up the proof root in the T1ERC7683 contract
         originReader.commitProofOfReadRoot(batchIndex, root);
 
         // 5. Now test handleReadResultWithProof with invalid result data
         vm.expectRevert();
-        L1T17683Pull.handleReadResultWithProof(abi.encode(batchIndex, requestId, position, result, proof));
+        l1T1ERC7683.handleReadResultWithProof(abi.encode(batchIndex, requestId, position, result, proof));
     }
 
     function test_SameProofShouldNotSettleTwice() public {
@@ -197,14 +197,14 @@ contract T1XChainReaderTest is T1BasicSwapE2E {
         (, bytes32 orderId, bytes32 requestId) = _openAndFillOrder();
 
         {
-            bytes memory result = L2T17683Pull.getFilledOrderStatus(orderId);
+            bytes memory result = l2T1ERC7683.getFilledOrderStatus(orderId);
             (bytes32 root, bytes memory proof) = _generateMerkleTree(requestId, result, position);
 
             originReader.commitProofOfReadRoot(batchIndex, root);
-            L1T17683Pull.handleReadResultWithProof(abi.encode(batchIndex, requestId, position, result, proof));
+            l1T1ERC7683.handleReadResultWithProof(abi.encode(batchIndex, requestId, position, result, proof));
 
             uint256 balanceSolverBeforeSecondSettle = inputToken.balanceOf(address(vegeta));
-            L1T17683Pull.handleReadResultWithProof(abi.encode(batchIndex, requestId, position, result, proof));
+            l1T1ERC7683.handleReadResultWithProof(abi.encode(batchIndex, requestId, position, result, proof));
             uint256 balanceSolverAfterSecondSettle = inputToken.balanceOf(address(vegeta));
 
             assertEq(
@@ -213,7 +213,7 @@ contract T1XChainReaderTest is T1BasicSwapE2E {
         }
 
         // Verify the final state on L1
-        assertTrue(L1T17683Pull.orderVerified(orderId), "Order should be verified");
+        assertTrue(l1T1ERC7683.orderVerified(orderId), "Order should be verified");
     }
 
     function test_settlementWithEmptyResultData() public {
@@ -229,15 +229,15 @@ contract T1XChainReaderTest is T1BasicSwapE2E {
         // Generate merkle tree and proof for the result
         (bytes32 root, bytes memory proof) = _generateMerkleTree(requestId, result, position);
 
-        // Set up the proof root in the T1ERC7683Pull contract
+        // Set up the proof root in the T1ERC7683 contract
         originReader.commitProofOfReadRoot(batchIndex, root);
 
         // 5. Now test handleReadResultWithProof with empty result data
         uint256 balanceSolverBeforeSettle = inputToken.balanceOf(address(vegeta));
 
         vm.expectEmit(true, true, true, true);
-        emit T1ERC7683Pull.SettlementVerified(orderId, false);
-        L1T17683Pull.handleReadResultWithProof(abi.encode(batchIndex, requestId, position, result, proof));
+        emit T1ERC7683.SettlementVerified(orderId, false);
+        l1T1ERC7683.handleReadResultWithProof(abi.encode(batchIndex, requestId, position, result, proof));
 
         uint256 balanceSolverAfterSettle = inputToken.balanceOf(address(vegeta));
 
@@ -267,30 +267,47 @@ contract T1XChainReaderTest is T1BasicSwapE2E {
         originReader.commitProofOfReadRoot(batchIndex, root);
     }
 
+    // function test_ownerCanUpdateProver() public {
+    //     address newProver = address(0xbeef);
+    //     originReader.setProver(newProver);
+    //     assertEq(originReader.prover(), newProver, "Prover should be updated");
+    // }
+
+    // function test_revertIfZeroAddress() public {
+    //     vm.expectRevert(T1XChainReader.ZeroAddress.selector);
+    //     originReader.setProver(address(0));
+    // }
+
+    // function test_revertIfNotOwner() public {
+    //     vm.expectRevert("Ownable: caller is not the owner");
+    //     vm.prank(address(0xbeef));
+    //     originReader.setProver(address(0xbeef));
+    // }
+
     function _openAndFillOrder() internal returns (OrderData memory, bytes32 orderId, bytes32 requestId) {
         OrderData memory orderData = _prepareOrderData();
         OnchainCrossChainOrder memory order =
             _prepareOnchainOrder(OrderEncoder.encode(orderData), orderData.fillDeadline, OrderEncoder.orderDataType());
 
         vm.startPrank(kakaroto);
-        inputToken.approve(address(L1T17683Pull), amount);
+        inputToken.approve(address(l1T1ERC7683), amount);
         vm.recordLogs();
-        L1T17683Pull.open(order);
+        l1T1ERC7683.open(order);
         vm.stopPrank();
 
         (bytes32 orderId_,) = _getOrderIDFromLogs();
-        assertEq(L1T17683Pull.orderStatus(orderId_), _base7683.OPENED());
+        assertEq(l1T1ERC7683.orderStatus(orderId_), _base7683.OPENED());
 
         vm.startPrank(vegeta);
-        outputToken.approve(address(L2T17683Pull), amount);
+        outputToken.approve(address(l2T1ERC7683), amount);
         bytes memory originData = OrderEncoder.encode(orderData);
         bytes memory fillerData = abi.encode(TypeCasts.addressToBytes32(vegeta));
-        L2T17683Pull.fill(orderId_, originData, fillerData);
-        assertEq(L2T17683Pull.orderStatus(orderId_), L2T17683Pull.FILLED());
+        l2T1ERC7683.fill(orderId_, originData, fillerData);
+        assertEq(l2T1ERC7683.orderStatus(orderId_), l2T1ERC7683.FILLED());
         vm.stopPrank();
 
         vm.startPrank(vegeta);
-        bytes32 requestId_ = L1T17683Pull.verifySettlement(destination, 1_000_000, orderId_);
+        bytes32 requestId_ = l1T1ERC7683.verifySettlement(destination, 1_000_000, orderId_);
         vm.stopPrank();
 
         return (orderData, orderId_, requestId_);
@@ -318,7 +335,7 @@ contract T1XChainReaderTest is T1BasicSwapE2E {
         for (uint256 i = 0; i < leafs.length; i++) {
             if (i == position) {
                 bytes32 xChainReadResultHash = keccak256(result);
-                // Use abi.encodePacked to match T1ERC7683Pull.sol line 138
+                // Use abi.encodePacked to match T1ERC7683.sol line 138
                 leafs[i] = keccak256(abi.encodePacked(xChainReadResultHash, requestId));
             } else {
                 bytes32 mockLeaf = keccak256(abi.encodePacked("mock_leaf", i));

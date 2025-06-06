@@ -22,7 +22,7 @@
         "implementation": "0x65949C0471cb12A4b82Dc0Cef4d52553f4a9A2aE",
         "proxy": "0x0fD87D072B5C7E51bD1Bc3B1c75B2a9F9fE9Fe58"
       },
-      "t1PullBased7683": {
+      "t1ERC7683": {
         "implementation": "0xfab428425a128245a489bc22f729A673eaeAb719",
         "proxy": "0x172F4579F1927c12b6bC38A1D19bB841a704b81B"
       }
@@ -41,7 +41,7 @@
         "implementation": "0x65949C0471cb12A4b82Dc0Cef4d52553f4a9A2aE",
         "proxy": "0x0fD87D072B5C7E51bD1Bc3B1c75B2a9F9fE9Fe58"
       },
-      "t1PullBased7683": {
+      "t1ERC7683": {
         "implementation": "0xfab428425a128245a489bc22f729A673eaeAb719",
         "proxy": "0x172F4579F1927c12b6bC38A1D19bB841a704b81B"
       }

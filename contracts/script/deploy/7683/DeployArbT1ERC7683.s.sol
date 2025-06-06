@@ -6,17 +6,17 @@ import { TransparentUpgradeableProxy } from "@openzeppelin/contracts/proxy/trans
 
 import { DeploymentUtils } from "../../lib/DeploymentUtils.sol";
 
-import { T1ERC7683Pull } from "../../../src/7683/T1ERC7683Pull.sol";
+import { T1ERC7683 } from "../../../src/7683/T1ERC7683.sol";
 import { T1Constants } from "../../../src/libraries/constants/T1Constants.sol";
 
-contract DeployArbT1ERC7683Pull is DeploymentUtils {
+contract DeployArbT1ERC7683 is DeploymentUtils {
     uint32 internal constant ARB = uint32(T1Constants.ARBITRUM_SEPOLIA_CHAIN_ID);
     uint32 internal constant BASE = uint32(T1Constants.BASE_SEPOLIA_CHAIN_ID);
     ProxyAdmin private proxyAdmin;
 
     function deploy() external {
         vm.createSelectFork(vm.rpcUrl("arbitrum_sepolia"));
-        logStart("DeployT1ERC7683Pull to Arbitrum");
+        logStart("DeployT1ERC7683 to Arbitrum");
         uint256 deployerPk = vm.envUint("DEPLOYER_PRIVATE_KEY");
         address ARB_T1_X_CHAIN_READ_PROXY_ADDR = vm.envAddress("ARB_T1_X_CHAIN_READ_PROXY_ADDR");
         address ARB_T1_PROXY_ADMIN_ADDR = vm.envAddress("ARB_T1_PROXY_ADMIN_ADDR");
@@ -24,7 +24,7 @@ contract DeployArbT1ERC7683Pull is DeploymentUtils {
 
         vm.startBroadcast(deployerPk);
 
-        T1ERC7683Pull impl = new T1ERC7683Pull(
+        T1ERC7683 impl = new T1ERC7683(
             address(0), // No Permit2 for now
             ARB_T1_X_CHAIN_READ_PROXY_ADDR,
             ARB
@@ -38,7 +38,7 @@ contract DeployArbT1ERC7683Pull is DeploymentUtils {
         logAddress("ARB_T1_PULL_BASED_7683_IMPLEMENTATION_ADDR", address(impl));
         logAddress("ARB_T1_PULL_BASED_7683_PROXY_ADDR", address(proxy));
 
-        logEnd("DeployT1ERC7683Pull to Arbitrum");
+        logEnd("DeployT1ERC7683 to Arbitrum");
     }
 
     function init() external {
@@ -49,7 +49,7 @@ contract DeployArbT1ERC7683Pull is DeploymentUtils {
 
         vm.startBroadcast(deployerPk);
 
-        T1ERC7683Pull(ARB_T1_7683_PROXY_ADDR).initialize(BASE_T1_7683_PROXY_ADDR);
+        T1ERC7683(ARB_T1_7683_PROXY_ADDR).initialize(BASE_T1_7683_PROXY_ADDR);
 
         vm.stopBroadcast();
     }

@@ -46,12 +46,12 @@ contract T1XChainReader is OwnableUpgradeable, ReentrancyGuardUpgradeable {
 
     // ============ State Variables ============
 
-    /// @notice The T1 messenger contract used for cross-chain communication
-    IT1Messenger public immutable messenger;
+    /// @notice The t1 messenger contract used for cross-chain communication
+    IT1Messenger public immutable MESSENGER;
 
-    /// @notice The T1 prover
+    /// @notice The t1 prover
     address public immutable prover;
-    /// @notice The next batch index to use by the proverfor the proof of read
+    /// @notice The next batch index to use by the prover for the proof of read
     uint256 public nextBatchIndex;
 
     /// @notice Maps batch indices to their proof of read root
@@ -90,7 +90,7 @@ contract T1XChainReader is OwnableUpgradeable, ReentrancyGuardUpgradeable {
         if (_messenger == address(0)) revert ZeroAddress();
         if (_prover == address(0)) revert ZeroAddress();
 
-        messenger = IT1Messenger(_messenger);
+        MESSENGER = IT1Messenger(_messenger);
         prover = _prover;
     }
 
@@ -148,7 +148,7 @@ contract T1XChainReader is OwnableUpgradeable, ReentrancyGuardUpgradeable {
     {
         bytes memory outerMessage = abi.encodePacked(selector, message);
 
-        messenger.sendMessage{ value: msg.value }(
+        MESSENGER.sendMessage{ value: msg.value }(
             targetContract,
             0, // No value transfer
             outerMessage,
