@@ -1,11 +1,11 @@
 {
   "metadata": {
-    "version": "v0.4.0",
-    "date": "2025-05-19",
+    "version": "v0.5.0",
+    "date": "2025-06-06",
     "by": "Evan",
     "from_machine": "Evan's machine",
     "from_branch": "feature/deploy-messengers-to-arb-and-base",
-    "from_tag": "v0.4.0"
+    "from_tag": "v0.5.0"
   },
   "addresses": {
     "arbitrum_sepolia": {
