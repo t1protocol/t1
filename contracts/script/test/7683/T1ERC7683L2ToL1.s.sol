@@ -109,7 +109,7 @@ contract SolverFillScript is Script {
     }
 }
 
-// Step 3:  Based Settlement and Relay
+// Step 3: Settlement and Relay
 contract SettlementScript is Script {
     function run() external {
         vm.createSelectFork(vm.rpcUrl("t1"));

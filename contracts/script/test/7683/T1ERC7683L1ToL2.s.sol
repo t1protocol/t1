@@ -108,7 +108,7 @@ contract SolverFillScript is Script {
     }
 }
 
-// Step 3:  Based Settlement and Relay
+// Step 3: Settlement and Relay
 contract SettlementScript is Script {
     uint32 private DESTINATION_CHAIN = uint32(vm.envUint("CHAIN_ID_L2"));
 
