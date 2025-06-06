@@ -50,7 +50,7 @@ contract T1XChainReader is OwnableUpgradeable, ReentrancyGuardUpgradeable {
     IT1Messenger public immutable MESSENGER;
 
     /// @notice The t1 prover
-    address public immutable PROVER;
+    address public immutable prover;
     /// @notice The next batch index to use by the prover for the proof of read
     uint256 public nextBatchIndex;
 
@@ -78,20 +78,20 @@ contract T1XChainReader is OwnableUpgradeable, ReentrancyGuardUpgradeable {
     // ============ Modifiers ============
 
     modifier onlyProver() {
-        if (msg.sender != address(PROVER)) revert OnlyProver();
+        if (msg.sender != address(prover)) revert OnlyProver();
         _;
     }
 
     /**
      * @notice Sets up the T1XChainReader contract
-     * @param _messenger Address of the T1 MESSENGER contract
+     * @param _messenger Address of the T1 messenger contract
      */
     constructor(address _messenger, address _prover) {
         if (_messenger == address(0)) revert ZeroAddress();
         if (_prover == address(0)) revert ZeroAddress();
 
         MESSENGER = IT1Messenger(_messenger);
-        PROVER = _prover;
+        prover = _prover;
     }
 
     // ============ External Functions ============
@@ -159,7 +159,7 @@ contract T1XChainReader is OwnableUpgradeable, ReentrancyGuardUpgradeable {
 
     /**
      * @notice Commit a new proof of read root
-     * @dev Access limited to the PROVER
+     * @dev Access limited to the prover
      * @param batchIndex The batch index of the read request
      * @param newRoot The root of the proof of read merkle tree
      */
