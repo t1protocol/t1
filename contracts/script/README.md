@@ -181,13 +181,13 @@ contracts.
 #### Arbitrum Sepolia XChain Reader
 
 ```bash
-forge script ./deploy/DeployArbT1XChainReader.s.sol:DeployArbT1XChainReader  --broadcast --verify --verifier etherscan --verifier-url https://api-sepolia.arbiscan.io/api --etherscan-api-key $ARBISCAN_API_KEY
+forge script ./deploy/DeployArbT1XChainReader.s.sol:DeployArbT1XChainReader --broadcast --verify --verifier etherscan --verifier-url https://api-sepolia.arbiscan.io/api --etherscan-api-key $ARBISCAN_API_KEY
 ```
 
 #### Base Sepolia XChain Reader
 
 ```bash
-forge script ./deploy/DeployBaseT1XChainReader.s.sol:DeployBaseT1XChainReader  --broadcast --verify --verifier etherscan --verifier-url https://api-sepolia.basescan.org/api --etherscan-api-key $BASESCAN_API_KEY
+forge script ./deploy/DeployBaseT1XChainReader.s.sol:DeployBaseT1XChainReader --broadcast --verify --verifier etherscan --verifier-url https://api-sepolia.basescan.org/api --etherscan-api-key $BASESCAN_API_KEY
 ```
 
 ### Deploying 7683
