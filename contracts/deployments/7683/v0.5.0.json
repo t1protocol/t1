@@ -18,13 +18,13 @@
       "t1MessageQueue": "0x5Fe327F7268f38f4a964DaFdFB709826F1C2a409",
       "t1MessengerImplementation": "0x2Ae1A629e64337F540f4E8eD94e665BF792656a3",
       "t1Owner": "0xFc30645d98ecF37823BeCbf0CDf86f09e886365a",
-      "t1XChainRead": {
-        "implementation": "0x65949C0471cb12A4b82Dc0Cef4d52553f4a9A2aE",
-        "proxy": "0x0fD87D072B5C7E51bD1Bc3B1c75B2a9F9fE9Fe58"
+      "t1XChainReader": {
+        "implementation": "0x5AE8E59FEdfdD7677b6A115D0E6DB0B45af54D0b",
+        "proxy": "0x624BA6F3D10575e38Bd4b17eEBC343B6E32876Ed"
       },
       "t1ERC7683": {
-        "implementation": "0xfab428425a128245a489bc22f729A673eaeAb719",
-        "proxy": "0x172F4579F1927c12b6bC38A1D19bB841a704b81B"
+        "implementation": "0xbBe7777d68B58791c53bD9cfBE2318662c57aD21",
+        "proxy": "0xa459D53d40d9485843088018f40dd8A1Fbb98eD8"
       }
     },
     "base_sepolia": {
@@ -38,12 +38,12 @@
       "t1MessengerImplementation": "0x2Ae1A629e64337F540f4E8eD94e665BF792656a3",
       "t1Owner": "0xFc30645d98ecF37823BeCbf0CDf86f09e886365a",
       "t1XChainRead": {
-        "implementation": "0x65949C0471cb12A4b82Dc0Cef4d52553f4a9A2aE",
-        "proxy": "0x0fD87D072B5C7E51bD1Bc3B1c75B2a9F9fE9Fe58"
+        "implementation": "0x5AE8E59FEdfdD7677b6A115D0E6DB0B45af54D0b",
+        "proxy": "0x624BA6F3D10575e38Bd4b17eEBC343B6E32876Ed"
       },
       "t1ERC7683": {
-        "implementation": "0xfab428425a128245a489bc22f729A673eaeAb719",
-        "proxy": "0x172F4579F1927c12b6bC38A1D19bB841a704b81B"
+        "implementation": "0xbBe7777d68B58791c53bD9cfBE2318662c57aD21",
+        "proxy": "0xa459D53d40d9485843088018f40dd8A1Fbb98eD8"
       }
     },
     "deployerAddress": "0xD99c1b45708a4E94c6230f6A77BD7fa729f5398B"
