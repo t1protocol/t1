@@ -7,4 +7,4 @@
 [rust]: https://www.rust-lang.org/
 [rust-badge]: https://img.shields.io/badge/Rust-stable-orange?logo=rust
 
-t1 extenstion of reth
+t1 extension of reth
