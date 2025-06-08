@@ -12,11 +12,7 @@
     "isolatedModules": true,
     "noFallthroughCasesInSwitch": true,
     "strictPropertyInitialization": false,
+    "skipLibCheck": true,
   },
-  "references": [
-    {
-      "path": "../sdk"
-    }
-  ],
   "exclude": ["node_modules", "dist"],
 }
