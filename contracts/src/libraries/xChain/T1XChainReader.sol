@@ -1,12 +1,9 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.25;
 
-import { TypeCasts } from "@hyperlane-xyz/libs/TypeCasts.sol";
 import { OwnableUpgradeable } from "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
 import { ReentrancyGuardUpgradeable } from "@openzeppelin/contracts-upgradeable/security/ReentrancyGuardUpgradeable.sol";
 
-import { IT1Messenger } from "../IT1Messenger.sol";
-import { T1XChainMessage } from "./T1XChainMessage.sol";
 import { WithdrawTrieVerifier } from "../verifier/WithdrawTrieVerifier.sol";
 
 /**
@@ -30,7 +27,7 @@ contract T1XChainReader is OwnableUpgradeable, ReentrancyGuardUpgradeable {
     event ReadRequested(
         bytes32 indexed requestId,
         uint32 indexed destinationDomain,
-        address targetContract,
+        address indexed targetContract,
         address requester,
         uint256 gasLimit,
         uint64 minBlock,
@@ -45,9 +42,6 @@ contract T1XChainReader is OwnableUpgradeable, ReentrancyGuardUpgradeable {
     event ProofOfReadRootCommitted(uint256 batchIndex);
 
     // ============ State Variables ============
-
-    /// @notice The t1 messenger contract used for cross-chain communication
-    IT1Messenger public immutable MESSENGER;
 
     /// @notice The t1 prover
     address public immutable prover;
@@ -84,13 +78,11 @@ contract T1XChainReader is OwnableUpgradeable, ReentrancyGuardUpgradeable {
 
     /**
      * @notice Sets up the T1XChainReader contract
-     * @param _messenger Address of the T1 messenger contract
+     * @param _prover Address of the prover
      */
-    constructor(address _messenger, address _prover) {
-        if (_messenger == address(0)) revert ZeroAddress();
+    constructor(address _prover) {
         if (_prover == address(0)) revert ZeroAddress();
 
-        MESSENGER = IT1Messenger(_messenger);
         prover = _prover;
     }
 
@@ -125,36 +117,7 @@ contract T1XChainReader is OwnableUpgradeable, ReentrancyGuardUpgradeable {
 
         nonce++;
 
-        bytes memory message = T1XChainMessage.encodeRead(
-            destinationDomain, TypeCasts.addressToBytes32(targetContract), requestId, callData
-        );
-
-        // Using this selector to avoid hash collision
-        bytes4 requestReadSelector = bytes4(keccak256("requestRead(uint32,address,uint256,uint64,bytes,address)"));
-
-        _sendMessage(destinationDomain, targetContract, gasLimit, requestReadSelector, message);
-
         emit ReadRequested(requestId, destinationDomain, targetContract, tx.origin, gasLimit, minBlock, callData, nonce);
-    }
-
-    function _sendMessage(
-        uint32 destinationDomain,
-        address targetContract,
-        uint256 gasLimit,
-        bytes4 selector,
-        bytes memory message
-    )
-        internal
-    {
-        bytes memory outerMessage = abi.encodePacked(selector, message);
-
-        MESSENGER.sendMessage{ value: msg.value }(
-            targetContract,
-            0, // No value transfer
-            outerMessage,
-            gasLimit,
-            uint64(destinationDomain)
-        );
     }
 
     /**

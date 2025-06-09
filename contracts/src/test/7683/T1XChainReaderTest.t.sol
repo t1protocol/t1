@@ -23,15 +23,11 @@ contract T1XChainReaderTest is T1BasicSwapE2E {
 
         // Deploy T1XChainReader on both chains
         originReader = T1XChainReader(payable(_deployProxy(address(0))));
-        admin.upgrade(
-            ITransparentUpgradeableProxy(address(originReader)),
-            address(new T1XChainReader(address(l1t1Messenger), address(this)))
-        );
+        admin.upgrade(ITransparentUpgradeableProxy(address(originReader)), address(new T1XChainReader(address(this))));
 
         destinationReader = T1XChainReader(payable(_deployProxy(address(0))));
         admin.upgrade(
-            ITransparentUpgradeableProxy(address(destinationReader)),
-            address(new T1XChainReader(address(l2t1Messenger), address(this)))
+            ITransparentUpgradeableProxy(address(destinationReader)), address(new T1XChainReader(address(this)))
         );
 
         l1T1ERC7683 = T1ERC7683(payable(_deployProxy(address(0))));

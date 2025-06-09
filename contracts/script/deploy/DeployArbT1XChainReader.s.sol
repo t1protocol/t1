@@ -15,14 +15,13 @@ contract DeployArbT1XChainReader is DeploymentUtils {
         logStart("DeployXChainRead to ARB");
 
         uint256 DEPLOYER_PRIVATE_KEY = vm.envUint("DEPLOYER_PRIVATE_KEY");
-        address ARB_T1_MESSENGER_PROXY_ADDR = vm.envAddress("ARB_T1_MESSENGER_PROXY_ADDR");
         address ARB_T1_PROXY_ADMIN_ADDR = vm.envAddress("ARB_T1_PROXY_ADMIN_ADDR");
         address SIGNER = vm.envAddress("ARB_SIGNER");
         ProxyAdmin proxyAdmin = ProxyAdmin(ARB_T1_PROXY_ADMIN_ADDR);
 
         vm.startBroadcast(DEPLOYER_PRIVATE_KEY);
 
-        T1XChainReader impl = new T1XChainReader(address(ARB_T1_MESSENGER_PROXY_ADDR), SIGNER);
+        T1XChainReader impl = new T1XChainReader(SIGNER);
         logAddress("ARB_T1_X_CHAIN_READ_IMPLEMENTATION_ADDR", address(impl));
 
         TransparentUpgradeableProxy proxy =

@@ -21,7 +21,7 @@ contract DeployBaseT1XChainReader is DeploymentUtils {
 
         vm.startBroadcast(DEPLOYER_PRIVATE_KEY);
 
-        T1XChainReader impl = new T1XChainReader(address(BASE_T1_MESSENGER_PROXY_ADDR), SIGNER);
+        T1XChainReader impl = new T1XChainReader(SIGNER);
         logAddress("BASE_T1_X_CHAIN_READ_IMPLEMENTATION_ADDR", address(impl));
 
         TransparentUpgradeableProxy proxy =
