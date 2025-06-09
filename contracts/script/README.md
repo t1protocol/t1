@@ -5,13 +5,13 @@
 You can use `./deploy.sh` in the `contracts` folder to automatically deploy all the contracts. Make sure to have the
 `.env` file clean from any previous deployments.
 
-There is a particular order the deployment scripts need to be ran in. There are multiple reasons for this:
+There is a particular order the deployment scripts need to be run in. There are multiple reasons for this:
 
 - Upgradeable ProxyAdmin needs to be correct
 - Contract Owners need to be correct
 - Some L1 and L2 contracts (such as ETHGateways) need to have their target chain counterparts correctly configured
 
-Should you deploy in an incorrect order, some of the functionalities might not work correctly even if your scripts ran
+Should you deploy in an incorrect order, some of the functionalities might not work correctly even if your scripts run
 with no errors!
 
 The magical deploy order is as follows:
