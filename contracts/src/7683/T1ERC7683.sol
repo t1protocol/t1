@@ -80,6 +80,28 @@ contract T1ERC7683 is BasicSwap7683, OwnableUpgradeable, PausableUpgradeable {
         __Pausable_init();
     }
 
+    function open(OnchainCrossChainOrder calldata _order) external payable override whenNotPaused {
+        (ResolvedCrossChainOrder memory resolvedOrder, bytes32 orderId, uint256 nonce) = _resolveOrder(_order);
+
+        openOrders[orderId] = abi.encode(_order.orderDataType, _order.orderData);
+        orderStatus[orderId] = OPENED;
+        _useNonce(msg.sender, nonce);
+
+        uint256 totalValue;
+        for (uint256 i = 0; i < resolvedOrder.minReceived.length; i++) {
+            address token = TypeCasts.bytes32ToAddress(resolvedOrder.minReceived[i].token);
+            if (token == address(0)) {
+                totalValue += resolvedOrder.minReceived[i].amount;
+            } else {
+                IERC20(token).safeTransferFrom(msg.sender, address(this), resolvedOrder.minReceived[i].amount);
+            }
+        }
+
+        if (msg.value != totalValue) revert InvalidNativeAmount();
+
+        emit Open(orderId, resolvedOrder);
+    }
+
     function openFor(
         GaslessCrossChainOrder calldata _order,
         bytes calldata _signature,
@@ -101,28 +123,6 @@ contract T1ERC7683 is BasicSwap7683, OwnableUpgradeable, PausableUpgradeable {
         _useNonce(_order.user, nonce);
 
         _permitTransferFrom(resolvedOrder, _signature, _order.nonce, address(this));
-
-        emit Open(orderId, resolvedOrder);
-    }
-
-    function open(OnchainCrossChainOrder calldata _order) external payable override whenNotPaused {
-        (ResolvedCrossChainOrder memory resolvedOrder, bytes32 orderId, uint256 nonce) = _resolveOrder(_order);
-
-        openOrders[orderId] = abi.encode(_order.orderDataType, _order.orderData);
-        orderStatus[orderId] = OPENED;
-        _useNonce(msg.sender, nonce);
-
-        uint256 totalValue;
-        for (uint256 i = 0; i < resolvedOrder.minReceived.length; i++) {
-            address token = TypeCasts.bytes32ToAddress(resolvedOrder.minReceived[i].token);
-            if (token == address(0)) {
-                totalValue += resolvedOrder.minReceived[i].amount;
-            } else {
-                IERC20(token).safeTransferFrom(msg.sender, address(this), resolvedOrder.minReceived[i].amount);
-            }
-        }
-
-        if (msg.value != totalValue) revert InvalidNativeAmount();
 
         emit Open(orderId, resolvedOrder);
     }
@@ -191,6 +191,14 @@ contract T1ERC7683 is BasicSwap7683, OwnableUpgradeable, PausableUpgradeable {
         }
 
         emit SettlementVerified(orderId, isSettled);
+    }
+
+    function pause() external onlyOwner {
+        _pause();
+    }
+
+    function unpause() external onlyOwner {
+        _unpause();
     }
 
     function getFilledOrderStatus(bytes32 orderId) external view returns (bytes memory) {
