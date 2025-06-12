@@ -2,9 +2,18 @@
 pragma solidity ^0.8.25;
 
 import { OwnableUpgradeable } from "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
+import { PausableUpgradeable } from "@openzeppelin/contracts-upgradeable/security/PausableUpgradeable.sol";
+import { IERC20 } from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
+import { SafeERC20 } from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
+import {
+    GaslessCrossChainOrder,
+    ResolvedCrossChainOrder,
+    OnchainCrossChainOrder
+} from "intents-framework/ERC7683/IERC7683.sol";
 import { Hyperlane7683Message } from "intents-framework/libs/Hyperlane7683Message.sol";
 import { BasicSwap7683 } from "intents-framework/BasicSwap7683.sol";
 import { OrderData, OrderEncoder } from "intents-framework/libs/OrderEncoder.sol";
+import { TypeCasts } from "@hyperlane-xyz/libs/TypeCasts.sol";
 
 import { T1XChainReader } from "../libraries/xChain/T1XChainReader.sol";
 /**
@@ -14,7 +23,9 @@ import { T1XChainReader } from "../libraries/xChain/T1XChainReader.sol";
  * @dev Implements both push-based messaging and pull-based verification for orders
  */
 
-contract T1ERC7683 is BasicSwap7683, OwnableUpgradeable {
+contract T1ERC7683 is BasicSwap7683, OwnableUpgradeable, PausableUpgradeable {
+    using SafeERC20 for IERC20;
+
     // ============ Constants ============
     uint32 public immutable localDomain;
     T1XChainReader public immutable xChainRead;
@@ -47,7 +58,6 @@ contract T1ERC7683 is BasicSwap7683, OwnableUpgradeable {
 
     // ============ Errors ============
     error FunctionNotImplemented(string functionName);
-    error EthNotAllowed();
     error SettlementFailed();
     error RefundFailed();
 
@@ -67,6 +77,54 @@ contract T1ERC7683 is BasicSwap7683, OwnableUpgradeable {
     function initialize(address _counterpart) external initializer {
         counterpart = _counterpart;
         __Ownable_init();
+        __Pausable_init();
+    }
+
+    function open(OnchainCrossChainOrder calldata _order) external payable override whenNotPaused {
+        (ResolvedCrossChainOrder memory resolvedOrder, bytes32 orderId, uint256 nonce) = _resolveOrder(_order);
+
+        openOrders[orderId] = abi.encode(_order.orderDataType, _order.orderData);
+        orderStatus[orderId] = OPENED;
+        _useNonce(msg.sender, nonce);
+
+        uint256 totalValue;
+        for (uint256 i = 0; i < resolvedOrder.minReceived.length; i++) {
+            address token = TypeCasts.bytes32ToAddress(resolvedOrder.minReceived[i].token);
+            if (token == address(0)) {
+                totalValue += resolvedOrder.minReceived[i].amount;
+            } else {
+                IERC20(token).safeTransferFrom(msg.sender, address(this), resolvedOrder.minReceived[i].amount);
+            }
+        }
+
+        if (msg.value != totalValue) revert InvalidNativeAmount();
+
+        emit Open(orderId, resolvedOrder);
+    }
+
+    function openFor(
+        GaslessCrossChainOrder calldata _order,
+        bytes calldata _signature,
+        bytes calldata _originFillerData
+    )
+        external
+        override
+        whenNotPaused
+    {
+        if (block.timestamp > _order.openDeadline) revert OrderOpenExpired();
+        if (_order.originSettler != address(this)) revert InvalidGaslessOrderSettler();
+        if (_order.originChainId != _localDomain()) revert InvalidGaslessOrderOrigin();
+
+        (ResolvedCrossChainOrder memory resolvedOrder, bytes32 orderId, uint256 nonce) =
+            _resolveOrder(_order, _originFillerData);
+
+        openOrders[orderId] = abi.encode(_order.orderDataType, _order.orderData);
+        orderStatus[orderId] = OPENED;
+        _useNonce(_order.user, nonce);
+
+        _permitTransferFrom(resolvedOrder, _signature, _order.nonce, address(this));
+
+        emit Open(orderId, resolvedOrder);
     }
 
     /// @notice Initiates a pull-based settlement verification for an order
@@ -133,6 +191,14 @@ contract T1ERC7683 is BasicSwap7683, OwnableUpgradeable {
         }
 
         emit SettlementVerified(orderId, isSettled);
+    }
+
+    function pause() external onlyOwner {
+        _pause();
+    }
+
+    function unpause() external onlyOwner {
+        _unpause();
     }
 
     function getFilledOrderStatus(bytes32 orderId) external view returns (bytes memory) {
