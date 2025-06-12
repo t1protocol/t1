@@ -73,7 +73,7 @@ contract BaseTest is Test, DeployPermit2 {
 
     ProxyAdmin internal admin;
 
-    EmptyContract private placeholder;
+    EmptyContract internal placeholder;
 
     function __T1TestBase_setUp() internal {
         admin = new ProxyAdmin();
