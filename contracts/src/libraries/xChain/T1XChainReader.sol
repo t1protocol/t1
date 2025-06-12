@@ -63,6 +63,7 @@ contract T1XChainReader is OwnableUpgradeable, ReentrancyGuardUpgradeable {
         uint256 gasLimit;
         uint64 minBlock;
         bytes callData;
+        address requester;
     }
 
     // ============ Errors ============
