@@ -111,7 +111,7 @@ contract T1ERC7683 is BasicSwap7683, OwnableUpgradeable {
     /// abi.encode(uint256 batchIndex, bytes32 requestId, uint256 position, bytes result, bytes proof)
     function handleReadResultWithProof(bytes calldata encodedProofOfRead) external {
         (bytes32 requestId, bytes memory result) = xChainRead.verifyProofOfRead(encodedProofOfRead);
-        
+
         bytes32 orderId = readRequestToOrderId[requestId];
 
         // Ensure we have a valid order

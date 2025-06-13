@@ -104,7 +104,12 @@ contract T1XChainReader is OwnableUpgradeable, ReentrancyGuardUpgradeable {
      */
     function requestRead(ReadRequest calldata request) external payable nonReentrant returns (bytes32 requestId) {
         return _processReadRequest(
-            request.destinationDomain, request.targetContract, request.gasLimit, request.minBlock, request.callData, request.requester
+            request.destinationDomain,
+            request.targetContract,
+            request.gasLimit,
+            request.minBlock,
+            request.callData,
+            request.requester
         );
     }
 
@@ -173,16 +178,16 @@ contract T1XChainReader is OwnableUpgradeable, ReentrancyGuardUpgradeable {
     }
 
     /**
-    * @notice Verifies a proof of read and returns the raw function result
-    * @dev The result is ABI-encoded as returned by the target function.
-    *      For functions returning dynamic types, you'll need to decode twice:
-    *      1. abi.decode(result, (bytes)) to get the inner bytes
-    *      2. abi.decode(innerBytes, (your expected type))
-    * @param encodedProofOfRead The encoded proof of read which is formatted as following:
-    * abi.encode(uint256 batchIndex, bytes32 requestId, uint256 position, bytes result, bytes proof)
-    * @return requestId The ID of the read request
-    * @return result The raw ABI-encoded return value from the target function
-    */
+     * @notice Verifies a proof of read and returns the raw function result
+     * @dev The result is ABI-encoded as returned by the target function.
+     *      For functions returning dynamic types, you'll need to decode twice:
+     *      1. abi.decode(result, (bytes)) to get the inner bytes
+     *      2. abi.decode(innerBytes, (your expected type))
+     * @param encodedProofOfRead The encoded proof of read which is formatted as following:
+     * abi.encode(uint256 batchIndex, bytes32 requestId, uint256 position, bytes result, bytes proof)
+     * @return requestId The ID of the read request
+     * @return result The raw ABI-encoded return value from the target function
+     */
     function verifyProofOfRead(bytes calldata encodedProofOfRead) external view returns (bytes32, bytes memory) {
         (uint256 batchIndex, bytes32 requestId, uint256 position, bytes memory result, bytes memory proof) =
             abi.decode(encodedProofOfRead, (uint256, bytes32, uint256, bytes, bytes));
