@@ -111,7 +111,7 @@ contract T1ERC7683 is BasicSwap7683, OwnableUpgradeable {
     /// abi.encode(uint256 batchIndex, bytes32 requestId, uint256 position, bytes result, bytes proof)
     function handleReadResultWithProof(bytes calldata encodedProofOfRead) external {
         (bytes32 requestId, bytes memory result) = xChainRead.verifyProofOfRead(encodedProofOfRead);
-
+        
         bytes32 orderId = readRequestToOrderId[requestId];
 
         // Ensure we have a valid order
@@ -168,8 +168,10 @@ contract T1ERC7683 is BasicSwap7683, OwnableUpgradeable {
     /// @param _sender The address of the sender on the origin domain
     /// @param _message The encoded message received via t1
     function _handle(uint32 _originDomain, bytes32 _sender, bytes memory _message) internal {
+        // Remove the first 32 bytes prefix of the message
+        bytes memory _innerMessage = abi.decode(_message, (bytes));
         (bool _settle, bytes32[] memory _orderIds, bytes[] memory _ordersFillerData) =
-            abi.decode(_message, (bool, bytes32[], bytes[]));
+            abi.decode(_innerMessage, (bool, bytes32[], bytes[]));
 
         for (uint256 i = 0; i < _orderIds.length; i++) {
             if (_settle) {
