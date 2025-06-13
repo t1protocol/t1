@@ -65,7 +65,7 @@ contract T1XChainReaderTest is T1BasicSwapE2E {
         // 4. Process the read request on L2 (destination chain) & Relay the result back to L1
         {
             // Construct the read request calldata
-            bytes memory result = l2T1ERC7683.getFilledOrderStatus(orderId);
+            bytes memory result = abi.encode(l2T1ERC7683.getFilledOrderStatus(orderId));
 
             // Generate merkle tree and proof for the result
             (bytes32 root, bytes memory proof) = _generateMerkleTree(requestId, result, position);
@@ -93,7 +93,7 @@ contract T1XChainReaderTest is T1BasicSwapE2E {
         // 4. Process the read request on L2 (destination chain) & Relay the result back to L1
         {
             // Construct the read request calldata
-            bytes memory result = l2T1ERC7683.getFilledOrderStatus(orderId);
+            bytes memory result = abi.encode(l2T1ERC7683.getFilledOrderStatus(orderId));
             // Generate merkle tree and proof for the result
             (bytes32 root, bytes memory proof) = _generateMerkleTree(requestId, result, position);
 
@@ -139,7 +139,7 @@ contract T1XChainReaderTest is T1BasicSwapE2E {
 
         (, bytes32 orderId, bytes32 requestId) = _openAndFillOrder();
 
-        bytes memory result = l2T1ERC7683.getFilledOrderStatus(orderId);
+        bytes memory result = abi.encode(l2T1ERC7683.getFilledOrderStatus(orderId));
         (bytes32 root,) = _generateMerkleTree(requestId, result, position);
         originReader.commitProofOfReadRoot(batchIndex, root);
 
@@ -155,7 +155,7 @@ contract T1XChainReaderTest is T1BasicSwapE2E {
 
         (, bytes32 orderId, bytes32 requestId) = _openAndFillOrder();
 
-        bytes memory result = l2T1ERC7683.getFilledOrderStatus(orderId);
+        bytes memory result = abi.encode(l2T1ERC7683.getFilledOrderStatus(orderId));
         (bytes32 root,) = _generateMerkleTree(requestId, result, position);
         originReader.commitProofOfReadRoot(batchIndex, root);
 
@@ -197,7 +197,7 @@ contract T1XChainReaderTest is T1BasicSwapE2E {
         (, bytes32 orderId, bytes32 requestId) = _openAndFillOrder();
 
         {
-            bytes memory result = l2T1ERC7683.getFilledOrderStatus(orderId);
+            bytes memory result = abi.encode(l2T1ERC7683.getFilledOrderStatus(orderId));
             (bytes32 root, bytes memory proof) = _generateMerkleTree(requestId, result, position);
 
             originReader.commitProofOfReadRoot(batchIndex, root);
