@@ -8,12 +8,16 @@ import { ISignatureTransfer } from "@uniswap/permit2/src/interfaces/IPermit2.sol
 import { BaseTest } from "./BaseTest.sol";
 import { T1XChainReader } from "../../libraries/xChain/T1XChainReader.sol";
 import { T1ERC7683 } from "../../7683/T1ERC7683.sol";
+
+import { TypeCasts } from "@hyperlane-xyz/libs/TypeCasts.sol";
+import { ITransparentUpgradeableProxy } from "@openzeppelin/contracts/proxy/transparent/TransparentUpgradeableProxy.sol";
 import { OrderData, OrderEncoder } from "../../../src/libraries/7683/OrderEncoder.sol";
 import {
     OnchainCrossChainOrder,
     GaslessCrossChainOrder,
     ResolvedCrossChainOrder
 } from "../../../src/interfaces/IERC7683.sol";
+import { ISignatureTransfer } from "@uniswap/permit2/src/interfaces/IPermit2.sol";
 
 contract TvlThresholdTest is BaseTest {
     using TypeCasts for address;
