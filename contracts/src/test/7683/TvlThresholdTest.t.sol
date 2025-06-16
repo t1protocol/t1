@@ -8,11 +8,16 @@ import { T1ERC7683 } from "../../7683/T1ERC7683.sol";
 import { TypeCasts } from "@hyperlane-xyz/libs/TypeCasts.sol";
 import { ITransparentUpgradeableProxy } from "@openzeppelin/contracts/proxy/transparent/TransparentUpgradeableProxy.sol";
 import { OrderData, OrderEncoder } from "intents-framework/libs/OrderEncoder.sol";
-import { OnchainCrossChainOrder } from "intents-framework/ERC7683/IERC7683.sol";
-import { GaslessCrossChainOrder } from "intents-framework/ERC7683/IERC7683.sol";
+import {
+    GaslessCrossChainOrder,
+    OnchainCrossChainOrder,
+    ResolvedCrossChainOrder
+} from "intents-framework/ERC7683/IERC7683.sol";
+import { ISignatureTransfer } from "@uniswap/permit2/src/interfaces/IPermit2.sol";
 
 contract TvlThresholdTest is BaseTest {
     using TypeCasts for address;
+    using TypeCasts for bytes32;
 
     event Paused(address account);
     event Unpaused(address account);
@@ -33,7 +38,7 @@ contract TvlThresholdTest is BaseTest {
         t1ERC7683 = T1ERC7683(payable(_deployProxy(address(0))));
         admin.upgrade(
             ITransparentUpgradeableProxy(address(t1ERC7683)),
-            address(new T1ERC7683(address(0), address(reader), uint32(origin)))
+            address(new T1ERC7683(permit2, address(reader), uint32(origin)))
         );
         t1ERC7683.initialize(address(t1ERC7683));
     }
@@ -74,19 +79,53 @@ contract TvlThresholdTest is BaseTest {
         OrderData memory orderData = _prepareOrderData();
         OnchainCrossChainOrder memory order =
             _prepareOnchainOrder(OrderEncoder.encode(orderData), orderData.fillDeadline, OrderEncoder.orderDataType());
-        bytes32 orderId = OrderEncoder.id(orderData);
 
         vm.startPrank(kakaroto);
         inputToken.approve(address(t1ERC7683), type(uint256).max);
         t1ERC7683.open(order);
         vm.stopPrank();
 
+        bytes32 orderId = OrderEncoder.id(orderData);
         bytes32 status = t1ERC7683.orderStatus(orderId);
-
         assertEq(status, t1ERC7683.OPENED());
     }
 
-    // function test_canOpenForWhenNotPaused() public { }
+    function test_canOpenForWhenNotPaused() public {
+        vm.prank(kakaroto);
+        inputToken.approve(permit2, type(uint256).max);
+
+        uint32 openDeadline = uint32(block.timestamp + 100);
+        OrderData memory orderData = _prepareOrderData();
+        GaslessCrossChainOrder memory order = _prepareGaslessOrder(
+            address(t1ERC7683),
+            kakaroto,
+            orderData.originDomain,
+            OrderEncoder.encode(orderData),
+            orderData.senderNonce,
+            openDeadline,
+            orderData.fillDeadline,
+            OrderEncoder.orderDataType()
+        );
+        bytes memory originFillerData = new bytes(0);
+
+        ResolvedCrossChainOrder memory resolvedOrder = t1ERC7683.resolveFor(order, originFillerData);
+        bytes memory sig = _getSignature(
+            address(t1ERC7683),
+            t1ERC7683.witnessHash(resolvedOrder),
+            orderData.inputToken.bytes32ToAddress(),
+            order.nonce,
+            orderData.amountIn,
+            openDeadline,
+            kakarotoPK
+        );
+
+        vm.prank(vegeta);
+        t1ERC7683.openFor(order, sig, new bytes(0));
+
+        bytes32 orderId = OrderEncoder.id(orderData);
+        bytes32 status = t1ERC7683.orderStatus(orderId);
+        assertEq(status, t1ERC7683.OPENED());
+    }
 
     function test_cannotOpenWhenPaused() public {
         t1ERC7683.pause();
