@@ -5,8 +5,8 @@ import { Script } from "forge-std/Script.sol";
 import { console2 } from "forge-std/console2.sol";
 import { ERC20 } from "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 import { TypeCasts } from "@hyperlane-xyz/libs/TypeCasts.sol";
-import { OrderData, OrderEncoder } from "intents-framework/libs/OrderEncoder.sol";
-import { OnchainCrossChainOrder } from "intents-framework/ERC7683/IERC7683.sol";
+import { OrderData, OrderEncoder } from "../../../src/libraries/7683/OrderEncoder.sol";
+import { OnchainCrossChainOrder } from "../../../src/interfaces/IERC7683.sol";
 import { T1ERC7683 } from "../../../src/7683/T1ERC7683.sol";
 import { T1Constants } from "../../../src/libraries/constants/T1Constants.sol";
 

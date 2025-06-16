@@ -18,9 +18,9 @@ import {
     GaslessCrossChainOrder,
     OnchainCrossChainOrder,
     ResolvedCrossChainOrder
-} from "intents-framework/ERC7683/IERC7683.sol";
+} from "../../../src/interfaces/IERC7683.sol";
 
-import { Base7683 } from "intents-framework/Base7683.sol";
+import { Base7683 } from "../../../src/7683/Base7683.sol";
 import { EmptyContract } from "../../misc/EmptyContract.sol";
 
 event Open(bytes32 indexed orderId, ResolvedCrossChainOrder resolvedOrder);

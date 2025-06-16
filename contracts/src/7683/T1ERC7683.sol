@@ -5,24 +5,20 @@ import { OwnableUpgradeable } from "@openzeppelin/contracts-upgradeable/access/O
 import { PausableUpgradeable } from "@openzeppelin/contracts-upgradeable/security/PausableUpgradeable.sol";
 import { IERC20 } from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import { SafeERC20 } from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
-import {
-    GaslessCrossChainOrder,
-    ResolvedCrossChainOrder,
-    OnchainCrossChainOrder
-} from "intents-framework/ERC7683/IERC7683.sol";
-import { Hyperlane7683Message } from "intents-framework/libs/Hyperlane7683Message.sol";
-import { BasicSwap7683 } from "intents-framework/BasicSwap7683.sol";
-import { OrderData, OrderEncoder } from "intents-framework/libs/OrderEncoder.sol";
 import { TypeCasts } from "@hyperlane-xyz/libs/TypeCasts.sol";
 
+import { GaslessCrossChainOrder, ResolvedCrossChainOrder, OnchainCrossChainOrder } from "../interfaces/IERC7683.sol";
+import { BasicSwap7683 } from "./BasicSwap7683.sol";
+import { Hyperlane7683Message } from "../libraries/7683/Hyperlane7683Message.sol";
+import { OrderData, OrderEncoder } from "../libraries/7683/OrderEncoder.sol";
 import { T1XChainReader } from "../libraries/xChain/T1XChainReader.sol";
+
 /**
  * @title T1ERC7683
  * @author t1 Labs
  * @notice This contract extends BasicSwap7683 with pull-based settlement using t1 cross-chain reads
  * @dev Implements both push-based messaging and pull-based verification for orders
  */
-
 contract T1ERC7683 is BasicSwap7683, OwnableUpgradeable, PausableUpgradeable {
     using SafeERC20 for IERC20;
 
@@ -152,7 +148,8 @@ contract T1ERC7683 is BasicSwap7683, OwnableUpgradeable, PausableUpgradeable {
             targetContract: counterpart,
             gasLimit: gasLimit,
             minBlock: 0,
-            callData: callData
+            callData: callData,
+            requester: msg.sender
         });
 
         // Request the cross-chain read
@@ -233,8 +230,10 @@ contract T1ERC7683 is BasicSwap7683, OwnableUpgradeable, PausableUpgradeable {
     /// @param _sender The address of the sender on the origin domain
     /// @param _message The encoded message received via t1
     function _handle(uint32 _originDomain, bytes32 _sender, bytes memory _message) internal {
+        // Remove the first 32 bytes prefix of the message
+        bytes memory _innerMessage = abi.decode(_message, (bytes));
         (bool _settle, bytes32[] memory _orderIds, bytes[] memory _ordersFillerData) =
-            abi.decode(_message, (bool, bytes32[], bytes[]));
+            abi.decode(_innerMessage, (bool, bytes32[], bytes[]));
 
         for (uint256 i = 0; i < _orderIds.length; i++) {
             if (_settle) {
