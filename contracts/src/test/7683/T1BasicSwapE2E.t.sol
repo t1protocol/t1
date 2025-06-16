@@ -8,9 +8,9 @@ import {
 import { TypeCasts } from "@hyperlane-xyz/libs/TypeCasts.sol";
 
 import { BaseTest, TestInterchainGasPaymaster } from "./BaseTest.sol";
-import { Base7683 } from "intents-framework/Base7683.sol";
-import { OrderData, OrderEncoder } from "intents-framework/libs/OrderEncoder.sol";
-import { GaslessCrossChainOrder } from "intents-framework/ERC7683/IERC7683.sol";
+import { Base7683 } from "../../../src/7683/Base7683.sol";
+import { OrderData, OrderEncoder } from "../../../src/libraries/7683/OrderEncoder.sol";
+import { GaslessCrossChainOrder } from "../../../src/interfaces/IERC7683.sol";
 
 import { T1ERC7683 } from "../../7683/T1ERC7683.sol";
 import { L1MessageQueue } from "../../L1/rollup/L1MessageQueue.sol";

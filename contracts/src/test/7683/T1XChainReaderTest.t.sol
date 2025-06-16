@@ -3,8 +3,8 @@ pragma solidity ^0.8.25;
 
 import { TypeCasts } from "@hyperlane-xyz/libs/TypeCasts.sol";
 import { ITransparentUpgradeableProxy } from "@openzeppelin/contracts/proxy/transparent/TransparentUpgradeableProxy.sol";
-import { OrderData, OrderEncoder } from "intents-framework/libs/OrderEncoder.sol";
-import { OnchainCrossChainOrder } from "intents-framework/ERC7683/IERC7683.sol";
+import { OrderData, OrderEncoder } from "../../../src/libraries/7683/OrderEncoder.sol";
+import { OnchainCrossChainOrder } from "../../../src/interfaces/IERC7683.sol";
 
 import { T1XChainReader } from "../../libraries/xChain/T1XChainReader.sol";
 import { T1BasicSwapE2E } from "./T1BasicSwapE2E.t.sol";

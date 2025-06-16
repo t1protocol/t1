@@ -2,9 +2,9 @@
 pragma solidity ^0.8.25;
 
 import { OwnableUpgradeable } from "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
-import { Hyperlane7683Message } from "intents-framework/libs/Hyperlane7683Message.sol";
-import { BasicSwap7683 } from "intents-framework/BasicSwap7683.sol";
-import { OrderData, OrderEncoder } from "intents-framework/libs/OrderEncoder.sol";
+import { Hyperlane7683Message } from "../libraries/7683/Hyperlane7683Message.sol";
+import { BasicSwap7683 } from "./BasicSwap7683.sol";
+import { OrderData, OrderEncoder } from "../libraries/7683/OrderEncoder.sol";
 
 import { T1XChainReader } from "../libraries/xChain/T1XChainReader.sol";
 /**
