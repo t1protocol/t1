@@ -149,7 +149,7 @@ contract T1ERC7683 is BasicSwap7683, OwnableUpgradeable, PausableUpgradeable {
             gasLimit: gasLimit,
             minBlock: 0,
             callData: callData,
-            requester: _msgSender()
+            requester: msg.sender
         });
 
         // Request the cross-chain read
