@@ -7,7 +7,6 @@
         "@openzeppelin/contracts": "4.9.3",
         "@openzeppelin/contracts-upgradeable": "4.9.3",
         "@uniswap/permit2": "github:uniswap/permit2",
-        "intents-framework": "github:BootNodeDev/intents-framework#main",
       },
       "devDependencies": {
         "ds-test": "github:dapphub/ds-test",
@@ -381,8 +380,6 @@
     "inflight": ["inflight@1.0.6", "", { "dependencies": { "once": "^1.3.0", "wrappy": "1" } }, "sha512-k92I/b08q4wvFscXCLvqfsHCrjrF7yiXsQuIVvVE7N82W3+aqpzuUdBbfhWcy/FZR3/4IgflMgKLOsvPDrGCJA=="],
 
     "inherits": ["inherits@2.0.4", "", {}, "sha512-k/vGaX4/Yla3WzyMCvTQOXYeIHvqOKtnqBduzTHpzpQZzAskKMhZ2K+EnBiSM9zGSoIFeMpXKxa4dYeZIQqewQ=="],
-
-    "intents-framework": ["@bootnodedev/intents-framework@github:BootNodeDev/intents-framework#62a181f", {}, "BootNodeDev-intents-framework-62a181f"],
 
     "is-arrayish": ["is-arrayish@0.2.1", "", {}, "sha512-zz06S8t0ozoDXMG+ube26zeCTNXcKIPJZJi8hBrF4idCLms4CG9QtK7qBl1boi5ODzFpjswb5JPmHCbMpjaYzg=="],
 

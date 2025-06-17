@@ -110,8 +110,20 @@ Miscellaneous Scripts:
 Scripts to upgrade contract implementations:
 
 - [T1Chain implementation](./upgrade/UpgradeT1Chain.s.sol)
+
   ```bash
   forge script ./script/upgrade/UpgradeT1Chain.s.sol:UpgradeT1Chain --rpc-url $T1_L1_RPC --broadcast
+  ```
+
+- [T1XChainReader implementation](./upgrade/UpgradeT1XChainReader.s.sol) - Upgrade on Sepolia (production)
+
+  ```bash
+  forge script ./script/upgrade/UpgradeT1XChainReader.s.sol:UpgradeT1XChainReader --rpc-url $T1_L1_RPC --broadcast
+  ```
+
+- [T1XChainReader implementation (Local)](./upgrade/UpgradeT1XChainReaderLocal.s.sol) - Upgrade on local network
+  ```bash
+  forge script ./script/upgrade/UpgradeT1XChainReaderLocal.s.sol:UpgradeT1XChainReaderLocal --rpc-url localhost --broadcast
   ```
 
 ## Deploying 7683 to Arbitrum Sepolia and Base Sepolia
@@ -181,13 +193,13 @@ contracts.
 #### Arbitrum Sepolia XChain Reader
 
 ```bash
-forge script ./deploy/DeployArbT1XChainReader.s.sol:DeployArbT1XChainReader  --broadcast --verify --verifier etherscan --verifier-url https://api-sepolia.arbiscan.io/api --etherscan-api-key $ARBISCAN_API_KEY
+forge script ./deploy/DeployArbT1XChainReader.s.sol:DeployArbT1XChainReader --broadcast --verify --verifier etherscan --verifier-url https://api-sepolia.arbiscan.io/api --etherscan-api-key $ARBISCAN_API_KEY
 ```
 
 #### Base Sepolia XChain Reader
 
 ```bash
-forge script ./deploy/DeployBaseT1XChainReader.s.sol:DeployBaseT1XChainReader  --broadcast --verify --verifier etherscan --verifier-url https://api-sepolia.basescan.org/api --etherscan-api-key $BASESCAN_API_KEY
+forge script ./deploy/DeployBaseT1XChainReader.s.sol:DeployBaseT1XChainReader --broadcast --verify --verifier etherscan --verifier-url https://api-sepolia.basescan.org/api --etherscan-api-key $BASESCAN_API_KEY
 ```
 
 ### Deploying 7683

@@ -1,0 +1,51 @@
+{
+  "metadata": {
+    "version": "v0.5.0",
+    "date": "2025-06-13",
+    "by": "Evan",
+    "from_machine": "Evan's machine",
+    "from_branch": "canary",
+    "from_commit": "10c1b46607559120aeb7c32b846202d25634a23c"
+  },
+  "addresses": {
+    "arbitrum_sepolia": {
+      "signer": "0x33c5A1e60E228814789F3b6178C15010a8087664",
+      "usdt": "0xF6232a871BF3B33F5bc181f55d770F9FB062A457",
+      "weth": "0x2836ae2eA2c013acD38028fD0C77B92cccFa2EE4",
+      "t1ProxyAdmin": "0xf3Fd7Ff45b28E76f4fD14ca86c1208c8F8E6dB72",
+      "proxyImplementationPlaceholder": "0xF597A13758Afa19228AbAc7882Bca9544882cc24",
+      "t1MessengerProxy": "0xF5612cD25eaAB4fF8EC5d4ff42b1CB5a8C794f28",
+      "t1MessageQueue": "0xAC93df286c7ee81d5A76b6b1f52C78b4f4110A7d",
+      "t1MessengerImplementation": "0x424a96cF24bac989f2930cf2A2913b0DE7d431C8",
+      "t1Owner": "0x2Ee22Dc359bb3b6Cd6442933Bb59676078c0F3d0",
+      "t1XChainRead": {
+        "implementation": "0x9Ad015CfA892b21d947b73d98d3D9Cd906b88fDF",
+        "proxy": "0x42d389A9007e446b92C0ce7bd8F42Ea10292881B"
+      },
+      "t1ERC7683": {
+        "implementation": "0xC0b5456e40c2A032DC98A39d455f5ea7d4AB1C9d",
+        "proxy": "0x4727D2EC7b602628980BE1E1a4e99d39A45786A4"
+      }
+    },
+    "base_sepolia": {
+      "signer": "0x33c5A1e60E228814789F3b6178C15010a8087664",
+      "usdt": "0x228eE6c1C297E2Eba0e95A71684B26f89385b4eC",
+      "weth": "0x4200000000000000000000000000000000000006",
+      "t1ProxyAdmin": "0x3e8cBA65503AeE9DAEDaa37436C7FCc0e8f3c17f",
+      "proxyImplementationPlaceholder": "0x2e22B3637f71Dc6C22c19d9F83e6E7E75B643411",
+      "t1MessengerProxy": "0xB4e41aded384620E4f8B7b9b7C4CD86118A91ca7",
+      "t1MessageQueue": "0xDf456070bF1A3B6AEdB71dEbDee3b3a7EFB4958E",
+      "t1MessengerImplementation": "0xF47811B52c09e7FB8c90eB6DDe449110c036826C",
+      "t1Owner": "0x9699Ad47112D4294dfb9482c9430B307cb7B177B",
+      "t1XChainRead": {
+        "implementation": "0x1325732DB8AD56acC8c93D9bf06A7725646b8ED9",
+        "proxy": "0x3821b214B4c9D053fa744dc2B355E2039696dFb7"
+      },
+      "t1ERC7683": {
+        "implementation": "0xfc39Ed3734F8660C96EA0523353a1CfD242e6C7d",
+        "proxy": "0xf96B8CcB029E0932fe36da0CeDd2b035E2c1695d"
+      }
+    },
+    "deployerAddress": "0xB458Ff684cCEDb45Be3a41584B7a25fD5FCcB10F"
+  }
+}

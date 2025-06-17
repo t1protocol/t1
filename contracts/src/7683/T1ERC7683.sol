@@ -2,19 +2,26 @@
 pragma solidity ^0.8.25;
 
 import { OwnableUpgradeable } from "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
-import { Hyperlane7683Message } from "intents-framework/libs/Hyperlane7683Message.sol";
-import { BasicSwap7683 } from "intents-framework/BasicSwap7683.sol";
-import { OrderData, OrderEncoder } from "intents-framework/libs/OrderEncoder.sol";
+import { PausableUpgradeable } from "@openzeppelin/contracts-upgradeable/security/PausableUpgradeable.sol";
+import { IERC20 } from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
+import { SafeERC20 } from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
+import { TypeCasts } from "@hyperlane-xyz/libs/TypeCasts.sol";
 
+import { GaslessCrossChainOrder, ResolvedCrossChainOrder, OnchainCrossChainOrder } from "../interfaces/IERC7683.sol";
+import { BasicSwap7683 } from "./BasicSwap7683.sol";
+import { Hyperlane7683Message } from "../libraries/7683/Hyperlane7683Message.sol";
+import { OrderData, OrderEncoder } from "../libraries/7683/OrderEncoder.sol";
 import { T1XChainReader } from "../libraries/xChain/T1XChainReader.sol";
+
 /**
  * @title T1ERC7683
  * @author t1 Labs
  * @notice This contract extends BasicSwap7683 with pull-based settlement using t1 cross-chain reads
  * @dev Implements both push-based messaging and pull-based verification for orders
  */
+contract T1ERC7683 is BasicSwap7683, OwnableUpgradeable, PausableUpgradeable {
+    using SafeERC20 for IERC20;
 
-contract T1ERC7683 is BasicSwap7683, OwnableUpgradeable {
     // ============ Constants ============
     uint32 public immutable localDomain;
     T1XChainReader public immutable xChainRead;
@@ -47,7 +54,6 @@ contract T1ERC7683 is BasicSwap7683, OwnableUpgradeable {
 
     // ============ Errors ============
     error FunctionNotImplemented(string functionName);
-    error EthNotAllowed();
     error SettlementFailed();
     error RefundFailed();
 
@@ -67,6 +73,54 @@ contract T1ERC7683 is BasicSwap7683, OwnableUpgradeable {
     function initialize(address _counterpart) external initializer {
         counterpart = _counterpart;
         __Ownable_init();
+        __Pausable_init();
+    }
+
+    function open(OnchainCrossChainOrder calldata _order) external payable override whenNotPaused {
+        (ResolvedCrossChainOrder memory resolvedOrder, bytes32 orderId, uint256 nonce) = _resolveOrder(_order);
+
+        openOrders[orderId] = abi.encode(_order.orderDataType, _order.orderData);
+        orderStatus[orderId] = OPENED;
+        _useNonce(msg.sender, nonce);
+
+        uint256 totalValue;
+        for (uint256 i = 0; i < resolvedOrder.minReceived.length; i++) {
+            address token = TypeCasts.bytes32ToAddress(resolvedOrder.minReceived[i].token);
+            if (token == address(0)) {
+                totalValue += resolvedOrder.minReceived[i].amount;
+            } else {
+                IERC20(token).safeTransferFrom(msg.sender, address(this), resolvedOrder.minReceived[i].amount);
+            }
+        }
+
+        if (msg.value != totalValue) revert InvalidNativeAmount();
+
+        emit Open(orderId, resolvedOrder);
+    }
+
+    function openFor(
+        GaslessCrossChainOrder calldata _order,
+        bytes calldata _signature,
+        bytes calldata _originFillerData
+    )
+        external
+        override
+        whenNotPaused
+    {
+        if (block.timestamp > _order.openDeadline) revert OrderOpenExpired();
+        if (_order.originSettler != address(this)) revert InvalidGaslessOrderSettler();
+        if (_order.originChainId != _localDomain()) revert InvalidGaslessOrderOrigin();
+
+        (ResolvedCrossChainOrder memory resolvedOrder, bytes32 orderId, uint256 nonce) =
+            _resolveOrder(_order, _originFillerData);
+
+        openOrders[orderId] = abi.encode(_order.orderDataType, _order.orderData);
+        orderStatus[orderId] = OPENED;
+        _useNonce(_order.user, nonce);
+
+        _permitTransferFrom(resolvedOrder, _signature, _order.nonce, address(this));
+
+        emit Open(orderId, resolvedOrder);
     }
 
     /// @notice Initiates a pull-based settlement verification for an order
@@ -94,7 +148,8 @@ contract T1ERC7683 is BasicSwap7683, OwnableUpgradeable {
             targetContract: counterpart,
             gasLimit: gasLimit,
             minBlock: 0,
-            callData: callData
+            callData: callData,
+            requester: msg.sender
         });
 
         // Request the cross-chain read
@@ -135,6 +190,14 @@ contract T1ERC7683 is BasicSwap7683, OwnableUpgradeable {
         emit SettlementVerified(orderId, isSettled);
     }
 
+    function pause() external onlyOwner {
+        _pause();
+    }
+
+    function unpause() external onlyOwner {
+        _unpause();
+    }
+
     function getFilledOrderStatus(bytes32 orderId) external view returns (bytes memory) {
         FilledOrder memory filledOrder = filledOrders[orderId];
         bytes memory _orderStatus;
@@ -167,8 +230,10 @@ contract T1ERC7683 is BasicSwap7683, OwnableUpgradeable {
     /// @param _sender The address of the sender on the origin domain
     /// @param _message The encoded message received via t1
     function _handle(uint32 _originDomain, bytes32 _sender, bytes memory _message) internal {
+        // Remove the first 32 bytes prefix of the message
+        bytes memory _innerMessage = abi.decode(_message, (bytes));
         (bool _settle, bytes32[] memory _orderIds, bytes[] memory _ordersFillerData) =
-            abi.decode(_message, (bool, bytes32[], bytes[]));
+            abi.decode(_innerMessage, (bool, bytes32[], bytes[]));
 
         for (uint256 i = 0; i < _orderIds.length; i++) {
             if (_settle) {
