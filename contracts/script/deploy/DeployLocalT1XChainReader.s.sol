@@ -21,7 +21,7 @@ contract DeployLocalT1XChainReader is DeploymentUtils {
 
         vm.startBroadcast(L1_DEPLOYER_PRIVATE_KEY);
 
-        T1XChainReader impl = new T1XChainReader(address(L1_T1_MESSENGER), L1_SIGNER);
+        T1XChainReader impl = new T1XChainReader(L1_SIGNER);
         logAddress("L1_T1_X_CHAIN_READ_IMPLEMENTATION_ADDR", address(impl));
 
         TransparentUpgradeableProxy proxy =

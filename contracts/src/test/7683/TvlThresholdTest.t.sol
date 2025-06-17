@@ -30,10 +30,7 @@ contract TvlThresholdTest is BaseTest {
         __T1TestBase_setUp();
 
         reader = T1XChainReader(payable(_deployProxy(address(0))));
-        admin.upgrade(
-            ITransparentUpgradeableProxy(address(reader)),
-            address(new T1XChainReader(address(placeholder), address(this)))
-        );
+        admin.upgrade(ITransparentUpgradeableProxy(address(reader)), address(new T1XChainReader(address(this))));
 
         t1ERC7683 = T1ERC7683(payable(_deployProxy(address(0))));
         admin.upgrade(
