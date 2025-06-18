@@ -60,7 +60,7 @@ contract T1ERC7683 is BasicSwap7683, OwnableUpgradeable, PausableUpgradeable {
     /// @notice Initializes the contract with the specified dependencies
     /// @param _permit2 The address of the permit2 contract
     /// @param _xChainRead The address of the cross-chain read contract
-    /// @param localDomain_ The local domain
+    /// @param localDomain_ The local domain (chain id)
     constructor(address _permit2, address _xChainRead, uint32 localDomain_) BasicSwap7683(_permit2) {
         xChainRead = T1XChainReader(_xChainRead);
         localDomain = localDomain_;
@@ -166,16 +166,18 @@ contract T1ERC7683 is BasicSwap7683, OwnableUpgradeable, PausableUpgradeable {
         // Check if the order is FILLED based on result length
         bool isSettled = (result.length != 0);
 
-        orderVerified[orderId] = isSettled;
-
         // process the settlement if verified
         if (isSettled && orderStatus[orderId] == OPENED) {
+            orderVerified[orderId] = true;
             // Get the order data to extract the destination domain and settler
             (, bytes memory _orderData) = abi.decode(openOrders[orderId], (bytes32, bytes));
             OrderData memory orderData = OrderEncoder.decode(_orderData);
 
             _handle(orderData.destinationDomain, orderData.destinationSettler, result);
         }
+        // _handleRefundOrder(_originDomain, _sender, _orderIds[i]);
+
+        // if (orderStatus[orderId] != REFUNDED) revert RefundFailed();
 
         emit SettlementVerified(orderId, isSettled);
     }
@@ -209,9 +211,27 @@ contract T1ERC7683 is BasicSwap7683, OwnableUpgradeable, PausableUpgradeable {
         revert FunctionNotImplemented("_dispatchSettle");
     }
 
-    /// @notice Not implemented
-    function _dispatchRefund(uint32, bytes32[] memory) internal pure override {
-        revert FunctionNotImplemented("_dispatchRefund");
+    /// @notice
+    /// @param originDomain The chain id of the network where intent has been created
+    function _dispatchRefund(uint32 originDomain, bytes32[] memory orderIds) internal override {
+        if (originDomain != localDomain) revert InvalidOrderOrigin();
+
+        for (uint256 i = 0; i < orderIds.length; i++) {
+            // if (orderStatus[_orderId] != OPENED) return
+
+            bytes32 orderId = orderIds[i];
+            orderStatus[orderId] = REFUNDED;
+
+            (, bytes memory _orderData) = abi.decode(openOrders[orderId], (bytes32, bytes));
+            OrderData memory orderData = OrderEncoder.decode(_orderData);
+
+            address orderSender = TypeCasts.bytes32ToAddress(orderData.sender);
+            address inputToken = TypeCasts.bytes32ToAddress(orderData.inputToken);
+
+            _transferTokenOut(inputToken, orderSender, orderData.amountIn);
+
+            emit Refunded(orderId, orderSender);
+        }
     }
 
     /// @notice Handles incoming messages
@@ -228,12 +248,7 @@ contract T1ERC7683 is BasicSwap7683, OwnableUpgradeable, PausableUpgradeable {
         for (uint256 i = 0; i < _orderIds.length; i++) {
             if (_settle) {
                 _handleSettleOrder(_originDomain, _sender, _orderIds[i], abi.decode(_ordersFillerData[i], (bytes32)));
-
                 if (orderStatus[_orderIds[i]] != SETTLED) revert SettlementFailed();
-            } else {
-                _handleRefundOrder(_originDomain, _sender, _orderIds[i]);
-
-                if (orderStatus[_orderIds[i]] != REFUNDED) revert RefundFailed();
             }
         }
     }
