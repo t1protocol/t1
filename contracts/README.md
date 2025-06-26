@@ -49,10 +49,10 @@ The backbone of 𝚝𝟷, responsible for managing batches, state roots, and cro
 
 ### Messaging Layer
 
- - **L1T1Messenger**: facilitates cross-chain message passing with the ability to retry failed messages
- - **L2T1Messenger**: handles incoming messages from Ethereum and sends outbound messages
- - **L1MessageQueue**: maintains the ordered queue of inbound messages from Ethereum
- - **L2MessageQueue**: maintains the ordered queue of outbound messages to Ethereum
+- **L1T1Messenger**: facilitates cross-chain message passing with the ability to retry failed messages
+- **L2T1Messenger**: handles incoming messages from Ethereum and sends outbound messages
+- **L1MessageQueue**: maintains the ordered queue of inbound messages from Ethereum
+- **L2MessageQueue**: maintains the ordered queue of outbound messages to Ethereum
 - **T1XChainReader**: facilitates cross-chain read requests between supported chains
 
 ### Bridge Infrastructure

@@ -36,6 +36,7 @@
 - [Docker](https://docs.docker.com/get-docker/) (containerization)
 
 ### 📥 Clone & Setup
+
 ```bash
 git clone https://github.com/t1protocol/t1.git
 cd t1
@@ -58,6 +59,7 @@ We ❤️ open-source developers! Here's how you can help:
 If you find a bug or have a feature request, please open an [issue](https://github.com/t1protocol/t1/issues).
 
 ## 🌍 Community
+
 - 🌐 [Website](https://t1protocol.com/)
 - 🐦 [Twitter](https://twitter.com/t1protocol)
 - 📚 [Documentation](https://docs.t1protocol.com/)
