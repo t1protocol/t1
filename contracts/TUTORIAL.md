@@ -1,22 +1,20 @@
 # 𝚝𝟷 Tutorials
 
 This doc will help you get started with building on 𝚝𝟷. It provides a simple demo project to show how to deploy and use
-contracts directly on 𝚝𝟷, moving Ether and tokens betweens the L1 and 𝚝𝟷, and more.
+contracts directly on 𝚝𝟷 and more.
 
 ## Why Build on 𝚝𝟷?
 
 𝚝𝟷 offers near-instant settlement between chains, enabling new types of cross-chain applications that were previously
 impossible. Some exciting use cases include:
 
-- cross-chain DEX with near-instant settlement
-- yield-bearing limit orders on [T-DEX](https://t-dex.v006.t1protocol.com/) (our native orderbook DEX)
 - intent-based bridges with real-time execution
-- secure auction mechanisms with L1 finality within 1-2 blocks
+- cross-chain DEX with near-instant settlement & yield-bearing limit orders
 
 ## Essentials
 
 For the most up-to-date RPC URL, chain ID, block explorer, and test tokens, please check the **Resources** section of
-our [DevNet portal](https://devnet.t1protocol.com/)
+our [Testnet portal](https://testnet.t1protocol.com/)
 
 ### Contract ABIs
 
@@ -24,14 +22,14 @@ ABIs will appear in the ./artifacts directory after running `npm run build`
 
 ### Protocol Contract Addresses
 
-Protocol contract addresses can be found in the highest version of [/deployments/bridge](./deployments/bridge)
+Protocol contract addresses can be found in the highest version of [/deployments](./deployments)
 
-### Getting Funds on 𝚝𝟷
+<!-- ### Getting Funds on 𝚝𝟷
 
 The easiest way to get funds onto t1 is to bridge your own sepolia funds into our layer 2. Everyone can do so navigating
-our [DevNet portal](https://devnet.t1protocol.com).
+our [Testnet portal](https://testnet.t1protocol.com). -->
 
-## Cross-Chain Arbitrary Message Passing
+<!-- ## Cross-Chain Arbitrary Message Passing
 
 𝚝𝟷 enables arbitrary message passing between chains, not just token transfers. This powerful primitive allows you to
 build truly cross-chain applications where contract calls on one chain can trigger actions on another.
@@ -61,16 +59,16 @@ This enables cross-chain use cases such as:
 
 ### Cross-Chain Messaging with 𝚝𝟷: Quickstart Guide
 
-This guide walks you through deploying and testing a basic cross-chain messaging contract between sepolia and 𝚝𝟷.
+This guide walks you through deploying and testing a basic cross-chain messaging contract between sepolia and 𝚝𝟷. -->
 
 ### Prerequisites
 
 - Foundry installed
-- Sepolia and 𝚝𝟷 rpc endpoints
+<!-- - Sepolia and 𝚝𝟷 rpc endpoints -->
 - Private keys with funds on both networks
-- 𝚝𝟷 messenger contract addresses loaded into `.env`
+<!-- - 𝚝𝟷 messenger contract addresses loaded into `.env` -->
 
-Step 1: Set up environment
+<!-- Step 1: Set up environment
 
 ```bash
 cp .env.example .env
@@ -118,7 +116,7 @@ is often easiest done by navigating to the explorer, but can also be accomplishe
 
 ```bash
 cast logs --rpc-url $T1_L1_RPC --from-block 7949820 "CrossChainRequestReceived(bytes32,address,bytes)"
-```
+``` -->
 
 ## Interacting with 𝚝𝟷's ERC-7683
 
@@ -142,7 +140,7 @@ To execute the scripts defined in `T1ERC7683L1ToL2.s.sol`, follow these steps:
 forge script ./script/test/7683/T1ERC7683L1ToL2.s.sol:AliceSetupScript --rpc-url $T1_L1_RPC --broadcast
 ```
 
-2. Solver Fills on L2
+2. Solver Fills on Destination Chain
 
 ```bash
 forge script ./script/test/7683/T1ERC7683L1ToL2.s.sol:SolverFillScript --rpc-url $T1_L2_RPC --broadcast
