@@ -24,7 +24,6 @@
 This monorepo encompasses essential infrastructure components of the 𝚝𝟷 protocol, including Solidity contracts, rollup node in Rust, and comprehensive end-to-end tests.
 
 - 🧑‍💻 **[contracts](./contracts/README.md)**: Solidity contracts (L1/L2 bridges, rollup & pre-deployed contracts)
-  - 📚 **[tutorial](./contracts/TUTORIAL.md)**: Step-by-step guide for building on 𝚝𝟷
 - 🦀 **[reth](./reth/README.md)**: Rust-based 𝚝𝟷 extension for reth
 - 🧪 **[e2e](./e2e/README.md)**: End-to-end testing suite for protocol validation
 
@@ -37,22 +36,12 @@ This monorepo encompasses essential infrastructure components of the 𝚝𝟷 pr
 - [Docker](https://docs.docker.com/get-docker/) (containerization)
 
 ### 📥 Clone & Setup
+
 ```bash
 git clone https://github.com/t1protocol/t1.git
 cd t1
 bun install
 ```
-
-## 📚 Tutorials
-
-Get started with building on 𝚝𝟷 by following our [developer tutorial](./contracts/TUTORIAL.md). This guide covers:
-
-- Why build on 𝚝𝟷
-- Getting funds on the network
-- Cross-chain arbitrary message passing
-- Implementing ERC-7683 for cross-chain applications
-
-Follow the step-by-step instructions to deploy your first cross-chain application on 𝚝𝟷.
 
 ## 💬 Contributing
 
@@ -70,6 +59,7 @@ We ❤️ open-source developers! Here's how you can help:
 If you find a bug or have a feature request, please open an [issue](https://github.com/t1protocol/t1/issues).
 
 ## 🌍 Community
+
 - 🌐 [Website](https://t1protocol.com/)
 - 🐦 [Twitter](https://twitter.com/t1protocol)
 - 📚 [Documentation](https://docs.t1protocol.com/)
