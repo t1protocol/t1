@@ -37,18 +37,8 @@ contracts.
 ├── <a href="./foundry.toml">foundry.toml</a>: Foundry configuration
 ├── <a href="./remappings.txt">remappings.txt</a>: Foundry dependency mappings
 └── <a href="./deployments">deployments</a>: Metadata from previous deployments
-└── <a href="./TUTORIAL.md">tutorial</a>: Walkthrough on getting started developing on 𝚝𝟷
 ...
 </pre>
-
-## Tutorials
-
-Get started with building on 𝚝𝟷 by following our [tutorial guide](./TUTORIAL.md). This guide covers:
-
-- Deploying contracts on 𝚝𝟷
-- Moving Ether and tokens between L1 and L2
-- Using cross-chain messaging contracts
-- Interacting with ERC-7683
 
 ## Core Contracts Overview
 
