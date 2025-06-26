@@ -37,18 +37,7 @@ contracts.
 ├── <a href="./foundry.toml">foundry.toml</a>: Foundry configuration
 ├── <a href="./remappings.txt">remappings.txt</a>: Foundry dependency mappings
 └── <a href="./deployments">deployments</a>: Metadata from previous deployments
-└── <a href="./TUTORIAL.md">tutorial</a>: Walkthrough on getting started developing on 𝚝𝟷
-...
 </pre>
-
-## Tutorials
-
-Get started with building on 𝚝𝟷 by following our [tutorial guide](./TUTORIAL.md). This guide covers:
-
-- Deploying contracts on 𝚝𝟷
-- Moving Ether and tokens between L1 and L2
-- Using cross-chain messaging contracts
-- Interacting with ERC-7683
 
 ## Core Contracts Overview
 
@@ -60,16 +49,16 @@ The backbone of 𝚝𝟷, responsible for managing batches, state roots, and cro
 
 ### Messaging Layer
 
-- **L1T1Messenger**: facilitates message passing between L1 and L2, with the ability to retry failed messages
-- **L2T1Messenger**: the L2 counterpart, handling incoming messages from L1 and sending outbound messages
-- **L1MessageQueue**: maintains the ordered queue of L1→L2 messages awaiting processing
-- **L2MessageQueue**: maintains the ordered queue of L2→L1 messages awaiting processing
+ - **L1T1Messenger**: facilitates cross-chain message passing with the ability to retry failed messages
+ - **L2T1Messenger**: handles incoming messages from Ethereum and sends outbound messages
+ - **L1MessageQueue**: maintains the ordered queue of inbound messages from Ethereum
+ - **L2MessageQueue**: maintains the ordered queue of outbound messages to Ethereum
 - **T1XChainReader**: facilitates cross-chain read requests between supported chains
 
 ### Bridge Infrastructure
 
 - **GatewayRouter**: entry point for all token bridging operations
-- **L1EthGateway**: handles native ETH bridging from L1→L2
+- **L1EthGateway**: handles native ETH bridging between chains
 - **L1WethGateway**: specialized gateway for WETH transfers
 - **L1StandardERC20Gateway**: supports general ERC20 token bridging
 

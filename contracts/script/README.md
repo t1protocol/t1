@@ -75,7 +75,7 @@ forge script ./script/deploy/7683/DeployT1ERC7683.s.sol:DeployT1ERC7683 --sig "i
 Scripts to configure the canonical bridge functionalities:
 
 - Configure
-  - [First USDT deposit from L1 to L2](./configure/FirstUsdtDepositFromL1ToL2.s.sol)
+  - [First USDT deposit](./configure/FirstUsdtDepositFromL1ToL2.s.sol)
   - [Allow router to transfer](./configure/AllowRouterToTransfer.s.sol)
   - [Set market maker](./configure/SetMM.s.sol)
 
@@ -84,13 +84,13 @@ Scripts to configure the canonical bridge functionalities:
 Scripts to test the canonical bridge functionalities:
 
 - Deposits
-  - [Deposit Ether from L1->L2](./test/DepositEtherFromL1ToL2.s.sol)
-  - [Deposit WETH from L1->L2](./test/DepositWethFromL1ToL2.s.sol)
-  - [Deposit USDT from L1->L2](./test/DepositUsdtFromL1ToL2.s.sol)
+  - [Deposit Ether](./test/DepositEtherFromL1ToL2.s.sol)
+  - [Deposit WETH](./test/DepositWethFromL1ToL2.s.sol)
+  - [Deposit USDT](./test/DepositUsdtFromL1ToL2.s.sol)
 - Withdrawals
-  - [Withdraw Ether from L2->L1](./test/WithdrawEtherFromL2ToL1.s.sol)
-  - [Withdraw WETH from L2->L1](./test/WithdrawWethFromL2ToL1.s.sol)
-  - [Withdraw USDT from L2->L1](./test/WithdrawUsdtFromL2ToL1.s.sol)
+  - [Withdraw Ether](./test/WithdrawEtherFromL2ToL1.s.sol)
+  - [Withdraw WETH](./test/WithdrawWethFromL2ToL1.s.sol)
+  - [Withdraw USDT](./test/WithdrawUsdtFromL2ToL1.s.sol)
 - Swaps
   - [Swap ERC20s against bridge reserves](./test/SwapERC20.s.sol)
 - Utility
