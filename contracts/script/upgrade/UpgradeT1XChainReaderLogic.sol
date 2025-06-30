@@ -31,7 +31,7 @@ abstract contract UpgradeT1XChainReaderLogic is Script, DeploymentUtils {
         address signerAddr = vm.envAddress("L1_SIGNER");
 
         vm.startBroadcast(deployerPrivateKey);
-        implementation = new T1XChainReader(messengerProxyAddr, signerAddr);
+        implementation = new T1XChainReader(signerAddr);
         vm.stopBroadcast();
 
         logAddress("L1_T1_X_CHAIN_READ_IMPLEMENTATION_ADDR_NEW", address(implementation));
