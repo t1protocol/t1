@@ -125,18 +125,9 @@ contract T1ERC7683 is BasicSwap7683, OwnableUpgradeable, PausableUpgradeable {
 
     /// @notice Initiates a pull-based settlement verification for an order
     /// @param destinationDomain The domain of the destination chain
-    /// @param gasLimit The gas limit for the read operation
     /// @param orderId The ID of the order to verify
     /// @return requestId The ID of the read request
-    function verifySettlement(
-        uint32 destinationDomain,
-        uint256 gasLimit,
-        bytes32 orderId
-    )
-        external
-        payable
-        returns (bytes32 requestId)
-    {
+    function verifySettlement(uint32 destinationDomain, bytes32 orderId) external returns (bytes32 requestId) {
         // Check if the order exists and is in a valid state
         if (orderStatus[orderId] != OPENED) revert InvalidOrderStatus();
 
@@ -146,14 +137,13 @@ contract T1ERC7683 is BasicSwap7683, OwnableUpgradeable, PausableUpgradeable {
         T1XChainReader.ReadRequest memory readRequest = T1XChainReader.ReadRequest({
             destinationDomain: destinationDomain,
             targetContract: counterpart,
-            gasLimit: gasLimit,
             minBlock: 0,
             callData: callData,
             requester: msg.sender
         });
 
         // Request the cross-chain read
-        requestId = xChainRead.requestRead{ value: msg.value }(readRequest);
+        requestId = xChainRead.requestRead(readRequest);
 
         readRequestToOrderId[requestId] = orderId;
 
