@@ -303,7 +303,7 @@ contract T1XChainReaderTest is T1BasicSwapE2E {
         vm.stopPrank();
 
         vm.startPrank(vegeta);
-        bytes32 requestId_ = l1T1ERC7683.verifySettlement(destination, 1_000_000, orderId_);
+        bytes32 requestId_ = l1T1ERC7683.verifySettlement(destination, orderId_);
         vm.stopPrank();
 
         return (orderData, orderId_, requestId_);

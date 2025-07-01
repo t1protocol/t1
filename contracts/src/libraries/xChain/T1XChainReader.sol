@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.25;
 
+import { OwnableUpgradeable } from "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
 import { ReentrancyGuardUpgradeable } from "@openzeppelin/contracts-upgradeable/security/ReentrancyGuardUpgradeable.sol";
 import { WithdrawTrieVerifier } from "../verifier/WithdrawTrieVerifier.sol";
 
@@ -8,7 +9,7 @@ import { WithdrawTrieVerifier } from "../verifier/WithdrawTrieVerifier.sol";
  * @title T1XChainReader
  * @notice Facilitates reading data from contracts on other chains through t1
  */
-contract T1XChainReader is ReentrancyGuardUpgradeable {
+contract T1XChainReader is OwnableUpgradeable, ReentrancyGuardUpgradeable {
     // ============ Events ============
 
     /**
@@ -17,7 +18,6 @@ contract T1XChainReader is ReentrancyGuardUpgradeable {
      * @param destinationDomain Domain ID of the target chain
      * @param targetContract Address of the contract to read from
      * @param requester Address who initiated the read request
-     * @param gasLimit The gas limit for the read operation
      * @param minBlock the minimum block on the target chain that you will accept the read to be executed
      * @param callData The encoded function call
      * @param nonce The nonce of the read request
@@ -27,7 +27,6 @@ contract T1XChainReader is ReentrancyGuardUpgradeable {
         uint32 indexed destinationDomain,
         address indexed targetContract,
         address requester,
-        uint256 gasLimit,
         uint64 minBlock,
         bytes callData,
         uint256 nonce
@@ -52,9 +51,6 @@ contract T1XChainReader is ReentrancyGuardUpgradeable {
     struct ReadRequest {
         uint32 destinationDomain;
         address targetContract;
-        /// @dev Off-chain relayer uses gasLimit when executing the call on destination chain.
-        ///      Value is unused on-chain but retained for the relayer.
-        uint256 gasLimit;
         uint64 minBlock;
         bytes callData;
         address requester;
@@ -66,7 +62,6 @@ contract T1XChainReader is ReentrancyGuardUpgradeable {
     error ZeroAddress();
     error InvalidBatchIndex();
     error InvalidProof();
-    error EtherNotAccepted();
 
     // ============ Variables ============
     uint256 public nonce;
@@ -92,26 +87,18 @@ contract T1XChainReader is ReentrancyGuardUpgradeable {
 
     /**
      * @notice Initiates a cross-chain read request
-     * @dev `gasLimit` is emitted for the off-chain relayer and unused on-chain
      * @param request ReadRequest
      * @return requestId Unique identifier for tracking this request
      */
-    function requestRead(ReadRequest calldata request) external payable nonReentrant returns (bytes32 requestId) {
-        if (msg.value != 0) revert EtherNotAccepted();
+    function requestRead(ReadRequest calldata request) external nonReentrant returns (bytes32 requestId) {
         return _processReadRequest(
-            request.destinationDomain,
-            request.targetContract,
-            request.gasLimit,
-            request.minBlock,
-            request.callData,
-            request.requester
+            request.destinationDomain, request.targetContract, request.minBlock, request.callData, request.requester
         );
     }
 
     function _processReadRequest(
         uint32 destinationDomain,
         address targetContract,
-        uint256 gasLimit,
         uint64 minBlock,
         bytes calldata callData,
         address requester
@@ -126,8 +113,7 @@ contract T1XChainReader is ReentrancyGuardUpgradeable {
         );
 
         nonce++;
-        // `gasLimit` is emitted for the off-chain relayer only and otherwise unused.
-        emit ReadRequested(requestId, destinationDomain, targetContract, requester, gasLimit, minBlock, callData, nonce);
+        emit ReadRequested(requestId, destinationDomain, targetContract, requester, minBlock, callData, nonce);
     }
 
     /**
@@ -136,8 +122,7 @@ contract T1XChainReader is ReentrancyGuardUpgradeable {
      * @param batchIndex The batch index of the read request
      * @param newRoot The root of the proof of read merkle tree
      */
-    function commitProofOfReadRoot(uint256 batchIndex, bytes32 newRoot) external payable onlyProver {
-        if (msg.value != 0) revert EtherNotAccepted();
+    function commitProofOfReadRoot(uint256 batchIndex, bytes32 newRoot) external onlyProver {
         if (batchIndex > nextBatchIndex) revert InvalidBatchIndex();
         proofOfReadRoots[batchIndex] = newRoot;
         nextBatchIndex++;

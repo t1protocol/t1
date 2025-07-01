@@ -122,7 +122,7 @@ contract SettlementScript is Script {
         // NOTE - orderId logged from the first step goes here (remove 0x first)
         bytes32 orderId = hex"";
 
-        l2_7683.verifySettlement(DESTINATION_CHAIN, 1_000_000, orderId);
+        l2_7683.verifySettlement(DESTINATION_CHAIN, orderId);
 
         vm.stopBroadcast();
     }
