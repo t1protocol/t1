@@ -128,66 +128,6 @@ abstract contract Base7683 is IOriginSettler, IDestinationSettler {
     // ============ External Functions ============
 
     /**
-     * @notice Opens a gasless cross-chain order on behalf of a user.
-     * @dev To be called by the filler.
-     * @dev This method must emit the Open event
-     * @param _order The GaslessCrossChainOrder definition
-     * @param _signature The user's signature over the order
-     * @param _originFillerData Any filler-defined data required by the settler
-     */
-    function openFor(
-        GaslessCrossChainOrder calldata _order,
-        bytes calldata _signature,
-        bytes calldata _originFillerData
-    )
-        external
-        virtual
-    {
-        if (block.timestamp > _order.openDeadline) revert OrderOpenExpired();
-        if (_order.originSettler != address(this)) revert InvalidGaslessOrderSettler();
-        if (_order.originChainId != _localDomain()) revert InvalidGaslessOrderOrigin();
-
-        (ResolvedCrossChainOrder memory resolvedOrder, bytes32 orderId, uint256 nonce) =
-            _resolveOrder(_order, _originFillerData);
-
-        openOrders[orderId] = abi.encode(_order.orderDataType, _order.orderData);
-        orderStatus[orderId] = OPENED;
-        _useNonce(_order.user, nonce);
-
-        _permitTransferFrom(resolvedOrder, _signature, _order.nonce, address(this));
-
-        emit Open(orderId, resolvedOrder);
-    }
-
-    /**
-     * @notice Opens a cross-chain order
-     * @dev To be called by the user
-     * @dev This method must emit the Open event
-     * @param _order The OnchainCrossChainOrder definition
-     */
-    function open(OnchainCrossChainOrder calldata _order) external payable virtual {
-        (ResolvedCrossChainOrder memory resolvedOrder, bytes32 orderId, uint256 nonce) = _resolveOrder(_order);
-
-        openOrders[orderId] = abi.encode(_order.orderDataType, _order.orderData);
-        orderStatus[orderId] = OPENED;
-        _useNonce(msg.sender, nonce);
-
-        uint256 totalValue;
-        for (uint256 i = 0; i < resolvedOrder.minReceived.length; i++) {
-            address token = TypeCasts.bytes32ToAddress(resolvedOrder.minReceived[i].token);
-            if (token == address(0)) {
-                totalValue += resolvedOrder.minReceived[i].amount;
-            } else {
-                IERC20(token).safeTransferFrom(msg.sender, address(this), resolvedOrder.minReceived[i].amount);
-            }
-        }
-
-        if (msg.value != totalValue) revert InvalidNativeAmount();
-
-        emit Open(orderId, resolvedOrder);
-    }
-
-    /**
      * @notice Resolves a specific GaslessCrossChainOrder into a generic ResolvedCrossChainOrder
      * @dev Intended to improve standardized integration of various order types and settlement contracts
      * @param _order The GaslessCrossChainOrder definition
@@ -261,50 +201,6 @@ abstract contract Base7683 is IOriginSettler, IDestinationSettler {
         _settleOrders(_orderIds, ordersOriginData, ordersFillerData);
 
         emit Settle(_orderIds, ordersFillerData);
-    }
-
-    /**
-     * @notice Refunds a batch of expired GaslessCrossChainOrders on the chain where the orders were opened.
-     * The refunded status should not be changed here but rather on the origin chain. To allow the user to retry in
-     * case some error occurs.
-     * Ensuring the order is eligible for refunding in the origin chain is the responsibility of the caller.
-     * @param _orders An array of GaslessCrossChainOrders to refund.
-     */
-    function refund(GaslessCrossChainOrder[] memory _orders) external payable {
-        bytes32[] memory orderIds = new bytes32[](_orders.length);
-        for (uint256 i = 0; i < _orders.length; i += 1) {
-            bytes32 orderId = _getOrderId(_orders[i]);
-            orderIds[i] = orderId;
-
-            if (orderStatus[orderId] != UNKNOWN) revert InvalidOrderStatus();
-            if (block.timestamp <= _orders[i].fillDeadline) revert OrderFillNotExpired();
-        }
-
-        _refundOrders(_orders, orderIds);
-
-        emit Refund(orderIds);
-    }
-
-    /**
-     * @notice Refunds a batch of expired OnchainCrossChainOrder on the chain where the orders were opened.
-     * The refunded status should not be changed here but rather on the origin chain. To allow the user to retry in
-     * case some error occurs.
-     * Ensuring the order is eligible for refunding the origin chain is the responsibility of the caller.
-     * @param _orders An array of GaslessCrossChainOrders to refund.
-     */
-    function refund(OnchainCrossChainOrder[] memory _orders) external payable {
-        bytes32[] memory orderIds = new bytes32[](_orders.length);
-        for (uint256 i = 0; i < _orders.length; i += 1) {
-            bytes32 orderId = _getOrderId(_orders[i]);
-            orderIds[i] = orderId;
-
-            if (orderStatus[orderId] != UNKNOWN) revert InvalidOrderStatus();
-            if (block.timestamp <= _orders[i].fillDeadline) revert OrderFillNotExpired();
-        }
-
-        _refundOrders(_orders, orderIds);
-
-        emit Refund(orderIds);
     }
 
     /**
@@ -462,22 +358,6 @@ abstract contract Base7683 is IOriginSettler, IDestinationSettler {
     )
         internal
         virtual;
-
-    /**
-     * @notice Refunds a batch of OnchainCrossChainOrders.
-     * @dev To be implemented by the inheriting contract. Contains logic specific to refunds.
-     * @param _orders An array of OnchainCrossChainOrders to refund.
-     * @param _orderIds An array of IDs for the orders to refund.
-     */
-    function _refundOrders(OnchainCrossChainOrder[] memory _orders, bytes32[] memory _orderIds) internal virtual;
-
-    /**
-     * @notice Refunds a batch of GaslessCrossChainOrders.
-     * @dev To be implemented by the inheriting contract. Contains logic specific to refunds.
-     * @param _orders An array of GaslessCrossChainOrders to refund.
-     * @param _orderIds An array of IDs for the orders to refund.
-     */
-    function _refundOrders(GaslessCrossChainOrder[] memory _orders, bytes32[] memory _orderIds) internal virtual;
 
     /**
      * @notice Retrieves the local domain identifier.

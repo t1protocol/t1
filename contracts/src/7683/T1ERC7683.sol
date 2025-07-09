@@ -47,15 +47,24 @@ contract T1ERC7683 is BasicSwap7683, OwnableUpgradeable, PausableUpgradeable {
      * @param isSettled Whether the order is settled
      */
     event SettlementVerified(bytes32 indexed orderId, bool isSettled);
+    /**
+     * @notice Emitted when an order refund verification is requested
+     * @param orderId The ID of the order
+     * @param requestId The ID of the read request
+     */
+    event RefundVerificationRequested(bytes32 indexed orderId, bytes32 indexed requestId);
 
     // ============ Upgrade Gap ============
     /// @dev Reserved storage slots for upgradeability.
     uint256[47] private __GAP;
 
     // ============ Errors ============
+
+    error LengthMismatch();
     error FunctionNotImplemented(string functionName);
     error SettlementFailed();
     error RefundFailed();
+    error OrderAlreadySettled();
 
     /// @notice Initializes the contract with the specified dependencies
     /// @param _permit2 The address of the permit2 contract
@@ -76,6 +85,12 @@ contract T1ERC7683 is BasicSwap7683, OwnableUpgradeable, PausableUpgradeable {
         __Pausable_init();
     }
 
+    /**
+     * @notice Opens a cross-chain order
+     * @dev To be called by the user
+     * @dev This method must emit the Open event
+     * @param _order The OnchainCrossChainOrder definition
+     */
     function open(OnchainCrossChainOrder calldata _order) external payable override whenNotPaused {
         (ResolvedCrossChainOrder memory resolvedOrder, bytes32 orderId, uint256 nonce) = _resolveOrder(_order);
 
@@ -98,6 +113,14 @@ contract T1ERC7683 is BasicSwap7683, OwnableUpgradeable, PausableUpgradeable {
         emit Open(orderId, resolvedOrder);
     }
 
+    /**
+     * @notice Opens a gasless cross-chain order on behalf of a user.
+     * @dev To be called by the filler.
+     * @dev This method must emit the Open event
+     * @param _order The GaslessCrossChainOrder definition
+     * @param _signature The user's signature over the order
+     * @param _originFillerData Any filler-defined data required by the settler
+     */
     function openFor(
         GaslessCrossChainOrder calldata _order,
         bytes calldata _signature,
@@ -127,7 +150,25 @@ contract T1ERC7683 is BasicSwap7683, OwnableUpgradeable, PausableUpgradeable {
     /// @param destinationDomain The domain of the destination chain
     /// @param orderId The ID of the order to verify
     /// @return requestId The ID of the read request
-    function verifySettlement(uint32 destinationDomain, bytes32 orderId) external returns (bytes32 requestId) {
+    function verifySettlement(uint32 destinationDomain, bytes32 orderId) external payable returns (bytes32 requestId) {
+        requestId = _verifyFill(destinationDomain, orderId);
+        emit SettlementVerificationRequested(orderId, requestId);
+    }
+
+    function verifyRefund(uint32 destinationDomain, bytes32 orderId) external returns (bytes32 requestId) {
+        (, bytes memory _orderData) = abi.decode(openOrders[orderId], (bytes32, bytes));
+        OrderData memory orderData = OrderEncoder.decode(_orderData);
+
+        if (orderData.originDomain != localDomain) revert InvalidOrderDomain();
+        if (block.timestamp <= orderData.fillDeadline) revert OrderFillNotExpired();
+
+        requestId = _verifyFill(destinationDomain, orderId);
+        orderStatus[orderId] = REFUND_REQUESTED;
+
+        emit RefundVerificationRequested(orderId, requestId);
+    }
+
+    function _verifyFill(uint32 destinationDomain, bytes32 orderId) private returns (bytes32 requestId) {
         // Check if the order exists and is in a valid state
         if (orderStatus[orderId] != OPENED) revert InvalidOrderStatus();
 
@@ -146,8 +187,6 @@ contract T1ERC7683 is BasicSwap7683, OwnableUpgradeable, PausableUpgradeable {
         requestId = xChainRead.requestRead(readRequest);
 
         readRequestToOrderId[requestId] = orderId;
-
-        emit SettlementVerificationRequested(orderId, requestId);
     }
 
     /// @notice Use result of proof of read to handle the order depending on the result
@@ -175,11 +214,105 @@ contract T1ERC7683 is BasicSwap7683, OwnableUpgradeable, PausableUpgradeable {
 
             _handle(orderData.destinationDomain, orderData.destinationSettler, result);
         }
-        // _handleRefundOrder(_originDomain, _sender, _orderIds[i]);
-
-        // if (orderStatus[orderId] != REFUNDED) revert RefundFailed();
 
         emit SettlementVerified(orderId, isSettled);
+    }
+
+    /// @notice Handles incoming messages
+    /// @dev Decodes the message and processes settlement or refund operations accordingly
+    /// @param _originDomain The domain from which the message originates
+    /// @param _sender The address of the sender on the origin domain
+    /// @param _message The encoded message received via t1
+    function _handle(uint32 _originDomain, bytes32 _sender, bytes memory _message) internal {
+        // Remove the first 32 bytes prefix of the message
+        bytes memory _innerMessage = abi.decode(_message, (bytes));
+        (bool _settle, bytes32[] memory _orderIds, bytes[] memory _ordersFillerData) =
+            abi.decode(_innerMessage, (bool, bytes32[], bytes[]));
+
+        for (uint256 i = 0; i < _orderIds.length; i++) {
+            if (_settle) {
+                _handleSettleOrder(_originDomain, _sender, _orderIds[i], abi.decode(_ordersFillerData[i], (bytes32)));
+            }
+        }
+    }
+
+    /// @notice Retrieves the local domain identifier.
+    /// @dev This function overrides the `_localDomain` function from the parent contract.
+    /// @return The local domain ID.
+    function _localDomain() internal view override returns (uint32) {
+        return localDomain;
+    }
+
+    /**
+     * @notice Refunds a batch of expired GaslessCrossChainOrders on the chain where the orders were opened.
+     * The refunded status should not be changed here but rather on the origin chain. To allow the user to retry in
+     * case some error occurs.
+     * Ensuring the order is eligible for refunding in the origin chain is the responsibility of the caller.
+     * @param _orders An array of GaslessCrossChainOrders to refund.
+     * @param _proofs Array of encoded proofs of read to verify orders are not settled
+     */
+    function refund(GaslessCrossChainOrder[] memory _orders, bytes[] calldata _proofs) external payable {
+        if (_orders.length != _proofs.length) revert LengthMismatch();
+
+        bytes32[] memory orderIds = new bytes32[](_orders.length);
+        for (uint256 i = 0; i < _orders.length; i += 1) {
+            bytes32 orderId = _getOrderId(_orders[i]);
+            _verifyOrderNotFilled(orderId, _proofs[i]);
+            orderIds[i] = orderId;
+        }
+
+        _refundOrders(OrderEncoder.decode(_orders[0].orderData).originDomain, orderIds);
+    }
+
+    /**
+     * @notice Refunds a batch of expired OnchainCrossChainOrder on the chain where the orders were opened.
+     * The refunded status should not be changed here but rather on the origin chain. To allow the user to retry in
+     * case some error occurs.
+     * Ensuring the order is eligible for refunding the origin chain is the responsibility of the caller.
+     * @param _orders An array of OnchainCrossChainOrders to refund.
+     * @param _proofs Array of encoded proofs of read to verify orders are not settled
+     */
+    function refund(OnchainCrossChainOrder[] memory _orders, bytes[] calldata _proofs) external payable {
+        if (_orders.length != _proofs.length) revert LengthMismatch();
+
+        bytes32[] memory orderIds = new bytes32[](_orders.length);
+        for (uint256 i = 0; i < _orders.length; i += 1) {
+            bytes32 orderId = _getOrderId(_orders[i]);
+            _verifyOrderNotFilled(orderId, _proofs[i]);
+            orderIds[i] = orderId;
+        }
+
+        _refundOrders(OrderEncoder.decode(_orders[0].orderData).originDomain, orderIds);
+    }
+
+    /**
+     * @dev Should be implemented by the messaging layer for dispatching a refunding instruction the remote domain
+     * where the orders where created.
+     * @param _originDomain The origin domain of the orders.
+     * @param _orderIds The IDs of the orders to refund.
+     */
+    /// @notice
+    /// @param originDomain The chain id of the network where intent has been created
+    /// @param orderIds Ids for the orders to refund
+    function _refundOrders(uint32 originDomain, bytes32[] memory orderIds) internal {
+        if (originDomain != localDomain) revert InvalidOrderOrigin();
+
+        for (uint256 i = 0; i < orderIds.length; i++) {
+            bytes32 orderId = orderIds[i];
+
+            if (orderStatus[orderId] != REFUND_REQUESTED) revert InvalidOrderStatus();
+            orderStatus[orderId] = REFUNDED;
+
+            (, bytes memory _orderData) = abi.decode(openOrders[orderId], (bytes32, bytes));
+            OrderData memory orderData = OrderEncoder.decode(_orderData);
+
+            address orderSender = TypeCasts.bytes32ToAddress(orderData.sender);
+            address inputToken = TypeCasts.bytes32ToAddress(orderData.inputToken);
+
+            _transferTokenOut(inputToken, orderSender, orderData.amountIn);
+
+            emit Refunded(orderId, orderSender);
+        }
     }
 
     function pause() external onlyOwner {
@@ -204,59 +337,33 @@ contract T1ERC7683 is BasicSwap7683, OwnableUpgradeable, PausableUpgradeable {
         return _orderStatus;
     }
 
+    /**
+     * @notice Verifies that an order is not filled using merkle proof
+     * @param orderId The ID of the order to verify
+     * @param encodedProofOfRead The encoded proof of read
+     */
+    function _verifyOrderNotFilled(bytes32 orderId, bytes calldata encodedProofOfRead) internal view {
+        (bytes32 requestId, bytes memory result) = xChainRead.verifyProofOfRead(encodedProofOfRead);
+
+        // Verify this proof corresponds to the correct order
+        bytes32 expectedOrderId = readRequestToOrderId[requestId];
+        if (expectedOrderId != orderId) revert InvalidOrderStatus();
+
+        // Check if the order is settled based on result length (same logic as handleReadResultWithProof)
+        if (result.length == 0) return;
+
+        // Remove the first 32 bytes prefix of the message
+        bytes memory _innerMessage = abi.decode(result, (bytes));
+        (bool filled,,) = abi.decode(_innerMessage, (bool, bytes32[], bytes[]));
+
+        // Revert if the order is already settled
+        if (filled) revert OrderAlreadySettled();
+    }
+
     // ============ Internal Functions ============
 
     /// @notice Not implemented
     function _dispatchSettle(uint32, bytes32[] memory, bytes[] memory) internal pure override {
         revert FunctionNotImplemented("_dispatchSettle");
-    }
-
-    /// @notice
-    /// @param originDomain The chain id of the network where intent has been created
-    function _dispatchRefund(uint32 originDomain, bytes32[] memory orderIds) internal override {
-        if (originDomain != localDomain) revert InvalidOrderOrigin();
-
-        for (uint256 i = 0; i < orderIds.length; i++) {
-            // if (orderStatus[_orderId] != OPENED) return
-
-            bytes32 orderId = orderIds[i];
-            orderStatus[orderId] = REFUNDED;
-
-            (, bytes memory _orderData) = abi.decode(openOrders[orderId], (bytes32, bytes));
-            OrderData memory orderData = OrderEncoder.decode(_orderData);
-
-            address orderSender = TypeCasts.bytes32ToAddress(orderData.sender);
-            address inputToken = TypeCasts.bytes32ToAddress(orderData.inputToken);
-
-            _transferTokenOut(inputToken, orderSender, orderData.amountIn);
-
-            emit Refunded(orderId, orderSender);
-        }
-    }
-
-    /// @notice Handles incoming messages
-    /// @dev Decodes the message and processes settlement or refund operations accordingly
-    /// @param _originDomain The domain from which the message originates
-    /// @param _sender The address of the sender on the origin domain
-    /// @param _message The encoded message received via t1
-    function _handle(uint32 _originDomain, bytes32 _sender, bytes memory _message) internal {
-        // Remove the first 32 bytes prefix of the message
-        bytes memory _innerMessage = abi.decode(_message, (bytes));
-        (bool _settle, bytes32[] memory _orderIds, bytes[] memory _ordersFillerData) =
-            abi.decode(_innerMessage, (bool, bytes32[], bytes[]));
-
-        for (uint256 i = 0; i < _orderIds.length; i++) {
-            if (_settle) {
-                _handleSettleOrder(_originDomain, _sender, _orderIds[i], abi.decode(_ordersFillerData[i], (bytes32)));
-                if (orderStatus[_orderIds[i]] != SETTLED) revert SettlementFailed();
-            }
-        }
-    }
-
-    /// @notice Retrieves the local domain identifier.
-    /// @dev This function overrides the `_localDomain` function from the parent contract.
-    /// @return The local domain ID.
-    function _localDomain() internal view override returns (uint32) {
-        return localDomain;
     }
 }
