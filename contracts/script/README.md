@@ -133,6 +133,23 @@ use event logs only, no dedicated messenger contracts are required. You will dep
 ERC-7683 pull modules. Each Forge script broadcasts the tx, verifies it on the relevant explorer API, and uses your API
 key to confirm source code.
 
+### Deploy a new Proxy Admin
+
+Deploys a proxy admin to each chain which is responsible for holding admin funtions on xChainReaders, so that we can
+transfer responsibiltiy to n chains without tedium
+
+#### Arbitrum Proxy Admin
+
+```bash
+forge script ./deploy/DeployArbT1ProxyAdmin.s.sol:DeployArbT1ProxyAdmin --broadcast --verify --verifier etherscan --verifier-url https://api-sepolia.arbiscan.io/api --etherscan-api-key $ARBISCAN_API_KEY
+```
+
+#### Base Proxy Admin
+
+```bash
+forge script ./deploy/DeployBaseT1ProxyAdmin.s.sol:DeployBaseT1ProxyAdmin --broadcast --verify --verifier etherscan --verifier-url https://api-sepolia.basescan.org/api --etherscan-api-key $BASESCAN_API_KEY
+```
+
 ### Deploying xChainRead
 
 Deploys the xChainReader contract, which packages cross-chain read requests and handles callbacks to the requesting
