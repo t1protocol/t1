@@ -146,7 +146,7 @@ forge script ./deploy/DeployArbT1ProxyAdmin.s.sol:DeployArbT1ProxyAdmin --broadc
 #### Base Proxy Admin
 
 ```bash
-forge script ./deploy/DeployBaseT1ProxyAdmin.s.sol:DeployBaseT1ProxyAdmin --broadcast --verify --verifier etherscan --verifier-url https://api-sepolia.arbiscan.io/api --etherscan-api-key $ARBISCAN_API_KEY
+forge script ./deploy/DeployBaseT1ProxyAdmin.s.sol:DeployBaseT1ProxyAdmin --broadcast --verify --verifier etherscan --verifier-url https://api-sepolia.basescan.org/api --etherscan-api-key $BASESCAN_API_KEY
 ```
 
 ### Deploying xChainRead
