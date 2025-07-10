@@ -135,7 +135,8 @@ key to confirm source code.
 
 ### Deploy a new Proxy Admin
 
-Deploys a proxy admin to each chain which is responsible for holding admin funtions on xChainReaders, so that we can transfer responsibiltiy to n chains without tedium
+Deploys a proxy admin to each chain which is responsible for holding admin funtions on xChainReaders, so that we can
+transfer responsibiltiy to n chains without tedium
 
 #### Arbitrum Proxy Admin
 
