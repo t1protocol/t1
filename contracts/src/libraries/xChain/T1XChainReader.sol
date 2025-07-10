@@ -112,8 +112,8 @@ contract T1XChainReader is OwnableUpgradeable, ReentrancyGuardUpgradeable {
             )
         );
 
-        nonce++;
         emit ReadRequested(requestId, destinationDomain, targetContract, requester, minBlock, callData, nonce);
+        nonce++;
     }
 
     /**

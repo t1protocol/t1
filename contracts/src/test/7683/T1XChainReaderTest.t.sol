@@ -263,6 +263,47 @@ contract T1XChainReaderTest is T1BasicSwapE2E {
         originReader.commitProofOfReadRoot(batchIndex, root);
     }
 
+    function test_requestReadEmitsCorrectNonce() public {
+        T1XChainReader.ReadRequest memory request = T1XChainReader.ReadRequest({
+            destinationDomain: destination,
+            targetContract: address(0xbeef),
+            minBlock: 0,
+            callData: hex"",
+            requester: address(this)
+        });
+
+        vm.warp(100);
+
+        uint256 expectedNonce = originReader.nonce();
+        bytes32 expectedRequestId = keccak256(
+            abi.encodePacked(
+                block.chainid,
+                request.destinationDomain,
+                request.targetContract,
+                request.callData,
+                block.timestamp,
+                request.requester,
+                expectedNonce
+            )
+        );
+
+        vm.expectEmit(true, true, true, true);
+        emit T1XChainReader.ReadRequested(
+            expectedRequestId,
+            request.destinationDomain,
+            request.targetContract,
+            request.requester,
+            request.minBlock,
+            request.callData,
+            expectedNonce
+        );
+
+        bytes32 requestId_ = originReader.requestRead(request);
+
+        assertEq(requestId_, expectedRequestId, "requestId mismatch");
+        assertEq(originReader.nonce(), expectedNonce + 1, "nonce should increment");
+    }
+
     // function test_ownerCanUpdateProver() public {
     //     address newProver = address(0xbeef);
     //     originReader.setProver(newProver);
