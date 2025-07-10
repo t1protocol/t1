@@ -1,0 +1,41 @@
+{
+  "metadata": {
+    "version": "v0.6.0",
+    "date": "2025-07-10",
+    "by": "Ryan",
+    "from_machine": "Ryans-MacBook-Pro.local",
+    "from_branch": "canary",
+    "from_commit": "952336183b9e4e9cdda12fe49790c30c1d0aa87c"
+  },
+  "addresses": {
+    "arbitrum_sepolia": {
+      "signer": "0x7Aa5e0E77b5aB2385Fd644373006C920D3a73894",
+      "usdt": "0xF6232a871BF3B33F5bc181f55d770F9FB062A457",
+      "weth": "0x2836ae2eA2c013acD38028fD0C77B92cccFa2EE4",
+      "t1ProxyAdmin": "0xf3Fd7Ff45b28E76f4fD14ca86c1208c8F8E6dB72",
+      "t1XChainRead": {
+        "implementation": "0xC1F86eB4c230df7bB2CCa6Cd76184317CAd4CC84",
+        "proxy": "0x0EABad6065e089AC56A95EB1cA200296affe9Db6"
+      },
+      "t1ERC7683": {
+        "implementation": "0x8528E5907D695a9eF10aD9AF0e46a7Fd8585AFDa",
+        "proxy": "0xaD6441d25f34cBC87A2FA7F49292CBfab56f55A6"
+      }
+    },
+    "base_sepolia": {
+      "signer": "0x7Aa5e0E77b5aB2385Fd644373006C920D3a73894",
+      "usdt": "0x228eE6c1C297E2Eba0e95A71684B26f89385b4eC",
+      "weth": "0x4200000000000000000000000000000000000006",
+      "t1ProxyAdmin": "0x3e8cBA65503AeE9DAEDaa37436C7FCc0e8f3c17f",
+      "t1XChainRead": {
+        "implementation": "0x6828533926752355b2238Bc4aFE39c5871C36744",
+        "proxy": "0xEff526eaaa38E67BB07Fde2c8F98a4B0985E3864"
+      },
+      "t1ERC7683": {
+        "implementation": "0xa0f76BE59E911E7d198687aE7BE71AABE1e23688",
+        "proxy": "0xADbEC96b8629580871F3fb2A62bA8034800bB5d7"
+      }
+    },
+    "deployerAddress": "0x2Ade71354645C57e7D099DbC04b27f8ad277395E"
+  }
+}

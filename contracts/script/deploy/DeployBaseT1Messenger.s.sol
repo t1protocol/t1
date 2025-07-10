@@ -24,14 +24,8 @@ contract DeployBaseT1MessengerProxy is Script, DeploymentUtils {
     function run() external {
         vm.createSelectFork(vm.rpcUrl("base_sepolia"));
         vm.startBroadcast(deployerPrivateKey);
-        deployProxyAdmin();
         deployPlaceHolder();
         deployT1MessengerProxy();
-    }
-
-    function deployProxyAdmin() internal {
-        proxyAdmin = new ProxyAdmin();
-        logAddress("BASE_T1_PROXY_ADMIN_ADDR", address(proxyAdmin));
     }
 
     function deployPlaceHolder() internal {

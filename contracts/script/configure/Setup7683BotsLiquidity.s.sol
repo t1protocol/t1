@@ -15,8 +15,8 @@ import { Usdt } from "../deploy/DeployL1Usdt.s.sol";
 contract Setup7683BotsLiquidity is Script, DeploymentUtils {
     uint256 private L1_DEPLOYER_PRIVATE_KEY = vm.envUint("L1_DEPLOYER_PRIVATE_KEY");
     uint256 private L2_DEPLOYER_PRIVATE_KEY = vm.envUint("L2_DEPLOYER_PRIVATE_KEY");
-    uint256 private L1_7683_BOT_PRIVATE_KEY = vm.envUint("L1_7683_BOT_PRIVATE_KEY");
-    uint256 private L2_7683_BOT_PRIVATE_KEY = vm.envUint("L2_7683_BOT_PRIVATE_KEY");
+    uint256 private L1_7683_FILL_BOT_PRIVATE_KEY = vm.envUint("L1_7683_FILL_BOT_PRIVATE_KEY");
+    uint256 private L2_7683_FILL_BOT_PRIVATE_KEY = vm.envUint("L2_7683_FILL_BOT_PRIVATE_KEY");
 
     address payable private L1_WETH_ADDR = payable(vm.envAddress("L1_WETH_ADDR"));
     address private L1_USDT_ADDR = vm.envAddress("L1_USDT_ADDR");
@@ -31,7 +31,7 @@ contract Setup7683BotsLiquidity is Script, DeploymentUtils {
         uint256 ethAmount = 2 ether;
         uint256 wethAmount = 2 ether;
         uint256 usdtAmount = 2_000_000 * 1e6;
-        address payable l1botAddr = payable(vm.addr(L1_7683_BOT_PRIVATE_KEY));
+        address payable l1botAddr = payable(vm.addr(L1_7683_FILL_BOT_PRIVATE_KEY));
 
         vm.createSelectFork(vm.rpcUrl("sepolia"));
         logStart("Setup L1 and t1 7683 Bot liquidity");
@@ -48,7 +48,7 @@ contract Setup7683BotsLiquidity is Script, DeploymentUtils {
         T1StandardERC20(L1_USDT_ADDR).transfer(l1botAddr, usdtAmount); // 2M USDT
 
         vm.stopBroadcast();
-        vm.startBroadcast(L1_7683_BOT_PRIVATE_KEY);
+        vm.startBroadcast(L1_7683_FILL_BOT_PRIVATE_KEY);
 
         // bridge half of bot's ETH to L2
         IL1GatewayRouter(L1_GATEWAY_ROUTER_PROXY_ADDR).depositETH{ value: ethAmount / 2 }(ethAmount / 2, gasLimit);
@@ -69,7 +69,7 @@ contract Setup7683BotsLiquidity is Script, DeploymentUtils {
 
         vm.stopBroadcast();
         vm.createSelectFork(vm.rpcUrl("t1"));
-        vm.startBroadcast(L2_7683_BOT_PRIVATE_KEY);
+        vm.startBroadcast(L2_7683_FILL_BOT_PRIVATE_KEY);
 
         // approve L2 7683 Escrow to transfer USDT in the bot's name
         T1StandardERC20(L2_USDT_ADDR).approve(L2_T1_PULL_BASED_7683_PROXY_ADDR, usdtAmount / 2);
