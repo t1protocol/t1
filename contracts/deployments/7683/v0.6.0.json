@@ -5,7 +5,7 @@
     "by": "Ryan",
     "from_machine": "Ryans-MacBook-Pro.local",
     "from_branch": "canary",
-    "from_commit": "952336183b9e4e9cdda12fe49790c30c1d0aa87c"
+    "from_commit": "601ef0d048b5447d148cb79d3b7b65acb49fd1b8"
   },
   "addresses": {
     "arbitrum_sepolia": {
@@ -14,12 +14,12 @@
       "weth": "0x2836ae2eA2c013acD38028fD0C77B92cccFa2EE4",
       "t1ProxyAdmin": "0xf3Fd7Ff45b28E76f4fD14ca86c1208c8F8E6dB72",
       "t1XChainRead": {
-        "implementation": "0xC1F86eB4c230df7bB2CCa6Cd76184317CAd4CC84",
-        "proxy": "0x0EABad6065e089AC56A95EB1cA200296affe9Db6"
+        "implementation": "0x8344139b6F20Ef6D2F915be90EB4fa4833a5a635",
+        "proxy": "0x99bD162935cA92A341E9Be0a320a9531B6049ffc"
       },
       "t1ERC7683": {
-        "implementation": "0x8528E5907D695a9eF10aD9AF0e46a7Fd8585AFDa",
-        "proxy": "0xaD6441d25f34cBC87A2FA7F49292CBfab56f55A6"
+        "implementation": "0x460015d166d33e26a49338932FAA42272298DD06",
+        "proxy": "0x9d7c2Aeca2F1Cb6cA3144F8Aca91096e3B32d5a4"
       }
     },
     "base_sepolia": {
@@ -28,12 +28,12 @@
       "weth": "0x4200000000000000000000000000000000000006",
       "t1ProxyAdmin": "0x3e8cBA65503AeE9DAEDaa37436C7FCc0e8f3c17f",
       "t1XChainRead": {
-        "implementation": "0x6828533926752355b2238Bc4aFE39c5871C36744",
-        "proxy": "0xEff526eaaa38E67BB07Fde2c8F98a4B0985E3864"
+        "implementation": "0xa2C641539dFc48a9393faC5EB60E0A683dDB8F58",
+        "proxy": "0x1F879CEd9a2dA0510385969b1C94029F6205F613"
       },
       "t1ERC7683": {
-        "implementation": "0xa0f76BE59E911E7d198687aE7BE71AABE1e23688",
-        "proxy": "0xADbEC96b8629580871F3fb2A62bA8034800bB5d7"
+        "implementation": "0xd1F672b74757F0412F51A36EDCCb308803eC5B93",
+        "proxy": "0x2bA00571BE18C51E86eF93D503797f1069a947Fb"
       }
     },
     "deployerAddress": "0x2Ade71354645C57e7D099DbC04b27f8ad277395E"
