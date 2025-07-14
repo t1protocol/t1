@@ -85,7 +85,7 @@ contract RefundTest is BaseTest {
 
         // Verify refund request
         vm.prank(kakaroto);
-        settlerContract.verifyRefund(destination, orderId);
+        settlerContract.verifyRefund(orderId);
 
         // Verify order status changed to REFUND_REQUESTED
         assertEq(settlerContract.orderStatus(orderId), "REFUND_REQUESTED");
@@ -167,7 +167,7 @@ contract RefundTest is BaseTest {
         );
 
         vm.prank(kakaroto);
-        settlerContract.verifyRefund(destination, orderId);
+        settlerContract.verifyRefund(orderId);
 
         assertEq(settlerContract.orderStatus(orderId), "REFUND_REQUESTED");
 
@@ -215,7 +215,7 @@ contract RefundTest is BaseTest {
         assertEq(settlerContract.orderStatus(orderId), "OPENED");
 
         vm.expectRevert(abi.encodeWithSignature("OrderFillNotExpired()"));
-        settlerContract.verifyRefund(destination, orderId);
+        settlerContract.verifyRefund(orderId);
     }
 
     function test_verifyRefundRevertIfOrderNotOpened() public {
@@ -223,7 +223,7 @@ contract RefundTest is BaseTest {
 
         vm.prank(kakaroto);
         vm.expectRevert();
-        settlerContract.verifyRefund(destination, orderId);
+        settlerContract.verifyRefund(orderId);
     }
 
     function test_revertIfRefundNotRequested() public {
@@ -271,7 +271,7 @@ contract RefundTest is BaseTest {
             abi.encode(expectedRequestId)
         );
         vm.prank(kakaroto);
-        settlerContract.verifyRefund(destination, orderId);
+        settlerContract.verifyRefund(orderId);
         vm.mockCall(
             address(mockXChainReader),
             abi.encodeWithSelector(mockXChainReader.verifyProofOfRead.selector),
@@ -285,7 +285,7 @@ contract RefundTest is BaseTest {
 
         // Try to refund the order a second time
         vm.expectRevert();
-        settlerContract.verifyRefund(destination, orderId);
+        settlerContract.verifyRefund(orderId);
     }
 
     function test_refundRevertIfParamLengthMismatchWithOnChainOrder() public {
@@ -349,7 +349,7 @@ contract RefundTest is BaseTest {
         );
 
         vm.prank(kakaroto);
-        settlerContract.verifyRefund(destination, orderId);
+        settlerContract.verifyRefund(orderId);
 
         // Mock the xChainReader to return a proof that indicates the order is filled
         bytes memory innerMessage = abi.encode(true, new bytes32[](0), new bytes[](0)); // filled = true
@@ -389,7 +389,7 @@ contract RefundTest is BaseTest {
         );
 
         vm.prank(kakaroto);
-        settlerContract.verifyRefund(destination, orderId);
+        settlerContract.verifyRefund(orderId);
 
         // Mock the xChainReader to return a proof that indicates the order is not filled
         bytes memory innerMessage = abi.encode(false, new bytes32[](0), new bytes[](0)); // filled = false
@@ -440,7 +440,7 @@ contract RefundTest is BaseTest {
 
         // Verify refund request (this sets readRequestToOrderId[expectedRequestId] = orderId)
         vm.prank(kakaroto);
-        settlerContract.verifyRefund(destination, orderId);
+        settlerContract.verifyRefund(orderId);
 
         // Mock the xChainReader to return a different requestId that doesn't match our order
         bytes32 differentRequestId = keccak256("different_request_id");
@@ -481,6 +481,6 @@ contract RefundTest is BaseTest {
         vm.warp(notExpiredOrderData.fillDeadline + 29);
         vm.expectRevert(T1ERC7683.OrderFillNotExpired.selector);
         vm.prank(kakaroto);
-        settlerContract.verifyRefund(destination, orderId);
+        settlerContract.verifyRefund(orderId);
     }
 }

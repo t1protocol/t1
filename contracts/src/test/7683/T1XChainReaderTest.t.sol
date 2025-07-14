@@ -219,7 +219,7 @@ contract T1XChainReaderTest is T1BasicSwapE2E {
         skip(200);
 
         vm.prank(kakaroto);
-        l1T1ERC7683.verifyRefund(destination, orderId);
+        l1T1ERC7683.verifyRefund(orderId);
 
         assertEq(l1T1ERC7683.orderStatus(orderId), "REFUND_REQUESTED");
 

@@ -161,14 +161,14 @@ contract T1ERC7683 is BasicSwap7683, OwnableUpgradeable, PausableUpgradeable {
         emit SettlementVerificationRequested(orderId, requestId);
     }
 
-    function verifyRefund(uint32 destinationDomain, bytes32 orderId) external returns (bytes32 requestId) {
+    function verifyRefund(bytes32 orderId) external returns (bytes32 requestId) {
         (, bytes memory _orderData) = abi.decode(openOrders[orderId], (bytes32, bytes));
         OrderData memory orderData = OrderEncoder.decode(_orderData);
 
         if (localDomain != orderData.originDomain) revert InvalidOrderDomain();
         if (block.timestamp <= orderData.fillDeadline + 30) revert OrderFillNotExpired();
 
-        requestId = _verifyFill(destinationDomain, orderId);
+        requestId = _verifyFill(orderData.destinationDomain, orderId);
         refundReadRequestToOrderId[requestId] = orderId;
         orderStatus[orderId] = REFUND_REQUESTED;
 
