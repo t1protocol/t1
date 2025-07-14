@@ -25,26 +25,6 @@ import { EmptyContract } from "../../misc/EmptyContract.sol";
 
 event Open(bytes32 indexed orderId, ResolvedCrossChainOrder resolvedOrder);
 
-contract TestInterchainGasPaymaster is InterchainGasPaymaster {
-    uint256 public gasPrice = 10;
-
-    constructor() {
-        initialize(msg.sender, msg.sender);
-    }
-
-    function quoteGasPayment(uint32, uint256 gasAmount) public view override returns (uint256) {
-        return gasPrice * gasAmount;
-    }
-
-    function setGasPrice(uint256 _gasPrice) public {
-        gasPrice = _gasPrice;
-    }
-
-    function getDefaultGasUsage() public pure returns (uint256) {
-        return DEFAULT_GAS_USAGE;
-    }
-}
-
 contract BaseTest is Test, DeployPermit2 {
     Base7683 internal _base7683;
 
@@ -74,10 +54,12 @@ contract BaseTest is Test, DeployPermit2 {
     ProxyAdmin internal admin;
 
     EmptyContract internal placeholder;
+    EmptyContract internal proxyOwner;
 
     function __T1TestBase_setUp() internal {
         admin = new ProxyAdmin();
         placeholder = new EmptyContract();
+        proxyOwner = new EmptyContract();
     }
 
     function _deployProxy(address _logic) internal returns (address) {
