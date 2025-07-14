@@ -27,15 +27,15 @@ contract Usdt is ERC20 {
 
 contract DeployL1Usdt is Script, DeploymentUtils {
     function run() external {
-        logStart("DeployL1Usdt");
+        logStart("DeployUsdt");
 
         uint256 L1_DEPLOYER_PRIVATE_KEY = vm.envUint("L1_DEPLOYER_PRIVATE_KEY");
         vm.startBroadcast(L1_DEPLOYER_PRIVATE_KEY);
         Usdt usdt = new Usdt(1_000_000_000 * 1e6);
         vm.stopBroadcast();
 
-        logAddress("L1_USDT_ADDR", address(usdt));
+        logAddress("USDT_ADDR", address(usdt));
 
-        logEnd("DeployL1Usdt");
+        logEnd("DeployUsdt");
     }
 }
