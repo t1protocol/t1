@@ -29,8 +29,10 @@ contract T1ERC7683 is BasicSwap7683, OwnableUpgradeable, PausableUpgradeable {
 
     // ============ State Variables ============
     mapping(bytes32 requestId => uint256 batchIndex) public requestIdToBatchIndex;
-    /// @notice Maps request IDs to order IDs for cross-chain read requests
-    mapping(bytes32 => bytes32) public readRequestToOrderId;
+    /// @notice Maps request IDs to order IDs for cross-chain read requests for settlements
+    mapping(bytes32 => bytes32) public settlementReadRequestToOrderId;
+    /// @notice Maps request IDs to order IDs for cross-chain read requests for refunds
+    mapping(bytes32 => bytes32) public refundReadRequestToOrderId;
     /// @notice Maps order IDs to verification status
     mapping(bytes32 => bool) public orderVerified;
 
@@ -65,6 +67,8 @@ contract T1ERC7683 is BasicSwap7683, OwnableUpgradeable, PausableUpgradeable {
     error SettlementFailed();
     error RefundFailed();
     error OrderAlreadySettled();
+    error InvalidRequest();
+    error InvalidOrder();
 
     /// @notice Initializes the contract with the specified dependencies
     /// @param _permit2 The address of the permit2 contract
@@ -152,6 +156,7 @@ contract T1ERC7683 is BasicSwap7683, OwnableUpgradeable, PausableUpgradeable {
     /// @return requestId The ID of the read request
     function verifySettlement(uint32 destinationDomain, bytes32 orderId) external payable returns (bytes32 requestId) {
         requestId = _verifyFill(destinationDomain, orderId);
+        settlementReadRequestToOrderId[requestId] = orderId;
         emit SettlementVerificationRequested(orderId, requestId);
     }
 
@@ -159,10 +164,11 @@ contract T1ERC7683 is BasicSwap7683, OwnableUpgradeable, PausableUpgradeable {
         (, bytes memory _orderData) = abi.decode(openOrders[orderId], (bytes32, bytes));
         OrderData memory orderData = OrderEncoder.decode(_orderData);
 
-        if (orderData.originDomain != localDomain) revert InvalidOrderDomain();
+        if (localDomain != orderData.originDomain) revert InvalidOrderDomain();
         if (block.timestamp <= orderData.fillDeadline) revert OrderFillNotExpired();
 
         requestId = _verifyFill(destinationDomain, orderId);
+        refundReadRequestToOrderId[requestId] = orderId;
         orderStatus[orderId] = REFUND_REQUESTED;
 
         emit RefundVerificationRequested(orderId, requestId);
@@ -185,8 +191,6 @@ contract T1ERC7683 is BasicSwap7683, OwnableUpgradeable, PausableUpgradeable {
 
         // Request the cross-chain read
         requestId = xChainRead.requestRead(readRequest);
-
-        readRequestToOrderId[requestId] = orderId;
     }
 
     /// @notice Use result of proof of read to handle the order depending on the result
@@ -195,18 +199,19 @@ contract T1ERC7683 is BasicSwap7683, OwnableUpgradeable, PausableUpgradeable {
     function handleReadResultWithProof(bytes calldata encodedProofOfRead) external {
         (bytes32 requestId, bytes memory result) = xChainRead.verifyProofOfRead(encodedProofOfRead);
 
-        bytes32 orderId = readRequestToOrderId[requestId];
+        bytes32 orderId = settlementReadRequestToOrderId[requestId];
 
         // Ensure we have a valid order
-        if (orderId == bytes32(0)) return;
+        if (orderId == bytes32(0)) revert InvalidOrder();
 
-        delete readRequestToOrderId[requestId];
+        delete settlementReadRequestToOrderId[requestId];
 
         // Check if the order is FILLED based on result length
         bool isSettled = (result.length != 0);
 
         // process the settlement if verified
-        if (isSettled && orderStatus[orderId] == OPENED) {
+        bytes32 status = orderStatus[orderId];
+        if (isSettled && (status == OPENED || status == REFUND_REQUESTED)) {
             orderVerified[orderId] = true;
             // Get the order data to extract the destination domain and settler
             (, bytes memory _orderData) = abi.decode(openOrders[orderId], (bytes32, bytes));
@@ -342,12 +347,14 @@ contract T1ERC7683 is BasicSwap7683, OwnableUpgradeable, PausableUpgradeable {
      * @param orderId The ID of the order to verify
      * @param encodedProofOfRead The encoded proof of read
      */
-    function _verifyOrderNotFilled(bytes32 orderId, bytes calldata encodedProofOfRead) internal view {
+    function _verifyOrderNotFilled(bytes32 orderId, bytes calldata encodedProofOfRead) internal {
         (bytes32 requestId, bytes memory result) = xChainRead.verifyProofOfRead(encodedProofOfRead);
 
         // Verify this proof corresponds to the correct order
-        bytes32 expectedOrderId = readRequestToOrderId[requestId];
-        if (expectedOrderId != orderId) revert InvalidOrderStatus();
+        bytes32 expectedOrderId = refundReadRequestToOrderId[requestId];
+        if (expectedOrderId != orderId) revert InvalidRequest();
+
+        delete settlementReadRequestToOrderId[requestId];
 
         // Check if the order is settled based on result length (same logic as handleReadResultWithProof)
         if (result.length == 0) return;

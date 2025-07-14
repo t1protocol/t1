@@ -186,30 +186,54 @@ contract T1XChainReaderTest is T1BasicSwapE2E {
         l1T1ERC7683.handleReadResultWithProof(abi.encode(batchIndex, requestId, position, result, proof));
     }
 
-    function test_SameProofShouldNotSettleTwice() public {
+    function test_sameProofShouldNotSettleTwice() public {
         uint256 batchIndex = 0;
         uint256 position = 0;
 
         (, bytes32 orderId, bytes32 requestId) = _openAndFillOrder();
 
-        {
-            bytes memory result = abi.encode(l2T1ERC7683.getFilledOrderStatus(orderId));
-            (bytes32 root, bytes memory proof) = _generateMerkleTree(requestId, result, position);
+        bytes memory result = abi.encode(l2T1ERC7683.getFilledOrderStatus(orderId));
+        (bytes32 root, bytes memory proof) = _generateMerkleTree(requestId, result, position);
 
-            originReader.commitProofOfReadRoot(batchIndex, root);
-            l1T1ERC7683.handleReadResultWithProof(abi.encode(batchIndex, requestId, position, result, proof));
+        originReader.commitProofOfReadRoot(batchIndex, root);
+        l1T1ERC7683.handleReadResultWithProof(abi.encode(batchIndex, requestId, position, result, proof));
 
-            uint256 balanceSolverBeforeSecondSettle = inputToken.balanceOf(address(vegeta));
-            l1T1ERC7683.handleReadResultWithProof(abi.encode(batchIndex, requestId, position, result, proof));
-            uint256 balanceSolverAfterSecondSettle = inputToken.balanceOf(address(vegeta));
-
-            assertEq(
-                balanceSolverBeforeSecondSettle, balanceSolverAfterSecondSettle, "vegeta balance should not change"
-            );
-        }
+        vm.expectRevert(T1ERC7683.InvalidOrder.selector);
+        l1T1ERC7683.handleReadResultWithProof(abi.encode(batchIndex, requestId, position, result, proof));
 
         // Verify the final state on L1
         assertTrue(l1T1ERC7683.orderVerified(orderId), "Order should be verified");
+    }
+
+    function test_shouldStillSettleIfStatusIsRefundRequested() public {
+        uint256 batchIndex = 0;
+        uint256 position = 0;
+
+        (, bytes32 orderId, bytes32 requestId) = _openAndFillOrder();
+
+        bytes memory result = abi.encode(l2T1ERC7683.getFilledOrderStatus(orderId));
+        (bytes32 root, bytes memory proof) = _generateMerkleTree(requestId, result, position);
+        originReader.commitProofOfReadRoot(batchIndex, root);
+
+        // Moves timestamp 200 sec forward
+        skip(200);
+
+        vm.prank(kakaroto);
+        l1T1ERC7683.verifyRefund(destination, orderId);
+
+        assertEq(l1T1ERC7683.orderStatus(orderId), "REFUND_REQUESTED");
+
+        uint256 balanceSolverBeforeSettle = inputToken.balanceOf(address(vegeta));
+        vm.prank(vegeta);
+        l1T1ERC7683.handleReadResultWithProof(abi.encode(batchIndex, requestId, position, result, proof));
+        uint256 balanceSolverAfterSettle = inputToken.balanceOf(address(vegeta));
+
+        assertEq(
+            balanceSolverBeforeSettle + amount, balanceSolverAfterSettle, "vegeta balance increased by input amount"
+        );
+
+        assertTrue(l1T1ERC7683.orderVerified(orderId), "Order should be verified");
+        assertEq(l1T1ERC7683.orderStatus(orderId), "SETTLED");
     }
 
     function test_settlementWithEmptyResultData() public {

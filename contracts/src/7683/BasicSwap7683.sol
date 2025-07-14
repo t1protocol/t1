@@ -9,6 +9,8 @@ import { TypeCasts } from "@hyperlane-xyz/libs/TypeCasts.sol";
 import { Base7683 } from "./Base7683.sol";
 import { OrderData, OrderEncoder } from "../libraries/7683/OrderEncoder.sol";
 
+import { console } from "forge-std/Test.sol";
+
 import {
     GaslessCrossChainOrder,
     OnchainCrossChainOrder,
@@ -30,6 +32,8 @@ import {
 abstract contract BasicSwap7683 is Base7683 {
     // ============ Libraries ============
     using SafeERC20 for IERC20;
+
+    error NotEligible();
 
     // ============ Constants ============
     /// @notice Status constant indicating that an order has been settled.
@@ -126,7 +130,7 @@ abstract contract BasicSwap7683 is Base7683 {
     {
         (bool isEligible, OrderData memory orderData) = _checkOrderEligibility(_messageOrigin, _messageSender, _orderId);
 
-        if (!isEligible) return;
+        if (!isEligible) revert NotEligible();
 
         orderStatus[_orderId] = SETTLED;
 
@@ -179,8 +183,9 @@ abstract contract BasicSwap7683 is Base7683 {
     {
         OrderData memory orderData;
 
-        // check if the order is opened to ensure it belongs to this domain, skip otherwise
-        if (orderStatus[_orderId] != OPENED) return (false, orderData);
+        // check if the order is opened or asked for refund to ensure it belongs to this domain, skip otherwise
+        bytes32 status = orderStatus[_orderId];
+        if (status != OPENED && status != REFUND_REQUESTED) return (false, orderData);
 
         (, bytes memory _orderData) = abi.decode(openOrders[_orderId], (bytes32, bytes));
         orderData = OrderEncoder.decode(_orderData);

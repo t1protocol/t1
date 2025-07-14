@@ -90,8 +90,8 @@ contract RefundTest is BaseTest {
         // Verify order status changed to REFUND_REQUESTED
         assertEq(settlerContract.orderStatus(orderId), "REFUND_REQUESTED");
 
-        // Verify readRequestToOrderId mapping is set
-        assertEq(settlerContract.readRequestToOrderId(expectedRequestId), orderId);
+        // Verify refundReadRequestToOrderId mapping is set
+        assertEq(settlerContract.refundReadRequestToOrderId(expectedRequestId), orderId);
 
         // Mock the xChainReader to return our mock proof (empty result = not filled)
         vm.mockCall(
@@ -171,7 +171,7 @@ contract RefundTest is BaseTest {
 
         assertEq(settlerContract.orderStatus(orderId), "REFUND_REQUESTED");
 
-        assertEq(settlerContract.readRequestToOrderId(expectedRequestId), orderId);
+        assertEq(settlerContract.refundReadRequestToOrderId(expectedRequestId), orderId);
 
         vm.mockCall(
             address(mockXChainReader),
@@ -253,7 +253,7 @@ contract RefundTest is BaseTest {
         bytes[] memory proofs = new bytes[](1);
         proofs[0] = "mock_proof";
 
-        vm.expectRevert(abi.encodeWithSignature("InvalidOrderStatus()"));
+        vm.expectRevert(T1ERC7683.InvalidRequest.selector);
         settlerContract.refund(orders, proofs);
     }
 
@@ -368,7 +368,7 @@ contract RefundTest is BaseTest {
         bytes[] memory proofs = new bytes[](1);
         proofs[0] = "mock_proof";
 
-        vm.expectRevert(abi.encodeWithSignature("OrderAlreadySettled()"));
+        vm.expectRevert(T1ERC7683.OrderAlreadySettled.selector);
         settlerContract.refund(orders, proofs);
     }
 
@@ -457,7 +457,7 @@ contract RefundTest is BaseTest {
         bytes[] memory proofs = new bytes[](1);
         proofs[0] = "mock_proof";
 
-        vm.expectRevert(abi.encodeWithSignature("InvalidOrderStatus()"));
+        vm.expectRevert(T1ERC7683.InvalidRequest.selector);
         settlerContract.refund(orders, proofs);
     }
 }
