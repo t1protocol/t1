@@ -26,7 +26,7 @@ event Refund(bytes32[] orderIds);
 
 event Refunded(bytes32 orderId, address receiver);
 
-contract T1BasicSwapE2E is BaseTest {
+contract T1XChainReaderBaseTestSetup is BaseTest {
     event Filled(bytes32 orderId, bytes originData, bytes fillerData);
 
     using TypeCasts for address;
