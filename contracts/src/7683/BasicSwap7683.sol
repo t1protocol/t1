@@ -9,8 +9,6 @@ import { TypeCasts } from "@hyperlane-xyz/libs/TypeCasts.sol";
 import { Base7683 } from "./Base7683.sol";
 import { OrderData, OrderEncoder } from "../libraries/7683/OrderEncoder.sol";
 
-import { console } from "forge-std/Test.sol";
-
 import {
     GaslessCrossChainOrder,
     OnchainCrossChainOrder,
