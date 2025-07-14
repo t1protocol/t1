@@ -330,8 +330,6 @@ contract RefundTest is BaseTest {
         settlerContract.refund(orders, proofs);
     }
 
-    /// _verifyOder
-
     function test_refundRevertIfOrderFilled() public {
         bytes memory orderData = OrderEncoder.encode(defaultOrderData);
 
@@ -459,5 +457,30 @@ contract RefundTest is BaseTest {
 
         vm.expectRevert(T1ERC7683.InvalidRequest.selector);
         settlerContract.refund(orders, proofs);
+    }
+
+    function test_refundRevertIfDeadlineNotPassed() public {
+        OrderData memory notExpiredOrderData = defaultOrderData;
+        notExpiredOrderData.fillDeadline = FILL_DEADLINE_NOT_EXPIRED;
+        bytes memory orderData = OrderEncoder.encode(notExpiredOrderData);
+        OnchainCrossChainOrder memory order =
+            _prepareOnchainOrder(orderData, FILL_DEADLINE_NOT_EXPIRED, OrderEncoder.orderDataType());
+
+        vm.prank(kakaroto);
+        settlerContract.open(order);
+
+        bytes32 orderId = OrderEncoder.id(notExpiredOrderData);
+
+        bytes32 expectedRequestId = keccak256("mock_request_id");
+        vm.mockCall(
+            address(mockXChainReader),
+            abi.encodeWithSelector(mockXChainReader.requestRead.selector),
+            abi.encode(expectedRequestId)
+        );
+
+        vm.warp(notExpiredOrderData.fillDeadline + 29);
+        vm.expectRevert(T1ERC7683.OrderFillNotExpired.selector);
+        vm.prank(kakaroto);
+        settlerContract.verifyRefund(destination, orderId);
     }
 }

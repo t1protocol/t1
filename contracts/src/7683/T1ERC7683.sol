@@ -69,6 +69,7 @@ contract T1ERC7683 is BasicSwap7683, OwnableUpgradeable, PausableUpgradeable {
     error OrderAlreadySettled();
     error InvalidRequest();
     error InvalidOrder();
+    error OrderFillNotExpired();
 
     /// @notice Initializes the contract with the specified dependencies
     /// @param _permit2 The address of the permit2 contract
@@ -165,7 +166,7 @@ contract T1ERC7683 is BasicSwap7683, OwnableUpgradeable, PausableUpgradeable {
         OrderData memory orderData = OrderEncoder.decode(_orderData);
 
         if (localDomain != orderData.originDomain) revert InvalidOrderDomain();
-        if (block.timestamp <= orderData.fillDeadline) revert OrderFillNotExpired();
+        if (block.timestamp <= orderData.fillDeadline + 30) revert OrderFillNotExpired();
 
         requestId = _verifyFill(destinationDomain, orderId);
         refundReadRequestToOrderId[requestId] = orderId;

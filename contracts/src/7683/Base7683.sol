@@ -111,7 +111,6 @@ abstract contract Base7683 is IOriginSettler, IDestinationSettler {
     error InvalidGaslessOrderOrigin();
     error InvalidNonce();
     error InvalidOrderOrigin();
-    error OrderFillNotExpired();
     error InvalidNativeAmount();
 
     // ============ Constructor ============
