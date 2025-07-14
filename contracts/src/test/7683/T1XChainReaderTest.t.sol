@@ -7,31 +7,29 @@ import { OrderData, OrderEncoder } from "../../../src/libraries/7683/OrderEncode
 import { OnchainCrossChainOrder } from "../../../src/interfaces/IERC7683.sol";
 
 import { T1XChainReader } from "../../libraries/xChain/T1XChainReader.sol";
-import { T1BasicSwapE2E } from "./T1BasicSwapE2E.t.sol";
+import { T1XChainReaderBaseTestSetup } from "./T1XChainReaderBaseTestSetup.sol";
 import { T1ERC7683 } from "../../7683/T1ERC7683.sol";
+import { Base7683 } from "../../7683/Base7683.sol";
 
-contract T1XChainReaderTest is T1BasicSwapE2E {
+contract T1XChainReaderTest is T1XChainReaderBaseTestSetup {
     using TypeCasts for address;
-
-    T1XChainReader internal originReader;
-    T1XChainReader internal destinationReader;
-    T1ERC7683 internal l1T1ERC7683;
-    T1ERC7683 internal l2T1ERC7683;
 
     function setUp() public virtual override {
         super.setUp();
 
         // Deploy T1XChainReader on both chains
-        originReader = T1XChainReader(payable(_deployProxy(address(0))));
+        originReader = T1XChainReader(payable(_deployProxy(address(proxyOwner))));
         admin.upgrade(ITransparentUpgradeableProxy(address(originReader)), address(new T1XChainReader(address(this))));
+        originReader.initialize(address(this));
 
-        destinationReader = T1XChainReader(payable(_deployProxy(address(0))));
+        destinationReader = T1XChainReader(payable(_deployProxy(address(proxyOwner))));
         admin.upgrade(
             ITransparentUpgradeableProxy(address(destinationReader)), address(new T1XChainReader(address(this)))
         );
+        destinationReader.initialize(address(this));
 
-        l1T1ERC7683 = T1ERC7683(payable(_deployProxy(address(0))));
-        l2T1ERC7683 = T1ERC7683(payable(_deployProxy(address(0))));
+        l1T1ERC7683 = T1ERC7683(payable(_deployProxy(address(proxyOwner))));
+        l2T1ERC7683 = T1ERC7683(payable(_deployProxy(address(proxyOwner))));
         admin.upgrade(
             ITransparentUpgradeableProxy(address(l1T1ERC7683)),
             address(new T1ERC7683(address(0), address(originReader), uint32(origin)))
@@ -42,6 +40,9 @@ contract T1XChainReaderTest is T1BasicSwapE2E {
         );
         l1T1ERC7683.initialize(address(l2T1ERC7683));
         l2T1ERC7683.initialize(address(l1T1ERC7683));
+        
+        // Initialize _base7683 to point to the l1T1ERC7683 contract
+        _base7683 = Base7683(address(l1T1ERC7683));
     }
 
     // 1. user opens intent on source chain
@@ -247,7 +248,7 @@ contract T1XChainReaderTest is T1BasicSwapE2E {
 
         (bytes32 root,) = _generateMerkleTree(requestId, orderStatus, 0);
 
-        vm.prank(address(0xbeef));
+        vm.prank(owner);
         vm.expectRevert(T1XChainReader.OnlyProver.selector);
         originReader.commitProofOfReadRoot(batchIndex, root);
     }
@@ -420,5 +421,192 @@ contract T1XChainReaderTest is T1BasicSwapE2E {
             mstore(0x20, b)
             value := keccak256(0x00, 0x40)
         }
+    }
+
+    // ============ Fee Tests ============
+
+    function test_setReadFee() public {
+        uint256 newFee = 1 ether;
+
+        vm.expectEmit(true, true, true, true);
+        emit T1XChainReader.FeeUpdated(newFee);
+
+        originReader.setReadFee(newFee);
+
+        assertEq(originReader.readFee(), newFee, "Read fee should be updated");
+    }
+
+    function test_setReadFeeOnlyOwner() public {
+        uint256 newFee = 1 ether;
+
+        vm.prank(address(0xbeef));
+        vm.expectRevert("Ownable: caller is not the owner");
+        originReader.setReadFee(newFee);
+    }
+
+    function test_setFeeRecipient() public {
+        address newRecipient = address(0xfeed);
+
+        vm.expectEmit(true, true, true, true);
+        emit T1XChainReader.FeeRecipientUpdated(newRecipient);
+
+        originReader.setFeeRecipient(newRecipient);
+
+        assertEq(originReader.feeRecipient(), newRecipient, "Fee recipient should be updated");
+    }
+
+    function test_setFeeRecipientRevertZeroAddress() public {
+        vm.expectRevert(T1XChainReader.ZeroAddress.selector);
+        originReader.setFeeRecipient(address(0));
+    }
+
+    function test_setFeeRecipientOnlyOwner() public {
+        address newRecipient = address(0xfeed);
+
+        vm.prank(address(0xbeef));
+        vm.expectRevert("Ownable: caller is not the owner");
+        originReader.setFeeRecipient(newRecipient);
+    }
+
+    function test_requestReadWithFee() public {
+        uint256 fee = 0.1 ether;
+        address feeRecipient = address(0xfeed);
+
+        originReader.setReadFee(fee);
+        originReader.setFeeRecipient(feeRecipient);
+
+        T1XChainReader.ReadRequest memory request = T1XChainReader.ReadRequest({
+            destinationDomain: destination,
+            targetContract: address(0xbeef),
+            minBlock: 0,
+            callData: hex"",
+            requester: address(this)
+        });
+
+        uint256 preBalance = originReader.collectedFees();
+
+        bytes32 requestId = originReader.requestRead{value: fee}(request);
+
+        assertEq(originReader.collectedFees(), preBalance + fee, "Collected fees should increase");
+        assertTrue(requestId != bytes32(0), "Request ID should be valid");
+    }
+
+    function test_requestReadWithExcessFee() public {
+        uint256 fee = 0.1 ether;
+        uint256 paidFee = 0.2 ether;
+        address feeRecipient = address(0xfeed);
+
+        originReader.setReadFee(fee);
+        originReader.setFeeRecipient(feeRecipient);
+
+        T1XChainReader.ReadRequest memory request = T1XChainReader.ReadRequest({
+            destinationDomain: destination,
+            targetContract: address(0xbeef),
+            minBlock: 0,
+            callData: hex"",
+            requester: address(this)
+        });
+
+        uint256 preBalance = originReader.collectedFees();
+
+        bytes32 requestId = originReader.requestRead{value: paidFee}(request);
+
+        assertEq(originReader.collectedFees(), preBalance + paidFee, "All paid fees should be collected");
+        assertTrue(requestId != bytes32(0), "Request ID should be valid");
+    }
+
+    function test_requestReadWithInsufficientFee() public {
+        uint256 fee = 0.1 ether;
+        uint256 paidFee = 0.05 ether;
+
+        originReader.setReadFee(fee);
+
+        T1XChainReader.ReadRequest memory request = T1XChainReader.ReadRequest({
+            destinationDomain: destination,
+            targetContract: address(0xbeef),
+            minBlock: 0,
+            callData: hex"",
+            requester: address(this)
+        });
+
+        vm.expectRevert(T1XChainReader.InsufficientFee.selector);
+        originReader.requestRead{value: paidFee}(request);
+    }
+
+    function test_requestReadWithZeroFee() public {
+        T1XChainReader.ReadRequest memory request = T1XChainReader.ReadRequest({
+            destinationDomain: destination,
+            targetContract: address(0xbeef),
+            minBlock: 0,
+            callData: hex"",
+            requester: address(this)
+        });
+
+        bytes32 requestId = originReader.requestRead(request);
+
+        assertEq(originReader.collectedFees(), 0, "No fees should be collected");
+        assertTrue(requestId != bytes32(0), "Request ID should be valid");
+    }
+
+    function test_withdrawFees() public {
+        uint256 fee = 0.1 ether;
+        address feeRecipient = address(0xfeed);
+
+        originReader.setReadFee(fee);
+        originReader.setFeeRecipient(feeRecipient);
+
+        T1XChainReader.ReadRequest memory request = T1XChainReader.ReadRequest({
+            destinationDomain: destination,
+            targetContract: address(0xbeef),
+            minBlock: 0,
+            callData: hex"",
+            requester: address(this)
+        });
+
+        originReader.requestRead{value: fee}(request);
+        originReader.requestRead{value: fee}(request);
+
+        uint256 preBalance = feeRecipient.balance;
+        uint256 expectedWithdrawal = fee * 2;
+
+        vm.expectEmit(true, true, true, true);
+        emit T1XChainReader.FeesWithdrawn(feeRecipient, expectedWithdrawal);
+
+        vm.prank(feeRecipient);
+        originReader.withdrawFees();
+
+        assertEq(feeRecipient.balance, preBalance + expectedWithdrawal, "Fee recipient should receive fees");
+        assertEq(originReader.collectedFees(), 0, "Collected fees should be reset");
+    }
+
+    function test_withdrawFeesUnauthorized() public {
+        uint256 fee = 0.1 ether;
+        address feeRecipient = address(0xfeed);
+        
+        originReader.setReadFee(fee);
+        originReader.setFeeRecipient(feeRecipient);
+
+        T1XChainReader.ReadRequest memory request = T1XChainReader.ReadRequest({
+            destinationDomain: destination,
+            targetContract: address(0xbeef),
+            minBlock: 0,
+            callData: hex"",
+            requester: address(this)
+        });
+
+        originReader.requestRead{value: fee}(request);
+
+        vm.prank(address(0xbeef));
+        vm.expectRevert(T1XChainReader.UnauthorizedFeeWithdraw.selector);
+        originReader.withdrawFees();
+    }
+
+    function test_withdrawFeesWithNoFees() public {
+        address feeRecipient = address(0xfeed);
+        originReader.setFeeRecipient(feeRecipient);
+
+        vm.prank(feeRecipient);
+        vm.expectRevert(T1XChainReader.NoFeesToWithdraw.selector);
+        originReader.withdrawFees();
     }
 }
