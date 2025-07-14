@@ -229,7 +229,7 @@ contract T1XChainReader is OwnableUpgradeable, ReentrancyGuardUpgradeable {
         uint256 amount = collectedFees;
         collectedFees = 0;
 
-        (bool success, ) = feeRecipient.call{value: amount}("");
+        (bool success,) = feeRecipient.call{ value: amount }("");
         if (!success) revert WithdrawFailed();
 
         emit FeesWithdrawn(feeRecipient, amount);

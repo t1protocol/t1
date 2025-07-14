@@ -40,7 +40,7 @@ contract T1XChainReaderTest is T1XChainReaderBaseTestSetup {
         );
         l1T1ERC7683.initialize(address(l2T1ERC7683));
         l2T1ERC7683.initialize(address(l1T1ERC7683));
-        
+
         // Initialize _base7683 to point to the l1T1ERC7683 contract
         _base7683 = Base7683(address(l1T1ERC7683));
     }
@@ -485,7 +485,7 @@ contract T1XChainReaderTest is T1XChainReaderBaseTestSetup {
 
         uint256 preBalance = originReader.collectedFees();
 
-        bytes32 requestId = originReader.requestRead{value: fee}(request);
+        bytes32 requestId = originReader.requestRead{ value: fee }(request);
 
         assertEq(originReader.collectedFees(), preBalance + fee, "Collected fees should increase");
         assertTrue(requestId != bytes32(0), "Request ID should be valid");
@@ -509,7 +509,7 @@ contract T1XChainReaderTest is T1XChainReaderBaseTestSetup {
 
         uint256 preBalance = originReader.collectedFees();
 
-        bytes32 requestId = originReader.requestRead{value: paidFee}(request);
+        bytes32 requestId = originReader.requestRead{ value: paidFee }(request);
 
         assertEq(originReader.collectedFees(), preBalance + paidFee, "All paid fees should be collected");
         assertTrue(requestId != bytes32(0), "Request ID should be valid");
@@ -530,7 +530,7 @@ contract T1XChainReaderTest is T1XChainReaderBaseTestSetup {
         });
 
         vm.expectRevert(T1XChainReader.InsufficientFee.selector);
-        originReader.requestRead{value: paidFee}(request);
+        originReader.requestRead{ value: paidFee }(request);
     }
 
     function test_requestReadWithZeroFee() public {
@@ -563,8 +563,8 @@ contract T1XChainReaderTest is T1XChainReaderBaseTestSetup {
             requester: address(this)
         });
 
-        originReader.requestRead{value: fee}(request);
-        originReader.requestRead{value: fee}(request);
+        originReader.requestRead{ value: fee }(request);
+        originReader.requestRead{ value: fee }(request);
 
         uint256 preBalance = feeRecipient.balance;
         uint256 expectedWithdrawal = fee * 2;
@@ -582,7 +582,7 @@ contract T1XChainReaderTest is T1XChainReaderBaseTestSetup {
     function test_withdrawFeesUnauthorized() public {
         uint256 fee = 0.1 ether;
         address feeRecipient = address(0xfeed);
-        
+
         originReader.setReadFee(fee);
         originReader.setFeeRecipient(feeRecipient);
 
@@ -594,7 +594,7 @@ contract T1XChainReaderTest is T1XChainReaderBaseTestSetup {
             requester: address(this)
         });
 
-        originReader.requestRead{value: fee}(request);
+        originReader.requestRead{ value: fee }(request);
 
         vm.prank(address(0xbeef));
         vm.expectRevert(T1XChainReader.UnauthorizedFeeWithdraw.selector);
