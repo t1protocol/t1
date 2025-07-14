@@ -205,7 +205,7 @@ contract T1XChainReaderTest is T1BasicSwapE2E {
         assertTrue(l1T1ERC7683.orderVerified(orderId), "Order should be verified");
     }
 
-    function test_shouldStillSettleIfStatusIsRefundRequested() public {
+    function test_settlementIfStatusIsRefundRequested() public {
         uint256 batchIndex = 0;
         uint256 position = 0;
 
@@ -225,6 +225,34 @@ contract T1XChainReaderTest is T1BasicSwapE2E {
 
         uint256 balanceSolverBeforeSettle = inputToken.balanceOf(address(vegeta));
         vm.prank(vegeta);
+        l1T1ERC7683.handleReadResultWithProof(abi.encode(batchIndex, requestId, position, result, proof));
+        uint256 balanceSolverAfterSettle = inputToken.balanceOf(address(vegeta));
+
+        assertEq(
+            balanceSolverBeforeSettle + amount, balanceSolverAfterSettle, "vegeta balance increased by input amount"
+        );
+
+        assertTrue(l1T1ERC7683.orderVerified(orderId), "Order should be verified");
+        assertEq(l1T1ERC7683.orderStatus(orderId), "SETTLED");
+    }
+
+    function test_settlementIfReadRequestedTwice() public {
+        uint256 batchIndex = 0;
+        uint256 position = 0;
+
+        (, bytes32 orderId, bytes32 requestId) = _openAndFillOrder();
+
+        bytes memory result = abi.encode(l2T1ERC7683.getFilledOrderStatus(orderId));
+        (bytes32 root, bytes memory proof) = _generateMerkleTree(requestId, result, position);
+        originReader.commitProofOfReadRoot(batchIndex, root);
+
+        // Request PoR a second time
+        vm.prank(kakaroto);
+        l1T1ERC7683.verifySettlement(destination, orderId);
+        (root, proof) = _generateMerkleTree(requestId, result, position);
+        originReader.commitProofOfReadRoot(batchIndex, root);
+
+        uint256 balanceSolverBeforeSettle = inputToken.balanceOf(address(vegeta));
         l1T1ERC7683.handleReadResultWithProof(abi.encode(batchIndex, requestId, position, result, proof));
         uint256 balanceSolverAfterSettle = inputToken.balanceOf(address(vegeta));
 
