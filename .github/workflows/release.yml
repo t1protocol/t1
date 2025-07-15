@@ -21,14 +21,9 @@ permissions:
 
 jobs:
   bump_and_pr:
+    if: github.event_name == 'workflow_dispatch'
     runs-on: ubuntu-latest
     steps:
-      - name: Ensure manual trigger
-        if: github.event_name != 'workflow_dispatch'
-        run: |
-          echo "This job only runs via workflow_dispatch."
-          exit 1
-
       - name: "Check out the repo"
         uses: actions/checkout@v4.1.1
 
