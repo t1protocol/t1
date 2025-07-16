@@ -40,9 +40,6 @@ contract T1XChainReaderTest is T1XChainReaderBaseTestSetup {
         );
         l1T1ERC7683.initialize(address(l2T1ERC7683));
         l2T1ERC7683.initialize(address(l1T1ERC7683));
-
-        // Initialize _base7683 to point to the l1T1ERC7683 contract
-        _base7683 = Base7683(address(l1T1ERC7683));
     }
 
     // 1. user opens intent on source chain
@@ -334,7 +331,7 @@ contract T1XChainReaderTest is T1XChainReaderBaseTestSetup {
         vm.stopPrank();
 
         (bytes32 orderId_,) = _getOrderIDFromLogs();
-        assertEq(l1T1ERC7683.orderStatus(orderId_), _base7683.OPENED());
+        assertEq(l1T1ERC7683.orderStatus(orderId_), l1T1ERC7683.OPENED());
 
         vm.startPrank(vegeta);
         outputToken.approve(address(l2T1ERC7683), amount);
@@ -483,11 +480,11 @@ contract T1XChainReaderTest is T1XChainReaderBaseTestSetup {
             requester: address(this)
         });
 
-        uint256 preBalance = originReader.collectedFees();
+        uint256 preBalance = address(originReader).balance;
 
         bytes32 requestId = originReader.requestRead{ value: fee }(request);
 
-        assertEq(originReader.collectedFees(), preBalance + fee, "Collected fees should increase");
+        assertEq(address(originReader).balance, preBalance + fee, "Contract balance should increase");
         assertTrue(requestId != bytes32(0), "Request ID should be valid");
     }
 
@@ -507,11 +504,11 @@ contract T1XChainReaderTest is T1XChainReaderBaseTestSetup {
             requester: address(this)
         });
 
-        uint256 preBalance = originReader.collectedFees();
+        uint256 preBalance = address(originReader).balance;
 
         bytes32 requestId = originReader.requestRead{ value: paidFee }(request);
 
-        assertEq(originReader.collectedFees(), preBalance + paidFee, "All paid fees should be collected");
+        assertEq(address(originReader).balance, preBalance + paidFee, "All paid fees should be collected");
         assertTrue(requestId != bytes32(0), "Request ID should be valid");
     }
 
@@ -529,7 +526,7 @@ contract T1XChainReaderTest is T1XChainReaderBaseTestSetup {
             requester: address(this)
         });
 
-        vm.expectRevert(T1XChainReader.InsufficientFee.selector);
+        vm.expectRevert(T1XChainReader.IncorrectFee.selector);
         originReader.requestRead{ value: paidFee }(request);
     }
 
@@ -544,7 +541,7 @@ contract T1XChainReaderTest is T1XChainReaderBaseTestSetup {
 
         bytes32 requestId = originReader.requestRead(request);
 
-        assertEq(originReader.collectedFees(), 0, "No fees should be collected");
+        assertEq(address(originReader).balance, 0, "No fees should be collected");
         assertTrue(requestId != bytes32(0), "Request ID should be valid");
     }
 
@@ -567,7 +564,7 @@ contract T1XChainReaderTest is T1XChainReaderBaseTestSetup {
         originReader.requestRead{ value: fee }(request);
 
         uint256 preBalance = feeRecipient.balance;
-        uint256 expectedWithdrawal = fee * 2;
+        uint256 expectedWithdrawal = address(originReader).balance;
 
         vm.expectEmit(true, true, true, true);
         emit T1XChainReader.FeesWithdrawn(feeRecipient, expectedWithdrawal);
@@ -576,7 +573,7 @@ contract T1XChainReaderTest is T1XChainReaderBaseTestSetup {
         originReader.withdrawFees();
 
         assertEq(feeRecipient.balance, preBalance + expectedWithdrawal, "Fee recipient should receive fees");
-        assertEq(originReader.collectedFees(), 0, "Collected fees should be reset");
+        assertEq(address(originReader).balance, 0, "Contract balance should be reset");
     }
 
     function test_withdrawFeesUnauthorized() public {
@@ -605,8 +602,11 @@ contract T1XChainReaderTest is T1XChainReaderBaseTestSetup {
         address feeRecipient = address(0xfeed);
         originReader.setFeeRecipient(feeRecipient);
 
+        uint256 preBalance = feeRecipient.balance;
+
         vm.prank(feeRecipient);
-        vm.expectRevert(T1XChainReader.NoFeesToWithdraw.selector);
         originReader.withdrawFees();
+
+        assertEq(feeRecipient.balance, preBalance, "Fee recipient balance should not change when no fees");
     }
 }
