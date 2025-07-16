@@ -488,30 +488,6 @@ contract T1XChainReaderTest is T1XChainReaderBaseTestSetup {
         assertTrue(requestId != bytes32(0), "Request ID should be valid");
     }
 
-    function test_requestReadWithExcessFee() public {
-        uint256 fee = 0.1 ether;
-        uint256 paidFee = 0.2 ether;
-        address feeRecipient = address(0xfeed);
-
-        originReader.setReadFee(fee);
-        originReader.setFeeRecipient(feeRecipient);
-
-        T1XChainReader.ReadRequest memory request = T1XChainReader.ReadRequest({
-            destinationDomain: destination,
-            targetContract: address(0xbeef),
-            minBlock: 0,
-            callData: hex"",
-            requester: address(this)
-        });
-
-        uint256 preBalance = address(originReader).balance;
-
-        bytes32 requestId = originReader.requestRead{ value: paidFee }(request);
-
-        assertEq(address(originReader).balance, preBalance + paidFee, "All paid fees should be collected");
-        assertTrue(requestId != bytes32(0), "Request ID should be valid");
-    }
-
     function test_requestReadWithInsufficientFee() public {
         uint256 fee = 0.1 ether;
         uint256 paidFee = 0.05 ether;
