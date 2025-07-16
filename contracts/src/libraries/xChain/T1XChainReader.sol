@@ -38,6 +38,25 @@ contract T1XChainReader is OwnableUpgradeable, ReentrancyGuardUpgradeable {
      */
     event ProofOfReadRootCommitted(uint256 batchIndex);
 
+    /**
+     * @notice Emitted when the read fee is updated
+     * @param newFee The new fee amount
+     */
+    event FeeUpdated(uint256 newFee);
+
+    /**
+     * @notice Emitted when the fee recipient is updated
+     * @param newFeeRecipient The new fee recipient address
+     */
+    event FeeRecipientUpdated(address newFeeRecipient);
+
+    /**
+     * @notice Emitted when fees are withdrawn
+     * @param recipient The address that received the fees
+     * @param amount The amount of fees withdrawn
+     */
+    event FeesWithdrawn(address recipient, uint256 amount);
+
     // ============ State Variables ============
 
     /// @notice The t1 prover
@@ -47,6 +66,11 @@ contract T1XChainReader is OwnableUpgradeable, ReentrancyGuardUpgradeable {
 
     /// @notice Maps batch indices to their proof of read root
     mapping(uint256 batchIndex => bytes32 root) public proofOfReadRoots;
+
+    /// @notice Fee required to make a read request (defaults to 0)
+    uint256 public readFee;
+    /// @notice Address that can withdraw collected fees
+    address public feeRecipient;
 
     struct ReadRequest {
         uint32 destinationDomain;
@@ -62,6 +86,10 @@ contract T1XChainReader is OwnableUpgradeable, ReentrancyGuardUpgradeable {
     error ZeroAddress();
     error InvalidBatchIndex();
     error InvalidProof();
+    error IncorrectFee();
+    error NoFeesToWithdraw();
+    error WithdrawFailed();
+    error UnauthorizedFeeWithdraw();
 
     // ============ Variables ============
     uint256 public nonce;
@@ -83,6 +111,16 @@ contract T1XChainReader is OwnableUpgradeable, ReentrancyGuardUpgradeable {
         prover = _prover;
     }
 
+    /**
+     * @notice Initializes the contract
+     * @param _owner The owner of the contract
+     */
+    function initialize(address _owner) external initializer {
+        __Ownable_init();
+        __ReentrancyGuard_init();
+        _transferOwnership(_owner);
+    }
+
     // ============ External Functions ============
 
     /**
@@ -90,7 +128,9 @@ contract T1XChainReader is OwnableUpgradeable, ReentrancyGuardUpgradeable {
      * @param request ReadRequest
      * @return requestId Unique identifier for tracking this request
      */
-    function requestRead(ReadRequest calldata request) external nonReentrant returns (bytes32 requestId) {
+    function requestRead(ReadRequest calldata request) external payable nonReentrant returns (bytes32 requestId) {
+        if (msg.value != readFee) revert IncorrectFee();
+
         return _processReadRequest(
             request.destinationDomain, request.targetContract, request.minBlock, request.callData, request.requester
         );
@@ -151,5 +191,40 @@ contract T1XChainReader is OwnableUpgradeable, ReentrancyGuardUpgradeable {
         if (!WithdrawTrieVerifier.verifyMerkleProof(root, leaf, position, proof)) revert InvalidProof();
 
         return (requestId, result);
+    }
+
+    /**
+     * @notice Set the fee required for read requests
+     * @dev Only callable by the owner
+     * @param _readFee The new fee amount in wei
+     */
+    function setReadFee(uint256 _readFee) external onlyOwner {
+        readFee = _readFee;
+        emit FeeUpdated(_readFee);
+    }
+
+    /**
+     * @notice Set the address that can withdraw collected fees
+     * @dev Only callable by the owner
+     * @param _feeRecipient The address that can withdraw fees
+     */
+    function setFeeRecipient(address _feeRecipient) external onlyOwner {
+        if (_feeRecipient == address(0)) revert ZeroAddress();
+        feeRecipient = _feeRecipient;
+        emit FeeRecipientUpdated(_feeRecipient);
+    }
+
+    /**
+     * @notice Withdraw all collected fees to the fee recipient
+     * @dev Only callable by the fee recipient
+     */
+    function withdrawFees() external {
+        if (msg.sender != feeRecipient) revert UnauthorizedFeeWithdraw();
+
+        uint256 amount = address(this).balance;
+        (bool success,) = feeRecipient.call{ value: amount }("");
+        if (!success) revert WithdrawFailed();
+
+        emit FeesWithdrawn(feeRecipient, amount);
     }
 }
