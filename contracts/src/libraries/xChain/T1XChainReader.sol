@@ -86,15 +86,13 @@ contract T1XChainReader is OwnableUpgradeable, ReentrancyGuardUpgradeable {
     error ZeroAddress();
     error InvalidBatchIndex();
     error InvalidProof();
-    error InsufficientFee();
+    error IncorrectFee();
     error NoFeesToWithdraw();
     error WithdrawFailed();
     error UnauthorizedFeeWithdraw();
 
     // ============ Variables ============
     uint256 public nonce;
-    /// @notice Total fees collected
-    uint256 public collectedFees;
 
     // ============ Modifiers ============
 
@@ -131,9 +129,7 @@ contract T1XChainReader is OwnableUpgradeable, ReentrancyGuardUpgradeable {
      * @return requestId Unique identifier for tracking this request
      */
     function requestRead(ReadRequest calldata request) external payable nonReentrant returns (bytes32 requestId) {
-        if (msg.value < readFee) revert InsufficientFee();
-
-        collectedFees += msg.value;
+        if (msg.value != readFee) revert IncorrectFee();
 
         return _processReadRequest(
             request.destinationDomain, request.targetContract, request.minBlock, request.callData, request.requester
@@ -224,11 +220,8 @@ contract T1XChainReader is OwnableUpgradeable, ReentrancyGuardUpgradeable {
      */
     function withdrawFees() external {
         if (msg.sender != feeRecipient) revert UnauthorizedFeeWithdraw();
-        if (collectedFees == 0) revert NoFeesToWithdraw();
 
-        uint256 amount = collectedFees;
-        collectedFees = 0;
-
+        uint256 amount = address(this).balance;
         (bool success,) = feeRecipient.call{ value: amount }("");
         if (!success) revert WithdrawFailed();
 
