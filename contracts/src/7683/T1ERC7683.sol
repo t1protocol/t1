@@ -251,9 +251,7 @@ contract T1ERC7683 is BasicSwap7683, OwnableUpgradeable, PausableUpgradeable {
 
     /**
      * @notice Refunds a batch of expired GaslessCrossChainOrders on the chain where the orders were opened.
-     * The refunded status should not be changed here but rather on the origin chain. To allow the user to retry in
-     * case some error occurs.
-     * Ensuring the order is eligible for refunding in the origin chain is the responsibility of the caller.
+     * This process needs a proof of read triggered by `verifyRefund` that proves the intent has not be filled.
      * @param _orders An array of GaslessCrossChainOrders to refund.
      * @param _proofs Array of encoded proofs of read to verify orders are not settled
      */
@@ -272,9 +270,7 @@ contract T1ERC7683 is BasicSwap7683, OwnableUpgradeable, PausableUpgradeable {
 
     /**
      * @notice Refunds a batch of expired OnchainCrossChainOrder on the chain where the orders were opened.
-     * The refunded status should not be changed here but rather on the origin chain. To allow the user to retry in
-     * case some error occurs.
-     * Ensuring the order is eligible for refunding the origin chain is the responsibility of the caller.
+     * This process needs a proof of read triggered by `verifyRefund` that proves the intent has not be filled.
      * @param _orders An array of OnchainCrossChainOrders to refund.
      * @param _proofs Array of encoded proofs of read to verify orders are not settled
      */
@@ -291,13 +287,7 @@ contract T1ERC7683 is BasicSwap7683, OwnableUpgradeable, PausableUpgradeable {
         _refundOrders(OrderEncoder.decode(_orders[0].orderData).originDomain, orderIds);
     }
 
-    /**
-     * @dev Should be implemented by the messaging layer for dispatching a refunding instruction the remote domain
-     * where the orders where created.
-     * @param _originDomain The origin domain of the orders.
-     * @param _orderIds The IDs of the orders to refund.
-     */
-    /// @notice
+    /// @notice Refunds orders by transferring input tokens back to order senders
     /// @param originDomain The chain id of the network where intent has been created
     /// @param orderIds Ids for the orders to refund
     function _refundOrders(uint32 originDomain, bytes32[] memory orderIds) internal {
