@@ -9,7 +9,6 @@ import { OnchainCrossChainOrder } from "../../../src/interfaces/IERC7683.sol";
 import { T1XChainReader } from "../../libraries/xChain/T1XChainReader.sol";
 import { T1XChainReaderBaseTestSetup } from "./T1XChainReaderBaseTestSetup.sol";
 import { T1ERC7683 } from "../../7683/T1ERC7683.sol";
-import { Base7683 } from "../../7683/Base7683.sol";
 
 contract T1XChainReaderTest is T1XChainReaderBaseTestSetup {
     using TypeCasts for address;
