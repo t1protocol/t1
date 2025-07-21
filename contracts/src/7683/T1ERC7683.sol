@@ -70,6 +70,7 @@ contract T1ERC7683 is BasicSwap7683, OwnableUpgradeable, PausableUpgradeable {
     error InvalidRequest();
     error InvalidOrder();
     error OrderFillNotExpired();
+    error InvalidSolver(address enforcedSolver);
 
     /// @notice Initializes the contract with the specified dependencies
     /// @param _permit2 The address of the permit2 contract
@@ -218,28 +219,29 @@ contract T1ERC7683 is BasicSwap7683, OwnableUpgradeable, PausableUpgradeable {
             (, bytes memory _orderData) = abi.decode(openOrders[orderId], (bytes32, bytes));
             OrderData memory orderData = OrderEncoder.decode(_orderData);
 
-            _handle(orderData.destinationDomain, orderData.destinationSettler, result);
+            // Remove the first 32 bytes prefix of the message
+            bytes memory _innerMessage = abi.decode(result, (bytes));
+            (bool _settle, bytes32[] memory _orderIds, bytes[] memory _ordersFillerData) =
+                abi.decode(_innerMessage, (bool, bytes32[], bytes[]));
+
+            for (uint256 i = 0; i < _orderIds.length; i++) {
+                if (_settle) {
+                    address receiver = TypeCasts.bytes32ToAddress(abi.decode(_ordersFillerData[i], (bytes32)));
+
+                    // Enforce auction winner
+                    if (orderData.data.length > 0) {
+                        address enforcedSolver = abi.decode(orderData.data, (address));
+                        if (receiver != enforcedSolver) revert InvalidSolver(enforcedSolver);
+                    }
+
+                    _handleSettleOrder(
+                        orderData.destinationDomain, orderData.destinationSettler, _orderIds[i], receiver
+                    );
+                }
+            }
         }
 
         emit SettlementVerified(orderId, isSettled);
-    }
-
-    /// @notice Handles incoming messages
-    /// @dev Decodes the message and processes settlement or refund operations accordingly
-    /// @param _originDomain The domain from which the message originates
-    /// @param _sender The address of the sender on the origin domain
-    /// @param _message The encoded message received via t1
-    function _handle(uint32 _originDomain, bytes32 _sender, bytes memory _message) internal {
-        // Remove the first 32 bytes prefix of the message
-        bytes memory _innerMessage = abi.decode(_message, (bytes));
-        (bool _settle, bytes32[] memory _orderIds, bytes[] memory _ordersFillerData) =
-            abi.decode(_innerMessage, (bool, bytes32[], bytes[]));
-
-        for (uint256 i = 0; i < _orderIds.length; i++) {
-            if (_settle) {
-                _handleSettleOrder(_originDomain, _sender, _orderIds[i], abi.decode(_ordersFillerData[i], (bytes32)));
-            }
-        }
     }
 
     /// @notice Retrieves the local domain identifier.

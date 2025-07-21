@@ -121,7 +121,7 @@ abstract contract BasicSwap7683 is Base7683 {
         uint32 _messageOrigin,
         bytes32 _messageSender,
         bytes32 _orderId,
-        bytes32 _receiver
+        address _receiver
     )
         internal
         virtual
@@ -132,12 +132,11 @@ abstract contract BasicSwap7683 is Base7683 {
 
         orderStatus[_orderId] = SETTLED;
 
-        address receiver = TypeCasts.bytes32ToAddress(_receiver);
         address inputToken = TypeCasts.bytes32ToAddress(orderData.inputToken);
 
-        _transferTokenOut(inputToken, receiver, orderData.amountIn);
+        _transferTokenOut(inputToken, _receiver, orderData.amountIn);
 
-        emit Settled(_orderId, receiver);
+        emit Settled(_orderId, _receiver);
     }
 
     /**
