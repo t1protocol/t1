@@ -31,9 +31,13 @@ abstract contract BasicSwap7683 is Base7683 {
     // ============ Libraries ============
     using SafeERC20 for IERC20;
 
+    error NotEligible();
+
     // ============ Constants ============
     /// @notice Status constant indicating that an order has been settled.
     bytes32 public constant SETTLED = "SETTLED";
+    /// @notice Status constant indicating that a refund has been requested for this order.
+    bytes32 public constant REFUND_REQUESTED = "REFUND_REQUESTED";
     /// @notice Status constant indicating that an order has been refunded.
     bytes32 public constant REFUNDED = "REFUNDED";
 
@@ -106,32 +110,6 @@ abstract contract BasicSwap7683 is Base7683 {
     }
 
     /**
-     * @dev Refunds multiple OnchainCrossChain orders by dispatching refund instructions.
-     * The proper status of all the orders (NOT filled and expired) is validated on the Base7683 before calling this
-     * function.
-     * It assumes that all orders were originated in the same originDomain so it uses the the one from the first one for
-     * dispatching the message, but if some order differs on the originDomain it can be re-refunded later.
-     * @param _orders The orders to refund.
-     * @param _orderIds The IDs of the orders to refund.
-     */
-    function _refundOrders(OnchainCrossChainOrder[] memory _orders, bytes32[] memory _orderIds) internal override {
-        _dispatchRefund(OrderEncoder.decode(_orders[0].orderData).originDomain, _orderIds);
-    }
-
-    /**
-     * @dev Refunds multiple GaslessCrossChain orders by dispatching refund instructions.
-     * The proper status of all the orders (NOT filled and expired) is validated on the Base7683 before calling this
-     * function.
-     * It assumes that all orders were originated in the same originDomain so it uses the the one from the first one for
-     * dispatching the message, but if some order differs on the originDomain it can be re-refunded later.
-     * @param _orders The orders to refund.
-     * @param _orderIds The IDs of the orders to refund.
-     */
-    function _refundOrders(GaslessCrossChainOrder[] memory _orders, bytes32[] memory _orderIds) internal override {
-        _dispatchRefund(OrderEncoder.decode(_orders[0].orderData).originDomain, _orderIds);
-    }
-
-    /**
      * @dev Handles settling an individual order, should be called by the inheriting contract when receiving a setting
      * instruction from a remote chain.
      * @param _messageOrigin The domain from which the message originates.
@@ -150,7 +128,7 @@ abstract contract BasicSwap7683 is Base7683 {
     {
         (bool isEligible, OrderData memory orderData) = _checkOrderEligibility(_messageOrigin, _messageSender, _orderId);
 
-        if (!isEligible) return;
+        if (!isEligible) revert NotEligible();
 
         orderStatus[_orderId] = SETTLED;
 
@@ -203,8 +181,9 @@ abstract contract BasicSwap7683 is Base7683 {
     {
         OrderData memory orderData;
 
-        // check if the order is opened to ensure it belongs to this domain, skip otherwise
-        if (orderStatus[_orderId] != OPENED) return (false, orderData);
+        // check if the order is opened or asked for refund to ensure it belongs to this domain, skip otherwise
+        bytes32 status = orderStatus[_orderId];
+        if (status != OPENED && status != REFUND_REQUESTED) return (false, orderData);
 
         (, bytes memory _orderData) = abi.decode(openOrders[_orderId], (bytes32, bytes));
         orderData = OrderEncoder.decode(_orderData);
@@ -419,12 +398,4 @@ abstract contract BasicSwap7683 is Base7683 {
     )
         internal
         virtual;
-
-    /**
-     * @dev Should be implemented by the messaging layer for dispatching a refunding instruction the remote domain
-     * where the orders where created.
-     * @param _originDomain The origin domain of the orders.
-     * @param _orderIds The IDs of the orders to refund.
-     */
-    function _dispatchRefund(uint32 _originDomain, bytes32[] memory _orderIds) internal virtual;
 }
