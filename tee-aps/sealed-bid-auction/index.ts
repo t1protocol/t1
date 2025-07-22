@@ -1,6 +1,6 @@
-import {SealedBidAuctionApiServer} from "./src/core/SealedBidAuctionApiServer.ts";
+import {SealedBidAuctionHttpServer} from "./src/api/http/SealedBidAuctionHttpServer.ts";
 
-const apiServer = new SealedBidAuctionApiServer();
+const apiServer = new SealedBidAuctionHttpServer();
 
 async function main() {
     await apiServer.start(3010);

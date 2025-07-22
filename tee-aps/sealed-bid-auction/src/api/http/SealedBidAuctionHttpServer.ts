@@ -2,12 +2,12 @@ import express from "express";
 import cors from "cors";
 import {Server} from "http";
 
-import {AuctionController} from "../api/controller/AuctionController.ts";
-import {WinstonLogger} from "./utils/WinstonLogger.ts";
+import {SealedBidAuctionController} from "./SealedBidAuctionController.ts";
+import {WinstonLogger} from "../../utils/WinstonLogger.ts";
 
-export class SealedBidAuctionApiServer {
+export class SealedBidAuctionHttpServer {
 
-    private logger: WinstonLogger = new WinstonLogger(SealedBidAuctionApiServer.name);
+    private logger: WinstonLogger = new WinstonLogger(SealedBidAuctionHttpServer.name);
 
     private apiServer: Server | null = null;
 
@@ -25,7 +25,7 @@ export class SealedBidAuctionApiServer {
         app.use(express.json());
 
         // Register routes
-        const auctionController = new AuctionController();
+        const auctionController = new SealedBidAuctionController();
 
         router.post("/auction",
             (req, res) => auctionController.open(req, res)
