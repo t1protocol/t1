@@ -70,7 +70,6 @@ contract T1ERC7683 is BasicSwap7683, OwnableUpgradeable, PausableUpgradeable {
     error InvalidRequest();
     error InvalidOrder();
     error OrderFillNotExpired();
-    error InvalidSolver(address enforcedSolver);
 
     /// @notice Initializes the contract with the specified dependencies
     /// @param _permit2 The address of the permit2 contract
@@ -226,16 +225,12 @@ contract T1ERC7683 is BasicSwap7683, OwnableUpgradeable, PausableUpgradeable {
 
             for (uint256 i = 0; i < _orderIds.length; i++) {
                 if (_settle) {
-                    address receiver = TypeCasts.bytes32ToAddress(abi.decode(_ordersFillerData[i], (bytes32)));
-
-                    // Enforce auction winner
-                    if (orderData.data.length > 0) {
-                        address enforcedSolver = abi.decode(orderData.data, (address));
-                        if (receiver != enforcedSolver) revert InvalidSolver(enforcedSolver);
-                    }
-
+                    // abi.decode(_ordersFillerData[i], (bytes32)) is receiver address set by solver when fill on dst
                     _handleSettleOrder(
-                        orderData.destinationDomain, orderData.destinationSettler, _orderIds[i], receiver
+                        orderData.destinationDomain,
+                        orderData.destinationSettler,
+                        _orderIds[i],
+                        abi.decode(_ordersFillerData[i], (bytes32))
                     );
                 }
             }

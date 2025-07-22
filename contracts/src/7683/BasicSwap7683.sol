@@ -71,6 +71,7 @@ abstract contract BasicSwap7683 is Base7683 {
     error InvalidOrderDomain();
     error InvalidDomain();
     error InvalidSender();
+    error InvalidSolver(address enforcedSolver);
 
     // ============ Modifiers ============
 
@@ -121,7 +122,7 @@ abstract contract BasicSwap7683 is Base7683 {
         uint32 _messageOrigin,
         bytes32 _messageSender,
         bytes32 _orderId,
-        address _receiver
+        bytes32 _receiver
     )
         internal
         virtual
@@ -132,11 +133,12 @@ abstract contract BasicSwap7683 is Base7683 {
 
         orderStatus[_orderId] = SETTLED;
 
+        address receiver = TypeCasts.bytes32ToAddress(_receiver);
         address inputToken = TypeCasts.bytes32ToAddress(orderData.inputToken);
 
-        _transferTokenOut(inputToken, _receiver, orderData.amountIn);
+        _transferTokenOut(inputToken, receiver, orderData.amountIn);
 
-        emit Settled(_orderId, _receiver);
+        emit Settled(_orderId, receiver);
     }
 
     /**
@@ -371,6 +373,11 @@ abstract contract BasicSwap7683 is Base7683 {
         if (_orderId != OrderEncoder.id(orderData)) revert InvalidOrderId();
         if (block.timestamp > orderData.fillDeadline) revert OrderFillExpired();
         if (orderData.destinationDomain != _localDomain()) revert InvalidOrderDomain();
+        // Enforce auction winner
+        if (orderData.data.length > 0) {
+            address enforcedSolver = abi.decode(orderData.data, (address));
+            if (msg.sender != enforcedSolver) revert InvalidSolver(enforcedSolver);
+        }
 
         address outputToken = TypeCasts.bytes32ToAddress(orderData.outputToken);
         address recipient = TypeCasts.bytes32ToAddress(orderData.recipient);
