@@ -1,0 +1,41 @@
+{
+  "metadata": {
+    "version": "v0.6.1",
+    "date": "2025-07-21",
+    "by": "Wojciech",
+    "from_machine": "D1.local",
+    "from_branch": "canary",
+    "from_commit": "30f2b731de436c146f6689a9f5ec76e34d3be8d0"
+  },
+  "addresses": {
+    "arbitrum_sepolia": {
+      "signer": "0x7Aa5e0E77b5aB2385Fd644373006C920D3a73894",
+      "usdt": "0xF6232a871BF3B33F5bc181f55d770F9FB062A457",
+      "weth": "0x2836ae2eA2c013acD38028fD0C77B92cccFa2EE4",
+      "t1ProxyAdmin": "0xf3Fd7Ff45b28E76f4fD14ca86c1208c8F8E6dB72",
+      "t1XChainRead": {
+        "implementation": "0x4ac2b4962a85Ce32E6248f63b2319C826BC38934",
+        "proxy": "0x8d91A7D6AC6068eEeA1bfAEC8C0ED983D640AD32"
+      },
+      "t1ERC7683": {
+        "implementation": "0xC67084dD44D02f9729918aA1D204de04e5306b56",
+        "proxy": "0x3D88ce9F7791c40D34eD4Cd00e9E48Aa4e75e8f3"
+      }
+    },
+    "base_sepolia": {
+      "signer": "0x7Aa5e0E77b5aB2385Fd644373006C920D3a73894",
+      "usdt": "0x228eE6c1C297E2Eba0e95A71684B26f89385b4eC",
+      "weth": "0x4200000000000000000000000000000000000006",
+      "t1ProxyAdmin": "0x3e8cBA65503AeE9DAEDaa37436C7FCc0e8f3c17f",
+      "t1XChainRead": {
+        "implementation": "0x4C35FE52901a7D21b5D874093dd7eC3fDB0B88D0",
+        "proxy": "0xCD4B9503CD9e5Fd3Bf0cD3982000F5B076d0A1A6"
+      },
+      "t1ERC7683": {
+        "implementation": "0xA8E087972EcA253D36AFAB3BD14Ed2F5Fb4520D4",
+        "proxy": "0x160394bFa0aa54885C09FDDBe9895c231c14d651"
+      }
+    },
+    "deployerAddress": "0x2Ade71354645C57e7D099DbC04b27f8ad277395E"
+  }
+}
