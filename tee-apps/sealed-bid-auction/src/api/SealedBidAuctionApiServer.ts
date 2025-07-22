@@ -10,7 +10,7 @@ export class SealedBidAuctionApiServer {
 
     public async start(port: number) {
         if (this.server) {
-            this.logger.warn("HTTP API server is already running");
+            this.logger.warn("API server is already running");
             return;
         }
 
