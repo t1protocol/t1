@@ -1,25 +1,31 @@
 import {SealedBidAuctionHttpServer} from "./src/api/http/SealedBidAuctionHttpServer.ts";
+import {SealedBidPriceWebsocketServer} from "./src/api/ws/SealedBidPriceWebsocketServer.ts";
 
-const apiServer = new SealedBidAuctionHttpServer();
+const httpServer = new SealedBidAuctionHttpServer();
+const wsServer = new SealedBidPriceWebsocketServer();
 
 async function main() {
-    await apiServer.start(3010);
+    await httpServer.start(3010);
+    await wsServer.start(3011);
 }
 
 main()
     .then()
     .catch((error) => {
-        apiServer.stop();
+        httpServer.stop();
+        wsServer.stop();
         console.error("", error);
         process.exit(1);
     });
 
 process.on("SIGINT", () => {
-    apiServer.stop();
+    httpServer.stop();
+    wsServer.stop();
     process.exit(0);
 });
 
 process.on("SIGTERM", () => {
-    apiServer.stop();
+    httpServer.stop();
+    wsServer.stop();
     process.exit(0);
 });

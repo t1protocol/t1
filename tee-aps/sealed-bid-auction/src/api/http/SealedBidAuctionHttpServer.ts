@@ -9,11 +9,11 @@ export class SealedBidAuctionHttpServer {
 
     private logger: WinstonLogger = new WinstonLogger(SealedBidAuctionHttpServer.name);
 
-    private apiServer: Server | null = null;
+    private server: Server | null = null;
 
-    async start(port: number) {
-        if (this.apiServer) {
-            this.logger.warn("API server is already running");
+    public async start(port: number) {
+        if (this.server) {
+            this.logger.warn("HTTP API server is already running");
             return;
         }
 
@@ -33,17 +33,17 @@ export class SealedBidAuctionHttpServer {
 
         app.use("/api", router);
 
-        this.apiServer = app.listen(port, () => {
-            this.logger.info(`API server started on port ${port}`);
+        this.server = app.listen(port, () => {
+            this.logger.info(`HTTP API server started on port ${port}`);
         });
     }
 
     public stop() {
-        if (this.apiServer) {
-            this.logger.info("Stopping API server...")
-            this.apiServer.close();
-            this.apiServer = null;
-            this.logger.info("API server stopped");
+        if (this.server) {
+            this.logger.info("Stopping HTTP API server...")
+            this.server.close();
+            this.server = null;
+            this.logger.info("HTTP API server stopped");
         }
     }
 }
