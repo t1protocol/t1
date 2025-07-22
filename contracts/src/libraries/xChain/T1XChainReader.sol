@@ -121,7 +121,13 @@ contract T1XChainReader is IT1XChainReader, OwnableUpgradeable, ReentrancyGuardU
      * @param request ReadRequest
      * @return requestId Unique identifier for tracking this request
      */
-    function requestRead(ReadRequest calldata request) external payable override nonReentrant returns (bytes32 requestId) {
+    function requestRead(ReadRequest calldata request)
+        external
+        payable
+        override
+        nonReentrant
+        returns (bytes32 requestId)
+    {
         if (msg.value != readFee) revert IncorrectFee();
 
         return _processReadRequest(
@@ -173,7 +179,12 @@ contract T1XChainReader is IT1XChainReader, OwnableUpgradeable, ReentrancyGuardU
      * @return requestId The ID of the read request
      * @return result The raw ABI-encoded return value from the target function
      */
-    function verifyProofOfRead(bytes calldata encodedProofOfRead) external view override returns (bytes32, bytes memory) {
+    function verifyProofOfRead(bytes calldata encodedProofOfRead)
+        external
+        view
+        override
+        returns (bytes32, bytes memory)
+    {
         (uint256 batchIndex, bytes32 requestId, uint256 position, bytes memory result, bytes memory proof) =
             abi.decode(encodedProofOfRead, (uint256, bytes32, uint256, bytes, bytes));
 
