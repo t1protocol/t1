@@ -66,9 +66,6 @@ abstract contract BasicSwap7683 is Base7683 {
 
     error InvalidOrderType(bytes32 orderType);
     error InvalidOriginDomain(uint32 originDomain);
-    error InvalidOrderId();
-    error OrderFillExpired();
-    error InvalidOrderDomain();
     error InvalidDomain();
     error InvalidSender();
 
@@ -360,29 +357,29 @@ abstract contract BasicSwap7683 is Base7683 {
         nonce = orderData.senderNonce;
     }
 
-    /**
-     * @dev Fills an order on the current domain.
-     * @param _orderId The ID of the order to fill.
-     * @param _originData The origin data of the order.
-     * Additional data related to the order (unused).
-     */
-    function _fillOrder(bytes32 _orderId, bytes calldata _originData, bytes calldata) internal override {
-        OrderData memory orderData = OrderEncoder.decode(_originData);
+    // /**
+    //  * @dev Fills an order on the current domain.
+    //  * @param _orderId The ID of the order to fill.
+    //  * @param _originData The origin data of the order.
+    //  * Additional data related to the order (unused).
+    //  */
+    // function _fillOrder(bytes32 _orderId, bytes calldata _originData, bytes calldata) internal override {
+    //     OrderData memory orderData = OrderEncoder.decode(_originData);
 
-        if (_orderId != OrderEncoder.id(orderData)) revert InvalidOrderId();
-        if (block.timestamp > orderData.fillDeadline) revert OrderFillExpired();
-        if (orderData.destinationDomain != _localDomain()) revert InvalidOrderDomain();
+    //     if (_orderId != OrderEncoder.id(orderData)) revert InvalidOrderId();
+    //     if (block.timestamp > orderData.fillDeadline) revert OrderFillExpired();
+    //     if (orderData.destinationDomain != _localDomain()) revert InvalidOrderDomain();
 
-        address outputToken = TypeCasts.bytes32ToAddress(orderData.outputToken);
-        address recipient = TypeCasts.bytes32ToAddress(orderData.recipient);
+    //     address outputToken = TypeCasts.bytes32ToAddress(orderData.outputToken);
+    //     address recipient = TypeCasts.bytes32ToAddress(orderData.recipient);
 
-        if (outputToken == address(0)) {
-            if (orderData.amountOut != msg.value) revert InvalidNativeAmount();
-            Address.sendValue(payable(recipient), orderData.amountOut);
-        } else {
-            IERC20(outputToken).safeTransferFrom(msg.sender, recipient, orderData.amountOut);
-        }
-    }
+    //     if (outputToken == address(0)) {
+    //         if (orderData.amountOut != msg.value) revert InvalidNativeAmount();
+    //         Address.sendValue(payable(recipient), orderData.amountOut);
+    //     } else {
+    //         IERC20(outputToken).safeTransferFrom(msg.sender, recipient, orderData.amountOut);
+    //     }
+    // }
 
     /**
      * @dev Should be implemented by the messaging layer for dispatching a settlement instruction the remote domain

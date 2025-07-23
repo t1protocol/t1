@@ -3,6 +3,7 @@ pragma solidity 0.8.25;
 
 import { IERC20 } from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import { SafeERC20 } from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
+import { Address } from "@openzeppelin/contracts/utils/Address.sol";
 
 import { TypeCasts } from "@hyperlane-xyz/libs/TypeCasts.sol";
 import { IPermit2, ISignatureTransfer } from "@uniswap/permit2/src/interfaces/IPermit2.sol";
@@ -14,6 +15,7 @@ import {
     IOriginSettler,
     IDestinationSettler
 } from "../interfaces/IERC7683.sol";
+import { OrderData, OrderEncoder } from "../libraries/7683/OrderEncoder.sol";
 
 /**
  * @title Base7683
@@ -26,6 +28,10 @@ import {
 abstract contract Base7683 is IOriginSettler, IDestinationSettler {
     // ============ Libraries ============
     using SafeERC20 for IERC20;
+
+    error InvalidOrderId();
+    error OrderFillExpired();
+    error InvalidOrderDomain();
 
     // ============ Constants ============
     /// @notice The instance of the Permit2 contract.
@@ -162,20 +168,33 @@ abstract contract Base7683 is IOriginSettler, IDestinationSettler {
 
     /**
      * @notice Fills a single leg of a particular order on the destination chain
-     * @param _orderId Unique order identifier for this order
-     * @param _originData Data emitted on the origin to parameterize the fill
-     * @param _fillerData Data provided by the filler to inform the fill or express their preferences. It should
+     * @param orderId Unique order identifier for this order
+     * @param originData Data emitted on the origin to parameterize the fill
+     * @param fillerData Data provided by the filler to inform the fill or express their preferences. It should
      * contain the bytes32 encoded address of the receiver which is used at settlement time
      */
-    function fill(bytes32 _orderId, bytes calldata _originData, bytes calldata _fillerData) external payable virtual {
-        if (orderStatus[_orderId] != UNKNOWN) revert InvalidOrderStatus();
+    function fill(bytes32 orderId, bytes calldata originData, bytes calldata fillerData) external payable virtual {
+        if (orderStatus[orderId] != UNKNOWN) revert InvalidOrderStatus();
 
-        _fillOrder(_orderId, _originData, _fillerData);
+        OrderData memory orderData = OrderEncoder.decode(originData);
 
-        orderStatus[_orderId] = FILLED;
-        filledOrders[_orderId] = FilledOrder(_originData, _fillerData);
+        if (orderId != OrderEncoder.id(orderData)) revert InvalidOrderId();
+        if (block.timestamp > orderData.fillDeadline) revert OrderFillExpired();
+        if (orderData.destinationDomain != _localDomain()) revert InvalidOrderDomain();
 
-        emit Filled(_orderId, _originData, _fillerData);
+        address outputToken = TypeCasts.bytes32ToAddress(orderData.outputToken);
+        address recipient = TypeCasts.bytes32ToAddress(orderData.recipient);
+
+        if (outputToken == address(0)) {
+            if (orderData.amountOut != msg.value) revert InvalidNativeAmount();
+            Address.sendValue(payable(recipient), orderData.amountOut);
+        } else {
+            IERC20(outputToken).safeTransferFrom(msg.sender, recipient, orderData.amountOut);
+        }
+        orderStatus[orderId] = FILLED;
+        filledOrders[orderId] = FilledOrder(originData, fillerData);
+
+        emit Filled(orderId, originData, fillerData);
     }
 
     /**
@@ -333,15 +352,6 @@ abstract contract Base7683 is IOriginSettler, IDestinationSettler {
         view
         virtual
         returns (ResolvedCrossChainOrder memory _resolvedOrder, bytes32 _orderId, uint256 _nonce);
-
-    /**
-     * @notice Fills an order with specific origin and filler data.
-     * @dev To be implemented by the inheriting contract. Defines how to process the origin and filler data.
-     * @param _orderId The unique identifier for the order to fill.
-     * @param _originData Data emitted on the origin chain to parameterize the fill.
-     * @param _fillerData Data provided by the filler, including preferences and additional information.
-     */
-    function _fillOrder(bytes32 _orderId, bytes calldata _originData, bytes calldata _fillerData) internal virtual;
 
     /**
      * @notice Settles a batch of orders using their origin and filler data.
