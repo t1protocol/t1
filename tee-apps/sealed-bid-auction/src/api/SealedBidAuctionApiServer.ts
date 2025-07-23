@@ -19,7 +19,6 @@ export class SealedBidAuctionApiServer {
         }
 
         const auctionController = new SealedBidAuctionController();
-        const infoLogger = this.logger.info;
 
         // @ts-ignore
         this.server = Bun.serve<AuthData>({
@@ -44,14 +43,19 @@ export class SealedBidAuctionApiServer {
                     return undefined;
                 }
 
-                return new Response("Hello WebSocket!");
+                return new Response("OK");
             },
             websocket: {
-                async message(ws, message) {
-                    infoLogger(`Received ${message}`);
-                    infoLogger(`Auth token [${ws.data.token}]`);
-                    // send back a message
+                open(ws) {
+                    console.log(`Client ${ws.data.token} connected`);
+                    ws.send("Welcome!");
+                },
+                message(ws, message) {
+                    console.log(`Received ${message}`);
                     ws.send(`You said: ${message}`);
+                },
+                close(_ws, _code, _reason) {
+                    console.log("Client disconnected");
                 },
             },
         });
