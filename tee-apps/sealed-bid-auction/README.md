@@ -2,11 +2,13 @@
 
 Sealed Bid auction implementation. Privacy of a bid is achieved by running the app inside a TEE - so the bids are protected even from a machine operator with admin rights.
 
+### To install:
 ```bash
 bun install
 ```
+Save TLS key in `key.pem` and certificate in `cert.pem` . Consider using CloudFlare Origin Server Certificate (of course if you use CloudFlare) 
 
-To run:
+### To run:
 
 ```bash
 bun run index.ts

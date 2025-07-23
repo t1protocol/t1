@@ -24,6 +24,10 @@ export class SealedBidAuctionApiServer {
         // @ts-ignore
         this.server = Bun.serve<AuthData>({
             port,
+            tls: {
+                key: Bun.file("./key.pem"),
+                cert: Bun.file("./cert.pem"),
+            },
             routes: {
                 "/healthcheck": new Response("OK"),
                 "/api/auction": req => auctionController.auction(req),
