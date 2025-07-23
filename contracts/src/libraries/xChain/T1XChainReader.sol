@@ -4,12 +4,13 @@ pragma solidity ^0.8.25;
 import { OwnableUpgradeable } from "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
 import { ReentrancyGuardUpgradeable } from "@openzeppelin/contracts-upgradeable/security/ReentrancyGuardUpgradeable.sol";
 import { WithdrawTrieVerifier } from "../verifier/WithdrawTrieVerifier.sol";
+import { IT1XChainReader } from "./IT1XChainReader.sol";
 
 /**
  * @title T1XChainReader
  * @notice Facilitates reading data from contracts on other chains through t1
  */
-contract T1XChainReader is OwnableUpgradeable, ReentrancyGuardUpgradeable {
+contract T1XChainReader is IT1XChainReader, OwnableUpgradeable, ReentrancyGuardUpgradeable {
     // ============ Events ============
 
     /**
@@ -72,14 +73,6 @@ contract T1XChainReader is OwnableUpgradeable, ReentrancyGuardUpgradeable {
     /// @notice Address that can withdraw collected fees
     address public feeRecipient;
 
-    struct ReadRequest {
-        uint32 destinationDomain;
-        address targetContract;
-        uint64 minBlock;
-        bytes callData;
-        address requester;
-    }
-
     // ============ Errors ============
 
     error OnlyProver();
@@ -115,7 +108,7 @@ contract T1XChainReader is OwnableUpgradeable, ReentrancyGuardUpgradeable {
      * @notice Initializes the contract
      * @param _owner The owner of the contract
      */
-    function initialize(address _owner) external initializer {
+    function initialize(address _owner) external override initializer {
         __Ownable_init();
         __ReentrancyGuard_init();
         _transferOwnership(_owner);
@@ -128,7 +121,13 @@ contract T1XChainReader is OwnableUpgradeable, ReentrancyGuardUpgradeable {
      * @param request ReadRequest
      * @return requestId Unique identifier for tracking this request
      */
-    function requestRead(ReadRequest calldata request) external payable nonReentrant returns (bytes32 requestId) {
+    function requestRead(ReadRequest calldata request)
+        external
+        payable
+        override
+        nonReentrant
+        returns (bytes32 requestId)
+    {
         if (msg.value != readFee) revert IncorrectFee();
 
         return _processReadRequest(
@@ -162,7 +161,7 @@ contract T1XChainReader is OwnableUpgradeable, ReentrancyGuardUpgradeable {
      * @param batchIndex The batch index of the read request
      * @param newRoot The root of the proof of read merkle tree
      */
-    function commitProofOfReadRoot(uint256 batchIndex, bytes32 newRoot) external onlyProver {
+    function commitProofOfReadRoot(uint256 batchIndex, bytes32 newRoot) external override onlyProver {
         if (batchIndex > nextBatchIndex) revert InvalidBatchIndex();
         proofOfReadRoots[batchIndex] = newRoot;
         nextBatchIndex++;
@@ -180,7 +179,12 @@ contract T1XChainReader is OwnableUpgradeable, ReentrancyGuardUpgradeable {
      * @return requestId The ID of the read request
      * @return result The raw ABI-encoded return value from the target function
      */
-    function verifyProofOfRead(bytes calldata encodedProofOfRead) external view returns (bytes32, bytes memory) {
+    function verifyProofOfRead(bytes calldata encodedProofOfRead)
+        external
+        view
+        override
+        returns (bytes32, bytes memory)
+    {
         (uint256 batchIndex, bytes32 requestId, uint256 position, bytes memory result, bytes memory proof) =
             abi.decode(encodedProofOfRead, (uint256, bytes32, uint256, bytes, bytes));
 
@@ -198,7 +202,7 @@ contract T1XChainReader is OwnableUpgradeable, ReentrancyGuardUpgradeable {
      * @dev Only callable by the owner
      * @param _readFee The new fee amount in wei
      */
-    function setReadFee(uint256 _readFee) external onlyOwner {
+    function setReadFee(uint256 _readFee) external override onlyOwner {
         readFee = _readFee;
         emit FeeUpdated(_readFee);
     }
@@ -208,7 +212,7 @@ contract T1XChainReader is OwnableUpgradeable, ReentrancyGuardUpgradeable {
      * @dev Only callable by the owner
      * @param _feeRecipient The address that can withdraw fees
      */
-    function setFeeRecipient(address _feeRecipient) external onlyOwner {
+    function setFeeRecipient(address _feeRecipient) external override onlyOwner {
         if (_feeRecipient == address(0)) revert ZeroAddress();
         feeRecipient = _feeRecipient;
         emit FeeRecipientUpdated(_feeRecipient);
@@ -218,7 +222,7 @@ contract T1XChainReader is OwnableUpgradeable, ReentrancyGuardUpgradeable {
      * @notice Withdraw all collected fees to the fee recipient
      * @dev Only callable by the fee recipient
      */
-    function withdrawFees() external {
+    function withdrawFees() external override {
         if (msg.sender != feeRecipient) revert UnauthorizedFeeWithdraw();
 
         uint256 amount = address(this).balance;

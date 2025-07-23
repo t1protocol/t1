@@ -6,6 +6,7 @@ import { ITransparentUpgradeableProxy } from "@openzeppelin/contracts/proxy/tran
 import { OrderData, OrderEncoder } from "../../../src/libraries/7683/OrderEncoder.sol";
 import { OnchainCrossChainOrder } from "../../../src/interfaces/IERC7683.sol";
 
+import { IT1XChainReader } from "../../libraries/xChain/IT1XChainReader.sol";
 import { T1XChainReader } from "../../libraries/xChain/T1XChainReader.sol";
 import { T1XChainReaderBaseTestSetup } from "./T1XChainReaderBaseTestSetup.sol";
 import { T1ERC7683 } from "../../7683/T1ERC7683.sol";
@@ -313,7 +314,7 @@ contract T1XChainReaderTest is T1XChainReaderBaseTestSetup {
     }
 
     function test_requestReadEmitsCorrectNonce() public {
-        T1XChainReader.ReadRequest memory request = T1XChainReader.ReadRequest({
+        IT1XChainReader.ReadRequest memory request = IT1XChainReader.ReadRequest({
             destinationDomain: destination,
             targetContract: address(0xbeef),
             minBlock: 0,
@@ -523,7 +524,7 @@ contract T1XChainReaderTest is T1XChainReaderBaseTestSetup {
         originReader.setReadFee(fee);
         originReader.setFeeRecipient(feeRecipient);
 
-        T1XChainReader.ReadRequest memory request = T1XChainReader.ReadRequest({
+        IT1XChainReader.ReadRequest memory request = IT1XChainReader.ReadRequest({
             destinationDomain: destination,
             targetContract: address(0xbeef),
             minBlock: 0,
@@ -545,7 +546,7 @@ contract T1XChainReaderTest is T1XChainReaderBaseTestSetup {
 
         originReader.setReadFee(fee);
 
-        T1XChainReader.ReadRequest memory request = T1XChainReader.ReadRequest({
+        IT1XChainReader.ReadRequest memory request = IT1XChainReader.ReadRequest({
             destinationDomain: destination,
             targetContract: address(0xbeef),
             minBlock: 0,
@@ -558,7 +559,7 @@ contract T1XChainReaderTest is T1XChainReaderBaseTestSetup {
     }
 
     function test_requestReadWithZeroFee() public {
-        T1XChainReader.ReadRequest memory request = T1XChainReader.ReadRequest({
+        IT1XChainReader.ReadRequest memory request = IT1XChainReader.ReadRequest({
             destinationDomain: destination,
             targetContract: address(0xbeef),
             minBlock: 0,
@@ -579,7 +580,7 @@ contract T1XChainReaderTest is T1XChainReaderBaseTestSetup {
         originReader.setReadFee(fee);
         originReader.setFeeRecipient(feeRecipient);
 
-        T1XChainReader.ReadRequest memory request = T1XChainReader.ReadRequest({
+        IT1XChainReader.ReadRequest memory request = IT1XChainReader.ReadRequest({
             destinationDomain: destination,
             targetContract: address(0xbeef),
             minBlock: 0,
@@ -610,7 +611,7 @@ contract T1XChainReaderTest is T1XChainReaderBaseTestSetup {
         originReader.setReadFee(fee);
         originReader.setFeeRecipient(feeRecipient);
 
-        T1XChainReader.ReadRequest memory request = T1XChainReader.ReadRequest({
+        IT1XChainReader.ReadRequest memory request = IT1XChainReader.ReadRequest({
             destinationDomain: destination,
             targetContract: address(0xbeef),
             minBlock: 0,
