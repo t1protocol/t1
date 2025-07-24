@@ -10,7 +10,10 @@
     "typescript": "^5"
   },
   "dependencies": {
+    "@jest/globals": "^30.0.5",
     "bun": "^1.2.19",
+    "jest": "^30.0.5",
+    "ts-jest": "^29.4.0",
     "winston": "^3.17.0"
   }
 }

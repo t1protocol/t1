@@ -3,7 +3,7 @@ import {SealedBidAuctionApiServer} from "./src/api/SealedBidAuctionApiServer.ts"
 const httpServer = new SealedBidAuctionApiServer();
 
 async function main() {
-    await httpServer.start(3010);
+    await httpServer.start(3010, true);
 }
 
 main()
