@@ -73,13 +73,7 @@ interface IL2ERC20Gateway {
     /// @param amount The amount of token to transfer.
     /// @param data Optional data to forward to recipient's account.
     /// @param gasLimit Unused, but included for potential forward compatibility considerations.
-    function withdrawERC20AndCall(
-        address token,
-        address to,
-        uint256 amount,
-        bytes calldata data,
-        uint256 gasLimit
-    )
+    function withdrawERC20AndCall(address token, address to, uint256 amount, bytes calldata data, uint256 gasLimit)
         external
         payable;
 
@@ -100,7 +94,5 @@ interface IL2ERC20Gateway {
         address to,
         uint256 amount,
         bytes calldata data
-    )
-        external
-        payable;
+    ) external payable;
 }

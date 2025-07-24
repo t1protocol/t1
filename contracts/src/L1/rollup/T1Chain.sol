@@ -2,18 +2,18 @@
 
 pragma solidity ^0.8.25;
 
-import { OwnableUpgradeable } from "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
-import { PausableUpgradeable } from "@openzeppelin/contracts-upgradeable/security/PausableUpgradeable.sol";
-import { ECDSAUpgradeable } from "@openzeppelin/contracts-upgradeable/utils/cryptography/ECDSAUpgradeable.sol";
+import {OwnableUpgradeable} from "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
+import {PausableUpgradeable} from "@openzeppelin/contracts-upgradeable/security/PausableUpgradeable.sol";
+import {ECDSAUpgradeable} from "@openzeppelin/contracts-upgradeable/utils/cryptography/ECDSAUpgradeable.sol";
 
-import { IL1MessageQueue } from "./IL1MessageQueue.sol";
-import { IT1Chain } from "./IT1Chain.sol";
-import { BatchHeaderV0Codec } from "../../libraries/codec/BatchHeaderV0Codec.sol";
-import { BatchHeaderV1Codec } from "../../libraries/codec/BatchHeaderV1Codec.sol";
-import { BatchHeaderV3Codec } from "../../libraries/codec/BatchHeaderV3Codec.sol";
-import { ChunkCodecV0 } from "../../libraries/codec/ChunkCodecV0.sol";
-import { ChunkCodecV1 } from "../../libraries/codec/ChunkCodecV1.sol";
-import { IRollupVerifier } from "../../libraries/verifier/IRollupVerifier.sol";
+import {IL1MessageQueue} from "./IL1MessageQueue.sol";
+import {IT1Chain} from "./IT1Chain.sol";
+import {BatchHeaderV0Codec} from "../../libraries/codec/BatchHeaderV0Codec.sol";
+import {BatchHeaderV1Codec} from "../../libraries/codec/BatchHeaderV1Codec.sol";
+import {BatchHeaderV3Codec} from "../../libraries/codec/BatchHeaderV3Codec.sol";
+import {ChunkCodecV0} from "../../libraries/codec/ChunkCodecV0.sol";
+import {ChunkCodecV1} from "../../libraries/codec/ChunkCodecV1.sol";
+import {IRollupVerifier} from "../../libraries/verifier/IRollupVerifier.sol";
 
 // solhint-disable no-inline-assembly
 // solhint-disable reason-string
@@ -270,12 +270,7 @@ contract T1Chain is OwnableUpgradeable, PausableUpgradeable, IT1Chain {
         bytes calldata _parentBatchHeader,
         bytes[] memory _chunks,
         bytes calldata _skippedL1MessageBitmap
-    )
-        external
-        override
-        OnlySequencer
-        whenNotPaused
-    {
+    ) external override OnlySequencer whenNotPaused {
         (bytes32 _parentBatchHash, uint256 _batchIndex, uint256 _totalL1MessagesPoppedOverall) =
             _beforeCommitBatch(_parentBatchHeader, _chunks);
 
@@ -332,12 +327,7 @@ contract T1Chain is OwnableUpgradeable, PausableUpgradeable, IT1Chain {
         bytes[] memory _chunks,
         bytes calldata _skippedL1MessageBitmap,
         bytes calldata _blobDataProof
-    )
-        external
-        override
-        OnlySequencer
-        whenNotPaused
-    {
+    ) external override OnlySequencer whenNotPaused {
         if (_version <= 2) {
             revert ErrorIncorrectBatchVersion();
         }
@@ -480,12 +470,7 @@ contract T1Chain is OwnableUpgradeable, PausableUpgradeable, IT1Chain {
         bytes32 _withdrawRoot,
         bytes calldata _blobDataProof,
         bytes calldata _aggrProof
-    )
-        external
-        override
-        OnlyProver
-        whenNotPaused
-    {
+    ) external override OnlyProver whenNotPaused {
         (uint256 batchPtr, bytes32 _batchHash, uint256 _batchIndex) = _beforeFinalizeBatch(_batchHeader, _postStateRoot);
 
         // compute public input hash
@@ -532,12 +517,7 @@ contract T1Chain is OwnableUpgradeable, PausableUpgradeable, IT1Chain {
         bytes32 _postStateRoot,
         bytes32 _withdrawRoot,
         bytes calldata _aggrProof
-    )
-        external
-        override
-        OnlyProver
-        whenNotPaused
-    {
+    ) external override OnlyProver whenNotPaused {
         if (_postStateRoot == bytes32(0)) revert ErrorStateRootIsZero();
 
         // compute pending batch hash and verify
@@ -653,10 +633,7 @@ contract T1Chain is OwnableUpgradeable, PausableUpgradeable, IT1Chain {
     /// @return _parentBatchHash The batch hash of parent batch header.
     /// @return _batchIndex The index of current batch.
     /// @return _totalL1MessagesPoppedOverall The total number of L1 messages popped before current batch.
-    function _beforeCommitBatch(
-        bytes calldata _parentBatchHeader,
-        bytes[] memory _chunks
-    )
+    function _beforeCommitBatch(bytes calldata _parentBatchHeader, bytes[] memory _chunks)
         private
         view
         returns (bytes32 _parentBatchHash, uint256 _batchIndex, uint256 _totalL1MessagesPoppedOverall)
@@ -684,10 +661,7 @@ contract T1Chain is OwnableUpgradeable, PausableUpgradeable, IT1Chain {
     /// @return batchPtr The start memory offset of current batch in memory.
     /// @return _batchHash The hash of current batch.
     /// @return _batchIndex The index of current batch.
-    function _beforeFinalizeBatch(
-        bytes calldata _batchHeader,
-        bytes32 _postStateRoot
-    )
+    function _beforeFinalizeBatch(bytes calldata _batchHeader, bytes32 _postStateRoot)
         internal
         view
         returns (uint256 batchPtr, bytes32 _batchHash, uint256 _batchIndex)
@@ -715,9 +689,7 @@ contract T1Chain is OwnableUpgradeable, PausableUpgradeable, IT1Chain {
         bytes32 _postStateRoot,
         bytes32 _withdrawRoot,
         bytes32 _proofOfFill7683Root
-    )
-        internal
-    {
+    ) internal {
         // check and update lastFinalizedBatchIndex
         unchecked {
             if (lastFinalizedBatchIndex + 1 != _batchIndex) revert ErrorIncorrectBatchIndex();
@@ -760,9 +732,7 @@ contract T1Chain is OwnableUpgradeable, PausableUpgradeable, IT1Chain {
         uint256 _totalL1MessagesPoppedInBatch,
         bytes calldata _skippedL1MessageBitmap,
         bool _doPopMessage
-    )
-        private
-    {
+    ) private {
         // check the length of bitmap
         unchecked {
             if (((_totalL1MessagesPoppedInBatch + 255) / 256) * 32 != _skippedL1MessageBitmap.length) {
@@ -800,11 +770,7 @@ contract T1Chain is OwnableUpgradeable, PausableUpgradeable, IT1Chain {
         uint256 _totalL1MessagesPoppedOverall,
         bytes[] memory _chunks,
         bytes calldata _skippedL1MessageBitmap
-    )
-        internal
-        view
-        returns (bytes32 _batchDataHash, uint256 _totalL1MessagesPoppedInBatch)
-    {
+    ) internal view returns (bytes32 _batchDataHash, uint256 _totalL1MessagesPoppedInBatch) {
         uint256 _chunksLength = _chunks.length;
 
         // load `batchDataHashPtr` and reserve the memory region for chunk data hashes
@@ -848,11 +814,7 @@ contract T1Chain is OwnableUpgradeable, PausableUpgradeable, IT1Chain {
         uint256 _totalL1MessagesPoppedOverall,
         bytes[] memory _chunks,
         bytes calldata _skippedL1MessageBitmap
-    )
-        internal
-        view
-        returns (bytes32 _batchDataHash, uint256 _totalL1MessagesPoppedInBatch)
-    {
+    ) internal view returns (bytes32 _batchDataHash, uint256 _totalL1MessagesPoppedInBatch) {
         uint256 _chunksLength = _chunks.length;
 
         // load `batchDataHashPtr` and reserve the memory region for chunk data hashes
@@ -939,11 +901,7 @@ contract T1Chain is OwnableUpgradeable, PausableUpgradeable, IT1Chain {
         uint256 _totalL1MessagesPoppedInBatch,
         uint256 _totalL1MessagesPoppedOverall,
         bytes calldata _skippedL1MessageBitmap
-    )
-        internal
-        view
-        returns (bytes32 _dataHash, uint256 _totalNumL1MessagesInChunk)
-    {
+    ) internal view returns (bytes32 _dataHash, uint256 _totalNumL1MessagesInChunk) {
         uint256 chunkPtr;
         uint256 startDataPtr;
         uint256 dataPtr;
@@ -1038,11 +996,7 @@ contract T1Chain is OwnableUpgradeable, PausableUpgradeable, IT1Chain {
         uint256 _totalL1MessagesPoppedInBatch,
         uint256 _totalL1MessagesPoppedOverall,
         bytes calldata _skippedL1MessageBitmap
-    )
-        internal
-        view
-        returns (bytes32 _dataHash, uint256 _totalNumL1MessagesInChunk)
-    {
+    ) internal view returns (bytes32 _dataHash, uint256 _totalNumL1MessagesInChunk) {
         uint256 chunkPtr;
         uint256 startDataPtr;
         uint256 dataPtr;
@@ -1120,11 +1074,7 @@ contract T1Chain is OwnableUpgradeable, PausableUpgradeable, IT1Chain {
         uint256 _totalL1MessagesPoppedInBatch,
         uint256 _totalL1MessagesPoppedOverall,
         bytes calldata _skippedL1MessageBitmap
-    )
-        internal
-        view
-        returns (uint256)
-    {
+    ) internal view returns (uint256) {
         if (_numL1Messages == 0) return _ptr;
         IL1MessageQueue _messageQueue = IL1MessageQueue(messageQueue);
 
@@ -1181,9 +1131,7 @@ contract T1Chain is OwnableUpgradeable, PausableUpgradeable, IT1Chain {
         uint256 bitmapPtr,
         uint256 totalL1MessagesPoppedOverall,
         uint256 totalL1MessagesPoppedInBatch
-    )
-        internal
-    {
+    ) internal {
         if (totalL1MessagesPoppedInBatch == 0) return;
         _popL1Messages(false, bitmapPtr, totalL1MessagesPoppedOverall, totalL1MessagesPoppedInBatch);
     }
@@ -1197,9 +1145,7 @@ contract T1Chain is OwnableUpgradeable, PausableUpgradeable, IT1Chain {
         bytes calldata skippedL1MessageBitmap,
         uint256 totalL1MessagesPoppedOverall,
         uint256 totalL1MessagesPoppedInBatch
-    )
-        internal
-    {
+    ) internal {
         if (totalL1MessagesPoppedInBatch == 0) return;
         uint256 bitmapPtr;
         assembly {
@@ -1219,9 +1165,7 @@ contract T1Chain is OwnableUpgradeable, PausableUpgradeable, IT1Chain {
         uint256 bitmapPtr,
         uint256 totalL1MessagesPoppedOverall,
         uint256 totalL1MessagesPoppedInBatch
-    )
-        internal
-    {
+    ) internal {
         if (totalL1MessagesPoppedInBatch == 0) return;
 
         unchecked {

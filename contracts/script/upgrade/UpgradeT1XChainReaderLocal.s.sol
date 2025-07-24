@@ -2,7 +2,7 @@
 
 pragma solidity ^0.8.25;
 
-import { UpgradeT1XChainReaderLogic } from "./UpgradeT1XChainReaderLogic.sol";
+import {UpgradeT1XChainReaderLogic} from "./UpgradeT1XChainReaderLogic.sol";
 
 /**
  * @title UpgradeT1XChainReaderLocal

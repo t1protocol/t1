@@ -12,11 +12,7 @@ library Hyperlane7683Message {
      * @param _ordersFillerData Each element should contain the bytes32 encoded address of the settlement receiver.
      * @return Formatted message body
      */
-    function encode(
-        bool _settle,
-        bytes32[] memory _orderIds,
-        bytes[] memory _ordersFillerData
-    )
+    function encode(bool _settle, bytes32[] memory _orderIds, bytes[] memory _ordersFillerData)
         internal
         pure
         returns (bytes memory)
@@ -33,10 +29,7 @@ library Hyperlane7683Message {
         return abi.decode(_message, (bool, bytes32[], bytes[]));
     }
 
-    function encodeSettle(
-        bytes32[] memory _orderIds,
-        bytes[] memory _ordersFillerData
-    )
+    function encodeSettle(bytes32[] memory _orderIds, bytes[] memory _ordersFillerData)
         internal
         pure
         returns (bytes memory)

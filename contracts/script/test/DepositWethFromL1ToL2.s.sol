@@ -2,10 +2,10 @@
 
 pragma solidity ^0.8.25;
 
-import { Script } from "forge-std/Script.sol";
+import {Script} from "forge-std/Script.sol";
 
-import { IL1GatewayRouter } from "../../src/L1/gateways/IL1GatewayRouter.sol";
-import { WrappedEther } from "../../src/L2/predeploys/WrappedEther.sol";
+import {IL1GatewayRouter} from "../../src/L1/gateways/IL1GatewayRouter.sol";
+import {WrappedEther} from "../../src/L2/predeploys/WrappedEther.sol";
 
 // solhint-disable var-name-mixedcase
 

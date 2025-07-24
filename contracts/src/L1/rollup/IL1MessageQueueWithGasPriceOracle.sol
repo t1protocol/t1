@@ -2,7 +2,7 @@
 
 pragma solidity ^0.8.25;
 
-import { IL1MessageQueue } from "./IL1MessageQueue.sol";
+import {IL1MessageQueue} from "./IL1MessageQueue.sol";
 
 interface IL1MessageQueueWithGasPriceOracle is IL1MessageQueue {
     /**

@@ -2,9 +2,9 @@
 
 pragma solidity ^0.8.25;
 
-import { Test } from "forge-std/Test.sol";
+import {Test} from "forge-std/Test.sol";
 
-import { Whitelist } from "../L2/predeploys/Whitelist.sol";
+import {Whitelist} from "../L2/predeploys/Whitelist.sol";
 
 contract WhitelistTest is Test {
     Whitelist private whitelist;

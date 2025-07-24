@@ -2,9 +2,9 @@
 
 pragma solidity ^0.8.25;
 
-import { AppendOnlyMerkleTree } from "../../libraries/common/AppendOnlyMerkleTree.sol";
-import { OwnableBase } from "../../libraries/common/OwnableBase.sol";
-import { IL2GasPriceOracle } from "../../L1/rollup/IL2GasPriceOracle.sol";
+import {AppendOnlyMerkleTree} from "../../libraries/common/AppendOnlyMerkleTree.sol";
+import {OwnableBase} from "../../libraries/common/OwnableBase.sol";
+import {IL2GasPriceOracle} from "../../L1/rollup/IL2GasPriceOracle.sol";
 
 /// @title L2MessageQueue
 /// @notice The original idea is from Optimism, see

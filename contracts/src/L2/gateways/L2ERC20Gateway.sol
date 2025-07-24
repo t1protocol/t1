@@ -2,9 +2,9 @@
 
 pragma solidity ^0.8.25;
 
-import { IL2ERC20Gateway } from "./IL2ERC20Gateway.sol";
+import {IL2ERC20Gateway} from "./IL2ERC20Gateway.sol";
 
-import { T1GatewayBase } from "../../libraries/gateway/T1GatewayBase.sol";
+import {T1GatewayBase} from "../../libraries/gateway/T1GatewayBase.sol";
 
 abstract contract L2ERC20Gateway is T1GatewayBase, IL2ERC20Gateway {
     /**
@@ -33,13 +33,7 @@ abstract contract L2ERC20Gateway is T1GatewayBase, IL2ERC20Gateway {
     }
 
     /// @inheritdoc IL2ERC20Gateway
-    function withdrawERC20AndCall(
-        address _token,
-        address _to,
-        uint256 _amount,
-        bytes calldata _data,
-        uint256 _gasLimit
-    )
+    function withdrawERC20AndCall(address _token, address _to, uint256 _amount, bytes calldata _data, uint256 _gasLimit)
         external
         payable
         override
@@ -52,13 +46,7 @@ abstract contract L2ERC20Gateway is T1GatewayBase, IL2ERC20Gateway {
      * Internal Functions *
      *
      */
-    function _withdraw(
-        address _token,
-        address _to,
-        uint256 _amount,
-        bytes memory _data,
-        uint256 _gasLimit
-    )
+    function _withdraw(address _token, address _to, uint256 _amount, bytes memory _data, uint256 _gasLimit)
         internal
         virtual;
 }

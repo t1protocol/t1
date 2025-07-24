@@ -2,15 +2,15 @@
 
 pragma solidity ^0.8.25;
 
-import { Script } from "forge-std/Script.sol";
+import {Script} from "forge-std/Script.sol";
 
-import { ISignatureTransfer } from "@uniswap/permit2/src/interfaces/ISignatureTransfer.sol";
+import {ISignatureTransfer} from "@uniswap/permit2/src/interfaces/ISignatureTransfer.sol";
 
-import { IL1GatewayRouter } from "../../src/L1/gateways/IL1GatewayRouter.sol";
-import { IL1ERC20Gateway } from "../../src/L1/gateways/IL1ERC20Gateway.sol";
-import { T1StandardERC20 } from "../../src/libraries/token/T1StandardERC20.sol";
-import { PermitSignature } from "../../src/test/utils/PermitSignature.sol";
-import { T1Constants } from "../../src/libraries/constants/T1Constants.sol";
+import {IL1GatewayRouter} from "../../src/L1/gateways/IL1GatewayRouter.sol";
+import {IL1ERC20Gateway} from "../../src/L1/gateways/IL1ERC20Gateway.sol";
+import {T1StandardERC20} from "../../src/libraries/token/T1StandardERC20.sol";
+import {PermitSignature} from "../../src/test/utils/PermitSignature.sol";
+import {T1Constants} from "../../src/libraries/constants/T1Constants.sol";
 
 // solhint-disable var-name-mixedcase
 // solhint-disable reason-string
@@ -37,7 +37,7 @@ contract SwapERC20 is Script, PermitSignature {
         address permit2 = IL1GatewayRouter(L1_GATEWAY_ROUTER_PROXY_ADDR).permit2();
 
         ISignatureTransfer.PermitTransferFrom memory permit = ISignatureTransfer.PermitTransferFrom({
-            permitted: ISignatureTransfer.TokenPermissions({ token: L1_WETH_ADDR, amount: inputTokenAmount }),
+            permitted: ISignatureTransfer.TokenPermissions({token: L1_WETH_ADDR, amount: inputTokenAmount}),
             nonce: uint256(keccak256(abi.encodePacked(msg.sender, block.timestamp, block.prevrandao))),
             deadline: block.timestamp + 10_000_000
         });
@@ -61,7 +61,7 @@ contract SwapERC20 is Script, PermitSignature {
         );
 
         IL1GatewayRouter.SwapParams memory params =
-            IL1GatewayRouter.SwapParams({ permit: permit, owner: alice, witness: witness, sig: sig });
+            IL1GatewayRouter.SwapParams({permit: permit, owner: alice, witness: witness, sig: sig});
 
         // Check if Alice has enough WETH to swap
         require(T1StandardERC20(L1_WETH_ADDR).balanceOf(alice) >= inputTokenAmount, "Alice doesn't have enough WETH");

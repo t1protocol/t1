@@ -2,7 +2,7 @@
 
 pragma solidity ^0.8.25;
 
-import { IT1Messenger } from "../libraries/IT1Messenger.sol";
+import {IT1Messenger} from "../libraries/IT1Messenger.sol";
 
 interface IL1T1Messenger is IT1Messenger {
     /**
@@ -48,8 +48,7 @@ interface IL1T1Messenger is IT1Messenger {
         uint256 nonce,
         bytes memory message,
         L2MessageProof memory proof
-    )
-        external;
+    ) external;
 
     /// @notice Replay an existing message.
     /// @param from The address of the sender of the message.
@@ -67,9 +66,7 @@ interface IL1T1Messenger is IT1Messenger {
         bytes memory message,
         uint32 newGasLimit,
         address refundAddress
-    )
-        external
-        payable;
+    ) external payable;
 
     /// @notice Drop a skipped message.
     /// @param from The address of the sender of the message.
@@ -77,12 +74,6 @@ interface IL1T1Messenger is IT1Messenger {
     /// @param value The msg.value passed to the message call.
     /// @param messageNonce The nonce for the message to drop.
     /// @param message The content of the message.
-    function dropMessage(
-        address from,
-        address to,
-        uint256 value,
-        uint256 messageNonce,
-        bytes memory message
-    )
+    function dropMessage(address from, address to, uint256 value, uint256 messageNonce, bytes memory message)
         external;
 }

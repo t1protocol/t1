@@ -2,13 +2,13 @@
 
 pragma solidity ^0.8.25;
 
-import { IL2ETHGateway } from "../../L2/gateways/IL2ETHGateway.sol";
-import { IL1T1Messenger } from "../IL1T1Messenger.sol";
-import { IL1ETHGateway } from "./IL1ETHGateway.sol";
+import {IL2ETHGateway} from "../../L2/gateways/IL2ETHGateway.sol";
+import {IL1T1Messenger} from "../IL1T1Messenger.sol";
+import {IL1ETHGateway} from "./IL1ETHGateway.sol";
 
-import { IMessageDropCallback } from "../../libraries/callbacks/IMessageDropCallback.sol";
-import { T1GatewayBase } from "../../libraries/gateway/T1GatewayBase.sol";
-import { T1Constants } from "../../libraries/constants/T1Constants.sol";
+import {IMessageDropCallback} from "../../libraries/callbacks/IMessageDropCallback.sol";
+import {T1GatewayBase} from "../../libraries/gateway/T1GatewayBase.sol";
+import {T1Constants} from "../../libraries/constants/T1Constants.sol";
 
 // solhint-disable avoid-low-level-calls
 
@@ -29,11 +29,7 @@ contract L1ETHGateway is T1GatewayBase, IL1ETHGateway, IMessageDropCallback {
     /// @param _counterpart The address of `L2ETHGateway` contract in L2.
     /// @param _router The address of `L1GatewayRouter` contract in L1.
     /// @param _messenger The address of `L1T1Messenger` contract in L1.
-    constructor(
-        address _counterpart,
-        address _router,
-        address _messenger
-    )
+    constructor(address _counterpart, address _router, address _messenger)
         T1GatewayBase(_counterpart, _router, _messenger)
     {
         if (_router == address(0)) revert ErrorZeroAddress();
@@ -63,12 +59,7 @@ contract L1ETHGateway is T1GatewayBase, IL1ETHGateway, IMessageDropCallback {
     }
 
     /// @inheritdoc IL1ETHGateway
-    function depositETHAndCall(
-        address _to,
-        uint256 _amount,
-        bytes calldata _data,
-        uint256 _gasLimit
-    )
+    function depositETHAndCall(address _to, uint256 _amount, bytes calldata _data, uint256 _gasLimit)
         external
         payable
         override
@@ -77,12 +68,7 @@ contract L1ETHGateway is T1GatewayBase, IL1ETHGateway, IMessageDropCallback {
     }
 
     /// @inheritdoc IL1ETHGateway
-    function finalizeWithdrawETH(
-        address _from,
-        address _to,
-        uint256 _amount,
-        bytes calldata _data
-    )
+    function finalizeWithdrawETH(address _from, address _to, uint256 _amount, bytes calldata _data)
         external
         payable
         override
@@ -94,7 +80,7 @@ contract L1ETHGateway is T1GatewayBase, IL1ETHGateway, IMessageDropCallback {
 
         // @note can possible trigger reentrant call to messenger,
         // but it seems not a big problem.
-        (bool _success,) = _to.call{ value: _amount }("");
+        (bool _success,) = _to.call{value: _amount}("");
         require(_success, "ETH transfer failed");
 
         _doCallback(_to, _data);
@@ -119,7 +105,7 @@ contract L1ETHGateway is T1GatewayBase, IL1ETHGateway, IMessageDropCallback {
 
         require(_amount == msg.value, "msg.value mismatch");
 
-        (bool _success,) = _receiver.call{ value: _amount }("");
+        (bool _success,) = _receiver.call{value: _amount}("");
         require(_success, "ETH transfer failed");
 
         emit RefundETH(_receiver, _amount);
@@ -136,12 +122,7 @@ contract L1ETHGateway is T1GatewayBase, IL1ETHGateway, IMessageDropCallback {
     /// @param _amount The amount of ETH to be deposited.
     /// @param _data Optional data to forward to recipient's account.
     /// @param _gasLimit Gas limit required to complete the deposit on L2.
-    function _deposit(
-        address _to,
-        uint256 _amount,
-        bytes memory _data,
-        uint256 _gasLimit
-    )
+    function _deposit(address _to, uint256 _amount, bytes memory _data, uint256 _gasLimit)
         internal
         virtual
         nonReentrant
@@ -160,7 +141,7 @@ contract L1ETHGateway is T1GatewayBase, IL1ETHGateway, IMessageDropCallback {
         // 2. Generate message passed to L1T1Messenger.
         bytes memory _message = abi.encodeCall(IL2ETHGateway.finalizeDepositETH, (_from, _to, _amount, _data));
 
-        IL1T1Messenger(messenger).sendMessage{ value: msg.value }(
+        IL1T1Messenger(messenger).sendMessage{value: msg.value}(
             counterpart, _amount, _message, _gasLimit, T1Constants.T1_DEVNET_CHAIN_ID, _from
         );
 

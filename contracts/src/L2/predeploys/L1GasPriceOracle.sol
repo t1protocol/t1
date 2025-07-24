@@ -2,10 +2,10 @@
 
 pragma solidity ^0.8.25;
 
-import { OwnableBase } from "../../libraries/common/OwnableBase.sol";
-import { IWhitelist } from "../../libraries/common/IWhitelist.sol";
+import {OwnableBase} from "../../libraries/common/OwnableBase.sol";
+import {IWhitelist} from "../../libraries/common/IWhitelist.sol";
 
-import { IL1GasPriceOracle } from "./IL1GasPriceOracle.sol";
+import {IL1GasPriceOracle} from "./IL1GasPriceOracle.sol";
 
 contract L1GasPriceOracle is OwnableBase, IL1GasPriceOracle {
     /**
@@ -164,10 +164,7 @@ contract L1GasPriceOracle is OwnableBase, IL1GasPriceOracle {
     }
 
     /// @inheritdoc IL1GasPriceOracle
-    function setL1BaseFeeAndBlobBaseFee(
-        uint256 _l1BaseFee,
-        uint256 _l1BlobBaseFee
-    )
+    function setL1BaseFeeAndBlobBaseFee(uint256 _l1BaseFee, uint256 _l1BlobBaseFee)
         external
         override
         onlyWhitelistedSender

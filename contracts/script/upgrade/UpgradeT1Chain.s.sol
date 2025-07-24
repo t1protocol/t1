@@ -2,16 +2,16 @@
 
 pragma solidity ^0.8.25;
 
-import { Script } from "forge-std/Script.sol";
-import { console } from "forge-std/console.sol";
+import {Script} from "forge-std/Script.sol";
+import {console} from "forge-std/console.sol";
 
-import { DeploymentUtils } from "../lib/DeploymentUtils.sol";
+import {DeploymentUtils} from "../lib/DeploymentUtils.sol";
 
-import { ProxyAdmin } from "@openzeppelin/contracts/proxy/transparent/ProxyAdmin.sol";
-import { ITransparentUpgradeableProxy } from "@openzeppelin/contracts/proxy/transparent/TransparentUpgradeableProxy.sol";
+import {ProxyAdmin} from "@openzeppelin/contracts/proxy/transparent/ProxyAdmin.sol";
+import {ITransparentUpgradeableProxy} from "@openzeppelin/contracts/proxy/transparent/TransparentUpgradeableProxy.sol";
 
-import { T1Chain } from "../../src/L1/rollup/T1Chain.sol";
-import { T1Owner } from "../../src/misc/T1Owner.sol";
+import {T1Chain} from "../../src/L1/rollup/T1Chain.sol";
+import {T1Owner} from "../../src/misc/T1Owner.sol";
 
 /**
  * @title UpgradeT1Chain

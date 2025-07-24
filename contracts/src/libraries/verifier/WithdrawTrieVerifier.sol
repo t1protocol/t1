@@ -19,12 +19,7 @@ library WithdrawTrieVerifier {
     /// @param _hash The leaf node hash of the withdraw trie.
     /// @param _nonce The index of the leaf node from left to right, starting from 0.
     /// @param _proof The concatenated merkle proof verified the leaf node.
-    function verifyMerkleProof(
-        bytes32 _root,
-        bytes32 _hash,
-        uint256 _nonce,
-        bytes memory _proof
-    )
+    function verifyMerkleProof(bytes32 _root, bytes32 _hash, uint256 _nonce, bytes memory _proof)
         internal
         pure
         returns (bool)

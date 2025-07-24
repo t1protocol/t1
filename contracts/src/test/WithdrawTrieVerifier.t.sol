@@ -2,9 +2,9 @@
 
 pragma solidity ^0.8.25;
 
-import { Test } from "forge-std/Test.sol";
+import {Test} from "forge-std/Test.sol";
 
-import { WithdrawTrieVerifier } from "../libraries/verifier/WithdrawTrieVerifier.sol";
+import {WithdrawTrieVerifier} from "../libraries/verifier/WithdrawTrieVerifier.sol";
 
 contract WithdrawTrieVerifierTest is Test {
     /// forge-config: default.allow_internal_expect_revert = true

@@ -1,11 +1,11 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity 0.8.25;
 
-import { IERC20 } from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
-import { SafeERC20 } from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
+import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
+import {SafeERC20} from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 
-import { TypeCasts } from "@hyperlane-xyz/libs/TypeCasts.sol";
-import { IPermit2, ISignatureTransfer } from "@uniswap/permit2/src/interfaces/IPermit2.sol";
+import {TypeCasts} from "@hyperlane-xyz/libs/TypeCasts.sol";
+import {IPermit2, ISignatureTransfer} from "@uniswap/permit2/src/interfaces/IPermit2.sol";
 
 import {
     GaslessCrossChainOrder,
@@ -133,10 +133,7 @@ abstract contract Base7683 is IOriginSettler, IDestinationSettler {
      * NOT USED originFillerData Any filler-defined data required by the settler
      * @return _resolvedOrder ResolvedCrossChainOrder hydrated order data including the inputs and outputs of the order
      */
-    function resolveFor(
-        GaslessCrossChainOrder calldata _order,
-        bytes calldata _originFillerData
-    )
+    function resolveFor(GaslessCrossChainOrder calldata _order, bytes calldata _originFillerData)
         public
         view
         virtual
@@ -271,9 +268,7 @@ abstract contract Base7683 is IOriginSettler, IDestinationSettler {
         bytes calldata _signature,
         uint256 _nonce,
         address _receiver
-    )
-        internal
-    {
+    ) internal {
         ISignatureTransfer.TokenPermissions[] memory permitted =
             new ISignatureTransfer.TokenPermissions[](_resolvedOrder.minReceived.length);
 
@@ -311,10 +306,7 @@ abstract contract Base7683 is IOriginSettler, IDestinationSettler {
      * @return _orderId The unique identifier for the order.
      * @return _nonce The nonce associated with the order.
      */
-    function _resolveOrder(
-        GaslessCrossChainOrder memory _order,
-        bytes calldata _originFillerData
-    )
+    function _resolveOrder(GaslessCrossChainOrder memory _order, bytes calldata _originFillerData)
         internal
         view
         virtual
@@ -354,9 +346,7 @@ abstract contract Base7683 is IOriginSettler, IDestinationSettler {
         bytes32[] calldata _orderIds,
         bytes[] memory _ordersOriginData,
         bytes[] memory _ordersFillerData
-    )
-        internal
-        virtual;
+    ) internal virtual;
 
     /**
      * @notice Retrieves the local domain identifier.

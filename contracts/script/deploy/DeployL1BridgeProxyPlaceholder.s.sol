@@ -2,14 +2,14 @@
 
 pragma solidity ^0.8.25;
 
-import { Script } from "forge-std/Script.sol";
+import {Script} from "forge-std/Script.sol";
 
-import { DeploymentUtils } from "../lib/DeploymentUtils.sol";
+import {DeploymentUtils} from "../lib/DeploymentUtils.sol";
 
-import { ProxyAdmin } from "@openzeppelin/contracts/proxy/transparent/ProxyAdmin.sol";
-import { TransparentUpgradeableProxy } from "@openzeppelin/contracts/proxy/transparent/TransparentUpgradeableProxy.sol";
+import {ProxyAdmin} from "@openzeppelin/contracts/proxy/transparent/ProxyAdmin.sol";
+import {TransparentUpgradeableProxy} from "@openzeppelin/contracts/proxy/transparent/TransparentUpgradeableProxy.sol";
 
-import { EmptyContract } from "../../src/misc/EmptyContract.sol";
+import {EmptyContract} from "../../src/misc/EmptyContract.sol";
 
 // solhint-disable var-name-mixedcase
 
@@ -86,7 +86,7 @@ contract DeployL1BridgeProxyPlaceholder is Script, DeploymentUtils {
 
     function deployL1T1Messenger() internal {
         TransparentUpgradeableProxy proxy =
-            new TransparentUpgradeableProxy{ value: 1 ether }(address(placeholder), address(proxyAdmin), new bytes(0));
+            new TransparentUpgradeableProxy{value: 1 ether}(address(placeholder), address(proxyAdmin), new bytes(0));
 
         logAddress("L1_T1_MESSENGER_PROXY_ADDR", address(proxy));
     }

@@ -2,7 +2,7 @@
 
 pragma solidity ^0.8.25;
 
-import { ChunkCodecV0 } from "./ChunkCodecV0.sol";
+import {ChunkCodecV0} from "./ChunkCodecV0.sol";
 
 /// @dev Below is the encoding for `Chunk`, total 60*n+1 bytes.
 /// The only difference between `ChunkCodecV0` is we remove `l2Transactions` from chunk encoding.

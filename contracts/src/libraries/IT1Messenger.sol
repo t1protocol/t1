@@ -70,13 +70,7 @@ interface IT1Messenger {
     /// @param message The content of the message.
     /// @param gasLimit Gas limit required to complete the message relay on corresponding chain.
     /// @param destChainId The ID of the chain for which the message is bound.
-    function sendMessage(
-        address target,
-        uint256 value,
-        bytes calldata message,
-        uint256 gasLimit,
-        uint64 destChainId
-    )
+    function sendMessage(address target, uint256 value, bytes calldata message, uint256 gasLimit, uint64 destChainId)
         external
         payable;
 
@@ -94,7 +88,5 @@ interface IT1Messenger {
         uint256 gasLimit,
         uint64 destChainId,
         address callbackAddress
-    )
-        external
-        payable;
+    ) external payable;
 }

@@ -2,16 +2,16 @@
 
 pragma solidity ^0.8.25;
 
-import { AddressUpgradeable } from "@openzeppelin/contracts-upgradeable/utils/AddressUpgradeable.sol";
+import {AddressUpgradeable} from "@openzeppelin/contracts-upgradeable/utils/AddressUpgradeable.sol";
 
-import { IL2ERC20Gateway, L2ERC20Gateway } from "./L2ERC20Gateway.sol";
-import { IL2T1Messenger } from "../IL2T1Messenger.sol";
-import { IL1ERC20Gateway } from "../../L1/gateways/IL1ERC20Gateway.sol";
-import { IT1ERC20Upgradeable } from "../../libraries/token/IT1ERC20Upgradeable.sol";
-import { T1StandardERC20 } from "../../libraries/token/T1StandardERC20.sol";
-import { IT1StandardERC20Factory } from "../../libraries/token/IT1StandardERC20Factory.sol";
-import { T1GatewayBase } from "../../libraries/gateway/T1GatewayBase.sol";
-import { T1Constants } from "../../libraries/constants/T1Constants.sol";
+import {IL2ERC20Gateway, L2ERC20Gateway} from "./L2ERC20Gateway.sol";
+import {IL2T1Messenger} from "../IL2T1Messenger.sol";
+import {IL1ERC20Gateway} from "../../L1/gateways/IL1ERC20Gateway.sol";
+import {IT1ERC20Upgradeable} from "../../libraries/token/IT1ERC20Upgradeable.sol";
+import {T1StandardERC20} from "../../libraries/token/T1StandardERC20.sol";
+import {IT1StandardERC20Factory} from "../../libraries/token/IT1StandardERC20Factory.sol";
+import {T1GatewayBase} from "../../libraries/gateway/T1GatewayBase.sol";
+import {T1Constants} from "../../libraries/constants/T1Constants.sol";
 
 /// @title L2StandardERC20Gateway
 /// @notice The `L2StandardERC20Gateway` is used to withdraw standard ERC20 tokens on layer 2 and
@@ -52,12 +52,7 @@ contract L2StandardERC20Gateway is L2ERC20Gateway {
     /// @param _router The address of `L2GatewayRouter` contract in L2.
     /// @param _messenger The address of `L2T1Messenger` contract in L2.
     /// @param _tokenFactory The address of `T1StandardERC20Factory` contract in L2.
-    constructor(
-        address _counterpart,
-        address _router,
-        address _messenger,
-        address _tokenFactory
-    )
+    constructor(address _counterpart, address _router, address _messenger, address _tokenFactory)
         T1GatewayBase(_counterpart, _router, _messenger)
     {
         if (_router == address(0) || _tokenFactory == address(0)) revert ErrorZeroAddress();
@@ -154,13 +149,7 @@ contract L2StandardERC20Gateway is L2ERC20Gateway {
      */
 
     /// @inheritdoc L2ERC20Gateway
-    function _withdraw(
-        address _token,
-        address _to,
-        uint256 _amount,
-        bytes memory _data,
-        uint256 _gasLimit
-    )
+    function _withdraw(address _token, address _to, uint256 _amount, bytes memory _data, uint256 _gasLimit)
         internal
         virtual
         override
@@ -185,7 +174,7 @@ contract L2StandardERC20Gateway is L2ERC20Gateway {
             abi.encodeCall(IL1ERC20Gateway.finalizeWithdrawERC20, (_l1Token, _token, _from, _to, _amount, _data));
 
         // 4. send message to L2T1Messenger
-        IL2T1Messenger(messenger).sendMessage{ value: msg.value }(
+        IL2T1Messenger(messenger).sendMessage{value: msg.value}(
             counterpart, 0, _message, _gasLimit, T1Constants.L1_CHAIN_ID
         );
 

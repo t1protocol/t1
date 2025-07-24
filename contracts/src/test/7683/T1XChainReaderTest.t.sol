@@ -1,15 +1,15 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.25;
 
-import { TypeCasts } from "@hyperlane-xyz/libs/TypeCasts.sol";
-import { ITransparentUpgradeableProxy } from "@openzeppelin/contracts/proxy/transparent/TransparentUpgradeableProxy.sol";
-import { OrderData, OrderEncoder } from "../../../src/libraries/7683/OrderEncoder.sol";
-import { OnchainCrossChainOrder } from "../../../src/interfaces/IERC7683.sol";
+import {TypeCasts} from "@hyperlane-xyz/libs/TypeCasts.sol";
+import {ITransparentUpgradeableProxy} from "@openzeppelin/contracts/proxy/transparent/TransparentUpgradeableProxy.sol";
+import {OrderData, OrderEncoder} from "../../../src/libraries/7683/OrderEncoder.sol";
+import {OnchainCrossChainOrder} from "../../../src/interfaces/IERC7683.sol";
 
-import { IT1XChainReader } from "../../libraries/xChain/IT1XChainReader.sol";
-import { T1XChainReader } from "../../libraries/xChain/T1XChainReader.sol";
-import { T1XChainReaderBaseTestSetup } from "./T1XChainReaderBaseTestSetup.sol";
-import { T1ERC7683 } from "../../7683/T1ERC7683.sol";
+import {IT1XChainReader} from "../../libraries/xChain/IT1XChainReader.sol";
+import {T1XChainReader} from "../../libraries/xChain/T1XChainReader.sol";
+import {T1XChainReaderBaseTestSetup} from "./T1XChainReaderBaseTestSetup.sol";
+import {T1ERC7683} from "../../7683/T1ERC7683.sol";
 
 contract T1XChainReaderTest is T1XChainReaderBaseTestSetup {
     using TypeCasts for address;
@@ -406,11 +406,7 @@ contract T1XChainReaderTest is T1XChainReaderBaseTestSetup {
     /// @param position position of the leaf where result is stored (0-3)
     /// @return root Root of the merkle tree
     /// @return proof Proof of for the leaf where result is stored
-    function _generateMerkleTree(
-        bytes32 requestId,
-        bytes memory result,
-        uint256 position
-    )
+    function _generateMerkleTree(bytes32 requestId, bytes memory result, uint256 position)
         private
         pure
         returns (bytes32 root, bytes memory proof)
@@ -534,7 +530,7 @@ contract T1XChainReaderTest is T1XChainReaderBaseTestSetup {
 
         uint256 preBalance = address(originReader).balance;
 
-        bytes32 requestId = originReader.requestRead{ value: fee }(request);
+        bytes32 requestId = originReader.requestRead{value: fee}(request);
 
         assertEq(address(originReader).balance, preBalance + fee, "Contract balance should increase");
         assertTrue(requestId != bytes32(0), "Request ID should be valid");
@@ -555,7 +551,7 @@ contract T1XChainReaderTest is T1XChainReaderBaseTestSetup {
         });
 
         vm.expectRevert(T1XChainReader.IncorrectFee.selector);
-        originReader.requestRead{ value: paidFee }(request);
+        originReader.requestRead{value: paidFee}(request);
     }
 
     function test_requestReadWithZeroFee() public {
@@ -588,8 +584,8 @@ contract T1XChainReaderTest is T1XChainReaderBaseTestSetup {
             requester: address(this)
         });
 
-        originReader.requestRead{ value: fee }(request);
-        originReader.requestRead{ value: fee }(request);
+        originReader.requestRead{value: fee}(request);
+        originReader.requestRead{value: fee}(request);
 
         uint256 preBalance = feeRecipient.balance;
         uint256 expectedWithdrawal = address(originReader).balance;
@@ -619,7 +615,7 @@ contract T1XChainReaderTest is T1XChainReaderBaseTestSetup {
             requester: address(this)
         });
 
-        originReader.requestRead{ value: fee }(request);
+        originReader.requestRead{value: fee}(request);
 
         vm.prank(address(0xbeef));
         vm.expectRevert(T1XChainReader.UnauthorizedFeeWithdraw.selector);

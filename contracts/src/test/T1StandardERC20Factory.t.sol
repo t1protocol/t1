@@ -2,10 +2,10 @@
 
 pragma solidity ^0.8.25;
 
-import { Test } from "forge-std/Test.sol";
+import {Test} from "forge-std/Test.sol";
 
-import { T1StandardERC20 } from "../libraries/token/T1StandardERC20.sol";
-import { T1StandardERC20Factory } from "../libraries/token/T1StandardERC20Factory.sol";
+import {T1StandardERC20} from "../libraries/token/T1StandardERC20.sol";
+import {T1StandardERC20Factory} from "../libraries/token/T1StandardERC20Factory.sol";
 
 contract T1StandardERC20FactoryTest is Test {
     T1StandardERC20 private impl;

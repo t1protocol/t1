@@ -80,13 +80,7 @@ interface IL1ERC20Gateway {
     /// @param _amount The amount of token to transfer.
     /// @param _data Optional data to forward to recipient's account.
     /// @param _gasLimit Gas limit required to complete the deposit on L2.
-    function depositERC20AndCall(
-        address _token,
-        address _to,
-        uint256 _amount,
-        bytes memory _data,
-        uint256 _gasLimit
-    )
+    function depositERC20AndCall(address _token, address _to, uint256 _amount, bytes memory _data, uint256 _gasLimit)
         external
         payable;
 
@@ -107,9 +101,7 @@ interface IL1ERC20Gateway {
         address _to,
         uint256 _amount,
         bytes calldata _data
-    )
-        external
-        payable;
+    ) external payable;
 
     /// @notice Allow the L1GatewayRouter to spend `token` using Permit2 AllowanceTransfer.
     /// @param token The address of the ERC20 token to approve.

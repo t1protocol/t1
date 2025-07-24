@@ -2,14 +2,14 @@
 
 pragma solidity ^0.8.25;
 
-import { MockERC20 } from "solmate/test/utils/mocks/MockERC20.sol";
+import {MockERC20} from "solmate/test/utils/mocks/MockERC20.sol";
 
 // solhint-disable no-empty-blocks
 
 contract FeeOnTransferToken is MockERC20 {
     uint256 private feeRate;
 
-    constructor(string memory _name, string memory _symbol, uint8 _decimals) MockERC20(_name, _symbol, _decimals) { }
+    constructor(string memory _name, string memory _symbol, uint8 _decimals) MockERC20(_name, _symbol, _decimals) {}
 
     function setFeeRate(uint256 _feeRate) external payable {
         feeRate = _feeRate;

@@ -2,9 +2,9 @@
 
 pragma solidity ^0.8.25;
 
-import { Test } from "forge-std/Test.sol";
+import {Test} from "forge-std/Test.sol";
 
-import { T1Owner } from "../misc/T1Owner.sol";
+import {T1Owner} from "../misc/T1Owner.sol";
 
 contract T1OwnerTest is Test {
     event GrantAccess(bytes32 indexed role, address indexed target, bytes4[] selectors);

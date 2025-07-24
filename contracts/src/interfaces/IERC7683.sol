@@ -115,11 +115,7 @@ interface IOriginSettler {
     /// @param order The GaslessCrossChainOrder definition
     /// @param signature The user's signature over the order
     /// @param originFillerData Any filler-defined data required by the settler
-    function openFor(
-        GaslessCrossChainOrder calldata order,
-        bytes calldata signature,
-        bytes calldata originFillerData
-    )
+    function openFor(GaslessCrossChainOrder calldata order, bytes calldata signature, bytes calldata originFillerData)
         external;
 
     /// @notice Opens a cross-chain order
@@ -133,10 +129,7 @@ interface IOriginSettler {
     /// @param order The GaslessCrossChainOrder definition
     /// @param originFillerData Any filler-defined data required by the settler
     /// @return ResolvedCrossChainOrder hydrated order data including the inputs and outputs of the order
-    function resolveFor(
-        GaslessCrossChainOrder calldata order,
-        bytes calldata originFillerData
-    )
+    function resolveFor(GaslessCrossChainOrder calldata order, bytes calldata originFillerData)
         external
         view
         returns (ResolvedCrossChainOrder memory);

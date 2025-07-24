@@ -2,7 +2,7 @@
 
 pragma solidity ^0.8.25;
 
-import { IZkEvmVerifierV1, IZkEvmVerifierV2 } from "../../libraries/verifier/IZkEvmVerifier.sol";
+import {IZkEvmVerifierV1, IZkEvmVerifierV2} from "../../libraries/verifier/IZkEvmVerifier.sol";
 
 contract MockZkEvmVerifier is IZkEvmVerifierV1, IZkEvmVerifierV2 {
     event Called(address);

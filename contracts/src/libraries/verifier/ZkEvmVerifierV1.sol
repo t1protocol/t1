@@ -2,7 +2,7 @@
 
 pragma solidity ^0.8.25;
 
-import { IZkEvmVerifierV1 } from "./IZkEvmVerifier.sol";
+import {IZkEvmVerifierV1} from "./IZkEvmVerifier.sol";
 
 // solhint-disable no-inline-assembly
 

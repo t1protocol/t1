@@ -1,18 +1,18 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity ^0.8.25;
 
-import { DeploymentUtils } from "../lib/DeploymentUtils.sol";
-import { EmptyContract } from "../../src/misc/EmptyContract.sol";
-import { L2T1Messenger } from "../../src/L2/L2T1Messenger.sol";
-import { T1Constants } from "../../src/libraries/constants/T1Constants.sol";
-import { L2MessageQueue } from "../../src/L2/predeploys/L2MessageQueue.sol";
-import { T1Owner } from "../../src/misc/T1Owner.sol";
+import {DeploymentUtils} from "../lib/DeploymentUtils.sol";
+import {EmptyContract} from "../../src/misc/EmptyContract.sol";
+import {L2T1Messenger} from "../../src/L2/L2T1Messenger.sol";
+import {T1Constants} from "../../src/libraries/constants/T1Constants.sol";
+import {L2MessageQueue} from "../../src/L2/predeploys/L2MessageQueue.sol";
+import {T1Owner} from "../../src/misc/T1Owner.sol";
 
-import { Script } from "forge-std/Script.sol";
-import { Ownable } from "@openzeppelin/contracts/access/Ownable.sol";
-import { ProxyAdmin } from "@openzeppelin/contracts/proxy/transparent/ProxyAdmin.sol";
-import { TransparentUpgradeableProxy } from "@openzeppelin/contracts/proxy/transparent/TransparentUpgradeableProxy.sol";
-import { ITransparentUpgradeableProxy } from "@openzeppelin/contracts/proxy/transparent/TransparentUpgradeableProxy.sol";
+import {Script} from "forge-std/Script.sol";
+import {Ownable} from "@openzeppelin/contracts/access/Ownable.sol";
+import {ProxyAdmin} from "@openzeppelin/contracts/proxy/transparent/ProxyAdmin.sol";
+import {TransparentUpgradeableProxy} from "@openzeppelin/contracts/proxy/transparent/TransparentUpgradeableProxy.sol";
+import {ITransparentUpgradeableProxy} from "@openzeppelin/contracts/proxy/transparent/TransparentUpgradeableProxy.sol";
 
 contract DeployArbT1MessengerProxy is Script, DeploymentUtils {
     uint256 private deployerPrivateKey = vm.envUint("DEPLOYER_PRIVATE_KEY");

@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.25;
 
-import { T1ChainMockBlob } from "../../mocks/T1ChainMockBlob.sol";
+import {T1ChainMockBlob} from "../../mocks/T1ChainMockBlob.sol";
 
 library BatchHeaders {
     function generateBatchHeader(T1ChainMockBlob rollup) internal view returns (bytes memory batchHeader1) {

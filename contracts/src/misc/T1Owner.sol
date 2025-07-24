@@ -2,8 +2,8 @@
 
 pragma solidity ^0.8.25;
 
-import { AccessControlEnumerable } from "@openzeppelin/contracts/access/AccessControlEnumerable.sol";
-import { EnumerableSet } from "@openzeppelin/contracts/utils/structs/EnumerableSet.sol";
+import {AccessControlEnumerable} from "@openzeppelin/contracts/access/AccessControlEnumerable.sol";
+import {EnumerableSet} from "@openzeppelin/contracts/utils/structs/EnumerableSet.sol";
 
 // solhint-disable no-empty-blocks
 
@@ -86,12 +86,7 @@ contract T1Owner is AccessControlEnumerable {
     /// @param _value The value passing to target contract.
     /// @param _data The calldata passing to target contract.
     /// @param _role The expected role of the caller.
-    function execute(
-        address _target,
-        uint256 _value,
-        bytes calldata _data,
-        bytes32 _role
-    )
+    function execute(address _target, uint256 _value, bytes calldata _data, bytes32 _role)
         external
         payable
         onlyRole(_role)
@@ -101,7 +96,7 @@ contract T1Owner is AccessControlEnumerable {
     }
 
     // allow others to send ether to this contract.
-    receive() external payable { }
+    receive() external payable {}
 
     /**
      *
@@ -114,12 +109,7 @@ contract T1Owner is AccessControlEnumerable {
     /// @param _selectors The list of function selectors to update.
     /// @param _role The role to change.
     /// @param _status True if we are going to add the role, otherwise remove the role.
-    function updateAccess(
-        address _target,
-        bytes4[] memory _selectors,
-        bytes32 _role,
-        bool _status
-    )
+    function updateAccess(address _target, bytes4[] memory _selectors, bytes32 _role, bool _status)
         external
         onlyRole(DEFAULT_ADMIN_ROLE)
     {
@@ -150,7 +140,7 @@ contract T1Owner is AccessControlEnumerable {
     /// @param _data The calldata passing to target contract.
     function _execute(address _target, uint256 _value, bytes calldata _data) private {
         // solhint-disable-next-line avoid-low-level-calls
-        (bool success,) = _target.call{ value: _value }(_data);
+        (bool success,) = _target.call{value: _value}(_data);
         if (!success) {
             // solhint-disable-next-line no-inline-assembly
             assembly {

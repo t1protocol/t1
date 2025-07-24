@@ -2,11 +2,11 @@
 
 pragma solidity ^0.8.25;
 
-import { console } from "forge-std/console.sol";
-import { Script } from "forge-std/Script.sol";
+import {console} from "forge-std/console.sol";
+import {Script} from "forge-std/Script.sol";
 
-import { T1StandardERC20 } from "../../src/libraries/token/T1StandardERC20.sol";
-import { IL1GatewayRouter } from "../../src/L1/gateways/IL1GatewayRouter.sol";
+import {T1StandardERC20} from "../../src/libraries/token/T1StandardERC20.sol";
+import {IL1GatewayRouter} from "../../src/L1/gateways/IL1GatewayRouter.sol";
 
 // solhint-disable var-name-mixedcase
 

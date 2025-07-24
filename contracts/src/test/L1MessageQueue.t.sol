@@ -2,12 +2,12 @@
 
 pragma solidity ^0.8.25;
 
-import { ITransparentUpgradeableProxy } from "@openzeppelin/contracts/proxy/transparent/TransparentUpgradeableProxy.sol";
+import {ITransparentUpgradeableProxy} from "@openzeppelin/contracts/proxy/transparent/TransparentUpgradeableProxy.sol";
 
-import { L1MessageQueue } from "../L1/rollup/L1MessageQueue.sol";
-import { L2GasPriceOracle } from "../L1/rollup/L2GasPriceOracle.sol";
+import {L1MessageQueue} from "../L1/rollup/L1MessageQueue.sol";
+import {L2GasPriceOracle} from "../L1/rollup/L2GasPriceOracle.sol";
 
-import { T1TestBase } from "./T1TestBase.t.sol";
+import {T1TestBase} from "./T1TestBase.t.sol";
 
 contract L1MessageQueueTest is T1TestBase {
     // events
@@ -194,9 +194,7 @@ contract L1MessageQueueTest is T1TestBase {
         uint256 bitmap1,
         uint256 bitmap2,
         uint256 bitmap3
-    )
-        external
-    {
+    ) external {
         count1 = bound(count1, 1, 256);
         count2 = bound(count2, 1, 256);
         count3 = bound(count3, 1, 256);
@@ -314,9 +312,7 @@ contract L1MessageQueueTest is T1TestBase {
         uint256 bitmap2,
         uint256 startIndex1,
         uint256 startIndex2
-    )
-        external
-    {
+    ) external {
         // append 1024 messages
         vm.startPrank(FakeMessenger);
         for (uint256 i = 0; i < 512; i++) {

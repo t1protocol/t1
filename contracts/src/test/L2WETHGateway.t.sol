@@ -2,20 +2,20 @@
 
 pragma solidity ^0.8.25;
 
-import { WETH } from "solmate/tokens/WETH.sol";
+import {WETH} from "solmate/tokens/WETH.sol";
 
-import { ITransparentUpgradeableProxy } from "@openzeppelin/contracts/proxy/transparent/TransparentUpgradeableProxy.sol";
+import {ITransparentUpgradeableProxy} from "@openzeppelin/contracts/proxy/transparent/TransparentUpgradeableProxy.sol";
 
-import { IL1ERC20Gateway, L1WETHGateway } from "../L1/gateways/L1WETHGateway.sol";
-import { L2GatewayRouter } from "../L2/gateways/L2GatewayRouter.sol";
-import { IL2ERC20Gateway, L2WETHGateway } from "../L2/gateways/L2WETHGateway.sol";
+import {IL1ERC20Gateway, L1WETHGateway} from "../L1/gateways/L1WETHGateway.sol";
+import {L2GatewayRouter} from "../L2/gateways/L2GatewayRouter.sol";
+import {IL2ERC20Gateway, L2WETHGateway} from "../L2/gateways/L2WETHGateway.sol";
 
-import { AddressAliasHelper } from "../libraries/common/AddressAliasHelper.sol";
-import { T1Constants } from "../libraries/constants/T1Constants.sol";
+import {AddressAliasHelper} from "../libraries/common/AddressAliasHelper.sol";
+import {T1Constants} from "../libraries/constants/T1Constants.sol";
 
-import { L2GatewayTestBase } from "./L2GatewayTestBase.t.sol";
-import { MockT1Messenger } from "./mocks/MockT1Messenger.sol";
-import { MockGatewayRecipient } from "./mocks/MockGatewayRecipient.sol";
+import {L2GatewayTestBase} from "./L2GatewayTestBase.t.sol";
+import {MockT1Messenger} from "./mocks/MockT1Messenger.sol";
+import {MockGatewayRecipient} from "./mocks/MockGatewayRecipient.sol";
 
 contract L2WETHGatewayTest is L2GatewayTestBase {
     // from L2WETHGateway
@@ -63,7 +63,7 @@ contract L2WETHGatewayTest is L2GatewayTestBase {
         router.initialize(address(0), address(gateway));
 
         // Prepare token balances
-        l2weth.deposit{ value: address(this).balance / 2 }();
+        l2weth.deposit{value: address(this).balance / 2}();
         l2weth.approve(address(gateway), type(uint256).max);
     }
 
@@ -83,7 +83,7 @@ contract L2WETHGatewayTest is L2GatewayTestBase {
     function testDirectTransferETH(uint256 amount) public {
         amount = bound(amount, 0, address(this).balance);
         // solhint-disable-next-line avoid-low-level-calls
-        (bool success, bytes memory result) = address(gateway).call{ value: amount }("");
+        (bool success, bytes memory result) = address(gateway).call{value: amount}("");
         assertEq(success, false);
         assertEq(string(result), string(abi.encodeWithSignature("Error(string)", "only WETH")));
     }
@@ -92,12 +92,7 @@ contract L2WETHGatewayTest is L2GatewayTestBase {
         _withdrawERC20(false, amount, gasLimit, feePerGas);
     }
 
-    function testWithdrawERC20WithRecipient(
-        uint256 amount,
-        address recipient,
-        uint256 gasLimit,
-        uint256 feePerGas
-    )
+    function testWithdrawERC20WithRecipient(uint256 amount, address recipient, uint256 gasLimit, uint256 feePerGas)
         public
     {
         _withdrawERC20WithRecipient(false, amount, recipient, gasLimit, feePerGas);
@@ -109,9 +104,7 @@ contract L2WETHGatewayTest is L2GatewayTestBase {
         bytes memory dataToCall,
         uint256 gasLimit,
         uint256 feePerGas
-    )
-        public
-    {
+    ) public {
         _withdrawERC20WithRecipientAndCalldata(false, amount, recipient, dataToCall, gasLimit, feePerGas);
     }
 
@@ -119,12 +112,7 @@ contract L2WETHGatewayTest is L2GatewayTestBase {
         _withdrawERC20(true, amount, gasLimit, feePerGas);
     }
 
-    function testRouterDepositERC20WithRecipient(
-        uint256 amount,
-        address recipient,
-        uint256 gasLimit,
-        uint256 feePerGas
-    )
+    function testRouterDepositERC20WithRecipient(uint256 amount, address recipient, uint256 gasLimit, uint256 feePerGas)
         public
     {
         _withdrawERC20WithRecipient(true, amount, recipient, gasLimit, feePerGas);
@@ -136,9 +124,7 @@ contract L2WETHGatewayTest is L2GatewayTestBase {
         bytes memory dataToCall,
         uint256 gasLimit,
         uint256 feePerGas
-    )
-        public
-    {
+    ) public {
         _withdrawERC20WithRecipientAndCalldata(true, amount, recipient, dataToCall, gasLimit, feePerGas);
     }
 
@@ -147,9 +133,7 @@ contract L2WETHGatewayTest is L2GatewayTestBase {
         address recipient,
         uint256 amount,
         bytes memory dataToCall
-    )
-        public
-    {
+    ) public {
         amount = bound(amount, 1, 100_000);
 
         // revert when caller is not messenger
@@ -223,12 +207,7 @@ contract L2WETHGatewayTest is L2GatewayTestBase {
         );
     }
 
-    function testFinalizeDepositERC20Failed(
-        address sender,
-        address recipient,
-        uint256 amount,
-        bytes memory dataToCall
-    )
+    function testFinalizeDepositERC20Failed(address sender, address recipient, uint256 amount, bytes memory dataToCall)
         public
     {
         // blacklist some addresses
@@ -356,9 +335,9 @@ contract L2WETHGatewayTest is L2GatewayTestBase {
         if (amount == 0) {
             vm.expectRevert("withdraw zero amount");
             if (useRouter) {
-                router.withdrawERC20{ value: feeToPay }(address(l2weth), amount, gasLimit);
+                router.withdrawERC20{value: feeToPay}(address(l2weth), amount, gasLimit);
             } else {
-                gateway.withdrawERC20{ value: feeToPay }(address(l2weth), amount, gasLimit);
+                gateway.withdrawERC20{value: feeToPay}(address(l2weth), amount, gasLimit);
             }
         } else {
             // token is not l2WETH
@@ -394,9 +373,9 @@ contract L2WETHGatewayTest is L2GatewayTestBase {
             uint256 feeVaultBalance = address(feeVault).balance;
             assertEq(l2Messenger.messageSendTimestamp(keccak256(xDomainCalldata)), 0);
             if (useRouter) {
-                router.withdrawERC20{ value: feeToPay }(address(l2weth), amount, gasLimit);
+                router.withdrawERC20{value: feeToPay}(address(l2weth), amount, gasLimit);
             } else {
-                gateway.withdrawERC20{ value: feeToPay }(address(l2weth), amount, gasLimit);
+                gateway.withdrawERC20{value: feeToPay}(address(l2weth), amount, gasLimit);
             }
             assertEq(amount + messengerBalance, address(l2Messenger).balance);
             assertEq(feeToPay + feeVaultBalance, address(feeVault).balance);
@@ -410,9 +389,7 @@ contract L2WETHGatewayTest is L2GatewayTestBase {
         address recipient,
         uint256 gasLimit,
         uint256 feePerGas
-    )
-        private
-    {
+    ) private {
         amount = bound(amount, 0, l2weth.balanceOf(address(this)));
         gasLimit = bound(gasLimit, 21_000, 1_000_000);
         feePerGas = 0;
@@ -441,9 +418,9 @@ contract L2WETHGatewayTest is L2GatewayTestBase {
         if (amount == 0) {
             vm.expectRevert("withdraw zero amount");
             if (useRouter) {
-                router.withdrawERC20{ value: feeToPay }(address(l2weth), recipient, amount, gasLimit);
+                router.withdrawERC20{value: feeToPay}(address(l2weth), recipient, amount, gasLimit);
             } else {
-                gateway.withdrawERC20{ value: feeToPay }(address(l2weth), recipient, amount, gasLimit);
+                gateway.withdrawERC20{value: feeToPay}(address(l2weth), recipient, amount, gasLimit);
             }
         } else {
             // token is not l1WETH
@@ -479,9 +456,9 @@ contract L2WETHGatewayTest is L2GatewayTestBase {
             uint256 feeVaultBalance = address(feeVault).balance;
             assertEq(l2Messenger.messageSendTimestamp(keccak256(xDomainCalldata)), 0);
             if (useRouter) {
-                router.withdrawERC20{ value: feeToPay }(address(l2weth), recipient, amount, gasLimit);
+                router.withdrawERC20{value: feeToPay}(address(l2weth), recipient, amount, gasLimit);
             } else {
-                gateway.withdrawERC20{ value: feeToPay }(address(l2weth), recipient, amount, gasLimit);
+                gateway.withdrawERC20{value: feeToPay}(address(l2weth), recipient, amount, gasLimit);
             }
             assertEq(amount + messengerBalance, address(l2Messenger).balance);
             assertEq(feeToPay + feeVaultBalance, address(feeVault).balance);
@@ -496,9 +473,7 @@ contract L2WETHGatewayTest is L2GatewayTestBase {
         bytes memory dataToCall,
         uint256 gasLimit,
         uint256 feePerGas
-    )
-        private
-    {
+    ) private {
         amount = bound(amount, 0, l2weth.balanceOf(address(this)));
         gasLimit = bound(gasLimit, 21_000, 1_000_000);
         feePerGas = 0;
@@ -527,11 +502,9 @@ contract L2WETHGatewayTest is L2GatewayTestBase {
         if (amount == 0) {
             vm.expectRevert("withdraw zero amount");
             if (useRouter) {
-                router.withdrawERC20AndCall{ value: feeToPay }(address(l2weth), recipient, amount, dataToCall, gasLimit);
+                router.withdrawERC20AndCall{value: feeToPay}(address(l2weth), recipient, amount, dataToCall, gasLimit);
             } else {
-                gateway.withdrawERC20AndCall{ value: feeToPay }(
-                    address(l2weth), recipient, amount, dataToCall, gasLimit
-                );
+                gateway.withdrawERC20AndCall{value: feeToPay}(address(l2weth), recipient, amount, dataToCall, gasLimit);
             }
         } else {
             // token is not l1WETH
@@ -567,11 +540,9 @@ contract L2WETHGatewayTest is L2GatewayTestBase {
             uint256 feeVaultBalance = address(feeVault).balance;
             assertEq(l2Messenger.messageSendTimestamp(keccak256(xDomainCalldata)), 0);
             if (useRouter) {
-                router.withdrawERC20AndCall{ value: feeToPay }(address(l2weth), recipient, amount, dataToCall, gasLimit);
+                router.withdrawERC20AndCall{value: feeToPay}(address(l2weth), recipient, amount, dataToCall, gasLimit);
             } else {
-                gateway.withdrawERC20AndCall{ value: feeToPay }(
-                    address(l2weth), recipient, amount, dataToCall, gasLimit
-                );
+                gateway.withdrawERC20AndCall{value: feeToPay}(address(l2weth), recipient, amount, dataToCall, gasLimit);
             }
             assertEq(amount + messengerBalance, address(l2Messenger).balance);
             assertEq(feeToPay + feeVaultBalance, address(feeVault).balance);

@@ -2,20 +2,20 @@
 
 pragma solidity ^0.8.25;
 
-import { Test } from "forge-std/Test.sol";
+import {Test} from "forge-std/Test.sol";
 
-import { ProxyAdmin } from "@openzeppelin/contracts/proxy/transparent/ProxyAdmin.sol";
+import {ProxyAdmin} from "@openzeppelin/contracts/proxy/transparent/ProxyAdmin.sol";
 import {
     ITransparentUpgradeableProxy,
     TransparentUpgradeableProxy
 } from "@openzeppelin/contracts/proxy/transparent/TransparentUpgradeableProxy.sol";
 
-import { L1GasPriceOracle } from "../L2/predeploys/L1GasPriceOracle.sol";
-import { L2MessageQueue } from "../L2/predeploys/L2MessageQueue.sol";
-import { Whitelist } from "../L2/predeploys/Whitelist.sol";
-import { L1T1Messenger } from "../L1/L1T1Messenger.sol";
-import { L2T1Messenger } from "../L2/L2T1Messenger.sol";
-import { EmptyContract } from "../misc/EmptyContract.sol";
+import {L1GasPriceOracle} from "../L2/predeploys/L1GasPriceOracle.sol";
+import {L2MessageQueue} from "../L2/predeploys/L2MessageQueue.sol";
+import {Whitelist} from "../L2/predeploys/Whitelist.sol";
+import {L1T1Messenger} from "../L1/L1T1Messenger.sol";
+import {L2T1Messenger} from "../L2/L2T1Messenger.sol";
+import {EmptyContract} from "../misc/EmptyContract.sol";
 
 abstract contract L2GatewayTestBase is Test {
     // from L2MessageQueue

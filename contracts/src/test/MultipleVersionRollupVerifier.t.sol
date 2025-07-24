@@ -2,11 +2,11 @@
 
 pragma solidity ^0.8.25;
 
-import { Test } from "forge-std/Test.sol";
+import {Test} from "forge-std/Test.sol";
 
-import { MultipleVersionRollupVerifier } from "../L1/rollup/MultipleVersionRollupVerifier.sol";
+import {MultipleVersionRollupVerifier} from "../L1/rollup/MultipleVersionRollupVerifier.sol";
 
-import { MockZkEvmVerifier } from "./mocks/MockZkEvmVerifier.sol";
+import {MockZkEvmVerifier} from "./mocks/MockZkEvmVerifier.sol";
 
 contract MultipleVersionRollupVerifierTest is Test {
     // from MultipleVersionRollupVerifier

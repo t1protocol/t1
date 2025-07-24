@@ -2,7 +2,7 @@
 
 pragma solidity ^0.8.25;
 
-import { BatchHeaderV0Codec } from "./BatchHeaderV0Codec.sol";
+import {BatchHeaderV0Codec} from "./BatchHeaderV0Codec.sol";
 
 // solhint-disable no-inline-assembly
 

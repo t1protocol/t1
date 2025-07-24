@@ -1,14 +1,14 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.25;
 
-import { Script } from "forge-std/Script.sol";
-import { console2 } from "forge-std/console2.sol";
-import { ERC20 } from "@openzeppelin/contracts/token/ERC20/ERC20.sol";
-import { TypeCasts } from "@hyperlane-xyz/libs/TypeCasts.sol";
-import { OrderData, OrderEncoder } from "../../../src/libraries/7683/OrderEncoder.sol";
-import { OnchainCrossChainOrder } from "../../../src/interfaces/IERC7683.sol";
-import { T1ERC7683 } from "../../../src/7683/T1ERC7683.sol";
-import { T1Constants } from "../../../src/libraries/constants/T1Constants.sol";
+import {Script} from "forge-std/Script.sol";
+import {console2} from "forge-std/console2.sol";
+import {ERC20} from "@openzeppelin/contracts/token/ERC20/ERC20.sol";
+import {TypeCasts} from "@hyperlane-xyz/libs/TypeCasts.sol";
+import {OrderData, OrderEncoder} from "../../../src/libraries/7683/OrderEncoder.sol";
+import {OnchainCrossChainOrder} from "../../../src/interfaces/IERC7683.sol";
+import {T1ERC7683} from "../../../src/7683/T1ERC7683.sol";
+import {T1Constants} from "../../../src/libraries/constants/T1Constants.sol";
 
 uint32 constant DESTINATION_CHAIN = uint32(T1Constants.L1_CHAIN_ID);
 uint32 constant HUNDRED_USDT = 100 * 1e6;
@@ -66,17 +66,12 @@ contract AliceSetupScript is Script {
         vm.stopBroadcast();
     }
 
-    function _prepareOnchainOrder(
-        bytes memory orderData,
-        uint32 fillDeadline,
-        bytes32 orderDataType
-    )
+    function _prepareOnchainOrder(bytes memory orderData, uint32 fillDeadline, bytes32 orderDataType)
         internal
         pure
         returns (OnchainCrossChainOrder memory)
     {
-        return
-            OnchainCrossChainOrder({ fillDeadline: fillDeadline, orderDataType: orderDataType, orderData: orderData });
+        return OnchainCrossChainOrder({fillDeadline: fillDeadline, orderDataType: orderDataType, orderData: orderData});
     }
 }
 

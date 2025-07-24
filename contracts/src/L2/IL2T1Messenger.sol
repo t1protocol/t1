@@ -2,7 +2,7 @@
 
 pragma solidity ^0.8.25;
 
-import { IT1Messenger } from "../libraries/IT1Messenger.sol";
+import {IT1Messenger} from "../libraries/IT1Messenger.sol";
 
 interface IL2T1Messenger is IT1Messenger {
     /**

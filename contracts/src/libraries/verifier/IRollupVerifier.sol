@@ -9,11 +9,7 @@ interface IRollupVerifier {
     /// @param batchIndex The batch index to verify.
     /// @param aggrProof The aggregated proof.
     /// @param publicInputHash The public input hash.
-    function verifyAggregateProof(
-        uint256 batchIndex,
-        bytes calldata aggrProof,
-        bytes32 publicInputHash
-    )
+    function verifyAggregateProof(uint256 batchIndex, bytes calldata aggrProof, bytes32 publicInputHash)
         external
         view;
 
@@ -27,9 +23,7 @@ interface IRollupVerifier {
         uint256 batchIndex,
         bytes calldata aggrProof,
         bytes32 publicInputHash
-    )
-        external
-        view;
+    ) external view;
 
     /// @notice Verify bundle zk proof.
     /// @param version The version of verifier to use.
@@ -41,7 +35,5 @@ interface IRollupVerifier {
         uint256 batchIndex,
         bytes calldata bundleProof,
         bytes calldata publicInput
-    )
-        external
-        view;
+    ) external view;
 }

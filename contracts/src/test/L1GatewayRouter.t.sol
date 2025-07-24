@@ -2,30 +2,30 @@
 
 pragma solidity ^0.8.25;
 
-import { WETH } from "solmate/tokens/WETH.sol";
-import { MockERC20 } from "solmate/test/utils/mocks/MockERC20.sol";
+import {WETH} from "solmate/tokens/WETH.sol";
+import {MockERC20} from "solmate/test/utils/mocks/MockERC20.sol";
 
-import { ITransparentUpgradeableProxy } from "@openzeppelin/contracts/proxy/transparent/TransparentUpgradeableProxy.sol";
+import {ITransparentUpgradeableProxy} from "@openzeppelin/contracts/proxy/transparent/TransparentUpgradeableProxy.sol";
 
-import { DeployPermit2 } from "@uniswap/permit2/test/utils/DeployPermit2.sol";
-import { ISignatureTransfer } from "@uniswap/permit2/src/interfaces/ISignatureTransfer.sol";
+import {DeployPermit2} from "@uniswap/permit2/test/utils/DeployPermit2.sol";
+import {ISignatureTransfer} from "@uniswap/permit2/src/interfaces/ISignatureTransfer.sol";
 
-import { L1ETHGateway } from "../L1/gateways/L1ETHGateway.sol";
-import { IL1GatewayRouter } from "../L1/gateways/IL1GatewayRouter.sol";
-import { L1GatewayRouter } from "../L1/gateways/L1GatewayRouter.sol";
-import { L1StandardERC20Gateway } from "../L1/gateways/L1StandardERC20Gateway.sol";
-import { L1WETHGateway } from "../L1/gateways/L1WETHGateway.sol";
-import { L2ETHGateway } from "../L2/gateways/L2ETHGateway.sol";
-import { L2StandardERC20Gateway } from "../L2/gateways/L2StandardERC20Gateway.sol";
-import { T1StandardERC20 } from "../libraries/token/T1StandardERC20.sol";
-import { T1StandardERC20Factory } from "../libraries/token/T1StandardERC20Factory.sol";
-import { T1Constants } from "../libraries/constants/T1Constants.sol";
+import {L1ETHGateway} from "../L1/gateways/L1ETHGateway.sol";
+import {IL1GatewayRouter} from "../L1/gateways/IL1GatewayRouter.sol";
+import {L1GatewayRouter} from "../L1/gateways/L1GatewayRouter.sol";
+import {L1StandardERC20Gateway} from "../L1/gateways/L1StandardERC20Gateway.sol";
+import {L1WETHGateway} from "../L1/gateways/L1WETHGateway.sol";
+import {L2ETHGateway} from "../L2/gateways/L2ETHGateway.sol";
+import {L2StandardERC20Gateway} from "../L2/gateways/L2StandardERC20Gateway.sol";
+import {T1StandardERC20} from "../libraries/token/T1StandardERC20.sol";
+import {T1StandardERC20Factory} from "../libraries/token/T1StandardERC20Factory.sol";
+import {T1Constants} from "../libraries/constants/T1Constants.sol";
 
-import { L1GatewayTestBase } from "./L1GatewayTestBase.t.sol";
+import {L1GatewayTestBase} from "./L1GatewayTestBase.t.sol";
 
-import { TransferReentrantToken } from "./mocks/tokens/TransferReentrantToken.sol";
+import {TransferReentrantToken} from "./mocks/tokens/TransferReentrantToken.sol";
 
-import { PermitSignature } from "./utils/PermitSignature.sol";
+import {PermitSignature} from "./utils/PermitSignature.sol";
 
 contract L1GatewayRouterTest is L1GatewayTestBase, DeployPermit2, PermitSignature {
     T1StandardERC20 private template;
@@ -104,7 +104,7 @@ contract L1GatewayRouterTest is L1GatewayTestBase, DeployPermit2, PermitSignatur
         aave.mint(address(l1StandardERC20Gateway), 1e21); // 1,000 AAVE
         dai.mint(address(l1StandardERC20Gateway), 1e21); // 1,000 DAI
         usdt.mint(address(l1StandardERC20Gateway), 1e12); // 1,000,000 USDT
-        weth.deposit{ value: address(this).balance / 2 }();
+        weth.deposit{value: address(this).balance / 2}();
         weth.approve(address(l1WETHGateway), type(uint256).max);
         weth.approve(address(router), type(uint256).max);
 
@@ -505,7 +505,7 @@ contract L1GatewayRouterTest is L1GatewayTestBase, DeployPermit2, PermitSignatur
 
     function defaultWitnessAndSwapParams() internal view returns (IL1GatewayRouter.SwapParams memory) {
         ISignatureTransfer.PermitTransferFrom memory permit = ISignatureTransfer.PermitTransferFrom({
-            permitted: ISignatureTransfer.TokenPermissions({ token: address(usdt), amount: 1e21 }),
+            permitted: ISignatureTransfer.TokenPermissions({token: address(usdt), amount: 1e21}),
             nonce: 0,
             deadline: block.timestamp + 1000
         });
@@ -517,6 +517,6 @@ contract L1GatewayRouterTest is L1GatewayTestBase, DeployPermit2, PermitSignatur
             outputTokenAmount: 1e21
         });
 
-        return IL1GatewayRouter.SwapParams({ permit: permit, owner: address(1), witness: witness, sig: bytes("") });
+        return IL1GatewayRouter.SwapParams({permit: permit, owner: address(1), witness: witness, sig: bytes("")});
     }
 }

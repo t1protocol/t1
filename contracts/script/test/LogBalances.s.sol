@@ -2,10 +2,10 @@
 
 pragma solidity ^0.8.25;
 
-import { console } from "forge-std/console.sol";
-import { Script } from "forge-std/Script.sol";
+import {console} from "forge-std/console.sol";
+import {Script} from "forge-std/Script.sol";
 
-import { T1StandardERC20 } from "../../src/libraries/token/T1StandardERC20.sol";
+import {T1StandardERC20} from "../../src/libraries/token/T1StandardERC20.sol";
 
 // solhint-disable var-name-mixedcase
 

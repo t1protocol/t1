@@ -2,10 +2,10 @@
 
 pragma solidity ^0.8.25;
 
-import { BatchHeaderV0Codec } from "../libraries/codec/BatchHeaderV0Codec.sol";
-import { BatchHeaderV1Codec } from "../libraries/codec/BatchHeaderV1Codec.sol";
-import { BatchHeaderV3Codec } from "../libraries/codec/BatchHeaderV3Codec.sol";
-import { T1Chain } from "../L1/rollup/T1Chain.sol";
+import {BatchHeaderV0Codec} from "../libraries/codec/BatchHeaderV0Codec.sol";
+import {BatchHeaderV1Codec} from "../libraries/codec/BatchHeaderV1Codec.sol";
+import {BatchHeaderV3Codec} from "../libraries/codec/BatchHeaderV3Codec.sol";
+import {T1Chain} from "../L1/rollup/T1Chain.sol";
 
 contract T1ChainMockBlob is T1Chain {
     bytes32 private blobVersionedHash;
@@ -22,13 +22,9 @@ contract T1ChainMockBlob is T1Chain {
     /// @param _chainId The chain id of L2.
     /// @param _messageQueue The address of `L1MessageQueue` contract.
     /// @param _verifier The address of zkevm verifier contract.
-    constructor(
-        uint64 _chainId,
-        address _messageQueue,
-        address _verifier
-    )
+    constructor(uint64 _chainId, address _messageQueue, address _verifier)
         T1Chain(_chainId, _messageQueue, _verifier)
-    { }
+    {}
 
     /**
      *

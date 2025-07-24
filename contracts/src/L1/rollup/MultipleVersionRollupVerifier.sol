@@ -2,10 +2,10 @@
 
 pragma solidity ^0.8.25;
 
-import { Ownable } from "@openzeppelin/contracts/access/Ownable.sol";
+import {Ownable} from "@openzeppelin/contracts/access/Ownable.sol";
 
-import { IRollupVerifier } from "../../libraries/verifier/IRollupVerifier.sol";
-import { IZkEvmVerifierV1, IZkEvmVerifierV2 } from "../../libraries/verifier/IZkEvmVerifier.sol";
+import {IRollupVerifier} from "../../libraries/verifier/IRollupVerifier.sol";
+import {IZkEvmVerifierV1, IZkEvmVerifierV2} from "../../libraries/verifier/IZkEvmVerifier.sol";
 
 /// @title MultipleVersionRollupVerifier
 /// @notice Verifies aggregate zk proofs using the appropriate verifier.
@@ -116,11 +116,7 @@ contract MultipleVersionRollupVerifier is IRollupVerifier, Ownable {
      */
 
     /// @inheritdoc IRollupVerifier
-    function verifyAggregateProof(
-        uint256 _batchIndex,
-        bytes calldata _aggrProof,
-        bytes32 _publicInputHash
-    )
+    function verifyAggregateProof(uint256 _batchIndex, bytes calldata _aggrProof, bytes32 _publicInputHash)
         external
         view
         override
@@ -136,11 +132,7 @@ contract MultipleVersionRollupVerifier is IRollupVerifier, Ownable {
         uint256 _batchIndex,
         bytes calldata _aggrProof,
         bytes32 _publicInputHash
-    )
-        external
-        view
-        override
-    {
+    ) external view override {
         address _verifier = getVerifier(_version, _batchIndex);
 
         IZkEvmVerifierV1(_verifier).verify(_aggrProof, _publicInputHash);
@@ -152,11 +144,7 @@ contract MultipleVersionRollupVerifier is IRollupVerifier, Ownable {
         uint256 _batchIndex,
         bytes calldata _bundleProof,
         bytes calldata _publicInput
-    )
-        external
-        view
-        override
-    {
+    ) external view override {
         address _verifier = getVerifier(_version, _batchIndex);
 
         IZkEvmVerifierV2(_verifier).verify(_bundleProof, _publicInput);
