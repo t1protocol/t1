@@ -32,7 +32,6 @@ contract Setup7683BotsLiquidity is Script, DeploymentUtils {
         address payable readResultProofBotAddr = payable(vm.addr(READ_RESULT_PROOF_BOT_PRIVATE_KEY));
 
         vm.createSelectFork(vm.rpcUrl("arbitrum_sepolia"));
-        logStart("[START] Setup Bot liquidity");
 
         // *** FUND BOTS *** //
         vm.startBroadcast(FUNDER_PRIVATE_KEY);
@@ -66,12 +65,10 @@ contract Setup7683BotsLiquidity is Script, DeploymentUtils {
         // *** ERC-20 Contract Approvals *** //
         vm.startBroadcast(FILL_BOT_PRIVATE_KEY);
         // approve L1 7683 Escrow to transfer USDT in the bot's name
-        T1StandardERC20(USDT_ADDR).approve(PULL_BASED_7683_PROXY_ADDR, 999_999 * 1e6);
+        T1StandardERC20(USDT_ADDR).approve(PULL_BASED_7683_PROXY_ADDR, 115792089237316195423570985008687907853269984665640564039457584007913129639935);
         // approve L1 7683 Escrow to transfer WETH in the bot's name
-        WrappedEther(WETH_ADDR).approve(PULL_BASED_7683_PROXY_ADDR, 999_999 * 1e18);
+        WrappedEther(WETH_ADDR).approve(PULL_BASED_7683_PROXY_ADDR, 115792089237316195423570985008687907853269984665640564039457584007913129639935);
 
         vm.stopBroadcast();
-
-        logStart("[COMPLETE] Setup Bot liquidity");
     }
 }
