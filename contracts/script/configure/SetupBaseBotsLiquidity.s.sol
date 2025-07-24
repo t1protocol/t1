@@ -23,7 +23,7 @@ contract Setup7683BotsLiquidity is Script, DeploymentUtils {
     function run() external {
         uint256 ethAmount = 90 ether;
         uint256 wethAmount = 2 ether;
-        uint256 usdtAmount = 2_000_000 * 1e6;
+        uint256 usdtAmount = 2_000 * 1e6;
         address payable fillBotAddr = payable(vm.addr(FILL_BOT_PRIVATE_KEY));
         address payable settlementBotAddr = payable(vm.addr(SETTLEMENT_BOT_PRIVATE_KEY));
         address payable signerAddr = payable(vm.addr(SIGNER_PRIVATE_KEY));
