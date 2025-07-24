@@ -1,12 +1,17 @@
 import {ALL_DIRECTIONS, type Interval, type PriceList} from "./types.ts";
 
+type PriceBookEntry = {
+    priceList: PriceList,
+    timestamp: number
+}
+
 export class SolverPriceBook {
-    private prices: Map<string, PriceList> = new Map<string, PriceList>();
+    private prices: Map<string, PriceBookEntry> = new Map<string, PriceBookEntry>();
 
     updatePrice(username: string, priceBlob: string): number {
         const priceList = this.validatePriceList(priceBlob);
 
-        this.prices.set(username, priceList);
+        this.prices.set(username, { priceList, timestamp: Date.now() });
 
         return Object.keys(priceList).length;
     }
