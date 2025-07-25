@@ -1,9 +1,9 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.25;
 
-import {Script, console2} from "forge-std/Script.sol";
-import {CrossChainExample} from "../deploy/DeployCrossChainExample.s.sol";
-import {T1Constants} from "../../src/libraries/constants/T1Constants.sol";
+import { Script, console2 } from "forge-std/Script.sol";
+import { CrossChainExample } from "../deploy/DeployCrossChainExample.s.sol";
+import { T1Constants } from "../../src/libraries/constants/T1Constants.sol";
 
 contract SendCrossChainMessageExample is Script {
     function send_l1_to_l2_message() public {
@@ -23,7 +23,7 @@ contract SendCrossChainMessageExample is Script {
         vm.startBroadcast(userPk);
 
         bytes32 requestId =
-            l1Example.sendCrossChainRequest{value: gasLimit}(l2ChainId, l2ExampleAddr, gasLimit, messageData);
+            l1Example.sendCrossChainRequest{ value: gasLimit }(l2ChainId, l2ExampleAddr, gasLimit, messageData);
 
         console2.log("sent message from l1->l2 with requestId:", vm.toString(requestId));
 

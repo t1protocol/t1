@@ -2,17 +2,17 @@
 
 pragma solidity ^0.8.25;
 
-import {ClonesUpgradeable} from "@openzeppelin/contracts-upgradeable/proxy/ClonesUpgradeable.sol";
-import {IERC20MetadataUpgradeable} from
+import { ClonesUpgradeable } from "@openzeppelin/contracts-upgradeable/proxy/ClonesUpgradeable.sol";
+import { IERC20MetadataUpgradeable } from
     "@openzeppelin/contracts-upgradeable/token/ERC20/extensions/IERC20MetadataUpgradeable.sol";
 
-import {IL2ERC20Gateway} from "../../L2/gateways/IL2ERC20Gateway.sol";
-import {IL1T1Messenger} from "../IL1T1Messenger.sol";
-import {IL1ERC20Gateway} from "./IL1ERC20Gateway.sol";
+import { IL2ERC20Gateway } from "../../L2/gateways/IL2ERC20Gateway.sol";
+import { IL1T1Messenger } from "../IL1T1Messenger.sol";
+import { IL1ERC20Gateway } from "./IL1ERC20Gateway.sol";
 
-import {T1Constants} from "../../libraries/constants/T1Constants.sol";
-import {T1GatewayBase} from "../../libraries/gateway/T1GatewayBase.sol";
-import {L1ERC20Gateway} from "./L1ERC20Gateway.sol";
+import { T1Constants } from "../../libraries/constants/T1Constants.sol";
+import { T1GatewayBase } from "../../libraries/gateway/T1GatewayBase.sol";
+import { L1ERC20Gateway } from "./L1ERC20Gateway.sol";
 
 /// @title L1StandardERC20Gateway
 /// @notice The `L1StandardERC20Gateway` is used to deposit standard ERC20 tokens on layer 1 and
@@ -65,7 +65,9 @@ contract L1StandardERC20Gateway is L1ERC20Gateway {
         address _messenger,
         address _l2TokenImplementation,
         address _l2TokenFactory
-    ) T1GatewayBase(_counterpart, _router, _messenger) {
+    )
+        T1GatewayBase(_counterpart, _router, _messenger)
+    {
         if (_router == address(0) || _l2TokenImplementation == address(0) || _l2TokenFactory == address(0)) {
             revert ErrorZeroAddress();
         }
@@ -103,7 +105,14 @@ contract L1StandardERC20Gateway is L1ERC20Gateway {
      */
 
     /// @inheritdoc L1ERC20Gateway
-    function _beforeFinalizeWithdrawERC20(address _l1Token, address _l2Token, address, address, uint256, bytes calldata)
+    function _beforeFinalizeWithdrawERC20(
+        address _l1Token,
+        address _l2Token,
+        address,
+        address,
+        uint256,
+        bytes calldata
+    )
         internal
         virtual
         override
@@ -127,7 +136,13 @@ contract L1StandardERC20Gateway is L1ERC20Gateway {
     }
 
     /// @inheritdoc L1ERC20Gateway
-    function _deposit(address _token, address _to, uint256 _amount, bytes memory _data, uint256 _gasLimit)
+    function _deposit(
+        address _token,
+        address _to,
+        uint256 _amount,
+        bytes memory _data,
+        uint256 _gasLimit
+    )
         internal
         virtual
         override
@@ -160,7 +175,7 @@ contract L1StandardERC20Gateway is L1ERC20Gateway {
             abi.encodeCall(IL2ERC20Gateway.finalizeDepositERC20, (_token, _l2Token, _from, _to, _amount, _l2Data));
 
         // 3. Send message to L1T1Messenger.
-        IL1T1Messenger(messenger).sendMessage{value: msg.value}(
+        IL1T1Messenger(messenger).sendMessage{ value: msg.value }(
             counterpart, 0, _message, _gasLimit, T1Constants.T1_DEVNET_CHAIN_ID, _from
         );
 

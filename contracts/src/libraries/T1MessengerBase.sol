@@ -2,12 +2,12 @@
 
 pragma solidity ^0.8.25;
 
-import {OwnableUpgradeable} from "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
-import {PausableUpgradeable} from "@openzeppelin/contracts-upgradeable/security/PausableUpgradeable.sol";
-import {ReentrancyGuardUpgradeable} from "@openzeppelin/contracts-upgradeable/security/ReentrancyGuardUpgradeable.sol";
+import { OwnableUpgradeable } from "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
+import { PausableUpgradeable } from "@openzeppelin/contracts-upgradeable/security/PausableUpgradeable.sol";
+import { ReentrancyGuardUpgradeable } from "@openzeppelin/contracts-upgradeable/security/ReentrancyGuardUpgradeable.sol";
 
-import {T1Constants} from "./constants/T1Constants.sol";
-import {IT1Messenger} from "./IT1Messenger.sol";
+import { T1Constants } from "./constants/T1Constants.sol";
+import { IT1Messenger } from "./IT1Messenger.sol";
 
 // solhint-disable var-name-mixedcase
 
@@ -89,7 +89,7 @@ abstract contract T1MessengerBase is
     }
 
     // make sure only owner can send ether to messenger to avoid possible user fund loss.
-    receive() external payable onlyOwner {}
+    receive() external payable onlyOwner { }
 
     /**
      *
@@ -137,7 +137,11 @@ abstract contract T1MessengerBase is
         uint256 _value,
         uint256 _messageNonce,
         bytes memory _message
-    ) internal pure returns (bytes memory) {
+    )
+        internal
+        pure
+        returns (bytes memory)
+    {
         return abi.encodeWithSignature(
             "relayMessage(address,address,uint256,uint256,bytes)", _sender, _target, _value, _messageNonce, _message
         );

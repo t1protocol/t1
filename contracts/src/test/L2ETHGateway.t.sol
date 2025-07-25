@@ -2,18 +2,18 @@
 
 pragma solidity ^0.8.25;
 
-import {ITransparentUpgradeableProxy} from "@openzeppelin/contracts/proxy/transparent/TransparentUpgradeableProxy.sol";
+import { ITransparentUpgradeableProxy } from "@openzeppelin/contracts/proxy/transparent/TransparentUpgradeableProxy.sol";
 
-import {L2GatewayRouter} from "../L2/gateways/L2GatewayRouter.sol";
-import {IL1ETHGateway, L1ETHGateway} from "../L1/gateways/L1ETHGateway.sol";
-import {IL2ETHGateway, L2ETHGateway} from "../L2/gateways/L2ETHGateway.sol";
+import { L2GatewayRouter } from "../L2/gateways/L2GatewayRouter.sol";
+import { IL1ETHGateway, L1ETHGateway } from "../L1/gateways/L1ETHGateway.sol";
+import { IL2ETHGateway, L2ETHGateway } from "../L2/gateways/L2ETHGateway.sol";
 
-import {AddressAliasHelper} from "../libraries/common/AddressAliasHelper.sol";
-import {T1Constants} from "../libraries/constants/T1Constants.sol";
+import { AddressAliasHelper } from "../libraries/common/AddressAliasHelper.sol";
+import { T1Constants } from "../libraries/constants/T1Constants.sol";
 
-import {L2GatewayTestBase} from "./L2GatewayTestBase.t.sol";
-import {MockT1Messenger} from "./mocks/MockT1Messenger.sol";
-import {MockGatewayRecipient} from "./mocks/MockGatewayRecipient.sol";
+import { L2GatewayTestBase } from "./L2GatewayTestBase.t.sol";
+import { MockT1Messenger } from "./mocks/MockT1Messenger.sol";
+import { MockGatewayRecipient } from "./mocks/MockGatewayRecipient.sol";
 
 contract L2ETHGatewayTest is L2GatewayTestBase {
     // from L2ETHGateway
@@ -53,7 +53,12 @@ contract L2ETHGatewayTest is L2GatewayTestBase {
         _withdrawETH(false, amount, gasLimit, feePerGas);
     }
 
-    function testWithdrawETHWithRecipient(uint256 amount, address recipient, uint256 gasLimit, uint256 feePerGas)
+    function testWithdrawETHWithRecipient(
+        uint256 amount,
+        address recipient,
+        uint256 gasLimit,
+        uint256 feePerGas
+    )
         public
     {
         _withdrawETHWithRecipient(false, amount, recipient, gasLimit, feePerGas);
@@ -65,7 +70,9 @@ contract L2ETHGatewayTest is L2GatewayTestBase {
         bytes memory dataToCall,
         uint256 gasLimit,
         uint256 feePerGas
-    ) public {
+    )
+        public
+    {
         _withdrawETHWithRecipientAndCalldata(false, amount, recipient, dataToCall, gasLimit, feePerGas);
     }
 
@@ -73,7 +80,12 @@ contract L2ETHGatewayTest is L2GatewayTestBase {
         _withdrawETH(true, amount, gasLimit, feePerGas);
     }
 
-    function testRouterWithdrawETHWithRecipient(uint256 amount, address recipient, uint256 gasLimit, uint256 feePerGas)
+    function testRouterWithdrawETHWithRecipient(
+        uint256 amount,
+        address recipient,
+        uint256 gasLimit,
+        uint256 feePerGas
+    )
         public
     {
         _withdrawETHWithRecipient(true, amount, recipient, gasLimit, feePerGas);
@@ -85,7 +97,9 @@ contract L2ETHGatewayTest is L2GatewayTestBase {
         bytes memory dataToCall,
         uint256 gasLimit,
         uint256 feePerGas
-    ) public {
+    )
+        public
+    {
         _withdrawETHWithRecipientAndCalldata(true, amount, recipient, dataToCall, gasLimit, feePerGas);
     }
 
@@ -97,7 +111,9 @@ contract L2ETHGatewayTest is L2GatewayTestBase {
         address recipient,
         uint256 amount,
         bytes memory dataToCall
-    ) public {
+    )
+        public
+    {
         amount = bound(amount, 1, address(this).balance / 2);
 
         // revert when caller is not messenger
@@ -126,7 +142,7 @@ contract L2ETHGatewayTest is L2GatewayTestBase {
 
         // ETH transfer failed
         vm.expectRevert("ETH transfer failed");
-        mockMessenger.callTarget{value: amount}(
+        mockMessenger.callTarget{ value: amount }(
             address(gateway),
             abi.encodeWithSelector(gateway.finalizeDepositETH.selector, sender, address(this), amount, dataToCall)
         );
@@ -138,11 +154,13 @@ contract L2ETHGatewayTest is L2GatewayTestBase {
         address recipient,
         uint256 amount,
         bytes memory dataToCall
-    ) public {
+    )
+        public
+    {
         amount = bound(amount, 1, address(this).balance / 2);
 
         // send some ETH to L2T1Messenger
-        gateway.withdrawETH{value: amount}(amount, 21_000);
+        gateway.withdrawETH{ value: amount }(amount, 21_000);
 
         // do finalize withdraw eth
         bytes memory message =
@@ -180,7 +198,7 @@ contract L2ETHGatewayTest is L2GatewayTestBase {
         amount = bound(amount, 1, address(this).balance / 2);
 
         // send some ETH to L2T1Messenger
-        gateway.withdrawETH{value: amount}(amount, 21_000);
+        gateway.withdrawETH{ value: amount }(amount, 21_000);
 
         // do finalize withdraw eth
         bytes memory message = abi.encodeWithSelector(
@@ -241,9 +259,9 @@ contract L2ETHGatewayTest is L2GatewayTestBase {
         if (amount == 0) {
             vm.expectRevert("withdraw zero eth");
             if (useRouter) {
-                router.withdrawETH{value: amount}(amount, gasLimit);
+                router.withdrawETH{ value: amount }(amount, gasLimit);
             } else {
-                gateway.withdrawETH{value: amount}(amount, gasLimit);
+                gateway.withdrawETH{ value: amount }(amount, gasLimit);
             }
         } else {
             // emit AppendMessage from L2MessageQueue
@@ -275,9 +293,9 @@ contract L2ETHGatewayTest is L2GatewayTestBase {
             uint256 feeVaultBalance = address(feeVault).balance;
             assertEq(l2Messenger.messageSendTimestamp(keccak256(xDomainCalldata)), 0);
             if (useRouter) {
-                router.withdrawETH{value: amount + feeToPay}(amount, gasLimit);
+                router.withdrawETH{ value: amount + feeToPay }(amount, gasLimit);
             } else {
-                gateway.withdrawETH{value: amount + feeToPay}(amount, gasLimit);
+                gateway.withdrawETH{ value: amount + feeToPay }(amount, gasLimit);
             }
             assertEq(amount + messengerBalance, address(l2Messenger).balance);
             assertEq(feeToPay + feeVaultBalance, address(feeVault).balance);
@@ -291,7 +309,9 @@ contract L2ETHGatewayTest is L2GatewayTestBase {
         address recipient,
         uint256 gasLimit,
         uint256 feePerGas
-    ) private {
+    )
+        private
+    {
         amount = bound(amount, 0, address(this).balance / 2);
         gasLimit = bound(gasLimit, 21_000, 1_000_000);
         feePerGas = 0;
@@ -314,9 +334,9 @@ contract L2ETHGatewayTest is L2GatewayTestBase {
         if (amount == 0) {
             vm.expectRevert("withdraw zero eth");
             if (useRouter) {
-                router.withdrawETH{value: amount}(recipient, amount, gasLimit);
+                router.withdrawETH{ value: amount }(recipient, amount, gasLimit);
             } else {
-                gateway.withdrawETH{value: amount}(recipient, amount, gasLimit);
+                gateway.withdrawETH{ value: amount }(recipient, amount, gasLimit);
             }
         } else {
             // emit AppendMessage from L2MessageQueue
@@ -348,9 +368,9 @@ contract L2ETHGatewayTest is L2GatewayTestBase {
             uint256 feeVaultBalance = address(feeVault).balance;
             assertEq(l2Messenger.messageSendTimestamp(keccak256(xDomainCalldata)), 0);
             if (useRouter) {
-                router.withdrawETH{value: amount + feeToPay}(recipient, amount, gasLimit);
+                router.withdrawETH{ value: amount + feeToPay }(recipient, amount, gasLimit);
             } else {
-                gateway.withdrawETH{value: amount + feeToPay}(recipient, amount, gasLimit);
+                gateway.withdrawETH{ value: amount + feeToPay }(recipient, amount, gasLimit);
             }
             assertEq(amount + messengerBalance, address(l2Messenger).balance);
             assertEq(feeToPay + feeVaultBalance, address(feeVault).balance);
@@ -365,7 +385,9 @@ contract L2ETHGatewayTest is L2GatewayTestBase {
         bytes memory dataToCall,
         uint256 gasLimit,
         uint256 feePerGas
-    ) private {
+    )
+        private
+    {
         amount = bound(amount, 0, address(this).balance / 2);
         gasLimit = bound(gasLimit, 21_000, 1_000_000);
         feePerGas = 0;
@@ -388,9 +410,9 @@ contract L2ETHGatewayTest is L2GatewayTestBase {
         if (amount == 0) {
             vm.expectRevert("withdraw zero eth");
             if (useRouter) {
-                router.withdrawETHAndCall{value: amount}(recipient, amount, dataToCall, gasLimit);
+                router.withdrawETHAndCall{ value: amount }(recipient, amount, dataToCall, gasLimit);
             } else {
-                gateway.withdrawETHAndCall{value: amount}(recipient, amount, dataToCall, gasLimit);
+                gateway.withdrawETHAndCall{ value: amount }(recipient, amount, dataToCall, gasLimit);
             }
         } else {
             // emit AppendMessage from L2MessageQueue
@@ -422,9 +444,9 @@ contract L2ETHGatewayTest is L2GatewayTestBase {
             uint256 feeVaultBalance = address(feeVault).balance;
             assertEq(l2Messenger.messageSendTimestamp(keccak256(xDomainCalldata)), 0);
             if (useRouter) {
-                router.withdrawETHAndCall{value: amount + feeToPay}(recipient, amount, dataToCall, gasLimit);
+                router.withdrawETHAndCall{ value: amount + feeToPay }(recipient, amount, dataToCall, gasLimit);
             } else {
-                gateway.withdrawETHAndCall{value: amount + feeToPay}(recipient, amount, dataToCall, gasLimit);
+                gateway.withdrawETHAndCall{ value: amount + feeToPay }(recipient, amount, dataToCall, gasLimit);
             }
             assertEq(amount + messengerBalance, address(l2Messenger).balance);
             assertEq(feeToPay + feeVaultBalance, address(feeVault).balance);

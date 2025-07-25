@@ -2,11 +2,11 @@
 
 pragma solidity ^0.8.25;
 
-import {ERC20Upgradeable} from "@openzeppelin/contracts-upgradeable/token/ERC20/ERC20Upgradeable.sol";
-import {ERC20PermitUpgradeable} from
+import { ERC20Upgradeable } from "@openzeppelin/contracts-upgradeable/token/ERC20/ERC20Upgradeable.sol";
+import { ERC20PermitUpgradeable } from
     "@openzeppelin/contracts-upgradeable/token/ERC20/extensions/draft-ERC20PermitUpgradeable.sol";
-import {IT1ERC20Upgradeable} from "./IT1ERC20Upgradeable.sol";
-import {IERC677Receiver} from "../callbacks/IERC677Receiver.sol";
+import { IT1ERC20Upgradeable } from "./IT1ERC20Upgradeable.sol";
+import { IERC677Receiver } from "../callbacks/IERC677Receiver.sol";
 
 /// @notice The `T1StandardERC20` is the ERC20 token contract created by
 /// `L2StandardERC20Gateway` when the first time the L1 ERC20 is bridged via
@@ -39,7 +39,10 @@ contract T1StandardERC20 is ERC20PermitUpgradeable, IT1ERC20Upgradeable {
         uint8 _decimals,
         address _gateway,
         address _counterpart
-    ) external initializer {
+    )
+        external
+        initializer
+    {
         __ERC20Permit_init(_name);
         __ERC20_init(_name, _symbol);
 

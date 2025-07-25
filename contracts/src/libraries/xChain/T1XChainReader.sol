@@ -1,10 +1,10 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.25;
 
-import {OwnableUpgradeable} from "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
-import {ReentrancyGuardUpgradeable} from "@openzeppelin/contracts-upgradeable/security/ReentrancyGuardUpgradeable.sol";
-import {WithdrawTrieVerifier} from "../verifier/WithdrawTrieVerifier.sol";
-import {IT1XChainReader} from "./IT1XChainReader.sol";
+import { OwnableUpgradeable } from "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
+import { ReentrancyGuardUpgradeable } from "@openzeppelin/contracts-upgradeable/security/ReentrancyGuardUpgradeable.sol";
+import { WithdrawTrieVerifier } from "../verifier/WithdrawTrieVerifier.sol";
+import { IT1XChainReader } from "./IT1XChainReader.sol";
 
 /**
  * @title T1XChainReader
@@ -141,7 +141,10 @@ contract T1XChainReader is IT1XChainReader, OwnableUpgradeable, ReentrancyGuardU
         uint64 minBlock,
         bytes calldata callData,
         address requester
-    ) internal returns (bytes32 requestId) {
+    )
+        internal
+        returns (bytes32 requestId)
+    {
         requestId = keccak256(
             abi.encodePacked(
                 block.chainid, destinationDomain, targetContract, callData, block.timestamp, requester, nonce
@@ -223,7 +226,7 @@ contract T1XChainReader is IT1XChainReader, OwnableUpgradeable, ReentrancyGuardU
         if (msg.sender != feeRecipient) revert UnauthorizedFeeWithdraw();
 
         uint256 amount = address(this).balance;
-        (bool success,) = feeRecipient.call{value: amount}("");
+        (bool success,) = feeRecipient.call{ value: amount }("");
         if (!success) revert WithdrawFailed();
 
         emit FeesWithdrawn(feeRecipient, amount);

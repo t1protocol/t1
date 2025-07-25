@@ -2,12 +2,12 @@
 
 pragma solidity ^0.8.25;
 
-import {Test} from "forge-std/Test.sol";
+import { Test } from "forge-std/Test.sol";
 
-import {ERC1967Proxy} from "@openzeppelin/contracts/proxy/ERC1967/ERC1967Proxy.sol";
+import { ERC1967Proxy } from "@openzeppelin/contracts/proxy/ERC1967/ERC1967Proxy.sol";
 
-import {L2GasPriceOracle} from "../L1/rollup/L2GasPriceOracle.sol";
-import {Whitelist} from "../L2/predeploys/Whitelist.sol";
+import { L2GasPriceOracle } from "../L1/rollup/L2GasPriceOracle.sol";
+import { Whitelist } from "../L2/predeploys/Whitelist.sol";
 
 contract L2GasPriceOracleTest is Test {
     // events

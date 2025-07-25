@@ -1,12 +1,12 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.25;
 
-import {Script} from "forge-std/Script.sol";
-import {console2} from "forge-std/console2.sol";
+import { Script } from "forge-std/Script.sol";
+import { console2 } from "forge-std/console2.sol";
 
-import {IL1T1Messenger} from "../../src/L1/IL1T1Messenger.sol";
-import {IL2T1Messenger} from "../../src/L2/IL2T1Messenger.sol";
-import {IT1Messenger} from "../../src/libraries/IT1Messenger.sol";
+import { IL1T1Messenger } from "../../src/L1/IL1T1Messenger.sol";
+import { IL2T1Messenger } from "../../src/L2/IL2T1Messenger.sol";
+import { IT1Messenger } from "../../src/libraries/IT1Messenger.sol";
 
 contract CrossChainExample {
     IT1Messenger public immutable MESSENGER;
@@ -29,7 +29,12 @@ contract CrossChainExample {
      * @param data the calldata to execute
      * @return requestId unique identifier for this request
      */
-    function sendCrossChainRequest(uint64 destChainId, address target, uint256 gasLimit, bytes calldata data)
+    function sendCrossChainRequest(
+        uint64 destChainId,
+        address target,
+        uint256 gasLimit,
+        bytes calldata data
+    )
         external
         payable
         returns (bytes32 requestId)
@@ -45,7 +50,7 @@ contract CrossChainExample {
             abi.encodeWithSelector(CrossChainExample.handleRequest.selector, requestId, msg.sender, data);
 
         // send via t1 messenger
-        MESSENGER.sendMessage{value: gasLimit}(
+        MESSENGER.sendMessage{ value: gasLimit }(
             target,
             0, // no value transfer
             message,

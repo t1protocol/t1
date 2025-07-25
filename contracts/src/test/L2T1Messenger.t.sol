@@ -2,18 +2,18 @@
 
 pragma solidity ^0.8.25;
 
-import {Test} from "forge-std/Test.sol";
-import {ERC1967Proxy} from "@openzeppelin/contracts/proxy/ERC1967/ERC1967Proxy.sol";
+import { Test } from "forge-std/Test.sol";
+import { ERC1967Proxy } from "@openzeppelin/contracts/proxy/ERC1967/ERC1967Proxy.sol";
 
-import {L1GasPriceOracle} from "../L2/predeploys/L1GasPriceOracle.sol";
-import {L2GasPriceOracle} from "../L1/rollup/L2GasPriceOracle.sol";
-import {L2MessageQueue} from "../L2/predeploys/L2MessageQueue.sol";
-import {Whitelist} from "../L2/predeploys/Whitelist.sol";
-import {L1T1Messenger} from "../L1/L1T1Messenger.sol";
-import {L2T1Messenger} from "../L2/L2T1Messenger.sol";
+import { L1GasPriceOracle } from "../L2/predeploys/L1GasPriceOracle.sol";
+import { L2GasPriceOracle } from "../L1/rollup/L2GasPriceOracle.sol";
+import { L2MessageQueue } from "../L2/predeploys/L2MessageQueue.sol";
+import { Whitelist } from "../L2/predeploys/Whitelist.sol";
+import { L1T1Messenger } from "../L1/L1T1Messenger.sol";
+import { L2T1Messenger } from "../L2/L2T1Messenger.sol";
 
-import {AddressAliasHelper} from "../libraries/common/AddressAliasHelper.sol";
-import {T1Constants} from "../libraries/constants/T1Constants.sol";
+import { AddressAliasHelper } from "../libraries/common/AddressAliasHelper.sol";
+import { T1Constants } from "../libraries/constants/T1Constants.sol";
 
 contract L2T1MessengerTest is Test {
     uint64 internal constant POLYGON_CHAIN_ID = 137;
@@ -98,11 +98,11 @@ contract L2T1MessengerTest is Test {
         // succeed normally
         uint256 balanceBefore = callbackAddress.balance;
         assertEq(l2Messenger.nextL2MessageNonce(), 0);
-        l2Messenger.sendMessage{value: 1}(address(0), 1, new bytes(0), 21_000, ARB_CHAIN_ID, callbackAddress);
+        l2Messenger.sendMessage{ value: 1 }(address(0), 1, new bytes(0), 21_000, ARB_CHAIN_ID, callbackAddress);
         assertEq(balanceBefore, callbackAddress.balance);
 
         assertEq(l2Messenger.nextL2MessageNonce(), 1);
-        l2Messenger.sendMessage{value: 1}(address(0), 1, new bytes(0), 21_000, ARB_CHAIN_ID, callbackAddress);
+        l2Messenger.sendMessage{ value: 1 }(address(0), 1, new bytes(0), 21_000, ARB_CHAIN_ID, callbackAddress);
 
         // 0.1 gwei = 100000000 wei
         uint256 l2BaseFee = 100_000_000;
@@ -112,12 +112,12 @@ contract L2T1MessengerTest is Test {
         /// only to cover gas fees on destination chain
         uint256 _value = l2BaseFee * gasLimit;
         assertEq(l2Messenger.nextL2MessageNonce(), 2);
-        l2Messenger.sendMessage{value: _value}(address(0), 0, new bytes(0), gasLimit, ARB_CHAIN_ID, callbackAddress);
+        l2Messenger.sendMessage{ value: _value }(address(0), 0, new bytes(0), gasLimit, ARB_CHAIN_ID, callbackAddress);
 
         // failure case - 1 wei short
         uint256 _valueMinusOne = _value - 1;
         vm.expectRevert(abi.encodeWithSelector(L2T1Messenger.InsufficientMsgValue.selector, _value));
-        l2Messenger.sendMessage{value: _valueMinusOne}(
+        l2Messenger.sendMessage{ value: _valueMinusOne }(
             address(0), 0, new bytes(0), gasLimit, ARB_CHAIN_ID, callbackAddress
         );
     }
@@ -137,7 +137,7 @@ contract L2T1MessengerTest is Test {
         // refund case - 1 wei over
         uint256 _balanceThisBefore = address(this).balance;
         uint256 _valuePlusOne = _value + 1;
-        l2Messenger.sendMessage{value: _valuePlusOne}(
+        l2Messenger.sendMessage{ value: _valuePlusOne }(
             address(0), 0, new bytes(0), gasLimit, ARB_CHAIN_ID, callbackAddress
         );
 
@@ -179,5 +179,5 @@ contract L2T1MessengerTest is Test {
 }
 
 contract MockCallbackRecipient {
-    fallback() external payable {}
+    fallback() external payable { }
 }

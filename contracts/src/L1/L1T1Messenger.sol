@@ -2,16 +2,16 @@
 
 pragma solidity ^0.8.25;
 
-import {IT1Chain} from "./rollup/IT1Chain.sol";
-import {IL1MessageQueue} from "./rollup/IL1MessageQueue.sol";
-import {IL1T1Messenger} from "./IL1T1Messenger.sol";
+import { IT1Chain } from "./rollup/IT1Chain.sol";
+import { IL1MessageQueue } from "./rollup/IL1MessageQueue.sol";
+import { IL1T1Messenger } from "./IL1T1Messenger.sol";
 
-import {IT1Messenger} from "../libraries/IT1Messenger.sol";
-import {T1Constants} from "../libraries/constants/T1Constants.sol";
-import {T1MessengerBase} from "../libraries/T1MessengerBase.sol";
-import {WithdrawTrieVerifier} from "../libraries/verifier/WithdrawTrieVerifier.sol";
+import { IT1Messenger } from "../libraries/IT1Messenger.sol";
+import { T1Constants } from "../libraries/constants/T1Constants.sol";
+import { T1MessengerBase } from "../libraries/T1MessengerBase.sol";
+import { WithdrawTrieVerifier } from "../libraries/verifier/WithdrawTrieVerifier.sol";
 
-import {IMessageDropCallback} from "../libraries/callbacks/IMessageDropCallback.sol";
+import { IMessageDropCallback } from "../libraries/callbacks/IMessageDropCallback.sol";
 
 // solhint-disable avoid-low-level-calls
 // solhint-disable not-rely-on-time
@@ -126,7 +126,13 @@ contract L1T1Messenger is T1MessengerBase, IL1T1Messenger {
      */
 
     /// @inheritdoc IT1Messenger
-    function sendMessage(address _to, uint256 _value, bytes calldata _message, uint256 _gasLimit, uint64 _destChainId)
+    function sendMessage(
+        address _to,
+        uint256 _value,
+        bytes calldata _message,
+        uint256 _gasLimit,
+        uint64 _destChainId
+    )
         external
         payable
         override
@@ -143,7 +149,12 @@ contract L1T1Messenger is T1MessengerBase, IL1T1Messenger {
         uint256 _gasLimit,
         uint64 _destChainId,
         address _callbackAddress
-    ) external payable override whenNotPaused {
+    )
+        external
+        payable
+        override
+        whenNotPaused
+    {
         _sendMessage(_to, _value, _message, _gasLimit, _destChainId, _callbackAddress);
     }
 
@@ -155,7 +166,10 @@ contract L1T1Messenger is T1MessengerBase, IL1T1Messenger {
         uint256 _nonce,
         bytes memory _message,
         L2MessageProof memory _proof
-    ) external override whenNotPaused 
+    )
+        external
+        override
+        whenNotPaused
     // notInExecution
     {
         bytes32 _xDomainCalldataHash = keccak256(_encodeXDomainCalldata(_from, _to, _value, _nonce, _message));
@@ -178,7 +192,7 @@ contract L1T1Messenger is T1MessengerBase, IL1T1Messenger {
         require(_from != xDomainMessageSender, "Invalid message sender");
 
         xDomainMessageSender = _from;
-        (bool success,) = _to.call{value: _value}(_message);
+        (bool success,) = _to.call{ value: _value }(_message);
         // reset value to refund gas.
         xDomainMessageSender = T1Constants.DEFAULT_XDOMAIN_MESSAGE_SENDER;
 
@@ -199,7 +213,11 @@ contract L1T1Messenger is T1MessengerBase, IL1T1Messenger {
         bytes memory _message,
         uint32 _newGasLimit,
         address _refundAddress
-    ) external payable override whenNotPaused 
+    )
+        external
+        payable
+        override
+        whenNotPaused
     // notInExecution
     {
         // We will use a different `queueIndex` for the replaced message. However, the original `queueIndex` or `nonce`
@@ -219,7 +237,7 @@ contract L1T1Messenger is T1MessengerBase, IL1T1Messenger {
         // charge relayer fee
         require(msg.value >= _fee, "Insufficient msg.value for fee");
         if (_fee > 0) {
-            (bool _success,) = feeVault.call{value: _fee}("");
+            (bool _success,) = feeVault.call{ value: _fee }("");
             require(_success, "Failed to deduct the fee");
         }
 
@@ -250,14 +268,20 @@ contract L1T1Messenger is T1MessengerBase, IL1T1Messenger {
         unchecked {
             uint256 _refund = msg.value - _fee;
             if (_refund > 0) {
-                (bool _success,) = _refundAddress.call{value: _refund}("");
+                (bool _success,) = _refundAddress.call{ value: _refund }("");
                 require(_success, "Failed to refund the fee");
             }
         }
     }
 
     /// @inheritdoc IL1T1Messenger
-    function dropMessage(address _from, address _to, uint256 _value, uint256 _messageNonce, bytes memory _message)
+    function dropMessage(
+        address _from,
+        address _to,
+        uint256 _value,
+        uint256 _messageNonce,
+        bytes memory _message
+    )
         external
         override
         whenNotPaused
@@ -302,7 +326,7 @@ contract L1T1Messenger is T1MessengerBase, IL1T1Messenger {
 
         // set execution context
         xDomainMessageSender = T1Constants.DROP_XDOMAIN_MESSAGE_SENDER;
-        IMessageDropCallback(_from).onDropMessage{value: _value}(_message);
+        IMessageDropCallback(_from).onDropMessage{ value: _value }(_message);
         // clear execution context
         xDomainMessageSender = T1Constants.DEFAULT_XDOMAIN_MESSAGE_SENDER;
     }
@@ -342,7 +366,10 @@ contract L1T1Messenger is T1MessengerBase, IL1T1Messenger {
         uint256 _gasLimit,
         uint64 _destChainId,
         address _callbackAddress
-    ) internal nonReentrant {
+    )
+        internal
+        nonReentrant
+    {
         // compute the actual cross domain message calldata.
         uint256 _messageNonce = IL1MessageQueue(messageQueue).nextCrossDomainMessageIndex();
         bytes memory _xDomainCalldata = _encodeXDomainCalldata(_msgSender(), _to, _value, _messageNonce, _message);
@@ -351,7 +378,7 @@ contract L1T1Messenger is T1MessengerBase, IL1T1Messenger {
         uint256 _fee = IL1MessageQueue(messageQueue).estimateCrossDomainMessageFee(_gasLimit);
         require(msg.value >= _fee + _value, "Insufficient msg.value");
         if (_fee > 0) {
-            (bool _success,) = feeVault.call{value: _fee}("");
+            (bool _success,) = feeVault.call{ value: _fee }("");
             require(_success, "Failed to deduct the fee");
         }
 
@@ -373,7 +400,7 @@ contract L1T1Messenger is T1MessengerBase, IL1T1Messenger {
         unchecked {
             uint256 _refund = msg.value - _fee - _value;
             if (_refund > 0) {
-                (bool _success,) = _callbackAddress.call{value: _refund}("");
+                (bool _success,) = _callbackAddress.call{ value: _refund }("");
                 require(_success, "Failed to refund the fee");
             }
         }

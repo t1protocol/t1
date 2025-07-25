@@ -1,18 +1,18 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.25;
 
-import {Test, Vm} from "forge-std/Test.sol";
+import { Test, Vm } from "forge-std/Test.sol";
 
-import {DeployPermit2} from "@uniswap/permit2/test/utils/DeployPermit2.sol";
-import {IEIP712} from "@uniswap/permit2/src/interfaces/IEIP712.sol";
+import { DeployPermit2 } from "@uniswap/permit2/test/utils/DeployPermit2.sol";
+import { IEIP712 } from "@uniswap/permit2/src/interfaces/IEIP712.sol";
 
-import {ERC20} from "@openzeppelin/contracts/token/ERC20/ERC20.sol";
-import {TypeCasts} from "@hyperlane-xyz/libs/TypeCasts.sol";
-import {InterchainGasPaymaster} from "@hyperlane-xyz/hooks/igp/InterchainGasPaymaster.sol";
-import {ISignatureTransfer} from "@uniswap/permit2/src/interfaces/IPermit2.sol";
+import { ERC20 } from "@openzeppelin/contracts/token/ERC20/ERC20.sol";
+import { TypeCasts } from "@hyperlane-xyz/libs/TypeCasts.sol";
+import { InterchainGasPaymaster } from "@hyperlane-xyz/hooks/igp/InterchainGasPaymaster.sol";
+import { ISignatureTransfer } from "@uniswap/permit2/src/interfaces/IPermit2.sol";
 
-import {ProxyAdmin} from "@openzeppelin/contracts/proxy/transparent/ProxyAdmin.sol";
-import {TransparentUpgradeableProxy} from "@openzeppelin/contracts/proxy/transparent/TransparentUpgradeableProxy.sol";
+import { ProxyAdmin } from "@openzeppelin/contracts/proxy/transparent/ProxyAdmin.sol";
+import { TransparentUpgradeableProxy } from "@openzeppelin/contracts/proxy/transparent/TransparentUpgradeableProxy.sol";
 
 import {
     GaslessCrossChainOrder,
@@ -20,8 +20,8 @@ import {
     ResolvedCrossChainOrder
 } from "../../../src/interfaces/IERC7683.sol";
 
-import {Base7683} from "../../../src/7683/Base7683.sol";
-import {EmptyContract} from "../../misc/EmptyContract.sol";
+import { Base7683 } from "../../../src/7683/Base7683.sol";
+import { EmptyContract } from "../../misc/EmptyContract.sol";
 
 event Open(bytes32 indexed orderId, ResolvedCrossChainOrder resolvedOrder);
 
@@ -106,12 +106,17 @@ contract BaseTest is Test, DeployPermit2 {
         users.push(counterpart);
     }
 
-    function _prepareOnchainOrder(bytes memory orderData, uint32 fillDeadline, bytes32 orderDataType)
+    function _prepareOnchainOrder(
+        bytes memory orderData,
+        uint32 fillDeadline,
+        bytes32 orderDataType
+    )
         internal
         pure
         returns (OnchainCrossChainOrder memory)
     {
-        return OnchainCrossChainOrder({fillDeadline: fillDeadline, orderDataType: orderDataType, orderData: orderData});
+        return
+            OnchainCrossChainOrder({ fillDeadline: fillDeadline, orderDataType: orderDataType, orderData: orderData });
     }
 
     function _prepareGaslessOrder(
@@ -123,7 +128,11 @@ contract BaseTest is Test, DeployPermit2 {
         uint32 openDeadline,
         uint32 fillDeadline,
         bytes32 orderDataType
-    ) internal pure returns (GaslessCrossChainOrder memory) {
+    )
+        internal
+        pure
+        returns (GaslessCrossChainOrder memory)
+    {
         return GaslessCrossChainOrder({
             originSettler: originSettler,
             user: user,
@@ -193,7 +202,11 @@ contract BaseTest is Test, DeployPermit2 {
         bytes32 typeHash,
         bytes32 witness,
         bytes32 domainSeparator
-    ) internal pure returns (bytes memory sig) {
+    )
+        internal
+        pure
+        returns (bytes memory sig)
+    {
         bytes32[] memory tokenPermissions = new bytes32[](permit.permitted.length);
         for (uint256 i = 0; i < permit.permitted.length; ++i) {
             tokenPermissions[i] = keccak256(abi.encode(_TOKEN_PERMISSIONS_TYPEHASH, permit.permitted[i]));
@@ -220,7 +233,12 @@ contract BaseTest is Test, DeployPermit2 {
         return bytes.concat(r, s, bytes1(v));
     }
 
-    function _defaultERC20PermitMultiple(address[] memory tokens, uint256 nonce, uint256 _amount, uint32 _deadline)
+    function _defaultERC20PermitMultiple(
+        address[] memory tokens,
+        uint256 nonce,
+        uint256 _amount,
+        uint32 _deadline
+    )
         internal
         pure
         returns (ISignatureTransfer.PermitBatchTransferFrom memory)
@@ -228,9 +246,9 @@ contract BaseTest is Test, DeployPermit2 {
         ISignatureTransfer.TokenPermissions[] memory permitted =
             new ISignatureTransfer.TokenPermissions[](tokens.length);
         for (uint256 i = 0; i < tokens.length; ++i) {
-            permitted[i] = ISignatureTransfer.TokenPermissions({token: tokens[i], amount: _amount});
+            permitted[i] = ISignatureTransfer.TokenPermissions({ token: tokens[i], amount: _amount });
         }
-        return ISignatureTransfer.PermitBatchTransferFrom({permitted: permitted, nonce: nonce, deadline: _deadline});
+        return ISignatureTransfer.PermitBatchTransferFrom({ permitted: permitted, nonce: nonce, deadline: _deadline });
     }
 
     function _getSignature(
@@ -241,7 +259,11 @@ contract BaseTest is Test, DeployPermit2 {
         uint256 _amount,
         uint32 _deadline,
         uint256 sigPk
-    ) internal view returns (bytes memory sig) {
+    )
+        internal
+        view
+        returns (bytes memory sig)
+    {
         address[] memory tokens = new address[](1);
         tokens[0] = token;
         ISignatureTransfer.PermitBatchTransferFrom memory permit =
@@ -263,7 +285,10 @@ contract BaseTest is Test, DeployPermit2 {
         uint64 _originChainId,
         address _inputToken,
         address _outputToken
-    ) internal view {
+    )
+        internal
+        view
+    {
         assertEq(resolvedOrder.maxSpent.length, 1, "resolvedOrder.maxSpent.length");
         assertEq(
             resolvedOrder.maxSpent[0].token,
@@ -316,7 +341,10 @@ contract BaseTest is Test, DeployPermit2 {
         bytes memory orderData,
         uint256[] memory balancesBefore,
         address user
-    ) internal view {
+    )
+        internal
+        view
+    {
         bytes memory savedOrderData = _orderDataById(orderId);
 
         assertFalse(_base7683.isValidNonce(sender, 1));
@@ -333,7 +361,10 @@ contract BaseTest is Test, DeployPermit2 {
         uint256[] memory balancesBefore,
         address user,
         bool native
-    ) internal view {
+    )
+        internal
+        view
+    {
         bytes memory savedOrderData = _orderDataById(orderId);
 
         assertFalse(_base7683.isValidNonce(sender, 1));
@@ -352,7 +383,10 @@ contract BaseTest is Test, DeployPermit2 {
         address receiver,
         bytes32 expectedStatus,
         bool native
-    ) internal view {
+    )
+        internal
+        view
+    {
         bytes memory savedOrderData = _orderDataById(orderId);
         bytes32 status = _base7683.orderStatus(orderId);
 

@@ -2,14 +2,14 @@
 
 pragma solidity ^0.8.25;
 
-import {IWETH} from "../../interfaces/IWETH.sol";
-import {IL2ERC20Gateway} from "../../L2/gateways/IL2ERC20Gateway.sol";
-import {IL1T1Messenger} from "../IL1T1Messenger.sol";
-import {IL1ERC20Gateway} from "./IL1ERC20Gateway.sol";
+import { IWETH } from "../../interfaces/IWETH.sol";
+import { IL2ERC20Gateway } from "../../L2/gateways/IL2ERC20Gateway.sol";
+import { IL1T1Messenger } from "../IL1T1Messenger.sol";
+import { IL1ERC20Gateway } from "./IL1ERC20Gateway.sol";
 
-import {T1Constants} from "../../libraries/constants/T1Constants.sol";
-import {T1GatewayBase} from "../../libraries/gateway/T1GatewayBase.sol";
-import {L1ERC20Gateway} from "./L1ERC20Gateway.sol";
+import { T1Constants } from "../../libraries/constants/T1Constants.sol";
+import { T1GatewayBase } from "../../libraries/gateway/T1GatewayBase.sol";
+import { L1ERC20Gateway } from "./L1ERC20Gateway.sol";
 
 /// @title L1WETHGateway
 /// @notice The `L1WETHGateway` contract is used to deposit `WETH` token on layer 1 and
@@ -45,7 +45,13 @@ contract L1WETHGateway is L1ERC20Gateway {
     /// @param _counterpart The address of `L2WETHGateway` contract in L2.
     /// @param _router The address of `L1GatewayRouter` contract in L1.
     /// @param _messenger The address of `L1T1Messenger` contract in L1.
-    constructor(address _WETH, address _l2WETH, address _counterpart, address _router, address _messenger)
+    constructor(
+        address _WETH,
+        address _l2WETH,
+        address _counterpart,
+        address _router,
+        address _messenger
+    )
         T1GatewayBase(_counterpart, _router, _messenger)
     {
         if (_WETH == address(0) || _l2WETH == address(0) || _router == address(0)) {
@@ -92,12 +98,16 @@ contract L1WETHGateway is L1ERC20Gateway {
         address,
         uint256 _amount,
         bytes calldata
-    ) internal virtual override {
+    )
+        internal
+        virtual
+        override
+    {
         require(_l1Token == WETH, "l1 token not WETH");
         require(_l2Token == l2WETH, "l2 token not WETH");
         require(_amount == msg.value, "msg.value mismatch");
 
-        IWETH(_l1Token).deposit{value: _amount}();
+        IWETH(_l1Token).deposit{ value: _amount }();
     }
 
     /// @inheritdoc L1ERC20Gateway
@@ -105,11 +115,17 @@ contract L1WETHGateway is L1ERC20Gateway {
         require(_token == WETH, "token not WETH");
         require(_amount == msg.value, "msg.value mismatch");
 
-        IWETH(_token).deposit{value: _amount}();
+        IWETH(_token).deposit{ value: _amount }();
     }
 
     /// @inheritdoc L1ERC20Gateway
-    function _deposit(address _token, address _to, uint256 _amount, bytes memory _data, uint256 _gasLimit)
+    function _deposit(
+        address _token,
+        address _to,
+        uint256 _amount,
+        bytes memory _data,
+        uint256 _gasLimit
+    )
         internal
         virtual
         override
@@ -128,7 +144,7 @@ contract L1WETHGateway is L1ERC20Gateway {
             abi.encodeCall(IL2ERC20Gateway.finalizeDepositERC20, (_token, l2WETH, _from, _to, _amount, _data));
 
         // 3. Send message to L1T1Messenger.
-        IL1T1Messenger(messenger).sendMessage{value: _amount + msg.value}(
+        IL1T1Messenger(messenger).sendMessage{ value: _amount + msg.value }(
             counterpart, _amount, _message, _gasLimit, T1Constants.T1_DEVNET_CHAIN_ID, _from
         );
 

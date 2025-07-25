@@ -2,10 +2,10 @@
 
 pragma solidity ^0.8.25;
 
-import {Clones} from "@openzeppelin/contracts/proxy/Clones.sol";
-import {Ownable} from "@openzeppelin/contracts/access/Ownable.sol";
+import { Clones } from "@openzeppelin/contracts/proxy/Clones.sol";
+import { Ownable } from "@openzeppelin/contracts/access/Ownable.sol";
 
-import {IT1StandardERC20Factory} from "./IT1StandardERC20Factory.sol";
+import { IT1StandardERC20Factory } from "./IT1StandardERC20Factory.sol";
 
 /// @title T1StandardERC20Factory
 /// @notice The `T1StandardERC20Factory` is used to deploy `T1StandardERC20` for `L2StandardERC20Gateway`.

@@ -2,12 +2,12 @@
 
 pragma solidity ^0.8.25;
 
-import {IL1T1Messenger} from "../L1/L1T1Messenger.sol";
+import { IL1T1Messenger } from "../L1/L1T1Messenger.sol";
 
-import {L1GatewayTestBase} from "./L1GatewayTestBase.t.sol";
+import { L1GatewayTestBase } from "./L1GatewayTestBase.t.sol";
 
-import {T1Constants} from "../libraries/constants/T1Constants.sol";
-import {BatchHeaders} from "./utils/BatchHeaders.sol";
+import { T1Constants } from "../libraries/constants/T1Constants.sol";
+import { BatchHeaders } from "./utils/BatchHeaders.sol";
 
 contract L1T1MessengerTest is L1GatewayTestBase {
     event OnDropMessageCalled(bytes);
@@ -71,7 +71,7 @@ contract L1T1MessengerTest is L1GatewayTestBase {
 
         // refund exceed fee
         uint256 balanceBefore = refundAddress.balance;
-        l1Messenger.sendMessage{value: 1 + exceedValue}(
+        l1Messenger.sendMessage{ value: 1 + exceedValue }(
             address(0), 1, new bytes(0), DEFAULT_GAS_LIMIT, T1Constants.T1_DEVNET_CHAIN_ID, refundAddress
         );
         assertEq(balanceBefore + exceedValue, refundAddress.balance);
@@ -88,7 +88,7 @@ contract L1T1MessengerTest is L1GatewayTestBase {
         l1Messenger.updateMaxReplayTimes(0);
 
         // append a message
-        l1Messenger.sendMessage{value: 100}(
+        l1Messenger.sendMessage{ value: 100 }(
             address(0), 100, new bytes(0), DEFAULT_GAS_LIMIT, T1Constants.T1_DEVNET_CHAIN_ID, refundAddress
         );
 
@@ -105,7 +105,7 @@ contract L1T1MessengerTest is L1GatewayTestBase {
 
         // Exceed maximum replay times
         vm.expectRevert("Exceed maximum replay times");
-        l1Messenger.replayMessage{value: _fee}(
+        l1Messenger.replayMessage{ value: _fee }(
             address(this), address(0), 100, 0, new bytes(0), DEFAULT_GAS_LIMIT, refundAddress
         );
 
@@ -114,7 +114,7 @@ contract L1T1MessengerTest is L1GatewayTestBase {
         // refund exceed fee
         uint256 balanceBefore = refundAddress.balance;
         uint256 feeVaultBefore = feeVault.balance;
-        l1Messenger.replayMessage{value: _fee + exceedValue}(
+        l1Messenger.replayMessage{ value: _fee + exceedValue }(
             address(this), address(0), 100, 0, new bytes(0), DEFAULT_GAS_LIMIT, refundAddress
         );
         assertEq(balanceBefore + exceedValue, refundAddress.balance);
@@ -125,7 +125,7 @@ contract L1T1MessengerTest is L1GatewayTestBase {
         // 2. replay 3 times
         messageQueue.setL2BaseFee(0);
         l1Messenger.updateMaxReplayTimes(100);
-        l1Messenger.sendMessage{value: 100}(
+        l1Messenger.sendMessage{ value: 100 }(
             address(0), 100, new bytes(0), DEFAULT_GAS_LIMIT, T1Constants.T1_DEVNET_CHAIN_ID, refundAddress
         );
         bytes32 hash = keccak256(
@@ -205,13 +205,13 @@ contract L1T1MessengerTest is L1GatewayTestBase {
         //   32B nonce
         //   message byte array (32B offset + 32B length + bytes (padding to multiple of 32))
         // So the intrinsic gas must be greater than 21000 + 16 * 228 = 24648
-        l1Messenger.sendMessage{value: _fee + value}(
+        l1Messenger.sendMessage{ value: _fee + value }(
             address(0), value, hex"0011220033", 24_648, T1Constants.T1_DEVNET_CHAIN_ID
         );
 
         // insufficient intrinsic gas
         vm.expectRevert("Insufficient gas limit, must be above intrinsic gas");
-        l1Messenger.sendMessage{value: _fee + value}(
+        l1Messenger.sendMessage{ value: _fee + value }(
             address(0), 1, hex"0011220033", 24_647, T1Constants.T1_DEVNET_CHAIN_ID
         );
 
@@ -219,13 +219,13 @@ contract L1T1MessengerTest is L1GatewayTestBase {
         uint256 gasLimit = 100_000_000;
         _fee = messageQueue.l2BaseFee() * gasLimit;
         vm.expectRevert("Gas limit must not exceed maxGasLimit");
-        l1Messenger.sendMessage{value: _fee + value}(
+        l1Messenger.sendMessage{ value: _fee + value }(
             address(0), value, hex"0011220033", gasLimit, T1Constants.T1_DEVNET_CHAIN_ID
         );
 
         // update max gas limit
         messageQueue.updateMaxGasLimit(gasLimit);
-        l1Messenger.sendMessage{value: _fee + value}(
+        l1Messenger.sendMessage{ value: _fee + value }(
             address(0), value, hex"0011220033", gasLimit, T1Constants.T1_DEVNET_CHAIN_ID
         );
     }
@@ -368,7 +368,7 @@ contract L1T1MessengerTest is L1GatewayTestBase {
         // solhint-disable-next-line max-line-length
             hex"00000000000000000000000000000000000000000000000000000000000000005bc8d719dee759f579606f5e9326010c9b4f1c89d2579636761a6bd37e348f4e";
         IL1T1Messenger.L2MessageProof memory messageProof =
-            IL1T1Messenger.L2MessageProof({batchIndex: 1, merkleProof: proof});
+            IL1T1Messenger.L2MessageProof({ batchIndex: 1, merkleProof: proof });
         uint256 nonce = 2;
         uint256 msgValue = 1;
         bytes memory message = new bytes(0);
@@ -395,7 +395,7 @@ contract L1T1MessengerTest is L1GatewayTestBase {
         // solhint-disable-next-line max-line-length
          hex"";
         IL1T1Messenger.L2MessageProof memory messageProof =
-            IL1T1Messenger.L2MessageProof({batchIndex: 1, merkleProof: proof});
+            IL1T1Messenger.L2MessageProof({ batchIndex: 1, merkleProof: proof });
         // hash f527187db10d953f02ec890a9d325af97abfcf3ee8fc4d3e388c3a38c8905065
         uint256 nonce = 18;
         uint256 msgValue = 1_000_000_000_000_000;
@@ -425,7 +425,7 @@ contract L1T1MessengerTest is L1GatewayTestBase {
         // solhint-disable-next-line max-line-length
          hex"f527187db10d953f02ec890a9d325af97abfcf3ee8fc4d3e388c3a38c8905065";
         IL1T1Messenger.L2MessageProof memory messageProof =
-            IL1T1Messenger.L2MessageProof({batchIndex: 1, merkleProof: proof});
+            IL1T1Messenger.L2MessageProof({ batchIndex: 1, merkleProof: proof });
         // hash 0x8572b59cc4b45153d52602d23eef03110237f38e16d762df7bc65210d9552530
         uint256 nonce = 19;
         uint256 msgValue = 1_000_000_000_000_000;
@@ -455,7 +455,7 @@ contract L1T1MessengerTest is L1GatewayTestBase {
         bytes memory proof = hex"d820115d49a31129d66a3307cd020b6632f30813de0922c45102429f1a56a2f9";
 
         IL1T1Messenger.L2MessageProof memory messageProof =
-            IL1T1Messenger.L2MessageProof({batchIndex: 1, merkleProof: proof});
+            IL1T1Messenger.L2MessageProof({ batchIndex: 1, merkleProof: proof });
         // hash
         // 0x592165c9ca6d3499270929d21f8eed86be390fce9827e35d8b7820e12eb95ab8
         uint256 nonce = 20;
@@ -487,7 +487,7 @@ contract L1T1MessengerTest is L1GatewayTestBase {
         // solhint-disable-next-line max-line-length
          hex"";
         IL1T1Messenger.L2MessageProof memory messageProof =
-            IL1T1Messenger.L2MessageProof({batchIndex: 1, merkleProof: proof});
+            IL1T1Messenger.L2MessageProof({ batchIndex: 1, merkleProof: proof });
         // hash f527187db10d953f02ec890a9d325af97abfcf3ee8fc4d3e388c3a38c8905065
         uint256 nonce = 24;
         uint256 msgValue = 100_000_000_000_000;
@@ -518,7 +518,7 @@ contract L1T1MessengerTest is L1GatewayTestBase {
         // solhint-disable-next-line max-line-length
          hex"130cef0bc21be7263033e5b153601dcb98684296fc29cfe5e41173b6b18ee6bf";
         IL1T1Messenger.L2MessageProof memory messageProof =
-            IL1T1Messenger.L2MessageProof({batchIndex: 1, merkleProof: proof});
+            IL1T1Messenger.L2MessageProof({ batchIndex: 1, merkleProof: proof });
         // hash
         uint256 nonce = 26;
         uint256 msgValue = 100_000_000_000_000;

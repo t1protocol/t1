@@ -89,7 +89,8 @@ interface IT1Chain {
         bytes calldata parentBatchHeader,
         bytes[] memory chunks,
         bytes calldata skippedL1MessageBitmap
-    ) external;
+    )
+        external;
 
     /// @notice Commit a batch of transactions on layer 1 with blob data proof.
     ///
@@ -109,7 +110,8 @@ interface IT1Chain {
         bytes[] memory chunks,
         bytes calldata skippedL1MessageBitmap,
         bytes calldata blobDataProof
-    ) external;
+    )
+        external;
 
     /// @notice Revert pending batches.
     /// @dev one can only revert unfinalized batches.
@@ -130,7 +132,8 @@ interface IT1Chain {
         bytes calldata withdrawRootSignature,
         bytes32 proofOfFill7683Root,
         bytes calldata proofOfFillRootSignature
-    ) external;
+    )
+        external;
 
     /// @notice Finalize a committed batch (with blob) on layer 1.
     ///
@@ -152,7 +155,8 @@ interface IT1Chain {
         bytes32 withdrawRoot,
         bytes calldata blobDataProof,
         bytes calldata aggrProof
-    ) external;
+    )
+        external;
 
     /// @notice Finalize a list of committed batches (i.e. bundle) on layer 1.
     /// @param batchHeader The header of last batch in current bundle, see the encoding in comments of `commitBatch.
@@ -164,5 +168,6 @@ interface IT1Chain {
         bytes32 postStateRoot,
         bytes32 withdrawRoot,
         bytes calldata aggrProof
-    ) external;
+    )
+        external;
 }

@@ -2,11 +2,11 @@
 
 pragma solidity ^0.8.25;
 
-import {Script} from "forge-std/Script.sol";
-import {DeploymentUtils} from "../lib/DeploymentUtils.sol";
+import { Script } from "forge-std/Script.sol";
+import { DeploymentUtils } from "../lib/DeploymentUtils.sol";
 
-import {T1StandardERC20} from "../../src/libraries/token/T1StandardERC20.sol";
-import {WrappedEther} from "../../src/L2/predeploys/WrappedEther.sol";
+import { T1StandardERC20 } from "../../src/libraries/token/T1StandardERC20.sol";
+import { WrappedEther } from "../../src/L2/predeploys/WrappedEther.sol";
 // import { Usdt } from "../deploy/DeployL1Usdt.s.sol";
 
 contract Setup7683BotsLiquidity is Script, DeploymentUtils {
@@ -65,13 +65,9 @@ contract Setup7683BotsLiquidity is Script, DeploymentUtils {
         // *** ERC-20 Contract Approvals *** //
         vm.startBroadcast(FILL_BOT_PRIVATE_KEY);
         // approve L1 7683 Escrow to transfer USDT in the bot's name
-        T1StandardERC20(USDT_ADDR).approve(
-            PULL_BASED_7683_PROXY_ADDR, 115792089237316195423570985008687907853269984665640564039457584007913129639935
-        );
+        T1StandardERC20(USDT_ADDR).approve(PULL_BASED_7683_PROXY_ADDR, 115792089237316195423570985008687907853269984665640564039457584007913129639935);
         // approve L1 7683 Escrow to transfer WETH in the bot's name
-        WrappedEther(WETH_ADDR).approve(
-            PULL_BASED_7683_PROXY_ADDR, 115792089237316195423570985008687907853269984665640564039457584007913129639935
-        );
+        WrappedEther(WETH_ADDR).approve(PULL_BASED_7683_PROXY_ADDR, 115792089237316195423570985008687907853269984665640564039457584007913129639935);
 
         vm.stopBroadcast();
     }

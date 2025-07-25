@@ -2,11 +2,11 @@
 
 pragma solidity ^0.8.25;
 
-import {OwnableUpgradeable} from "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
+import { OwnableUpgradeable } from "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
 
-import {IL2GatewayRouter} from "./IL2GatewayRouter.sol";
-import {IL2ETHGateway} from "./IL2ETHGateway.sol";
-import {IL2ERC20Gateway} from "./IL2ERC20Gateway.sol";
+import { IL2GatewayRouter } from "./IL2GatewayRouter.sol";
+import { IL2ETHGateway } from "./IL2ETHGateway.sol";
+import { IL2ERC20Gateway } from "./IL2ERC20Gateway.sol";
 
 /// @title L2GatewayRouter
 /// @notice The `L2GatewayRouter` is the main entry for withdrawing Ether and ERC20 tokens.
@@ -103,7 +103,13 @@ contract L2GatewayRouter is OwnableUpgradeable, IL2GatewayRouter {
     }
 
     /// @inheritdoc IL2ERC20Gateway
-    function withdrawERC20AndCall(address _token, address _to, uint256 _amount, bytes memory _data, uint256 _gasLimit)
+    function withdrawERC20AndCall(
+        address _token,
+        address _to,
+        uint256 _amount,
+        bytes memory _data,
+        uint256 _gasLimit
+    )
         public
         payable
         override
@@ -114,7 +120,7 @@ contract L2GatewayRouter is OwnableUpgradeable, IL2GatewayRouter {
         // encode msg.sender with _data
         bytes memory _routerData = abi.encode(_msgSender(), _data);
 
-        IL2ERC20Gateway(_gateway).withdrawERC20AndCall{value: msg.value}(_token, _to, _amount, _routerData, _gasLimit);
+        IL2ERC20Gateway(_gateway).withdrawERC20AndCall{ value: msg.value }(_token, _to, _amount, _routerData, _gasLimit);
     }
 
     /// @inheritdoc IL2ETHGateway
@@ -128,7 +134,12 @@ contract L2GatewayRouter is OwnableUpgradeable, IL2GatewayRouter {
     }
 
     /// @inheritdoc IL2ETHGateway
-    function withdrawETHAndCall(address _to, uint256 _amount, bytes memory _data, uint256 _gasLimit)
+    function withdrawETHAndCall(
+        address _to,
+        uint256 _amount,
+        bytes memory _data,
+        uint256 _gasLimit
+    )
         public
         payable
         override
@@ -139,7 +150,7 @@ contract L2GatewayRouter is OwnableUpgradeable, IL2GatewayRouter {
         // encode msg.sender with _data
         bytes memory _routerData = abi.encode(_msgSender(), _data);
 
-        IL2ETHGateway(_gateway).withdrawETHAndCall{value: msg.value}(_to, _amount, _routerData, _gasLimit);
+        IL2ETHGateway(_gateway).withdrawETHAndCall{ value: msg.value }(_to, _amount, _routerData, _gasLimit);
     }
 
     /// @inheritdoc IL2ETHGateway
@@ -148,7 +159,14 @@ contract L2GatewayRouter is OwnableUpgradeable, IL2GatewayRouter {
     }
 
     /// @inheritdoc IL2ERC20Gateway
-    function finalizeDepositERC20(address, address, address, address, uint256, bytes calldata)
+    function finalizeDepositERC20(
+        address,
+        address,
+        address,
+        address,
+        uint256,
+        bytes calldata
+    )
         external
         payable
         virtual

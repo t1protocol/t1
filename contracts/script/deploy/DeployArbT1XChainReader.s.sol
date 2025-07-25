@@ -2,13 +2,13 @@
 
 pragma solidity ^0.8.25;
 
-import {Script} from "forge-std/Script.sol";
-import {ProxyAdmin} from "@openzeppelin/contracts/proxy/transparent/ProxyAdmin.sol";
-import {TransparentUpgradeableProxy} from "@openzeppelin/contracts/proxy/transparent/TransparentUpgradeableProxy.sol";
+import { Script } from "forge-std/Script.sol";
+import { ProxyAdmin } from "@openzeppelin/contracts/proxy/transparent/ProxyAdmin.sol";
+import { TransparentUpgradeableProxy } from "@openzeppelin/contracts/proxy/transparent/TransparentUpgradeableProxy.sol";
 
-import {DeploymentUtils} from "../lib/DeploymentUtils.sol";
+import { DeploymentUtils } from "../lib/DeploymentUtils.sol";
 
-import {T1XChainReader} from "../../src/libraries/xChain/T1XChainReader.sol";
+import { T1XChainReader } from "../../src/libraries/xChain/T1XChainReader.sol";
 
 contract DeployArbT1XChainReader is DeploymentUtils {
     function run() external {

@@ -2,8 +2,8 @@
 
 pragma solidity ^0.8.25;
 
-import {OwnableBase} from "../../libraries/common/OwnableBase.sol";
-import {IWhitelist} from "../../libraries/common/IWhitelist.sol";
+import { OwnableBase } from "../../libraries/common/OwnableBase.sol";
+import { IWhitelist } from "../../libraries/common/IWhitelist.sol";
 
 contract Whitelist is OwnableBase, IWhitelist {
     /// @notice Emitted when account whitelist status changed.

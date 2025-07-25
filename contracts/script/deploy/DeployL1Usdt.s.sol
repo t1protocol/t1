@@ -2,11 +2,11 @@
 
 pragma solidity ^0.8.25;
 
-import {Script} from "forge-std/Script.sol";
+import { Script } from "forge-std/Script.sol";
 
-import {DeploymentUtils} from "../lib/DeploymentUtils.sol";
+import { DeploymentUtils } from "../lib/DeploymentUtils.sol";
 
-import {ERC20} from "@openzeppelin/contracts/token/ERC20/ERC20.sol";
+import { ERC20 } from "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 
 // solhint-disable var-name-mixedcase
 

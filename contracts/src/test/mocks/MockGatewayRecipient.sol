@@ -2,7 +2,7 @@
 
 pragma solidity ^0.8.25;
 
-import {IT1GatewayCallback} from "../../libraries/callbacks/IT1GatewayCallback.sol";
+import { IT1GatewayCallback } from "../../libraries/callbacks/IT1GatewayCallback.sol";
 
 contract MockGatewayRecipient is IT1GatewayCallback {
     event ReceiveCall(bytes data);
@@ -11,5 +11,5 @@ contract MockGatewayRecipient is IT1GatewayCallback {
         emit ReceiveCall(data);
     }
 
-    receive() external payable {}
+    receive() external payable { }
 }

@@ -100,7 +100,10 @@ interface IL1MessageQueue {
         address target,
         uint256 gasLimit,
         bytes calldata data
-    ) external view returns (bytes32);
+    )
+        external
+        view
+        returns (bytes32);
 
     /// @notice Return whether the message is skipped.
     /// @param queueIndex The queue index of the message to check.

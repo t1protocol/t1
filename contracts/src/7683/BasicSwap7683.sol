@@ -1,13 +1,13 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity 0.8.25;
 
-import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
-import {SafeERC20} from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
-import {Address} from "@openzeppelin/contracts/utils/Address.sol";
-import {TypeCasts} from "@hyperlane-xyz/libs/TypeCasts.sol";
+import { IERC20 } from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
+import { SafeERC20 } from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
+import { Address } from "@openzeppelin/contracts/utils/Address.sol";
+import { TypeCasts } from "@hyperlane-xyz/libs/TypeCasts.sol";
 
-import {Base7683} from "./Base7683.sol";
-import {OrderData, OrderEncoder} from "../libraries/7683/OrderEncoder.sol";
+import { Base7683 } from "./Base7683.sol";
+import { OrderData, OrderEncoder } from "../libraries/7683/OrderEncoder.sol";
 
 import {
     GaslessCrossChainOrder,
@@ -79,7 +79,7 @@ abstract contract BasicSwap7683 is Base7683 {
      * @dev Initializes the contract by calling the constructor of Base7683 with the permit2 address.
      * @param _permit2 The address of the PERMIT2 contract.
      */
-    constructor(address _permit2) Base7683(_permit2) {}
+    constructor(address _permit2) Base7683(_permit2) { }
 
     // ============ Initializers ============
 
@@ -100,7 +100,10 @@ abstract contract BasicSwap7683 is Base7683 {
         bytes32[] calldata _orderIds,
         bytes[] memory _ordersOriginData,
         bytes[] memory _ordersFillerData
-    ) internal override {
+    )
+        internal
+        override
+    {
         // at this point we are sure all orders are filled, use the first order to get the originDomain
         // if some order differs on the originDomain it can be re-settle later
         _dispatchSettle(OrderEncoder.decode(_ordersOriginData[0]).originDomain, _orderIds, _ordersFillerData);
@@ -114,7 +117,12 @@ abstract contract BasicSwap7683 is Base7683 {
      * @param _orderId The ID of the order to settle.
      * @param _receiver The receiver address (encoded as bytes32).
      */
-    function _handleSettleOrder(uint32 _messageOrigin, bytes32 _messageSender, bytes32 _orderId, bytes32 _receiver)
+    function _handleSettleOrder(
+        uint32 _messageOrigin,
+        bytes32 _messageSender,
+        bytes32 _orderId,
+        bytes32 _receiver
+    )
         internal
         virtual
     {
@@ -162,7 +170,11 @@ abstract contract BasicSwap7683 is Base7683 {
      * @param _orderId The unique identifier of the order.
      * @return A boolean indicating if the order is valid, and the decoded OrderData structure.
      */
-    function _checkOrderEligibility(uint32 _messageOrigin, bytes32 _messageSender, bytes32 _orderId)
+    function _checkOrderEligibility(
+        uint32 _messageOrigin,
+        bytes32 _messageSender,
+        bytes32 _orderId
+    )
         internal
         virtual
         returns (bool, OrderData memory)
@@ -237,7 +249,10 @@ abstract contract BasicSwap7683 is Base7683 {
      * @return The order ID.
      * @return The order nonce.
      */
-    function _resolveOrder(GaslessCrossChainOrder memory _order, bytes calldata)
+    function _resolveOrder(
+        GaslessCrossChainOrder memory _order,
+        bytes calldata
+    )
         internal
         view
         virtual
@@ -283,7 +298,11 @@ abstract contract BasicSwap7683 is Base7683 {
         uint32 _openDeadline,
         uint32 _fillDeadline,
         bytes memory _orderData
-    ) internal view returns (ResolvedCrossChainOrder memory resolvedOrder, bytes32 orderId, uint256 nonce) {
+    )
+        internal
+        view
+        returns (ResolvedCrossChainOrder memory resolvedOrder, bytes32 orderId, uint256 nonce)
+    {
         if (_orderType != OrderEncoder.orderDataType()) revert InvalidOrderType(_orderType);
 
         // IDEA: _orderData should not be directly typed as OrderData, it should contain information that is not
@@ -372,7 +391,11 @@ abstract contract BasicSwap7683 is Base7683 {
      * @param _orderIds The IDs of the orders to settle.
      * @param _ordersFillerData The filler data for the orders.
      */
-    function _dispatchSettle(uint32 _originDomain, bytes32[] memory _orderIds, bytes[] memory _ordersFillerData)
+    function _dispatchSettle(
+        uint32 _originDomain,
+        bytes32[] memory _orderIds,
+        bytes[] memory _ordersFillerData
+    )
         internal
         virtual;
 }

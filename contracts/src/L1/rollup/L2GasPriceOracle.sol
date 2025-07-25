@@ -2,11 +2,11 @@
 
 pragma solidity ^0.8.25;
 
-import {OwnableUpgradeable} from "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
+import { OwnableUpgradeable } from "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
 
-import {IWhitelist} from "../../libraries/common/IWhitelist.sol";
+import { IWhitelist } from "../../libraries/common/IWhitelist.sol";
 
-import {IL2GasPriceOracle} from "./IL2GasPriceOracle.sol";
+import { IL2GasPriceOracle } from "./IL2GasPriceOracle.sol";
 
 // solhint-disable reason-string
 
@@ -69,7 +69,12 @@ contract L2GasPriceOracle is OwnableUpgradeable, IL2GasPriceOracle {
         _disableInitializers();
     }
 
-    function initialize(uint64 _txGas, uint64 _txGasContractCreation, uint64 _zeroGas, uint64 _nonZeroGas)
+    function initialize(
+        uint64 _txGas,
+        uint64 _txGasContractCreation,
+        uint64 _zeroGas,
+        uint64 _nonZeroGas
+    )
         external
         initializer
     {
@@ -147,7 +152,12 @@ contract L2GasPriceOracle is OwnableUpgradeable, IL2GasPriceOracle {
     /// @param _txGasContractCreation The intrinsic gas for contract creation.
     /// @param _zeroGas The intrinsic gas for each zero byte.
     /// @param _nonZeroGas The intrinsic gas for each nonzero byte.
-    function setIntrinsicParams(uint64 _txGas, uint64 _txGasContractCreation, uint64 _zeroGas, uint64 _nonZeroGas)
+    function setIntrinsicParams(
+        uint64 _txGas,
+        uint64 _txGasContractCreation,
+        uint64 _zeroGas,
+        uint64 _nonZeroGas
+    )
         external
         onlyOwner
     {
@@ -165,7 +175,12 @@ contract L2GasPriceOracle is OwnableUpgradeable, IL2GasPriceOracle {
     /// @param _txGasContractCreation The intrinsic gas for contract creation.
     /// @param _zeroGas The intrinsic gas for each zero byte.
     /// @param _nonZeroGas The intrinsic gas for each nonzero byte.
-    function _setIntrinsicParams(uint64 _txGas, uint64 _txGasContractCreation, uint64 _zeroGas, uint64 _nonZeroGas)
+    function _setIntrinsicParams(
+        uint64 _txGas,
+        uint64 _txGasContractCreation,
+        uint64 _zeroGas,
+        uint64 _nonZeroGas
+    )
         internal
     {
         require(_txGas > 0, "txGas is zero");

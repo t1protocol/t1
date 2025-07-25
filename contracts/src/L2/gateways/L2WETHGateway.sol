@@ -2,15 +2,15 @@
 
 pragma solidity ^0.8.25;
 
-import {IERC20Upgradeable} from "@openzeppelin/contracts-upgradeable/token/ERC20/IERC20Upgradeable.sol";
-import {SafeERC20Upgradeable} from "@openzeppelin/contracts-upgradeable/token/ERC20/utils/SafeERC20Upgradeable.sol";
+import { IERC20Upgradeable } from "@openzeppelin/contracts-upgradeable/token/ERC20/IERC20Upgradeable.sol";
+import { SafeERC20Upgradeable } from "@openzeppelin/contracts-upgradeable/token/ERC20/utils/SafeERC20Upgradeable.sol";
 
-import {IL2ERC20Gateway, L2ERC20Gateway} from "./L2ERC20Gateway.sol";
-import {IL2T1Messenger} from "../IL2T1Messenger.sol";
-import {IWETH} from "../../interfaces/IWETH.sol";
-import {IL1ERC20Gateway} from "../../L1/gateways/IL1ERC20Gateway.sol";
-import {T1GatewayBase} from "../../libraries/gateway/T1GatewayBase.sol";
-import {T1Constants} from "../../libraries/constants/T1Constants.sol";
+import { IL2ERC20Gateway, L2ERC20Gateway } from "./L2ERC20Gateway.sol";
+import { IL2T1Messenger } from "../IL2T1Messenger.sol";
+import { IWETH } from "../../interfaces/IWETH.sol";
+import { IL1ERC20Gateway } from "../../L1/gateways/IL1ERC20Gateway.sol";
+import { T1GatewayBase } from "../../libraries/gateway/T1GatewayBase.sol";
+import { T1Constants } from "../../libraries/constants/T1Constants.sol";
 
 /// @title L2WETHGateway
 /// @notice The `L2WETHGateway` contract is used to withdraw `WETH` token on layer 2 and
@@ -48,7 +48,13 @@ contract L2WETHGateway is L2ERC20Gateway {
     /// @param _counterpart The address of `L1WETHGateway` contract in L1.
     /// @param _router The address of `L2GatewayRouter` contract.
     /// @param _messenger The address of `L2T1Messenger` contract.
-    constructor(address _WETH, address _l1WETH, address _counterpart, address _router, address _messenger)
+    constructor(
+        address _WETH,
+        address _l1WETH,
+        address _counterpart,
+        address _router,
+        address _messenger
+    )
         T1GatewayBase(_counterpart, _router, _messenger)
     {
         if (_WETH == address(0) || _l1WETH == address(0) || _router == address(0)) {
@@ -100,12 +106,18 @@ contract L2WETHGateway is L2ERC20Gateway {
         address _to,
         uint256 _amount,
         bytes calldata _data
-    ) external payable override onlyCallByCounterpart nonReentrant {
+    )
+        external
+        payable
+        override
+        onlyCallByCounterpart
+        nonReentrant
+    {
         require(_l1Token == l1WETH, "l1 token not WETH");
         require(_l2Token == WETH, "l2 token not WETH");
         require(_amount == msg.value, "msg.value mismatch");
 
-        IWETH(_l2Token).deposit{value: _amount}();
+        IWETH(_l2Token).deposit{ value: _amount }();
         IERC20Upgradeable(_l2Token).safeTransfer(_to, _amount);
 
         _doCallback(_to, _data);
@@ -120,7 +132,13 @@ contract L2WETHGateway is L2ERC20Gateway {
      */
 
     /// @inheritdoc L2ERC20Gateway
-    function _withdraw(address _token, address _to, uint256 _amount, bytes memory _data, uint256 _gasLimit)
+    function _withdraw(
+        address _token,
+        address _to,
+        uint256 _amount,
+        bytes memory _data,
+        uint256 _gasLimit
+    )
         internal
         virtual
         override
@@ -145,7 +163,7 @@ contract L2WETHGateway is L2ERC20Gateway {
             abi.encodeCall(IL1ERC20Gateway.finalizeWithdrawERC20, (_l1WETH, _token, _from, _to, _amount, _data));
 
         // 4. Send message to L1T1Messenger.
-        IL2T1Messenger(messenger).sendMessage{value: _amount + msg.value}(
+        IL2T1Messenger(messenger).sendMessage{ value: _amount + msg.value }(
             counterpart, _amount, _message, _gasLimit, T1Constants.L1_CHAIN_ID
         );
 

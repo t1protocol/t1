@@ -1,13 +1,13 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.25;
 
-import {TypeCasts} from "@hyperlane-xyz/libs/TypeCasts.sol";
+import { TypeCasts } from "@hyperlane-xyz/libs/TypeCasts.sol";
 
-import {BaseTest} from "./BaseTest.sol";
-import {OrderData} from "../../../src/libraries/7683/OrderEncoder.sol";
+import { BaseTest } from "./BaseTest.sol";
+import { OrderData } from "../../../src/libraries/7683/OrderEncoder.sol";
 
-import {T1ERC7683} from "../../7683/T1ERC7683.sol";
-import {T1XChainReader} from "../../libraries/xChain/T1XChainReader.sol";
+import { T1ERC7683 } from "../../7683/T1ERC7683.sol";
+import { T1XChainReader } from "../../libraries/xChain/T1XChainReader.sol";
 
 event Settle(bytes32[] orderIds, bytes[] ordersFillerData);
 
@@ -49,7 +49,7 @@ contract T1XChainReaderBaseTestSetup is BaseTest {
         labelAccounts();
     }
 
-    receive() external payable {}
+    receive() external payable { }
 
     function _prepareOrderData() internal view returns (OrderData memory) {
         return OrderData({

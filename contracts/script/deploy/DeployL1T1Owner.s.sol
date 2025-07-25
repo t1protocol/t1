@@ -2,13 +2,13 @@
 
 pragma solidity ^0.8.25;
 
-import {Script} from "forge-std/Script.sol";
+import { Script } from "forge-std/Script.sol";
 
-import {DeploymentUtils} from "../lib/DeploymentUtils.sol";
+import { DeploymentUtils } from "../lib/DeploymentUtils.sol";
 
-import {TimelockController} from "@openzeppelin/contracts/governance/TimelockController.sol";
+import { TimelockController } from "@openzeppelin/contracts/governance/TimelockController.sol";
 
-import {T1Owner} from "../../src/misc/T1Owner.sol";
+import { T1Owner } from "../../src/misc/T1Owner.sol";
 
 // solhint-disable var-name-mixedcase
 

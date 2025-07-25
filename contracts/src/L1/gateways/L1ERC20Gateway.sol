@@ -2,17 +2,17 @@
 
 pragma solidity ^0.8.25;
 
-import {IERC20Upgradeable} from "@openzeppelin/contracts-upgradeable/token/ERC20/IERC20Upgradeable.sol";
-import {SafeERC20Upgradeable} from "@openzeppelin/contracts-upgradeable/token/ERC20/utils/SafeERC20Upgradeable.sol";
+import { IERC20Upgradeable } from "@openzeppelin/contracts-upgradeable/token/ERC20/IERC20Upgradeable.sol";
+import { SafeERC20Upgradeable } from "@openzeppelin/contracts-upgradeable/token/ERC20/utils/SafeERC20Upgradeable.sol";
 
-import {IAllowanceTransfer} from "@uniswap/permit2/src/interfaces/IAllowanceTransfer.sol";
+import { IAllowanceTransfer } from "@uniswap/permit2/src/interfaces/IAllowanceTransfer.sol";
 
-import {IL1ERC20Gateway} from "./IL1ERC20Gateway.sol";
-import {IL1GatewayRouter} from "./IL1GatewayRouter.sol";
+import { IL1ERC20Gateway } from "./IL1ERC20Gateway.sol";
+import { IL1GatewayRouter } from "./IL1GatewayRouter.sol";
 
-import {IL2ERC20Gateway} from "../../L2/gateways/IL2ERC20Gateway.sol";
-import {T1GatewayBase} from "../../libraries/gateway/T1GatewayBase.sol";
-import {IMessageDropCallback} from "../../libraries/callbacks/IMessageDropCallback.sol";
+import { IL2ERC20Gateway } from "../../L2/gateways/IL2ERC20Gateway.sol";
+import { T1GatewayBase } from "../../libraries/gateway/T1GatewayBase.sol";
+import { IMessageDropCallback } from "../../libraries/callbacks/IMessageDropCallback.sol";
 
 /// @title L1ERC20Gateway
 /// @notice The `L1ERC20Gateway` as a base contract for ERC20 gateways in L1.
@@ -46,7 +46,13 @@ abstract contract L1ERC20Gateway is IL1ERC20Gateway, IMessageDropCallback, T1Gat
     }
 
     /// @inheritdoc IL1ERC20Gateway
-    function depositERC20AndCall(address _token, address _to, uint256 _amount, bytes memory _data, uint256 _gasLimit)
+    function depositERC20AndCall(
+        address _token,
+        address _to,
+        uint256 _amount,
+        bytes memory _data,
+        uint256 _gasLimit
+    )
         external
         payable
         override
@@ -141,7 +147,9 @@ abstract contract L1ERC20Gateway is IL1ERC20Gateway, IMessageDropCallback, T1Gat
         address _to,
         uint256 _amount,
         bytes calldata _data
-    ) internal virtual;
+    )
+        internal
+        virtual;
 
     /// @dev Internal function hook to perform checks and actions before dropping the message.
     /// @param _token The L1 token address.
@@ -153,7 +161,11 @@ abstract contract L1ERC20Gateway is IL1ERC20Gateway, IMessageDropCallback, T1Gat
     /// @param _token The address of token to transfer.
     /// @param _amount The amount of token to transfer.
     /// @param _data The data passed by caller.
-    function _transferERC20In(address _token, uint256 _amount, bytes memory _data)
+    function _transferERC20In(
+        address _token,
+        uint256 _amount,
+        bytes memory _data
+    )
         internal
         returns (address, uint256, bytes memory)
     {
@@ -184,7 +196,13 @@ abstract contract L1ERC20Gateway is IL1ERC20Gateway, IMessageDropCallback, T1Gat
     /// @param _amount The amount of token to deposit.
     /// @param _data Optional data to forward to recipient's account.
     /// @param _gasLimit Gas limit required to complete the deposit on L2.
-    function _deposit(address _token, address _to, uint256 _amount, bytes memory _data, uint256 _gasLimit)
+    function _deposit(
+        address _token,
+        address _to,
+        uint256 _amount,
+        bytes memory _data,
+        uint256 _gasLimit
+    )
         internal
         virtual;
 }

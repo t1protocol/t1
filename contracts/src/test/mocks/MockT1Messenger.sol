@@ -2,7 +2,7 @@
 
 pragma solidity ^0.8.25;
 
-import {IT1Messenger} from "../../libraries/IT1Messenger.sol";
+import { IT1Messenger } from "../../libraries/IT1Messenger.sol";
 
 // solhint-disable no-empty-blocks
 
@@ -21,7 +21,7 @@ contract MockT1Messenger is IT1Messenger {
 
     function callTarget(address to, bytes calldata data) external payable {
         // solhint-disable-next-line avoid-low-level-calls
-        (bool success,) = address(to).call{value: msg.value}(data);
+        (bool success,) = address(to).call{ value: msg.value }(data);
         if (!success) {
             // solhint-disable-next-line no-inline-assembly
             assembly {
@@ -33,10 +33,16 @@ contract MockT1Messenger is IT1Messenger {
         }
     }
 
-    function sendMessage(address target, uint256 value, bytes calldata message, uint256 gasLimit, uint64 destChainId)
+    function sendMessage(
+        address target,
+        uint256 value,
+        bytes calldata message,
+        uint256 gasLimit,
+        uint64 destChainId
+    )
         external
         payable
-    {}
+    { }
 
     function sendMessage(
         address target,
@@ -45,5 +51,8 @@ contract MockT1Messenger is IT1Messenger {
         uint256 gasLimit,
         uint64 destChainId,
         address callbackAddress
-    ) external payable {}
+    )
+        external
+        payable
+    { }
 }

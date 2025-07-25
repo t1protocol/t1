@@ -2,13 +2,13 @@
 
 pragma solidity ^0.8.25;
 
-import {OwnableUpgradeable} from "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
-import {BitMapsUpgradeable} from "@openzeppelin/contracts-upgradeable/utils/structs/BitMapsUpgradeable.sol";
+import { OwnableUpgradeable } from "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
+import { BitMapsUpgradeable } from "@openzeppelin/contracts-upgradeable/utils/structs/BitMapsUpgradeable.sol";
 
-import {IL2GasPriceOracle} from "./IL2GasPriceOracle.sol";
-import {IL1MessageQueue} from "./IL1MessageQueue.sol";
+import { IL2GasPriceOracle } from "./IL2GasPriceOracle.sol";
+import { IL1MessageQueue } from "./IL1MessageQueue.sol";
 
-import {AddressAliasHelper} from "../../libraries/common/AddressAliasHelper.sol";
+import { AddressAliasHelper } from "../../libraries/common/AddressAliasHelper.sol";
 
 // solhint-disable no-empty-blocks
 // solhint-disable no-inline-assembly
@@ -109,7 +109,12 @@ contract L1MessageQueue is OwnableUpgradeable, IL1MessageQueue {
         address _target,
         uint256 _gasLimit,
         bytes calldata _data
-    ) public pure override returns (bytes32) {
+    )
+        public
+        pure
+        override
+        returns (bytes32)
+    {
         // We use EIP-2718 to encode the L1 message, and the encoding of the message is
         //      `TransactionType || TransactionPayload`
         // where
@@ -125,7 +130,7 @@ contract L1MessageQueue is OwnableUpgradeable, IL1MessageQueue {
                     len := 1
                     leave
                 }
-                for {} gt(v, 0) {} {
+                for { } gt(v, 0) { } {
                     len := add(len, 1)
                     v := shr(8, v)
                 }
@@ -379,7 +384,9 @@ contract L1MessageQueue is OwnableUpgradeable, IL1MessageQueue {
         uint256 _value,
         uint256 _gasLimit,
         bytes calldata _data
-    ) internal {
+    )
+        internal
+    {
         // compute transaction hash
         uint256 _queueIndex = messageQueue.length;
         bytes32 _hash = computeTransactionHash(_sender, _queueIndex, _value, _target, _gasLimit, _data);

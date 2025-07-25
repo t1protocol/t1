@@ -2,18 +2,18 @@
 
 pragma solidity ^0.8.25;
 
-import {OwnableUpgradeable} from "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
-import {IERC20Upgradeable} from "@openzeppelin/contracts-upgradeable/token/ERC20/IERC20Upgradeable.sol";
-import {IERC20MetadataUpgradeable} from
+import { OwnableUpgradeable } from "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
+import { IERC20Upgradeable } from "@openzeppelin/contracts-upgradeable/token/ERC20/IERC20Upgradeable.sol";
+import { IERC20MetadataUpgradeable } from
     "@openzeppelin/contracts-upgradeable/token/ERC20/extensions/IERC20MetadataUpgradeable.sol";
-import {SafeERC20Upgradeable} from "@openzeppelin/contracts-upgradeable/token/ERC20/utils/SafeERC20Upgradeable.sol";
-import {IAllowanceTransfer} from "@uniswap/permit2/src/interfaces/IAllowanceTransfer.sol";
-import {ISignatureTransfer} from "@uniswap/permit2/src/interfaces/ISignatureTransfer.sol";
+import { SafeERC20Upgradeable } from "@openzeppelin/contracts-upgradeable/token/ERC20/utils/SafeERC20Upgradeable.sol";
+import { IAllowanceTransfer } from "@uniswap/permit2/src/interfaces/IAllowanceTransfer.sol";
+import { ISignatureTransfer } from "@uniswap/permit2/src/interfaces/ISignatureTransfer.sol";
 
-import {IL1ETHGateway} from "./IL1ETHGateway.sol";
-import {IL1ERC20Gateway} from "./IL1ERC20Gateway.sol";
-import {IL1GatewayRouter} from "./IL1GatewayRouter.sol";
-import {T1Constants} from "../../libraries/constants/T1Constants.sol";
+import { IL1ETHGateway } from "./IL1ETHGateway.sol";
+import { IL1ERC20Gateway } from "./IL1ERC20Gateway.sol";
+import { IL1GatewayRouter } from "./IL1GatewayRouter.sol";
+import { T1Constants } from "../../libraries/constants/T1Constants.sol";
 
 /// @title L1GatewayRouter
 /// @notice The `L1GatewayRouter` is the main entry for depositing Ether and ERC20 tokens.
@@ -206,7 +206,13 @@ contract L1GatewayRouter is OwnableUpgradeable, IL1GatewayRouter {
     }
 
     /// @inheritdoc IL1ERC20Gateway
-    function depositERC20AndCall(address _token, address _to, uint256 _amount, bytes memory _data, uint256 _gasLimit)
+    function depositERC20AndCall(
+        address _token,
+        address _to,
+        uint256 _amount,
+        bytes memory _data,
+        uint256 _gasLimit
+    )
         public
         payable
         override
@@ -221,14 +227,21 @@ contract L1GatewayRouter is OwnableUpgradeable, IL1GatewayRouter {
         // encode msg.sender with _data
         bytes memory _routerData = abi.encode(_msgSender(), _data);
 
-        IL1ERC20Gateway(_gateway).depositERC20AndCall{value: msg.value}(_token, _to, _amount, _routerData, _gasLimit);
+        IL1ERC20Gateway(_gateway).depositERC20AndCall{ value: msg.value }(_token, _to, _amount, _routerData, _gasLimit);
 
         // leave deposit context
         gatewayInContext = address(0);
     }
 
     /// @inheritdoc IL1ERC20Gateway
-    function finalizeWithdrawERC20(address, address, address, address, uint256, bytes calldata)
+    function finalizeWithdrawERC20(
+        address,
+        address,
+        address,
+        address,
+        uint256,
+        bytes calldata
+    )
         external
         payable
         virtual
@@ -254,7 +267,12 @@ contract L1GatewayRouter is OwnableUpgradeable, IL1GatewayRouter {
     }
 
     /// @inheritdoc IL1ETHGateway
-    function depositETHAndCall(address _to, uint256 _amount, bytes memory _data, uint256 _gasLimit)
+    function depositETHAndCall(
+        address _to,
+        uint256 _amount,
+        bytes memory _data,
+        uint256 _gasLimit
+    )
         public
         payable
         override
@@ -266,7 +284,7 @@ contract L1GatewayRouter is OwnableUpgradeable, IL1GatewayRouter {
         // encode msg.sender with _data
         bytes memory _routerData = abi.encode(_msgSender(), _data);
 
-        IL1ETHGateway(_gateway).depositETHAndCall{value: msg.value}(_to, _amount, _routerData, _gasLimit);
+        IL1ETHGateway(_gateway).depositETHAndCall{ value: msg.value }(_to, _amount, _routerData, _gasLimit);
     }
 
     /// @inheritdoc IL1ETHGateway

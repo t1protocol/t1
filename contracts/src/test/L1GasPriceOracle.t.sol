@@ -2,10 +2,10 @@
 
 pragma solidity ^0.8.25;
 
-import {Test} from "forge-std/Test.sol";
+import { Test } from "forge-std/Test.sol";
 
-import {L1GasPriceOracle} from "../L2/predeploys/L1GasPriceOracle.sol";
-import {Whitelist} from "../L2/predeploys/Whitelist.sol";
+import { L1GasPriceOracle } from "../L2/predeploys/L1GasPriceOracle.sol";
+import { Whitelist } from "../L2/predeploys/Whitelist.sol";
 
 contract L1GasPriceOracleTest is Test {
     uint256 private constant PRECISION = 1e9;
@@ -182,7 +182,12 @@ contract L1GasPriceOracleTest is Test {
         assertEq(oracle.getL1GasUsed(_data), _gasUsed);
     }
 
-    function testGetL1FeeBeforeCurie(uint256 _baseFee, uint256 _overhead, uint256 _scalar, bytes memory _data)
+    function testGetL1FeeBeforeCurie(
+        uint256 _baseFee,
+        uint256 _overhead,
+        uint256 _scalar,
+        bytes memory _data
+    )
         external
     {
         _overhead = bound(_overhead, 0, MAX_OVERHEAD);
@@ -213,7 +218,9 @@ contract L1GasPriceOracleTest is Test {
         uint256 _commitScalar,
         uint256 _blobScalar,
         bytes memory _data
-    ) external {
+    )
+        external
+    {
         _baseFee = bound(_baseFee, 0, 1e9 * 20_000); // max 20k gwei
         _blobBaseFee = bound(_blobBaseFee, 0, 1e9 * 20_000); // max 20k gwei
         _commitScalar = bound(_commitScalar, 0, MAX_COMMIT_SCALAR);

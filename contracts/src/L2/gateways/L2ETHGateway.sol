@@ -2,12 +2,12 @@
 
 pragma solidity ^0.8.25;
 
-import {IL1ETHGateway} from "../../L1/gateways/IL1ETHGateway.sol";
-import {IL2T1Messenger} from "../IL2T1Messenger.sol";
-import {IL2ETHGateway} from "./IL2ETHGateway.sol";
+import { IL1ETHGateway } from "../../L1/gateways/IL1ETHGateway.sol";
+import { IL2T1Messenger } from "../IL2T1Messenger.sol";
+import { IL2ETHGateway } from "./IL2ETHGateway.sol";
 
-import {T1GatewayBase} from "../../libraries/gateway/T1GatewayBase.sol";
-import {T1Constants} from "../../libraries/constants/T1Constants.sol";
+import { T1GatewayBase } from "../../libraries/gateway/T1GatewayBase.sol";
+import { T1Constants } from "../../libraries/constants/T1Constants.sol";
 
 /// @title L2ETHGateway
 /// @notice The `L2ETHGateway` contract is used to withdraw ETH token on layer 2 and
@@ -26,7 +26,11 @@ contract L2ETHGateway is T1GatewayBase, IL2ETHGateway {
     /// @param _counterpart The address of `L1ETHGateway` contract in L1.
     /// @param _router The address of `L1GatewayRouter` contract.
     /// @param _messenger The address of `L1T1Messenger` contract.
-    constructor(address _counterpart, address _router, address _messenger)
+    constructor(
+        address _counterpart,
+        address _router,
+        address _messenger
+    )
         T1GatewayBase(_counterpart, _router, _messenger)
     {
         if (_router == address(0)) revert ErrorZeroAddress();
@@ -56,7 +60,12 @@ contract L2ETHGateway is T1GatewayBase, IL2ETHGateway {
     }
 
     /// @inheritdoc IL2ETHGateway
-    function withdrawETHAndCall(address _to, uint256 _amount, bytes memory _data, uint256 _gasLimit)
+    function withdrawETHAndCall(
+        address _to,
+        uint256 _amount,
+        bytes memory _data,
+        uint256 _gasLimit
+    )
         public
         payable
         override
@@ -65,7 +74,12 @@ contract L2ETHGateway is T1GatewayBase, IL2ETHGateway {
     }
 
     /// @inheritdoc IL2ETHGateway
-    function finalizeDepositETH(address _from, address _to, uint256 _amount, bytes calldata _data)
+    function finalizeDepositETH(
+        address _from,
+        address _to,
+        uint256 _amount,
+        bytes calldata _data
+    )
         external
         payable
         override
@@ -76,7 +90,7 @@ contract L2ETHGateway is T1GatewayBase, IL2ETHGateway {
         require(msg.value == _amount, "msg.value mismatch");
 
         // solhint-disable-next-line avoid-low-level-calls
-        (bool _success,) = _to.call{value: _amount}("");
+        (bool _success,) = _to.call{ value: _amount }("");
         require(_success, "ETH transfer failed");
 
         _doCallback(_to, _data);
@@ -95,7 +109,12 @@ contract L2ETHGateway is T1GatewayBase, IL2ETHGateway {
     /// @param _amount The amount of ETH to be withdrawn.
     /// @param _data Optional data to forward to recipient's account.
     /// @param _gasLimit Optional gas limit to complete the deposit on L1.
-    function _withdraw(address _to, uint256 _amount, bytes memory _data, uint256 _gasLimit)
+    function _withdraw(
+        address _to,
+        uint256 _amount,
+        bytes memory _data,
+        uint256 _gasLimit
+    )
         internal
         virtual
         nonReentrant
@@ -112,7 +131,7 @@ contract L2ETHGateway is T1GatewayBase, IL2ETHGateway {
         // @note no rate limit here, since ETH is limited in messenger
 
         bytes memory _message = abi.encodeCall(IL1ETHGateway.finalizeWithdrawETH, (_from, _to, _amount, _data));
-        IL2T1Messenger(messenger).sendMessage{value: msg.value}(
+        IL2T1Messenger(messenger).sendMessage{ value: msg.value }(
             counterpart, _amount, _message, _gasLimit, T1Constants.L1_CHAIN_ID
         );
 

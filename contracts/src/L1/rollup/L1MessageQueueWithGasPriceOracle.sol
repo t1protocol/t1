@@ -2,12 +2,12 @@
 
 pragma solidity ^0.8.25;
 
-import {IWhitelist} from "../../libraries/common/IWhitelist.sol";
-import {IL1MessageQueue} from "./IL1MessageQueue.sol";
-import {IL1MessageQueueWithGasPriceOracle} from "./IL1MessageQueueWithGasPriceOracle.sol";
-import {IL2GasPriceOracle} from "./IL2GasPriceOracle.sol";
+import { IWhitelist } from "../../libraries/common/IWhitelist.sol";
+import { IL1MessageQueue } from "./IL1MessageQueue.sol";
+import { IL1MessageQueueWithGasPriceOracle } from "./IL1MessageQueueWithGasPriceOracle.sol";
+import { IL2GasPriceOracle } from "./IL2GasPriceOracle.sol";
 
-import {L1MessageQueue} from "./L1MessageQueue.sol";
+import { L1MessageQueue } from "./L1MessageQueue.sol";
 
 contract L1MessageQueueWithGasPriceOracle is L1MessageQueue, IL1MessageQueueWithGasPriceOracle {
     /**
@@ -44,7 +44,7 @@ contract L1MessageQueueWithGasPriceOracle is L1MessageQueue, IL1MessageQueueWith
     ///
     /// @param _messenger The address of `L1T1Messenger` contract.
     /// @param _T1Chain The address of `T1Chain` contract.
-    constructor(address _messenger, address _T1Chain) L1MessageQueue() {}
+    constructor(address _messenger, address _T1Chain) L1MessageQueue() { }
 
     /// @notice Initialize the storage of L1MessageQueueWithGasPriceOracle.
     function initializeV2() external reinitializer(2) {

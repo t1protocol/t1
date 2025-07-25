@@ -2,12 +2,12 @@
 
 pragma solidity ^0.8.25;
 
-import {IL2T1Messenger} from "./IL2T1Messenger.sol";
-import {L2MessageQueue} from "./predeploys/L2MessageQueue.sol";
+import { IL2T1Messenger } from "./IL2T1Messenger.sol";
+import { L2MessageQueue } from "./predeploys/L2MessageQueue.sol";
 
-import {IT1Messenger} from "../libraries/IT1Messenger.sol";
-import {T1Constants} from "../libraries/constants/T1Constants.sol";
-import {T1MessengerBase} from "../libraries/T1MessengerBase.sol";
+import { IT1Messenger } from "../libraries/IT1Messenger.sol";
+import { T1Constants } from "../libraries/constants/T1Constants.sol";
+import { T1MessengerBase } from "../libraries/T1MessengerBase.sol";
 
 // solhint-disable reason-string
 // solhint-disable not-rely-on-time
@@ -102,7 +102,13 @@ contract L2T1Messenger is T1MessengerBase, IL2T1Messenger {
      */
 
     /// @inheritdoc IT1Messenger
-    function sendMessage(address _to, uint256 _value, bytes memory _message, uint256 _gasLimit, uint64 _destChainId)
+    function sendMessage(
+        address _to,
+        uint256 _value,
+        bytes memory _message,
+        uint256 _gasLimit,
+        uint64 _destChainId
+    )
         external
         payable
         override
@@ -119,12 +125,23 @@ contract L2T1Messenger is T1MessengerBase, IL2T1Messenger {
         uint256 _gasLimit,
         uint64 _destChainId,
         address _callbackAddress
-    ) external payable override whenNotPaused {
+    )
+        external
+        payable
+        override
+        whenNotPaused
+    {
         _sendMessage(_to, _value, _message, _gasLimit, _destChainId, _callbackAddress);
     }
 
     /// @inheritdoc IL2T1Messenger
-    function relayMessage(address _from, address _to, uint256 _value, uint256 _nonce, bytes memory _message)
+    function relayMessage(
+        address _from,
+        address _to,
+        uint256 _value,
+        uint256 _nonce,
+        bytes memory _message
+    )
         external
         override
         whenNotPaused
@@ -189,7 +206,11 @@ contract L2T1Messenger is T1MessengerBase, IL2T1Messenger {
         uint256 _gasLimit,
         uint64 _destChainId,
         address _callbackAddress
-    ) internal nonReentrant returns (uint256 _nonce) {
+    )
+        internal
+        nonReentrant
+        returns (uint256 _nonce)
+    {
         if (!isSupportedDest(_destChainId)) revert InvalidDestinationChain();
 
         uint256 _fee;
@@ -201,7 +222,7 @@ contract L2T1Messenger is T1MessengerBase, IL2T1Messenger {
             _fee = L2MessageQueue(messageQueue).estimateCrossDomainMessageFee(_gasLimit, _destChainId);
             if (msg.value < _fee + _value) revert InsufficientMsgValue(_fee + _value);
             if (_fee > 0) {
-                (bool _success,) = feeVault.call{value: _fee}("");
+                (bool _success,) = feeVault.call{ value: _fee }("");
                 if (!_success) revert FailedToDeductFee();
             }
 
@@ -238,7 +259,9 @@ contract L2T1Messenger is T1MessengerBase, IL2T1Messenger {
         uint256 _value,
         bytes memory _message,
         bytes32 _xDomainCalldataHash
-    ) internal {
+    )
+        internal
+    {
         // @note check more `_to` address to avoid attack in the future when we add more gateways.
         require(_to != messageQueue, "Forbid to call message queue");
         _validateTargetAddress(_to);
@@ -248,7 +271,7 @@ contract L2T1Messenger is T1MessengerBase, IL2T1Messenger {
 
         xDomainMessageSender = _from;
         // solhint-disable-next-line avoid-low-level-calls
-        (bool success,) = _to.call{value: _value}(_message);
+        (bool success,) = _to.call{ value: _value }(_message);
         // reset value to refund gas.
         xDomainMessageSender = T1Constants.DEFAULT_XDOMAIN_MESSAGE_SENDER;
 
@@ -264,7 +287,7 @@ contract L2T1Messenger is T1MessengerBase, IL2T1Messenger {
         unchecked {
             uint256 _refund = msg.value - _fee - _value;
             if (_refund > 0) {
-                (bool _success,) = _callbackAddress.call{value: _refund}("");
+                (bool _success,) = _callbackAddress.call{ value: _refund }("");
                 if (!_success) revert FailedToRefundFee();
             }
         }

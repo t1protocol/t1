@@ -2,11 +2,11 @@
 
 pragma solidity ^0.8.25;
 
-import {Script} from "forge-std/Script.sol";
-import {ProxyAdmin} from "@openzeppelin/contracts/proxy/transparent/ProxyAdmin.sol";
-import {TransparentUpgradeableProxy} from "@openzeppelin/contracts/proxy/transparent/TransparentUpgradeableProxy.sol";
+import { Script } from "forge-std/Script.sol";
+import { ProxyAdmin } from "@openzeppelin/contracts/proxy/transparent/ProxyAdmin.sol";
+import { TransparentUpgradeableProxy } from "@openzeppelin/contracts/proxy/transparent/TransparentUpgradeableProxy.sol";
 
-import {DeploymentUtils} from "../lib/DeploymentUtils.sol";
+import { DeploymentUtils } from "../lib/DeploymentUtils.sol";
 
 contract DeployArbT1ProxyAdmin is Script, DeploymentUtils {
     uint256 private deployerPrivateKey = vm.envUint("DEPLOYER_PRIVATE_KEY");

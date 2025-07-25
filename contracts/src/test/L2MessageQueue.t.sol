@@ -2,9 +2,9 @@
 
 pragma solidity ^0.8.25;
 
-import {Test} from "forge-std/Test.sol";
+import { Test } from "forge-std/Test.sol";
 
-import {L2MessageQueue} from "../L2/predeploys/L2MessageQueue.sol";
+import { L2MessageQueue } from "../L2/predeploys/L2MessageQueue.sol";
 
 contract L2MessageQueueTest is Test {
     L2MessageQueue internal queue;

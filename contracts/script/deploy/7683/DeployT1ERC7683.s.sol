@@ -1,13 +1,13 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.25;
 
-import {Script} from "forge-std/Script.sol";
-import {console2} from "forge-std/console2.sol";
-import {ProxyAdmin} from "@openzeppelin/contracts/proxy/transparent/ProxyAdmin.sol";
-import {TransparentUpgradeableProxy} from "@openzeppelin/contracts/proxy/transparent/TransparentUpgradeableProxy.sol";
+import { Script } from "forge-std/Script.sol";
+import { console2 } from "forge-std/console2.sol";
+import { ProxyAdmin } from "@openzeppelin/contracts/proxy/transparent/ProxyAdmin.sol";
+import { TransparentUpgradeableProxy } from "@openzeppelin/contracts/proxy/transparent/TransparentUpgradeableProxy.sol";
 
-import {T1ERC7683} from "../../../src/7683/T1ERC7683.sol";
-import {T1Constants} from "../../../src/libraries/constants/T1Constants.sol";
+import { T1ERC7683 } from "../../../src/7683/T1ERC7683.sol";
+import { T1Constants } from "../../../src/libraries/constants/T1Constants.sol";
 
 contract DeployT1ERC7683 is Script {
     uint32 private constant ORIGIN_CHAIN = uint32(T1Constants.L1_CHAIN_ID); // Sepolia

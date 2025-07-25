@@ -2,18 +2,18 @@
 
 pragma solidity ^0.8.25;
 
-import {ITransparentUpgradeableProxy} from "@openzeppelin/contracts/proxy/transparent/TransparentUpgradeableProxy.sol";
+import { ITransparentUpgradeableProxy } from "@openzeppelin/contracts/proxy/transparent/TransparentUpgradeableProxy.sol";
 
-import {L1GatewayRouter} from "../L1/gateways/L1GatewayRouter.sol";
-import {IL1ETHGateway, L1ETHGateway} from "../L1/gateways/L1ETHGateway.sol";
-import {IL1T1Messenger} from "../L1/IL1T1Messenger.sol";
-import {IL2ETHGateway, L2ETHGateway} from "../L2/gateways/L2ETHGateway.sol";
-import {AddressAliasHelper} from "../libraries/common/AddressAliasHelper.sol";
-import {T1Constants} from "../libraries/constants/T1Constants.sol";
+import { L1GatewayRouter } from "../L1/gateways/L1GatewayRouter.sol";
+import { IL1ETHGateway, L1ETHGateway } from "../L1/gateways/L1ETHGateway.sol";
+import { IL1T1Messenger } from "../L1/IL1T1Messenger.sol";
+import { IL2ETHGateway, L2ETHGateway } from "../L2/gateways/L2ETHGateway.sol";
+import { AddressAliasHelper } from "../libraries/common/AddressAliasHelper.sol";
+import { T1Constants } from "../libraries/constants/T1Constants.sol";
 
-import {L1GatewayTestBase} from "./L1GatewayTestBase.t.sol";
-import {MockT1Messenger} from "./mocks/MockT1Messenger.sol";
-import {MockGatewayRecipient} from "./mocks/MockGatewayRecipient.sol";
+import { L1GatewayTestBase } from "./L1GatewayTestBase.t.sol";
+import { MockT1Messenger } from "./mocks/MockT1Messenger.sol";
+import { MockGatewayRecipient } from "./mocks/MockGatewayRecipient.sol";
 
 contract L1ETHGatewayTest is L1GatewayTestBase {
     // from L1ETHGateway
@@ -54,7 +54,12 @@ contract L1ETHGatewayTest is L1GatewayTestBase {
         _depositETH(false, amount, gasLimit, feePerGas);
     }
 
-    function testDepositETHWithRecipient(uint256 amount, address recipient, uint256 gasLimit, uint256 feePerGas)
+    function testDepositETHWithRecipient(
+        uint256 amount,
+        address recipient,
+        uint256 gasLimit,
+        uint256 feePerGas
+    )
         public
     {
         _depositETHWithRecipient(false, amount, recipient, gasLimit, feePerGas);
@@ -66,7 +71,9 @@ contract L1ETHGatewayTest is L1GatewayTestBase {
         bytes memory dataToCall,
         uint256 gasLimit,
         uint256 feePerGas
-    ) public {
+    )
+        public
+    {
         _depositETHWithRecipientAndCalldata(false, amount, recipient, dataToCall, gasLimit, feePerGas);
     }
 
@@ -74,7 +81,12 @@ contract L1ETHGatewayTest is L1GatewayTestBase {
         _depositETH(true, amount, gasLimit, feePerGas);
     }
 
-    function testRouterDepositETHWithRecipient(uint256 amount, address recipient, uint256 gasLimit, uint256 feePerGas)
+    function testRouterDepositETHWithRecipient(
+        uint256 amount,
+        address recipient,
+        uint256 gasLimit,
+        uint256 feePerGas
+    )
         public
     {
         _depositETHWithRecipient(true, amount, recipient, gasLimit, feePerGas);
@@ -86,7 +98,9 @@ contract L1ETHGatewayTest is L1GatewayTestBase {
         bytes memory dataToCall,
         uint256 gasLimit,
         uint256 feePerGas
-    ) public {
+    )
+        public
+    {
         _depositETHWithRecipientAndCalldata(true, amount, recipient, dataToCall, gasLimit, feePerGas);
     }
 
@@ -118,7 +132,7 @@ contract L1ETHGatewayTest is L1GatewayTestBase {
 
         // msg.value mismatch, revert
         vm.expectRevert("msg.value mismatch");
-        mockMessenger.callTarget{value: 99}(
+        mockMessenger.callTarget{ value: 99 }(
             address(gateway), abi.encodeWithSelector(gateway.onDropMessage.selector, message)
         );
     }
@@ -128,7 +142,7 @@ contract L1ETHGatewayTest is L1GatewayTestBase {
         bytes memory message = abi.encodeWithSelector(
             IL2ETHGateway.finalizeDepositETH.selector, address(this), recipient, amount, dataToCall
         );
-        gateway.depositETHAndCall{value: amount}(recipient, amount, dataToCall, DEFAULT_GAS_LIMIT);
+        gateway.depositETHAndCall{ value: amount }(recipient, amount, dataToCall, DEFAULT_GAS_LIMIT);
 
         // skip message 0
         vm.startPrank(address(rollup));
@@ -161,7 +175,9 @@ contract L1ETHGatewayTest is L1GatewayTestBase {
         address recipient,
         uint256 amount,
         bytes memory dataToCall
-    ) public {
+    )
+        public
+    {
         amount = bound(amount, 1, address(this).balance / 2);
 
         // revert when caller is not messenger
@@ -191,7 +207,7 @@ contract L1ETHGatewayTest is L1GatewayTestBase {
         // ETH transfer failed
         revertOnReceive = true;
         vm.expectRevert("ETH transfer failed");
-        mockMessenger.callTarget{value: amount}(
+        mockMessenger.callTarget{ value: amount }(
             address(gateway),
             abi.encodeWithSelector(gateway.finalizeWithdrawETH.selector, sender, address(this), amount, dataToCall)
         );
@@ -203,11 +219,13 @@ contract L1ETHGatewayTest is L1GatewayTestBase {
         address recipient,
         uint256 amount,
         bytes memory dataToCall
-    ) public {
+    )
+        public
+    {
         amount = bound(amount, 1, address(this).balance / 2);
 
         // deposit some ETH to L1T1Messenger
-        gateway.depositETH{value: amount}(amount, DEFAULT_GAS_LIMIT);
+        gateway.depositETH{ value: amount }(amount, DEFAULT_GAS_LIMIT);
 
         // do finalize withdraw eth
         bytes memory message =
@@ -248,7 +266,7 @@ contract L1ETHGatewayTest is L1GatewayTestBase {
         amount = bound(amount, 1, address(this).balance / 2);
 
         // deposit some ETH to L1T1Messenger
-        gateway.depositETH{value: amount}(amount, DEFAULT_GAS_LIMIT);
+        gateway.depositETH{ value: amount }(amount, DEFAULT_GAS_LIMIT);
 
         // do finalize withdraw eth
         bytes memory message = abi.encodeWithSelector(
@@ -312,9 +330,9 @@ contract L1ETHGatewayTest is L1GatewayTestBase {
         if (amount == 0) {
             vm.expectRevert("deposit zero eth");
             if (useRouter) {
-                router.depositETH{value: amount}(amount, gasLimit);
+                router.depositETH{ value: amount }(amount, gasLimit);
             } else {
-                gateway.depositETH{value: amount}(amount, gasLimit);
+                gateway.depositETH{ value: amount }(amount, gasLimit);
             }
         } else {
             // emit QueueTransaction from L1MessageQueue
@@ -347,9 +365,9 @@ contract L1ETHGatewayTest is L1GatewayTestBase {
             uint256 feeVaultBalance = address(feeVault).balance;
             assertEq(l1Messenger.messageSendTimestamp(keccak256(xDomainCalldata)), 0);
             if (useRouter) {
-                router.depositETH{value: amount + feeToPay + EXTRA_VALUE}(amount, gasLimit);
+                router.depositETH{ value: amount + feeToPay + EXTRA_VALUE }(amount, gasLimit);
             } else {
-                gateway.depositETH{value: amount + feeToPay + EXTRA_VALUE}(amount, gasLimit);
+                gateway.depositETH{ value: amount + feeToPay + EXTRA_VALUE }(amount, gasLimit);
             }
             assertEq(amount + messengerBalance, address(l1Messenger).balance);
             assertEq(feeToPay + feeVaultBalance, address(feeVault).balance);
@@ -363,7 +381,9 @@ contract L1ETHGatewayTest is L1GatewayTestBase {
         address recipient,
         uint256 gasLimit,
         uint256 feePerGas
-    ) private {
+    )
+        private
+    {
         amount = bound(amount, 0, address(this).balance / 2);
         gasLimit = bound(gasLimit, DEFAULT_GAS_LIMIT / 2, DEFAULT_GAS_LIMIT);
         feePerGas = bound(feePerGas, 0, 1000);
@@ -386,9 +406,9 @@ contract L1ETHGatewayTest is L1GatewayTestBase {
         if (amount == 0) {
             vm.expectRevert("deposit zero eth");
             if (useRouter) {
-                router.depositETH{value: amount}(recipient, amount, gasLimit);
+                router.depositETH{ value: amount }(recipient, amount, gasLimit);
             } else {
-                gateway.depositETH{value: amount}(recipient, amount, gasLimit);
+                gateway.depositETH{ value: amount }(recipient, amount, gasLimit);
             }
         } else {
             // emit QueueTransaction from L1MessageQueue
@@ -421,9 +441,9 @@ contract L1ETHGatewayTest is L1GatewayTestBase {
             uint256 feeVaultBalance = address(feeVault).balance;
             assertEq(l1Messenger.messageSendTimestamp(keccak256(xDomainCalldata)), 0);
             if (useRouter) {
-                router.depositETH{value: amount + feeToPay + EXTRA_VALUE}(recipient, amount, gasLimit);
+                router.depositETH{ value: amount + feeToPay + EXTRA_VALUE }(recipient, amount, gasLimit);
             } else {
-                gateway.depositETH{value: amount + feeToPay + EXTRA_VALUE}(recipient, amount, gasLimit);
+                gateway.depositETH{ value: amount + feeToPay + EXTRA_VALUE }(recipient, amount, gasLimit);
             }
             assertEq(amount + messengerBalance, address(l1Messenger).balance);
             assertEq(feeToPay + feeVaultBalance, address(feeVault).balance);
@@ -438,7 +458,9 @@ contract L1ETHGatewayTest is L1GatewayTestBase {
         bytes memory dataToCall,
         uint256 gasLimit,
         uint256 feePerGas
-    ) private {
+    )
+        private
+    {
         amount = bound(amount, 0, address(this).balance / 2);
         gasLimit = bound(gasLimit, DEFAULT_GAS_LIMIT / 2, DEFAULT_GAS_LIMIT);
         feePerGas = bound(feePerGas, 0, 1000);
@@ -461,9 +483,9 @@ contract L1ETHGatewayTest is L1GatewayTestBase {
         if (amount == 0) {
             vm.expectRevert("deposit zero eth");
             if (useRouter) {
-                router.depositETHAndCall{value: amount}(recipient, amount, dataToCall, gasLimit);
+                router.depositETHAndCall{ value: amount }(recipient, amount, dataToCall, gasLimit);
             } else {
-                gateway.depositETHAndCall{value: amount}(recipient, amount, dataToCall, gasLimit);
+                gateway.depositETHAndCall{ value: amount }(recipient, amount, dataToCall, gasLimit);
             }
         } else {
             // emit QueueTransaction from L1MessageQueue
@@ -496,11 +518,11 @@ contract L1ETHGatewayTest is L1GatewayTestBase {
             uint256 feeVaultBalance = address(feeVault).balance;
             assertEq(l1Messenger.messageSendTimestamp(keccak256(xDomainCalldata)), 0);
             if (useRouter) {
-                router.depositETHAndCall{value: amount + feeToPay + EXTRA_VALUE}(
+                router.depositETHAndCall{ value: amount + feeToPay + EXTRA_VALUE }(
                     recipient, amount, dataToCall, gasLimit
                 );
             } else {
-                gateway.depositETHAndCall{value: amount + feeToPay + EXTRA_VALUE}(
+                gateway.depositETHAndCall{ value: amount + feeToPay + EXTRA_VALUE }(
                     recipient, amount, dataToCall, gasLimit
                 );
             }
