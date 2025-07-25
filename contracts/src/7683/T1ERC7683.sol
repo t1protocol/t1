@@ -24,6 +24,11 @@ import { IT1XChainReader } from "../libraries/xChain/IT1XChainReader.sol";
 contract T1ERC7683 is Base7683, OwnableUpgradeable, PausableUpgradeable {
     using SafeERC20 for IERC20;
 
+    struct Bid {
+        address settlementReceiver;
+        uint256 amountOut;
+    }
+
     // ============ Constants ============
     uint32 public immutable localDomain;
     IT1XChainReader public immutable xChainRead;
@@ -37,6 +42,7 @@ contract T1ERC7683 is Base7683, OwnableUpgradeable, PausableUpgradeable {
     mapping(bytes32 => bytes32) public refundReadRequestToOrderId;
     /// @notice Maps order IDs to verification status
     mapping(bytes32 => bool) public orderVerified;
+    mapping(bytes32 orderId => Bid winnerBid) public orderToBid;
 
     // ============ Events ============
     /**
@@ -69,6 +75,7 @@ contract T1ERC7683 is Base7683, OwnableUpgradeable, PausableUpgradeable {
      * @param receiver The address of the order's input token receiver.
      */
     event Refunded(bytes32 indexed orderId, address receiver);
+    event WinnerBidCommited(bytes32 indexed orderId, address indexed settlementSeceiver);
 
     // ============ Upgrade Gap ============
     /// @dev Reserved storage slots for upgradeability.
@@ -82,6 +89,9 @@ contract T1ERC7683 is Base7683, OwnableUpgradeable, PausableUpgradeable {
     error InvalidOrder();
     error OrderFillNotExpired();
     error NotEligible();
+    error InvalidFill(
+        address settlementReceiver, address expectedSettlementReceiver, uint256 amountOut, uint256 expectedAmountOut
+    );
 
     /// @notice Initializes the contract with the specified dependencies
     /// @param _permit2 The address of the permit2 contract
@@ -237,7 +247,20 @@ contract T1ERC7683 is Base7683, OwnableUpgradeable, PausableUpgradeable {
 
             for (uint256 i = 0; i < _orderIds.length; i++) {
                 if (_settle) {
-                    (, address settlementReceiver) = abi.decode(_ordersFillerData[i], (uint256, address));
+                    (uint256 amountOut, address settlementReceiver) =
+                        abi.decode(_ordersFillerData[i], (uint256, address));
+                    Bid memory winnerBid = orderToBid[orderId];
+
+                    if (
+                        orderData.closedAuction == true
+                            && (settlementReceiver != winnerBid.settlementReceiver || amountOut != winnerBid.amountOut)
+                    ) {
+                        revert InvalidFill(
+                            settlementReceiver, winnerBid.settlementReceiver, amountOut, winnerBid.amountOut
+                        );
+                    }
+                    delete orderToBid[orderId];
+
                     _handleSettleOrder(
                         orderData.destinationDomain, orderData.destinationSettler, _orderIds[i], settlementReceiver
                     );
@@ -378,6 +401,11 @@ contract T1ERC7683 is Base7683, OwnableUpgradeable, PausableUpgradeable {
 
             emit Refunded(orderId, orderSender);
         }
+    }
+
+    function commitWinnerBid(bytes32 orderId, Bid calldata winnerBid) external onlyOwner {
+        orderToBid[orderId] = winnerBid;
+        emit WinnerBidCommited(orderId, winnerBid.settlementReceiver);
     }
 
     function pause() external onlyOwner {

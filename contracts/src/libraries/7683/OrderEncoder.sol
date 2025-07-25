@@ -13,6 +13,7 @@ struct OrderData {
     uint32 destinationDomain;
     bytes32 destinationSettler;
     uint32 fillDeadline;
+    bool closedAuction;
     bytes data;
 }
 
@@ -30,6 +31,7 @@ library OrderEncoder {
         "uint32 destinationDomain,",
         "bytes32 destinationSettler,",
         "uint32 fillDeadline,",
+        "bool closedAuction,",
         "bytes data)"
     );
 
