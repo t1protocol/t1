@@ -5,8 +5,14 @@ node_modules
 out
 artifacts
 
+# agents
+CLAUDE.md
+.claude
+.cursorrules
+
 # files
 *.env
+*.env.*
 *.log
 .DS_Store
 .pnp.*

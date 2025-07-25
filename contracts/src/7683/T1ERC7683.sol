@@ -11,7 +11,7 @@ import { GaslessCrossChainOrder, ResolvedCrossChainOrder, OnchainCrossChainOrder
 import { BasicSwap7683 } from "./BasicSwap7683.sol";
 import { Hyperlane7683Message } from "../libraries/7683/Hyperlane7683Message.sol";
 import { OrderData, OrderEncoder } from "../libraries/7683/OrderEncoder.sol";
-import { T1XChainReader } from "../libraries/xChain/T1XChainReader.sol";
+import { IT1XChainReader } from "../libraries/xChain/IT1XChainReader.sol";
 
 /**
  * @title T1ERC7683
@@ -24,7 +24,7 @@ contract T1ERC7683 is BasicSwap7683, OwnableUpgradeable, PausableUpgradeable {
 
     // ============ Constants ============
     uint32 public immutable localDomain;
-    T1XChainReader public immutable xChainRead;
+    IT1XChainReader public immutable xChainRead;
     address public counterpart;
 
     // ============ State Variables ============
@@ -76,7 +76,7 @@ contract T1ERC7683 is BasicSwap7683, OwnableUpgradeable, PausableUpgradeable {
     /// @param _xChainRead The address of the cross-chain read contract
     /// @param localDomain_ The local domain (chain id)
     constructor(address _permit2, address _xChainRead, uint32 localDomain_) BasicSwap7683(_permit2) {
-        xChainRead = T1XChainReader(_xChainRead);
+        xChainRead = IT1XChainReader(_xChainRead);
         localDomain = localDomain_;
     }
 
@@ -182,7 +182,7 @@ contract T1ERC7683 is BasicSwap7683, OwnableUpgradeable, PausableUpgradeable {
         // Create the calldata to check the order status on the destination chain
         bytes memory callData = abi.encodeWithSelector(this.getFilledOrderStatus.selector, orderId);
 
-        T1XChainReader.ReadRequest memory readRequest = T1XChainReader.ReadRequest({
+        IT1XChainReader.ReadRequest memory readRequest = IT1XChainReader.ReadRequest({
             destinationDomain: destinationDomain,
             targetContract: counterpart,
             minBlock: 0,
