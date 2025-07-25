@@ -37,7 +37,7 @@ contract AliceSetupScript is Script {
             inputToken: TypeCasts.addressToBytes32(address(inputToken)),
             outputToken: TypeCasts.addressToBytes32(address(outputToken)),
             amountIn: HUNDRED_USDT,
-            amountOut: HUNDRED_USDT,
+            minAmountOut: HUNDRED_USDT,
             senderNonce: uint32(
                 uint256(keccak256(abi.encodePacked(block.timestamp, block.prevrandao, msg.sender))) % 10_000
             ), // Random number between 0 and 9999
