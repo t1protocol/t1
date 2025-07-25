@@ -195,6 +195,20 @@ forge script ./deploy/7683/DeployArbT1ERC7683.s.sol:DeployArbT1ERC7683 --sig "in
 forge script ./deploy/7683/DeployBaseT1ERC7683.s.sol:DeployBaseT1ERC7683 --sig "init()" --broadcast
 ```
 
+### Funding & Approvals (devnet & testnet)
+
+#### Arbitrum Sepolia Liquidity
+
+```bash
+forge script ./configure/SetupArbBotsLiquidity.s.sol --broadcast
+```
+
+#### Base Sepolia Liquidity
+
+```bash
+forge script ./configure/SetupBaseBotsLiquidity.s.sol --broadcast
+```
+
 ## Testing 7683 on Arbitrum Sepolia and Base Sepolia
 
 ### Testing 7683 on Arbitrum Sepolia
