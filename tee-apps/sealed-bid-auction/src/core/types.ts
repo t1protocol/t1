@@ -1,5 +1,9 @@
 export type PriceList = {
-    [key in Direction]?: Interval[];
+    [key in Direction]?:
+    {
+        intervals: Interval[];
+        erc20Addreses: string[];
+    }
 };
 
 export enum Direction {

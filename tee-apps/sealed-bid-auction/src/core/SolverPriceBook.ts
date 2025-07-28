@@ -1,8 +1,8 @@
 import {ALL_DIRECTIONS, type Interval, type PriceList} from "./types.ts";
 
 type PriceBookEntry = {
-    priceList: PriceList,
-    timestamp: number
+    timestamp: number;
+    priceList: PriceList;
 }
 
 export class SolverPriceBook {
@@ -20,7 +20,7 @@ export class SolverPriceBook {
         const priceList: PriceList = JSON.parse(priceBlob);
 
         ALL_DIRECTIONS.forEach((direction) => {
-            const intervals: Interval[] | undefined = priceList[direction];
+            const intervals: Interval[] | undefined = priceList[direction].intervals;
             if (intervals) {
                 for (let i = 1; i < intervals.length; i++) {
                     if (BigInt(intervals[i - 1]!.range.max) + 1n !== BigInt(intervals[i]!.range.min)) {
