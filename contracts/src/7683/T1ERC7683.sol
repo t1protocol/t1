@@ -24,6 +24,11 @@ import { IT1XChainReader } from "../libraries/xChain/IT1XChainReader.sol";
 contract T1ERC7683 is Base7683, OwnableUpgradeable, PausableUpgradeable {
     using SafeERC20 for IERC20;
 
+    /**
+     * @notice Represents a bid for order settlement
+     * @param settlementReceiver The address that will receive the settlement on src chain
+     * @param amountOut The amount of output tokens to be received on dst chain
+     */
     struct Bid {
         address settlementReceiver;
         uint256 amountOut;
@@ -42,6 +47,7 @@ contract T1ERC7683 is Base7683, OwnableUpgradeable, PausableUpgradeable {
     mapping(bytes32 => bytes32) public refundReadRequestToOrderId;
     /// @notice Maps order IDs to verification status
     mapping(bytes32 => bool) public orderVerified;
+    /// @notice Maps order IDs to their winning bid information
     mapping(bytes32 orderId => Bid winnerBid) public orderToBid;
 
     // ============ Events ============
@@ -75,6 +81,11 @@ contract T1ERC7683 is Base7683, OwnableUpgradeable, PausableUpgradeable {
      * @param receiver The address of the order's input token receiver.
      */
     event Refunded(bytes32 indexed orderId, address receiver);
+    /**
+     * @notice Emitted when a winner bid is committed for an order
+     * @param orderId The ID of the order
+     * @param settlementSeceiver The address of the settlement receiver
+     */
     event WinnerBidCommited(bytes32 indexed orderId, address indexed settlementSeceiver);
 
     // ============ Upgrade Gap ============
@@ -217,6 +228,7 @@ contract T1ERC7683 is Base7683, OwnableUpgradeable, PausableUpgradeable {
     }
 
     /// @notice Use result of proof of read to handle the order depending on the result
+    /// Also enforce auction winner bid if the orderId has closed auction.
     /// @param encodedProofOfRead The encoded proof of read which is formatted as following:
     /// abi.encode(uint256 batchIndex, bytes32 requestId, uint256 position, bytes result, bytes proof)
     function handleReadResultWithProof(bytes calldata encodedProofOfRead) external {
@@ -403,6 +415,11 @@ contract T1ERC7683 is Base7683, OwnableUpgradeable, PausableUpgradeable {
         }
     }
 
+    /**
+     * @notice Commits a winning bid for a specific order
+     * @param orderId The ID of the order to set the winner bid for
+     * @param winnerBid The winning bid containing settlement receiver and amount out
+     */
     function commitWinnerBid(bytes32 orderId, Bid calldata winnerBid) external onlyOwner {
         orderToBid[orderId] = winnerBid;
         emit WinnerBidCommited(orderId, winnerBid.settlementReceiver);
