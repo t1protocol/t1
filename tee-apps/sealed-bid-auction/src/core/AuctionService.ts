@@ -5,7 +5,7 @@ import type {SolverPriceBook} from "./SolverPriceBook.ts";
 import type {Interval, PriceListItem} from "./types.ts";
 
 type Price = {
-    price: number;
+    price: bigint;
     solverAddress: string;
 }
 
@@ -30,7 +30,7 @@ export class AuctionService {
         }
     }
 
-    private getCorrectInterval(priceListItem: PriceListItem, amount: number): Interval | undefined {
+    private getCorrectInterval(priceListItem: PriceListItem, amount: bigint): Interval | undefined {
         return priceListItem.intervals.find(interval => interval.range.min <= amount && interval.range.max >= amount);
     }
 
@@ -39,7 +39,7 @@ export class AuctionService {
 
         if (!pricesForAskedTokens.isEmpty()) {
             let bestPrice = {
-                price: -1,
+                price: -1n,
                 solverAddress: "0xdeadbeef"
             };
 

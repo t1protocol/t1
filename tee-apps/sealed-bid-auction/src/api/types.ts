@@ -4,7 +4,7 @@ export interface AuctionRequest {
     dstChainId: number;
     srcTokenAddress: string;
     dstTokenAddress: string;
-    amountIn: number; // must be an integer representing the smallest denomination of the token
+    amountIn: bigint; // must be an integer representing the smallest denomination of the token
 }
 
 export interface AuctionQuote {
@@ -14,9 +14,9 @@ export interface AuctionQuote {
         dstChainId: number;
         srcTokenAddress: string;
         dstTokenAddress: string;
-        amountIn: number;
+        amountIn: bigint;
     },
-    amountOut: number;
+    amountOut: bigint;
     solverAddress: string;
     timestamp: number;
 }

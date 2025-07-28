@@ -2,6 +2,7 @@ import type {BunRequest} from "bun";
 
 import {AuctionService} from "../core/AuctionService.ts";
 import type {AuctionRequest} from "./types.ts";
+import {serialize} from "../utils/WinstonLogger.ts";
 
 export class SealedBidAuctionController {
 
@@ -13,7 +14,7 @@ export class SealedBidAuctionController {
             const auctionQuote = this.auctionService.auction(auctionRequest);
 
             if (auctionQuote) {
-                return new Response(JSON.stringify(auctionQuote), {status: 200});
+                return new Response(serialize(auctionQuote), {status: 200});
             } else {
                 return new Response("No quote found for this pair", {status: 204});
             }

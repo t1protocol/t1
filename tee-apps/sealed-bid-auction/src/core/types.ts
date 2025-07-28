@@ -22,10 +22,10 @@ enum Token {
 
 export type Interval = {
     range: {
-        min: number; // must be an integer representing full tokens
-        max: number; // must be an integer representing full tokens
+        min: bigint; // must be an integer representing full tokens
+        max: bigint; // must be an integer representing full tokens
     };
     rangeUnit: Token;
-    price: number; // must be an integer representing the smallest denomination of the token
+    price: bigint; // must be an integer representing the smallest denomination of the token
     priceUnit: Token;
 };
