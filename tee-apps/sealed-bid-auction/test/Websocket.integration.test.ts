@@ -49,7 +49,7 @@ beforeEach(() => {
 
 describe("Websocket Integration Test", () => {
     it("Should add Price List", async () => {
-        socket.send(PRICE_LIST_WITH_TWO_ITEMS);
+        socket.send(JSON.stringify(PRICE_LIST_WITH_TWO_ITEMS));
 
         while (!socketMessage) {
             await new Promise((resolve) => setTimeout(resolve, 100));
@@ -59,7 +59,7 @@ describe("Websocket Integration Test", () => {
     });
 
     it("Should not add Price List with gap in ranges", async () => {
-        socket.send(PRICE_LIST_WITH_GAP_IN_RANGES);
+        socket.send(JSON.stringify(PRICE_LIST_WITH_GAP_IN_RANGES));
 
         while (!socketMessage) {
             await new Promise((resolve) => setTimeout(resolve, 100));

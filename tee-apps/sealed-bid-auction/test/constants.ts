@@ -1,87 +1,99 @@
 export const USERNAME = "Bob";
 
-export const PRICE_LIST_WITH_TWO_ITEMS = "{\n" +
-    "  \"Base_USDC->Arbitrum_USDC\": [\n" +
-    "    {\n" +
-    "      \"range\": {\n" +
-    "        \"min\": \"0\",\n" +
-    "        \"max\": \"99\"\n" +
-    "      },\n" +
-    "      \"rangeUnit\": 0,\n" +
-    "      \"price\": \"970000\",\n" +
-    "      \"priceUnit\": 2\n" +
-    "    },\n" +
-    "    {\n" +
-    "      \"range\": {\n" +
-    "        \"min\": \"100\",\n" +
-    "        \"max\": \"1000\"\n" +
-    "      },\n" +
-    "      \"rangeUnit\": 0,\n" +
-    "      \"price\": \"980000\",\n" +
-    "      \"priceUnit\": 2\n" +
-    "    }\n" +
-    "  ],\n" +
-    "  \"Arbitrum_WETH->Base_USDC\": [\n" +
-    "    {\n" +
-    "      \"range\": {\n" +
-    "        \"min\": \"0\",\n" +
-    "        \"max\": \"3\"\n" +
-    "      },\n" +
-    "      \"rangeUnit\": 3,\n" +
-    "      \"price\": \"3500000000\",\n" +
-    "      \"priceUnit\": 0\n" +
-    "    },\n" +
-    "    {\n" +
-    "      \"range\": {\n" +
-    "        \"min\": \"4\",\n" +
-    "        \"max\": \"18\"\n" +
-    "      },\n" +
-    "      \"rangeUnit\": 3,\n" +
-    "      \"price\": \"3480000000\",\n" +
-    "      \"priceUnit\": 0\n" +
-    "    }\n" +
-    "  ]\n" +
-    "}\n";
+export const PRICE_LIST_WITH_TWO_ITEMS = {
+        "Base_USDC->Arbitrum_USDC": {
+            "intervals": [
+                {
+                    "range": {
+                        "min": "0",
+                        "max": "99"
+                    },
+                    "rangeUnit": 0,
+                    "price": "970000",
+                    "priceUnit": 2
+                },
+                {
+                    "range": {
+                        "min": "100",
+                        "max": "1000"
+                    },
+                    "rangeUnit": 0,
+                    "price": "980000",
+                    "priceUnit": 2
+                }
+            ],
+            "erc20Addreses": ["0xf3C3351D6Bd0098EEb33ca8f830FAf2a141Ea2E1"]
+        },
+        "Arbitrum_WETH->Base_USDC": {
+            "intervals": [
+                {
+                    "range": {
+                        "min": "0",
+                        "max": "3"
+                    },
+                    "rangeUnit": 3,
+                    "price": "3500000000",
+                    "priceUnit": 0
+                },
+                {
+                    "range": {
+                        "min": "4",
+                        "max": "18"
+                    },
+                    "rangeUnit": 3,
+                    "price": "3480000000",
+                    "priceUnit": 0
+                }
+            ],
+            "erc20Addreses": ["0x036CbD53842c5426634e7929541eC2318f3dCF7e"]
+        }
+    };
 
-export const PRICE_LIST_WITH_GAP_IN_RANGES = "{\n" +
-    "  \"Base_USDC->Arbitrum_USDC\": [\n" +
-    "    {\n" +
-    "      \"range\": {\n" +
-    "        \"min\": \"0\",\n" +
-    "        \"max\": \"99\"\n" +
-    "      },\n" +
-    "      \"rangeUnit\": 0,\n" +
-    "      \"price\": \"970000\",\n" +
-    "      \"priceUnit\": 2\n" +
-    "    },\n" +
-    "    {\n" +
-    "      \"range\": {\n" +
-    "        \"min\": \"101\",\n" +
-    "        \"max\": \"1000\"\n" +
-    "      },\n" +
-    "      \"rangeUnit\": 0,\n" +
-    "      \"price\": \"980000\",\n" +
-    "      \"priceUnit\": 2\n" +
-    "    }\n" +
-    "  ],\n" +
-    "  \"Arbitrum_WETH->Base_USDC\": [\n" +
-    "    {\n" +
-    "      \"range\": {\n" +
-    "        \"min\": \"0\",\n" +
-    "        \"max\": \"3\"\n" +
-    "      },\n" +
-    "      \"rangeUnit\": 3,\n" +
-    "      \"price\": \"3500000000\",\n" +
-    "      \"priceUnit\": 0\n" +
-    "    },\n" +
-    "    {\n" +
-    "      \"range\": {\n" +
-    "        \"min\": \"4\",\n" +
-    "        \"max\": \"18\"\n" +
-    "      },\n" +
-    "      \"rangeUnit\": 3,\n" +
-    "      \"price\": \"3480000000\",\n" +
-    "      \"priceUnit\": 0\n" +
-    "    }\n" +
-    "  ]\n" +
-    "}\n";
+export const PRICE_LIST_WITH_GAP_IN_RANGES = {
+    "Base_USDC->Arbitrum_USDC": {
+        "intervals": [
+            {
+                "range": {
+                    "min": "0",
+                    "max": "99"
+                },
+                "rangeUnit": 0,
+                "price": "970000",
+                "priceUnit": 2
+            },
+            {
+                "range": {
+                    "min": "101",
+                    "max": "1000"
+                },
+                "rangeUnit": 0,
+                "price": "980000",
+                "priceUnit": 2
+            }
+        ],
+        "erc20Addreses": ["0xf3C3351D6Bd0098EEb33ca8f830FAf2a141Ea2E1"]
+    },
+    "Arbitrum_WETH->Base_USDC": {
+        "intervals": [
+            {
+                "range": {
+                    "min": "0",
+                    "max": "3"
+                },
+                "rangeUnit": 3,
+                "price": "3500000000",
+                "priceUnit": 0
+            },
+            {
+                "range": {
+                    "min": "4",
+                    "max": "18"
+                },
+                "rangeUnit": 3,
+                "price": "3480000000",
+                "priceUnit": 0
+            }
+        ],
+        "erc20Addreses": ["0x036CbD53842c5426634e7929541eC2318f3dCF7e"]
+    }
+};

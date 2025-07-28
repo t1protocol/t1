@@ -1,10 +1,11 @@
 export type PriceList = {
-    [key in Direction]?:
-    {
-        intervals: Interval[];
-        erc20Addreses: string[];
-    }
+    [key in Direction]?: PriceListItem;
 };
+
+export type PriceListItem = {
+    intervals: Interval[];
+    erc20Addreses: string[];
+}
 
 export enum Direction {
     "Base_USDC->Arbitrum_USDC",
