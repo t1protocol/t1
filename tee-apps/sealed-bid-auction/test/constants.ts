@@ -22,7 +22,8 @@ export const PRICE_LIST_WITH_TWO_ITEMS = {
                     "priceUnit": 2
                 }
             ],
-            "erc20Addreses": ["0xf3C3351D6Bd0098EEb33ca8f830FAf2a141Ea2E1"]
+            "srcTokenAddresses": ["0xf3C3351D6Bd0098EEb33ca8f830FAf2a141Ea2E1"],
+            "destTokenAddresses": ["0x036CbD53842c5426634e7929541eC2318f3dCF7e"]
         },
         "Arbitrum_WETH->Base_USDC": {
             "intervals": [
@@ -45,7 +46,8 @@ export const PRICE_LIST_WITH_TWO_ITEMS = {
                     "priceUnit": 0
                 }
             ],
-            "erc20Addreses": ["0x036CbD53842c5426634e7929541eC2318f3dCF7e"]
+            "srcTokenAddresses": ["0x036CbD53842c5426634e7929541eC2318f3dCF7e"],
+            "destTokenAddresses": ["0xf3C3351D6Bd0098EEb33ca8f830FAf2a141Ea2E1"]
         }
     };
 

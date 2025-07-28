@@ -4,7 +4,8 @@ export type PriceList = {
 
 export type PriceListItem = {
     intervals: Interval[];
-    erc20Addreses: string[];
+    srcTokenAddresses: string[];
+    destTokenAddresses: string[];
 }
 
 export enum Direction {
