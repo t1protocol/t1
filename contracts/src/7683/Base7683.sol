@@ -3,6 +3,7 @@ pragma solidity 0.8.25;
 
 import { IERC20 } from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import { SafeERC20 } from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
+import { Address } from "@openzeppelin/contracts/utils/Address.sol";
 
 import { TypeCasts } from "@hyperlane-xyz/libs/TypeCasts.sol";
 import { IPermit2, ISignatureTransfer } from "@uniswap/permit2/src/interfaces/IPermit2.sol";
@@ -12,8 +13,11 @@ import {
     OnchainCrossChainOrder,
     ResolvedCrossChainOrder,
     IOriginSettler,
-    IDestinationSettler
+    IDestinationSettler,
+    Output,
+    FillInstruction
 } from "../interfaces/IERC7683.sol";
+import { OrderData, OrderEncoder } from "../libraries/7683/OrderEncoder.sol";
 
 /**
  * @title Base7683
@@ -26,6 +30,12 @@ import {
 abstract contract Base7683 is IOriginSettler, IDestinationSettler {
     // ============ Libraries ============
     using SafeERC20 for IERC20;
+
+    error InvalidOrderId();
+    error OrderFillExpired();
+    error InvalidOrderDomain();
+    error InvalidOrderType(bytes32 orderType);
+    error InvalidOriginDomain(uint32 originDomain);
 
     // ============ Constants ============
     /// @notice The instance of the Permit2 contract.
@@ -44,6 +54,12 @@ abstract contract Base7683 is IOriginSettler, IDestinationSettler {
     bytes32 public constant UNKNOWN = "";
     bytes32 public constant OPENED = "OPENED";
     bytes32 public constant FILLED = "FILLED";
+    /// @notice Status constant indicating that an order has been settled.
+    bytes32 public constant SETTLED = "SETTLED";
+    /// @notice Status constant indicating that a refund has been requested for this order.
+    bytes32 public constant REFUND_REQUESTED = "REFUND_REQUESTED";
+    /// @notice Status constant indicating that an order has been refunded.
+    bytes32 public constant REFUNDED = "REFUNDED";
 
     // ============ Structs ============
     /**
@@ -112,6 +128,7 @@ abstract contract Base7683 is IOriginSettler, IDestinationSettler {
     error InvalidNonce();
     error InvalidOrderOrigin();
     error InvalidNativeAmount();
+    error AmountOutTooLow();
 
     // ============ Constructor ============
     /**
@@ -161,45 +178,152 @@ abstract contract Base7683 is IOriginSettler, IDestinationSettler {
     }
 
     /**
-     * @notice Fills a single leg of a particular order on the destination chain
-     * @param _orderId Unique order identifier for this order
-     * @param _originData Data emitted on the origin to parameterize the fill
-     * @param _fillerData Data provided by the filler to inform the fill or express their preferences. It should
-     * contain the bytes32 encoded address of the receiver which is used at settlement time
+     * @dev Resolves a GaslessCrossChainOrder.
+     * @param _order The GaslessCrossChainOrder to resolve.
+     * NOT USED _originFillerData Any filler-defined data required by the settler
+     * @return A ResolvedCrossChainOrder structure.
+     * @return The order ID.
+     * @return The order nonce.
      */
-    function fill(bytes32 _orderId, bytes calldata _originData, bytes calldata _fillerData) external payable virtual {
-        if (orderStatus[_orderId] != UNKNOWN) revert InvalidOrderStatus();
-
-        _fillOrder(_orderId, _originData, _fillerData);
-
-        orderStatus[_orderId] = FILLED;
-        filledOrders[_orderId] = FilledOrder(_originData, _fillerData);
-
-        emit Filled(_orderId, _originData, _fillerData);
+    function _resolveOrder(
+        GaslessCrossChainOrder memory _order,
+        bytes calldata
+    )
+        internal
+        view
+        returns (ResolvedCrossChainOrder memory, bytes32, uint256)
+    {
+        return _resolvedOrder(
+            _order.orderDataType, _order.user, _order.openDeadline, _order.fillDeadline, _order.orderData
+        );
     }
 
     /**
-     * @notice Settles a batch of filled orders on the chain where the orders were opened.
-     * @dev Pays the filler the amount locked when the orders were opened.
-     * The settled status should not be changed here but rather on the origin chain. To allow the filler to retry in
-     * case some error occurs.
-     * Ensuring the order is eligible for settling in the origin chain is the responsibility of the caller.
-     * @param _orderIds An array of IDs for the orders to settle.
+     * @notice Resolves a OnchainCrossChainOrder.
+     * @param _order The OnchainCrossChainOrder to resolve.
+     * @return A ResolvedCrossChainOrder structure.
+     * @return The order ID.
+     * @return The order nonce.
      */
-    function settle(bytes32[] calldata _orderIds) external payable {
-        bytes[] memory ordersOriginData = new bytes[](_orderIds.length);
-        bytes[] memory ordersFillerData = new bytes[](_orderIds.length);
-        for (uint256 i = 0; i < _orderIds.length; i += 1) {
-            // all orders must be FILLED
-            if (orderStatus[_orderIds[i]] != FILLED) revert InvalidOrderStatus();
+    function _resolveOrder(OnchainCrossChainOrder memory _order)
+        internal
+        view
+        returns (ResolvedCrossChainOrder memory, bytes32, uint256)
+    {
+        return _resolvedOrder(_order.orderDataType, msg.sender, type(uint32).max, _order.fillDeadline, _order.orderData);
+    }
 
-            ordersOriginData[i] = filledOrders[_orderIds[i]].originData;
-            ordersFillerData[i] = filledOrders[_orderIds[i]].fillerData;
+    /**
+     * @dev Resolves an order into a ResolvedCrossChainOrder structure.
+     * @param _orderType The type of the order.
+     * @param _sender The sender of the order.
+     * @param _openDeadline The open deadline of the order.
+     * @param _fillDeadline The fill deadline of the order.
+     * @param _orderData The data of the order.
+     * @return resolvedOrder A ResolvedCrossChainOrder structure.
+     * @return orderId The order ID.
+     * @return nonce The order nonce.
+     */
+    function _resolvedOrder(
+        bytes32 _orderType,
+        address _sender,
+        uint32 _openDeadline,
+        uint32 _fillDeadline,
+        bytes memory _orderData
+    )
+        internal
+        view
+        returns (ResolvedCrossChainOrder memory resolvedOrder, bytes32 orderId, uint256 nonce)
+    {
+        if (_orderType != OrderEncoder.orderDataType()) revert InvalidOrderType(_orderType);
+
+        // IDEA: _orderData should not be directly typed as OrderData, it should contain information that is not
+        // present on the type used for open the order. So _fillDeadline and _user should be passed as arguments
+        OrderData memory orderData = OrderEncoder.decode(_orderData);
+
+        if (orderData.originDomain != _localDomain()) revert InvalidOriginDomain(orderData.originDomain);
+
+        // bytes32 destinationSettler = _mustHaveRemoteCounterpart(orderData.destinationDomain);
+
+        // enforce fillDeadline into orderData
+        orderData.fillDeadline = _fillDeadline;
+        // enforce sender into orderData
+        orderData.sender = TypeCasts.addressToBytes32(_sender);
+
+        // this can be used by the filler to approve the tokens to be spent on destination
+        Output[] memory maxSpent = new Output[](1);
+        maxSpent[0] = Output({
+            token: orderData.outputToken,
+            amount: 0, // irrelevant as we open intent with limit price
+            recipient: orderData.destinationSettler,
+            chainId: orderData.destinationDomain
+        });
+
+        // this can be used by the filler know how much it can expect to receive
+        Output[] memory minReceived = new Output[](1);
+        minReceived[0] = Output({
+            token: orderData.inputToken,
+            amount: orderData.amountIn,
+            recipient: bytes32(0),
+            chainId: orderData.originDomain
+        });
+
+        // this can be user by the filler to know how to fill the order
+        FillInstruction[] memory fillInstructions = new FillInstruction[](1);
+        fillInstructions[0] = FillInstruction({
+            destinationChainId: orderData.destinationDomain,
+            destinationSettler: orderData.destinationSettler,
+            originData: OrderEncoder.encode(orderData)
+        });
+
+        orderId = OrderEncoder.id(orderData);
+
+        resolvedOrder = ResolvedCrossChainOrder({
+            user: _sender,
+            originChainId: _localDomain(),
+            openDeadline: _openDeadline,
+            fillDeadline: _fillDeadline,
+            orderId: orderId,
+            minReceived: minReceived,
+            maxSpent: maxSpent,
+            fillInstructions: fillInstructions
+        });
+
+        nonce = orderData.senderNonce;
+    }
+
+    /**
+     * @notice Fills a single leg of a particular order on the destination chain
+     * @param orderId Unique order identifier for this order
+     * @param originData Data emitted on the origin to parameterize the fill
+     * @param fillerData Data provided by the filler to inform the amount they want to fill and the address they
+     * want to receive the source chain settle on.
+     * Formatted as: abi.encode(uint256 amountOut, address settlementReceiver)
+     */
+    function fill(bytes32 orderId, bytes calldata originData, bytes calldata fillerData) external payable virtual {
+        if (orderStatus[orderId] != UNKNOWN) revert InvalidOrderStatus();
+
+        OrderData memory orderData = OrderEncoder.decode(originData);
+        (uint256 amountOut,) = abi.decode(fillerData, (uint256, address));
+
+        if (orderId != OrderEncoder.id(orderData)) revert InvalidOrderId();
+        if (block.timestamp > orderData.fillDeadline) revert OrderFillExpired();
+        if (orderData.destinationDomain != _localDomain()) revert InvalidOrderDomain();
+        if (amountOut < orderData.minAmountOut) revert AmountOutTooLow();
+
+        address outputToken = TypeCasts.bytes32ToAddress(orderData.outputToken);
+        address recipient = TypeCasts.bytes32ToAddress(orderData.recipient);
+
+        if (outputToken == address(0)) {
+            if (amountOut != msg.value) revert InvalidNativeAmount();
+            Address.sendValue(payable(recipient), amountOut);
+        } else {
+            IERC20(outputToken).safeTransferFrom(msg.sender, recipient, amountOut);
         }
+        orderStatus[orderId] = FILLED;
+        filledOrders[orderId] = FilledOrder(originData, fillerData);
 
-        _settleOrders(_orderIds, ordersOriginData, ordersFillerData);
-
-        emit Settle(_orderIds, ordersFillerData);
+        emit Filled(orderId, originData, fillerData);
     }
 
     /**
@@ -303,62 +427,6 @@ abstract contract Base7683 is IOriginSettler, IDestinationSettler {
     }
 
     /**
-     * @notice Resolves a GaslessCrossChainOrder into a ResolvedCrossChainOrder.
-     * @dev To be implemented by the inheriting contract. Contains logic specific to the order type and data.
-     * @param _order The GaslessCrossChainOrder to resolve.
-     * @param _originFillerData Any filler-defined data required by the settler
-     * @return _resolvedOrder A ResolvedCrossChainOrder with hydrated data.
-     * @return _orderId The unique identifier for the order.
-     * @return _nonce The nonce associated with the order.
-     */
-    function _resolveOrder(
-        GaslessCrossChainOrder memory _order,
-        bytes calldata _originFillerData
-    )
-        internal
-        view
-        virtual
-        returns (ResolvedCrossChainOrder memory _resolvedOrder, bytes32 _orderId, uint256 _nonce);
-
-    /**
-     * @notice Resolves an OnchainCrossChainOrder into a ResolvedCrossChainOrder.
-     * @dev To be implemented by the inheriting contract. Contains logic specific to the order type and data.
-     * @param _order The OnchainCrossChainOrder to resolve.
-     * @return _resolvedOrder A ResolvedCrossChainOrder with hydrated data.
-     * @return _orderId The unique identifier for the order.
-     * @return _nonce The nonce associated with the order.
-     */
-    function _resolveOrder(OnchainCrossChainOrder memory _order)
-        internal
-        view
-        virtual
-        returns (ResolvedCrossChainOrder memory _resolvedOrder, bytes32 _orderId, uint256 _nonce);
-
-    /**
-     * @notice Fills an order with specific origin and filler data.
-     * @dev To be implemented by the inheriting contract. Defines how to process the origin and filler data.
-     * @param _orderId The unique identifier for the order to fill.
-     * @param _originData Data emitted on the origin chain to parameterize the fill.
-     * @param _fillerData Data provided by the filler, including preferences and additional information.
-     */
-    function _fillOrder(bytes32 _orderId, bytes calldata _originData, bytes calldata _fillerData) internal virtual;
-
-    /**
-     * @notice Settles a batch of orders using their origin and filler data.
-     * @dev To be implemented by the inheriting contract. Contains the specific logic for settlement.
-     * @param _orderIds An array of order IDs to settle.
-     * @param _ordersOriginData The origin data for the orders being settled.
-     * @param _ordersFillerData The filler data for the orders being settled.
-     */
-    function _settleOrders(
-        bytes32[] calldata _orderIds,
-        bytes[] memory _ordersOriginData,
-        bytes[] memory _ordersFillerData
-    )
-        internal
-        virtual;
-
-    /**
      * @notice Retrieves the local domain identifier.
      * @dev To be implemented by the inheriting contract. Specifies the logic to determine the local domain.
      * @return The local domain ID.
@@ -366,18 +434,84 @@ abstract contract Base7683 is IOriginSettler, IDestinationSettler {
     function _localDomain() internal view virtual returns (uint32);
 
     /**
-     * @notice Computes the unique identifier for a GaslessCrossChainOrder.
-     * @dev To be implemented by the inheriting contract. Specifies the logic to compute the order ID.
+     * @dev Gets the ID of a GaslessCrossChainOrder.
      * @param _order The GaslessCrossChainOrder to compute the ID for.
-     * @return The unique identifier for the order.
+     * @return The computed order ID.
      */
-    function _getOrderId(GaslessCrossChainOrder memory _order) internal pure virtual returns (bytes32);
+    function _getOrderId(GaslessCrossChainOrder memory _order) internal pure returns (bytes32) {
+        return _getOrderId(_order.orderDataType, _order.orderData);
+    }
 
     /**
-     * @notice Computes the unique identifier for an OnchainCrossChainOrder.
-     * @dev To be implemented by the inheriting contract. Specifies the logic to compute the order ID.
+     * @dev Gets the ID of an OnchainCrossChainOrder.
      * @param _order The OnchainCrossChainOrder to compute the ID for.
-     * @return The unique identifier for the order.
+     * @return The computed order ID.
      */
-    function _getOrderId(OnchainCrossChainOrder memory _order) internal pure virtual returns (bytes32);
+    function _getOrderId(OnchainCrossChainOrder memory _order) internal pure returns (bytes32) {
+        return _getOrderId(_order.orderDataType, _order.orderData);
+    }
+
+    /**
+     * @dev Computes the ID of an order given its type and data.
+     * @param _orderType The type of the order.
+     * @param _orderData The data of the order.
+     * @return orderId The computed order ID.
+     */
+    function _getOrderId(bytes32 _orderType, bytes memory _orderData) internal pure returns (bytes32 orderId) {
+        if (_orderType != OrderEncoder.orderDataType()) revert InvalidOrderType(_orderType);
+        OrderData memory orderData = OrderEncoder.decode(_orderData);
+        orderId = OrderEncoder.id(orderData);
+    }
+
+    // Left as demo for batch filler repayment
+    // /**
+    //  * @notice Settles a batch of filled orders on the chain where the orders were opened.
+    //  * @dev Pays the filler the amount locked when the orders were opened.
+    //  * The settled status should not be changed here but rather on the origin chain. To allow the filler to retry in
+    //  * case some error occurs.
+    //  * Ensuring the order is eligible for settling in the origin chain is the responsibility of the caller.
+    //  * @param _orderIds An array of IDs for the orders to settle.
+    //  */
+    // function settle(bytes32[] calldata _orderIds) external payable {
+    //     bytes[] memory ordersOriginData = new bytes[](_orderIds.length);
+    //     bytes[] memory ordersFillerData = new bytes[](_orderIds.length);
+    //     for (uint256 i = 0; i < _orderIds.length; i += 1) {
+    //         // all orders must be FILLED
+    //         if (orderStatus[_orderIds[i]] != FILLED) revert InvalidOrderStatus();
+
+    //         ordersOriginData[i] = filledOrders[_orderIds[i]].originData;
+    //         ordersFillerData[i] = filledOrders[_orderIds[i]].fillerData;
+    //     }
+
+    //     _settleOrders(_orderIds, ordersOriginData, ordersFillerData);
+
+    //     emit Settle(_orderIds, ordersFillerData);
+    // }
+
+    // /**
+    //  * @dev Settles multiple orders by dispatching the settlement instructions.
+    //  * The proper status of all the orders (filled) is validated on the Base7683 before calling this function.
+    //  * It assumes that all orders were originated in the same originDomain so it uses the the one from the first one
+    // for
+    //  * dispatching the message, but if some order differs on the originDomain it can be re-settle later.
+    //  * @param _orderIds The IDs of the orders to settle.
+    //  * @param _ordersOriginData The original data of the orders.
+    //  * @param _ordersFillerData The filler data for the orders.
+    //  */
+    // function _settleOrders(
+    //     bytes32[] calldata _orderIds,
+    //     bytes[] memory _ordersOriginData,
+    //     bytes[] memory _ordersFillerData
+    // )
+    //     internal
+    // {
+    //     // at this point we are sure all orders are filled, use the first order to get the originDomain
+    //     // if some order differs on the originDomain it can be re-settle later
+    //     _dispatchSettle(OrderEncoder.decode(_ordersOriginData[0]).originDomain, _orderIds, _ordersFillerData);
+    // }
+
+    // /// @notice Not implemented
+    // function _dispatchSettle(uint32, bytes32[] memory, bytes[] memory) internal pure {
+    //     revert FunctionNotImplemented("_dispatchSettle");
+    // }
 }

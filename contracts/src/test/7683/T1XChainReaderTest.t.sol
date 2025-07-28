@@ -10,9 +10,13 @@ import { IT1XChainReader } from "../../libraries/xChain/IT1XChainReader.sol";
 import { T1XChainReader } from "../../libraries/xChain/T1XChainReader.sol";
 import { T1XChainReaderBaseTestSetup } from "./T1XChainReaderBaseTestSetup.sol";
 import { T1ERC7683 } from "../../7683/T1ERC7683.sol";
+import { Base7683 } from "../../7683/Base7683.sol";
 
 contract T1XChainReaderTest is T1XChainReaderBaseTestSetup {
     using TypeCasts for address;
+
+    uint256 batchIndex = 0;
+    uint256 position = 0;
 
     function setUp() public virtual override {
         super.setUp();
@@ -51,9 +55,6 @@ contract T1XChainReaderTest is T1XChainReaderBaseTestSetup {
     // writes the new merkle root for the target batch
     // 5. Solver calls handleReadResultWithProof on 7683 contract with merkle proof, settles intent and releases funds
     function test_ERC7683SettlementFlow() public {
-        uint256 batchIndex = 0;
-        uint256 position = 0;
-
         (, bytes32 orderId, bytes32 requestId) = _openAndFillOrder();
 
         // 4. Process the read request on L2 (destination chain) & Relay the result back to L1
@@ -79,8 +80,7 @@ contract T1XChainReaderTest is T1XChainReaderBaseTestSetup {
     }
 
     function test_ERC7683SettlementFlowWithAnotherTreePosition() public {
-        uint256 batchIndex = 0;
-        uint256 position = 3;
+        position = 3;
 
         (, bytes32 orderId, bytes32 requestId) = _openAndFillOrder();
 
@@ -105,8 +105,54 @@ contract T1XChainReaderTest is T1XChainReaderBaseTestSetup {
         assertTrue(l1T1ERC7683.orderVerified(orderId), "Order should be verified");
     }
 
+    function test_shouldFillWithAmountOutHigherThanLimit() public {
+        OrderData memory orderData = _prepareOrderData();
+        OnchainCrossChainOrder memory order =
+            _prepareOnchainOrder(OrderEncoder.encode(orderData), orderData.fillDeadline, OrderEncoder.orderDataType());
+
+        vm.startPrank(kakaroto);
+        inputToken.approve(address(l1T1ERC7683), amount);
+        vm.recordLogs();
+        l1T1ERC7683.open(order);
+        vm.stopPrank();
+
+        (bytes32 orderId,) = _getOrderIDFromLogs();
+        assertEq(l1T1ERC7683.orderStatus(orderId), l1T1ERC7683.OPENED());
+
+        uint256 amountOut = amount * 2;
+        vm.startPrank(vegeta);
+        outputToken.approve(address(l2T1ERC7683), amountOut);
+        bytes memory originData = OrderEncoder.encode(orderData);
+        bytes memory fillerData = abi.encode(amountOut, TypeCasts.addressToBytes32(vegeta));
+        l2T1ERC7683.fill(orderId, originData, fillerData);
+        assertEq(l2T1ERC7683.orderStatus(orderId), l2T1ERC7683.FILLED());
+        vm.stopPrank();
+    }
+
+    function test_revertFillWithAmountOutLowerThanLimit() public {
+        OrderData memory orderData = _prepareOrderData();
+        OnchainCrossChainOrder memory order =
+            _prepareOnchainOrder(OrderEncoder.encode(orderData), orderData.fillDeadline, OrderEncoder.orderDataType());
+
+        vm.startPrank(kakaroto);
+        inputToken.approve(address(l1T1ERC7683), amount);
+        vm.recordLogs();
+        l1T1ERC7683.open(order);
+        vm.stopPrank();
+
+        (bytes32 orderId,) = _getOrderIDFromLogs();
+        assertEq(l1T1ERC7683.orderStatus(orderId), l1T1ERC7683.OPENED());
+
+        uint256 amountOut = amount - 1;
+        vm.startPrank(vegeta);
+        outputToken.approve(address(l2T1ERC7683), amountOut);
+        bytes memory originData = OrderEncoder.encode(orderData);
+        bytes memory fillerData = abi.encode(amountOut, TypeCasts.addressToBytes32(vegeta));
+        vm.expectRevert(Base7683.AmountOutTooLow.selector);
+        l2T1ERC7683.fill(orderId, originData, fillerData);
+    }
+
     function test_incrementBatchIndex() public {
-        uint256 batchIndex = 0;
         bytes32 root = bytes32(vm.randomBytes(32));
 
         uint256 precommitBatchIndex = originReader.nextBatchIndex();
@@ -117,7 +163,6 @@ contract T1XChainReaderTest is T1XChainReaderBaseTestSetup {
     }
 
     function test_proverAbleToUpdatePreviousBatchIndexRoot() public {
-        uint256 batchIndex = 0;
         bytes32 root = bytes32(vm.randomBytes(32));
         bytes32 root2 = bytes32(vm.randomBytes(32));
 
@@ -128,9 +173,6 @@ contract T1XChainReaderTest is T1XChainReaderBaseTestSetup {
     }
 
     function test_revertWithInvalidProofData() public {
-        uint256 batchIndex = 0;
-        uint256 position = 0;
-
         (, bytes32 orderId, bytes32 requestId) = _openAndFillOrder();
 
         bytes memory result = abi.encode(l2T1ERC7683.getFilledOrderStatus(orderId));
@@ -144,9 +186,6 @@ contract T1XChainReaderTest is T1XChainReaderBaseTestSetup {
     }
 
     function test_revertWithInvalidProof() public {
-        uint256 batchIndex = 0;
-        uint256 position = 0;
-
         (, bytes32 orderId, bytes32 requestId) = _openAndFillOrder();
 
         bytes memory result = abi.encode(l2T1ERC7683.getFilledOrderStatus(orderId));
@@ -164,9 +203,6 @@ contract T1XChainReaderTest is T1XChainReaderBaseTestSetup {
     }
 
     function test_revertWithInvalidResultData() public {
-        uint256 batchIndex = 0;
-        uint256 position = 0;
-
         (,, bytes32 requestId) = _openAndFillOrder();
 
         // 4. First, set up the proof root by calling handle on the reader
@@ -185,9 +221,6 @@ contract T1XChainReaderTest is T1XChainReaderBaseTestSetup {
     }
 
     function test_sameProofShouldNotSettleTwice() public {
-        uint256 batchIndex = 0;
-        uint256 position = 0;
-
         (, bytes32 orderId, bytes32 requestId) = _openAndFillOrder();
 
         bytes memory result = abi.encode(l2T1ERC7683.getFilledOrderStatus(orderId));
@@ -204,9 +237,6 @@ contract T1XChainReaderTest is T1XChainReaderBaseTestSetup {
     }
 
     function test_settlementIfStatusIsRefundRequested() public {
-        uint256 batchIndex = 0;
-        uint256 position = 0;
-
         (, bytes32 orderId, bytes32 requestId) = _openAndFillOrder();
 
         bytes memory result = abi.encode(l2T1ERC7683.getFilledOrderStatus(orderId));
@@ -235,9 +265,6 @@ contract T1XChainReaderTest is T1XChainReaderBaseTestSetup {
     }
 
     function test_settlementIfReadRequestedTwice() public {
-        uint256 batchIndex = 0;
-        uint256 position = 0;
-
         (, bytes32 orderId, bytes32 requestId) = _openAndFillOrder();
 
         bytes memory result = abi.encode(l2T1ERC7683.getFilledOrderStatus(orderId));
@@ -263,9 +290,6 @@ contract T1XChainReaderTest is T1XChainReaderBaseTestSetup {
     }
 
     function test_settlementWithEmptyResultData() public {
-        uint256 batchIndex = 0;
-        uint256 position = 0;
-
         (, bytes32 orderId, bytes32 requestId) = _openAndFillOrder();
 
         // 4. First, set up the proof root by calling handle on the reader
@@ -291,7 +315,6 @@ contract T1XChainReaderTest is T1XChainReaderBaseTestSetup {
     }
 
     function test_revertIfNotProver() public {
-        uint256 batchIndex = 0;
         bytes32 requestId = hex"";
         bytes memory orderStatus = hex"";
 
@@ -303,7 +326,7 @@ contract T1XChainReaderTest is T1XChainReaderBaseTestSetup {
     }
 
     function test_revertWithInvalidBatchIndex() public {
-        uint256 batchIndex = 1;
+        batchIndex = 1;
         bytes32 requestId = bytes32(vm.randomBytes(32));
         bytes memory orderStatus = vm.randomBytes(10);
 
@@ -388,7 +411,7 @@ contract T1XChainReaderTest is T1XChainReaderBaseTestSetup {
         vm.startPrank(vegeta);
         outputToken.approve(address(l2T1ERC7683), amount);
         bytes memory originData = OrderEncoder.encode(orderData);
-        bytes memory fillerData = abi.encode(TypeCasts.addressToBytes32(vegeta));
+        bytes memory fillerData = abi.encode(amount, TypeCasts.addressToBytes32(vegeta));
         l2T1ERC7683.fill(orderId_, originData, fillerData);
         assertEq(l2T1ERC7683.orderStatus(orderId_), l2T1ERC7683.FILLED());
         vm.stopPrank();

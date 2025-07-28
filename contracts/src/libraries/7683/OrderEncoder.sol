@@ -7,7 +7,7 @@ struct OrderData {
     bytes32 inputToken;
     bytes32 outputToken;
     uint256 amountIn;
-    uint256 amountOut;
+    uint256 minAmountOut;
     uint256 senderNonce;
     uint32 originDomain;
     uint32 destinationDomain;
@@ -24,7 +24,7 @@ library OrderEncoder {
         "bytes32 inputToken,",
         "bytes32 outputToken,",
         "uint256 amountIn,",
-        "uint256 amountOut,",
+        "uint256 minAmountOut,",
         "uint256 senderNonce,",
         "uint32 originDomain,",
         "uint32 destinationDomain,",

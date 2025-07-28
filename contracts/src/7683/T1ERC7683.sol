@@ -1,14 +1,16 @@
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.8.25;
+pragma solidity 0.8.25;
 
 import { OwnableUpgradeable } from "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
 import { PausableUpgradeable } from "@openzeppelin/contracts-upgradeable/security/PausableUpgradeable.sol";
 import { IERC20 } from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import { SafeERC20 } from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
+import { Address } from "@openzeppelin/contracts/utils/Address.sol";
 import { TypeCasts } from "@hyperlane-xyz/libs/TypeCasts.sol";
 
 import { GaslessCrossChainOrder, ResolvedCrossChainOrder, OnchainCrossChainOrder } from "../interfaces/IERC7683.sol";
-import { BasicSwap7683 } from "./BasicSwap7683.sol";
+// import { BasicSwap7683 } from "./BasicSwap7683.sol";
+import { Base7683 } from "./Base7683.sol";
 import { Hyperlane7683Message } from "../libraries/7683/Hyperlane7683Message.sol";
 import { OrderData, OrderEncoder } from "../libraries/7683/OrderEncoder.sol";
 import { IT1XChainReader } from "../libraries/xChain/IT1XChainReader.sol";
@@ -19,7 +21,7 @@ import { IT1XChainReader } from "../libraries/xChain/IT1XChainReader.sol";
  * @notice This contract extends BasicSwap7683 with pull-based settlement using t1 cross-chain reads
  * @dev Implements both push-based messaging and pull-based verification for orders
  */
-contract T1ERC7683 is BasicSwap7683, OwnableUpgradeable, PausableUpgradeable {
+contract T1ERC7683 is Base7683, OwnableUpgradeable, PausableUpgradeable {
     using SafeERC20 for IERC20;
 
     // ============ Constants ============
@@ -50,11 +52,23 @@ contract T1ERC7683 is BasicSwap7683, OwnableUpgradeable, PausableUpgradeable {
      */
     event SettlementVerified(bytes32 indexed orderId, bool isSettled);
     /**
+     * @notice Emitted when an order is settled.
+     * @param orderId The ID of the settled order.
+     * @param receiver The address of the order's input token receiver.
+     */
+    event Settled(bytes32 indexed orderId, address receiver);
+    /**
      * @notice Emitted when an order refund verification is requested
      * @param orderId The ID of the order
      * @param requestId The ID of the read request
      */
     event RefundVerificationRequested(bytes32 indexed orderId, bytes32 indexed requestId);
+    /**
+     * @notice Emitted when an order is refunded.
+     * @param orderId The ID of the refunded order.
+     * @param receiver The address of the order's input token receiver.
+     */
+    event Refunded(bytes32 indexed orderId, address receiver);
 
     // ============ Upgrade Gap ============
     /// @dev Reserved storage slots for upgradeability.
@@ -63,19 +77,17 @@ contract T1ERC7683 is BasicSwap7683, OwnableUpgradeable, PausableUpgradeable {
     // ============ Errors ============
 
     error LengthMismatch();
-    error FunctionNotImplemented(string functionName);
-    error SettlementFailed();
-    error RefundFailed();
     error OrderAlreadySettled();
     error InvalidRequest();
     error InvalidOrder();
     error OrderFillNotExpired();
+    error NotEligible();
 
     /// @notice Initializes the contract with the specified dependencies
     /// @param _permit2 The address of the permit2 contract
     /// @param _xChainRead The address of the cross-chain read contract
     /// @param localDomain_ The local domain (chain id)
-    constructor(address _permit2, address _xChainRead, uint32 localDomain_) BasicSwap7683(_permit2) {
+    constructor(address _permit2, address _xChainRead, uint32 localDomain_) Base7683(_permit2) {
         xChainRead = IT1XChainReader(_xChainRead);
         localDomain = localDomain_;
     }
@@ -218,28 +230,85 @@ contract T1ERC7683 is BasicSwap7683, OwnableUpgradeable, PausableUpgradeable {
             (, bytes memory _orderData) = abi.decode(openOrders[orderId], (bytes32, bytes));
             OrderData memory orderData = OrderEncoder.decode(_orderData);
 
-            _handle(orderData.destinationDomain, orderData.destinationSettler, result);
+            // Remove the first 32 bytes prefix of the message
+            bytes memory _innerMessage = abi.decode(result, (bytes));
+            (bool _settle, bytes32[] memory _orderIds, bytes[] memory _ordersFillerData) =
+                abi.decode(_innerMessage, (bool, bytes32[], bytes[]));
+
+            for (uint256 i = 0; i < _orderIds.length; i++) {
+                if (_settle) {
+                    (, address settlementReceiver) = abi.decode(_ordersFillerData[i], (uint256, address));
+                    _handleSettleOrder(
+                        orderData.destinationDomain, orderData.destinationSettler, _orderIds[i], settlementReceiver
+                    );
+                }
+            }
         }
 
         emit SettlementVerified(orderId, isSettled);
     }
 
-    /// @notice Handles incoming messages
-    /// @dev Decodes the message and processes settlement or refund operations accordingly
-    /// @param _originDomain The domain from which the message originates
-    /// @param _sender The address of the sender on the origin domain
-    /// @param _message The encoded message received via t1
-    function _handle(uint32 _originDomain, bytes32 _sender, bytes memory _message) internal {
-        // Remove the first 32 bytes prefix of the message
-        bytes memory _innerMessage = abi.decode(_message, (bytes));
-        (bool _settle, bytes32[] memory _orderIds, bytes[] memory _ordersFillerData) =
-            abi.decode(_innerMessage, (bool, bytes32[], bytes[]));
+    /**
+     * @dev Handles settling an individual order, should be called by the inheriting contract when receiving a setting
+     * instruction from a remote chain.
+     * @param _messageOrigin The domain from which the message originates.
+     * @param _messageSender The address of the sender on the origin domain.
+     * @param _orderId The ID of the order to settle.
+     * @param settlementReceiver The receiver address (encoded as bytes32).
+     */
+    function _handleSettleOrder(
+        uint32 _messageOrigin,
+        bytes32 _messageSender,
+        bytes32 _orderId,
+        address settlementReceiver
+    )
+        internal
+        virtual
+    {
+        (bool isEligible, OrderData memory orderData) = _checkOrderEligibility(_messageOrigin, _messageSender, _orderId);
 
-        for (uint256 i = 0; i < _orderIds.length; i++) {
-            if (_settle) {
-                _handleSettleOrder(_originDomain, _sender, _orderIds[i], abi.decode(_ordersFillerData[i], (bytes32)));
-            }
+        if (!isEligible) revert NotEligible();
+
+        orderStatus[_orderId] = SETTLED;
+
+        address inputToken = TypeCasts.bytes32ToAddress(orderData.inputToken);
+
+        _transferTokenOut(inputToken, settlementReceiver, orderData.amountIn);
+
+        emit Settled(_orderId, settlementReceiver);
+    }
+
+    /**
+     * @notice Checks if order is eligible for settlement or refund .
+     * @dev Order must be OPENED and the message was sent from the appropriated chain and contract.
+     * @param _messageOrigin The origin domain of the message.
+     * @param _messageSender The sender identifier of the message.
+     * @param _orderId The unique identifier of the order.
+     * @return A boolean indicating if the order is valid, and the decoded OrderData structure.
+     */
+    function _checkOrderEligibility(
+        uint32 _messageOrigin,
+        bytes32 _messageSender,
+        bytes32 _orderId
+    )
+        internal
+        virtual
+        returns (bool, OrderData memory)
+    {
+        OrderData memory orderData;
+
+        // check if the order is opened or asked for refund to ensure it belongs to this domain, skip otherwise
+        bytes32 status = orderStatus[_orderId];
+        if (status != OPENED && status != REFUND_REQUESTED) return (false, orderData);
+
+        (, bytes memory _orderData) = abi.decode(openOrders[_orderId], (bytes32, bytes));
+        orderData = OrderEncoder.decode(_orderData);
+
+        if (orderData.destinationDomain != _messageOrigin || orderData.destinationSettler != _messageSender) {
+            return (false, orderData);
         }
+
+        return (true, orderData);
     }
 
     /// @notice Retrieves the local domain identifier.
@@ -358,10 +427,19 @@ contract T1ERC7683 is BasicSwap7683, OwnableUpgradeable, PausableUpgradeable {
         if (filled) revert OrderAlreadySettled();
     }
 
-    // ============ Internal Functions ============
-
-    /// @notice Not implemented
-    function _dispatchSettle(uint32, bytes32[] memory, bytes[] memory) internal pure override {
-        revert FunctionNotImplemented("_dispatchSettle");
+    /**
+     * @notice Transfers tokens or ETH out of the contract.
+     * @dev If _token is the zero address, transfers ETH using a safe method; otherwise, performs an ERC20 token
+     * transfer.
+     * @param _token The address of the token to transfer (use address(0) for ETH).
+     * @param _to The recipient address.
+     * @param _amount The amount of tokens or ETH to transfer.
+     */
+    function _transferTokenOut(address _token, address _to, uint256 _amount) internal {
+        if (_token == address(0)) {
+            Address.sendValue(payable(_to), _amount);
+        } else {
+            IERC20(_token).safeTransfer(_to, _amount);
+        }
     }
 }

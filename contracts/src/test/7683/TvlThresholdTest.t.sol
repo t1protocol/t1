@@ -167,7 +167,7 @@ contract TvlThresholdTest is BaseTest {
             inputToken: TypeCasts.addressToBytes32(address(inputToken)),
             outputToken: TypeCasts.addressToBytes32(address(outputToken)),
             amountIn: amount,
-            amountOut: amount,
+            minAmountOut: amount,
             senderNonce: 1,
             originDomain: origin,
             destinationDomain: destination,
