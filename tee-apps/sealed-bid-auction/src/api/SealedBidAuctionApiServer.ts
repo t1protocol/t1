@@ -3,6 +3,7 @@ import type {Server} from "bun";
 import {SealedBidAuctionController} from "./SealedBidAuctionController.ts";
 import {WinstonLogger} from "../utils/WinstonLogger.ts";
 import {SolverPriceBook} from "../core/SolverPriceBook.ts";
+import {AuctionService} from "../core/AuctionService.ts";
 
 type AuthData = {
     username: string;
@@ -18,7 +19,7 @@ export class SealedBidAuctionApiServer {
 
     public constructor() {
         this.solverPriceBook = new SolverPriceBook();
-        this.auctionController = new SealedBidAuctionController(this.solverPriceBook);
+        this.auctionController = new SealedBidAuctionController(new AuctionService(this.solverPriceBook));
     }
 
     public async start(port: number, tls: boolean) {

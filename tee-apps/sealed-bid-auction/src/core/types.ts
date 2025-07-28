@@ -2,7 +2,7 @@ export type PriceListItem = {
     direction: Direction;
     intervals: Interval[];
     srcTokenAddresses: string[];
-    destTokenAddresses: string[];
+    dstTokenAddress: string[];
     solverAddress: string;
 }
 
@@ -22,10 +22,10 @@ enum Token {
 
 export type Interval = {
     range: {
-        min: string; // must be an integer representing full tokens
-        max: string; // must be an integer representing full tokens
+        min: number; // must be an integer representing full tokens
+        max: number; // must be an integer representing full tokens
     };
     rangeUnit: Token;
-    price: string; // must be an integer representing the smallest denomination of the token
+    price: number; // must be an integer representing the smallest denomination of the token
     priceUnit: Token;
 };

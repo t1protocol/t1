@@ -1,23 +1,25 @@
 import type {BunRequest} from "bun";
+
 import {AuctionService} from "../core/AuctionService.ts";
-import type {PreauctionRequest} from "./types.ts";
-import type {SolverPriceBook} from "../core/SolverPriceBook.ts";
+import type {AuctionRequest} from "./types.ts";
 
 export class SealedBidAuctionController {
 
-    private readonly auctionService;
-
-    constructor(private readonly solverPricebook: SolverPriceBook) {
-        this.auctionService = new AuctionService(this.solverPricebook);
-    }
+    constructor(private readonly auctionService: AuctionService) {}
 
     public async preauction(req: BunRequest): Promise<Response> {
         try {
-            const preauctionRequest: PreauctionRequest = JSON.parse(await req.text());
+            const auctionRequest: AuctionRequest = JSON.parse(await req.text());
+            const auctionQuote = this.auctionService.auction(auctionRequest);
 
-            return new Response("", {status: 200})
+            if (auctionQuote) {
+                return new Response(JSON.stringify(auctionQuote), {status: 200});
+            } else {
+                return new Response("No quote found for this pair", {status: 204});
+            }
+
         } catch (e: any) {
-            return new Response(`Invalid request: ${e}`, {status: 400})
+            return new Response(`Invalid request: ${e}`, {status: 400});
         }
     }
 }
