@@ -1,11 +1,9 @@
-export type PriceList = {
-    [key in Direction]?: PriceListItem;
-};
-
 export type PriceListItem = {
+    direction: Direction;
     intervals: Interval[];
     srcTokenAddresses: string[];
     destTokenAddresses: string[];
+    solverAddress: string;
 }
 
 export enum Direction {
@@ -14,13 +12,6 @@ export enum Direction {
     "Arbitrum_USDC->Base_USDC",
     "Arbitrum_WETH->Base_USDC",
 }
-
-export const ALL_DIRECTIONS = [
-    "Base_USDC->Arbitrum_USDC",
-    "Base_USDC->Arbitrum_WETH",
-    "Arbitrum_USDC->Base_USDC",
-    "Arbitrum_WETH->Base_USDC"
-];
 
 enum Token {
     Base_USDC = "Base_USDC",

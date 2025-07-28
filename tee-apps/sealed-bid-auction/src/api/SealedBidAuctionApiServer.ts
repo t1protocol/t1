@@ -11,10 +11,15 @@ type AuthData = {
 export class SealedBidAuctionApiServer {
     private logger = new WinstonLogger(SealedBidAuctionApiServer.name);
 
-    private auctionController = new SealedBidAuctionController();
-    private solverPriceBook = new SolverPriceBook();
+    private readonly solverPriceBook;
+    private readonly auctionController;
 
     private server: Server | null = null;
+
+    public constructor() {
+        this.solverPriceBook = new SolverPriceBook();
+        this.auctionController = new SealedBidAuctionController(this.solverPriceBook);
+    }
 
     public async start(port: number, tls: boolean) {
         if (this.server) {
@@ -33,7 +38,7 @@ export class SealedBidAuctionApiServer {
             } : {},
             routes: {
                 "/healthcheck": new Response("OK"),
-                "/api/auction": req => this.auctionController.auction(req),
+                "/api/preauction": req => this.auctionController.preauction(req),
             },
             fetch(req, server) {
                 const success = server.upgrade(req, {
