@@ -57,6 +57,7 @@ export class SealedBidAuctionApiServer {
             },
             websocket: {
                 open(ws) {
+                    ws.subscribe('intent-auction');
                     console.log(`Client ${ws.data.username} connected`);
                     ws.send("Welcome!");
                 },
@@ -70,8 +71,10 @@ export class SealedBidAuctionApiServer {
                     }
                 },
                 close(ws, _code, _reason) {
+                    ws.unsubscribe('intent-auction');
                     console.log(`Client ${ws.data.username} disconnected`);
                 },
+
             },
         });
 
@@ -85,5 +88,9 @@ export class SealedBidAuctionApiServer {
             this.server = null;
             this.logger.info("API server stopped");
         }
+    }
+
+    public publishAuctionResult(msg: string) {
+        this.server?.publish('intent-auction', msg);
     }
 }

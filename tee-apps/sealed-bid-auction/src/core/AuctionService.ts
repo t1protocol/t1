@@ -12,10 +12,8 @@ type Price = {
 export class AuctionService {
     constructor(private readonly solverPricebook: SolverPriceBook) {}
 
-    public auction(request: AuctionRequest): AuctionQuote | null {
-        const pricesForAskedTokens = this.findPricesForAskedTokens(request);
-
-        const bestPrice = this.chooseBestPrice(pricesForAskedTokens);
+    public preauction(request: AuctionRequest): AuctionQuote | null {
+        const bestPrice = this.auction(request.srcTokenAddress, request.dstTokenAddress, request.amountIn);
 
         if (!bestPrice) {
             throw new Error("No quote found for this pair");
@@ -28,6 +26,12 @@ export class AuctionService {
                 timestamp: Date.now()
             };
         }
+    }
+
+    public auction(srcTokenAddress: string, dstTokenAddress: string, amountIn: bigint) {
+        const pricesForAskedTokens = this.findPricesForAskedTokens(srcTokenAddress, dstTokenAddress, amountIn);
+
+        return this.chooseBestPrice(pricesForAskedTokens);
     }
 
     private getCorrectInterval(priceListItem: PriceListItem, amount: bigint): Interval | undefined {
@@ -51,16 +55,16 @@ export class AuctionService {
         return bestPrice;
     }
 
-    private findPricesForAskedTokens(request: AuctionRequest) {
+    private findPricesForAskedTokens(srcTokenAddress: string, dstTokenAddress: string, amountIn: bigint) {
         return this.solverPricebook.getCurrentPrices().flatMap(
             priceItems => priceItems.filter(
                 priceItem =>
-                    priceItem.srcTokenAddresses.includes(request.srcTokenAddress) &&
-                    priceItem.dstTokenAddress.includes(request.dstTokenAddress) &&
-                    this.getCorrectInterval(priceItem, request.amountIn) !== undefined
+                    priceItem.srcTokenAddresses.includes(srcTokenAddress) &&
+                    priceItem.dstTokenAddress.includes(dstTokenAddress) &&
+                    this.getCorrectInterval(priceItem, amountIn) !== undefined
             ).map(priceItem => {
                 return {
-                    price: this.getCorrectInterval(priceItem, request.amountIn)!.price,
+                    price: this.getCorrectInterval(priceItem, amountIn)!.price,
                     solverAddress: priceItem.solverAddress
                 };
             })
