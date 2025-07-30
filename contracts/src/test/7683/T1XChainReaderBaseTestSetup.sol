@@ -64,6 +64,7 @@ contract T1XChainReaderBaseTestSetup is BaseTest {
             destinationDomain: destination,
             destinationSettler: address(l2T1ERC7683).addressToBytes32(),
             fillDeadline: uint32(block.timestamp + 100),
+            closedAuction: false,
             data: new bytes(0)
         });
     }
