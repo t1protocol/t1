@@ -4,7 +4,7 @@ import type {AuctionQuote, AuctionRequest} from "../api/types.ts";
 import type {SolverPriceBook} from "./SolverPriceBook.ts";
 import type {Interval, PriceListItem} from "./types.ts";
 
-type Price = {
+export type Price = {
     price: bigint;
     solverAddress: string;
 }

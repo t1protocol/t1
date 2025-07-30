@@ -3,7 +3,8 @@ import type {Server} from "bun";
 import {SealedBidAuctionController} from "./SealedBidAuctionController.ts";
 import {WinstonLogger} from "../utils/WinstonLogger.ts";
 import {SolverPriceBook} from "../core/SolverPriceBook.ts";
-import {AuctionService} from "../core/AuctionService.ts";
+import {AuctionService, type Price} from "../core/AuctionService.ts";
+import type {AuctionResult} from "./types.ts";
 
 type AuthData = {
     username: string;
@@ -90,7 +91,14 @@ export class SealedBidAuctionApiServer {
         }
     }
 
-    public publishAuctionResult(msg: string) {
-        this.server?.publish('intent-auction', msg);
+    public publishAuctionResult(price: Price, orderId: string, resolvedOrder: string) {
+        const result: AuctionResult = {
+            winner: price.solverAddress,
+            price: price.price,
+            orderId,
+            resolvedOrder
+        }
+
+        this.server?.publish('intent-auction', JSON.stringify(result));
     }
 }

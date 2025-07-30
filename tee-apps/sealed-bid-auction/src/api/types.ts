@@ -20,3 +20,10 @@ export interface AuctionQuote {
     solverAddress: string;
     timestamp: number;
 }
+
+export interface AuctionResult {
+    winner: string;
+    price: bigint;
+    orderId: string;
+    resolvedOrder: string;
+}

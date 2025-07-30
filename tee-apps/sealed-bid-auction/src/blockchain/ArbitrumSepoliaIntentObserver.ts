@@ -1,15 +1,30 @@
-import {createPublicClient, http, parseAbi, parseAbiItem, parseEventLogs, type WatchEventOnLogsParameter} from "viem"
+import {
+    createPublicClient, decodeFunctionResult,
+    http,
+    parseAbi,
+    parseAbiItem,
+    parseEventLogs,
+    type WatchEventOnLogsParameter
+} from "viem"
 import {arbitrumSepolia} from "viem/chains"
 
 import type {IntentObserver} from "./IntentObserver.ts";
 import type {AuctionService} from "../core/AuctionService.ts";
+import t1Erc7683Abi from "../../../../contracts/artifacts/src/T1ERC7683.sol/T1ERC7683.json";
+import type {OrderData} from "./types.ts";
+import type {SealedBidAuctionApiServer} from "../api/SealedBidAuctionApiServer.ts";
 
 export class ArbitrumSepoliaIntentObserver implements IntentObserver {
     private readonly OPEN_INTENT_EVENT_SIGNATURE = 'event Open(bytes32 indexed orderId, ResolvedCrossChainOrder resolvedOrder)';
 
     private readonly client;
 
-    constructor(rpcUrl: string, pollingInterval: number, private readonly auctionService: AuctionService) {
+    constructor(rpcUrl: string,
+                pollingInterval: number,
+                private readonly t1Erc7683ContractAddress: `0x${string}`,
+                private readonly auctionService: AuctionService,
+                private readonly apiServer: SealedBidAuctionApiServer
+    ) {
         this.client = createPublicClient({
             chain: arbitrumSepolia,
             transport: http(rpcUrl),
@@ -17,23 +32,49 @@ export class ArbitrumSepoliaIntentObserver implements IntentObserver {
         });
     }
 
-    public start(t1Erc7683ContractAddress: `0x${string}`) {
+    public start() {
         this.client.watchEvent({
-            address: t1Erc7683ContractAddress,
+            address: this.t1Erc7683ContractAddress,
             event: parseAbiItem(this.OPEN_INTENT_EVENT_SIGNATURE),
-            onLogs: logs => this.parseLogsAndStartAuction(logs)
+            onLogs: logs => this.processIntentLogs(logs)
         })
     }
 
-    private parseLogsAndStartAuction(logs: WatchEventOnLogsParameter) {
+    private async processIntentLogs(logs: WatchEventOnLogsParameter) {
         const parsedLogs = parseEventLogs({
             abi: parseAbi([this.OPEN_INTENT_EVENT_SIGNATURE]),
             logs
         });
 
-        parsedLogs.map(log => {
-            const resolvedOrder = log.args.resolvedOrder;
-            // do sth with resolved order
-        });
+        const auctionPromises: Promise<void>[] = [];
+
+        for (const order of parsedLogs) {
+            const encodedReadResult = (await this.client.readContract({
+                address: this.t1Erc7683ContractAddress,
+                abi: t1Erc7683Abi.abi,
+                functionName: 'openOrders',
+                args: [order.args.orderId]
+            })) as `0x${string}`;
+
+            const orderData: OrderData = JSON.parse(decodeFunctionResult({
+                abi: t1Erc7683Abi.abi,
+                functionName: 'openOrders',
+                data: encodedReadResult
+            }) as string);
+
+            auctionPromises.push(this.runAuctionAndNotifySolver(orderData, order.args.orderId, order.args.resolvedOrder as string));
+        }
+
+        await Promise.all(auctionPromises);
+    }
+
+    private async runAuctionAndNotifySolver(orderData: OrderData, orderId: string, resolvedOrder: string) {
+        while(Date.now() < orderData.fillDeadline) {
+            const result = this.auctionService.auction(orderData.inputToken, orderData.outputToken, orderData.amountIn);
+
+            if (result !== null && result.price >= orderData.minAmountOut) {
+                this.apiServer.publishAuctionResult(result!, orderId, resolvedOrder);
+            }
+        }
     }
 }
