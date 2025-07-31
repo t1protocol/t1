@@ -73,12 +73,11 @@ export class AuctionService {
         const finalIndex = this.getFinalIntervalIndex(priceItem, amountIn)!;
 
         do {
-            const curr = priceItem.intervals[currentInterval]!;
-            const final = priceItem.intervals[finalIndex]!;
-            if (curr !== final) {
-                amountOut += curr.price * (curr.range.max - curr.range.min);
+            const currInterval = priceItem.intervals[currentInterval]!;
+            if (currInterval !== priceItem.intervals[finalIndex]!) {
+                amountOut += currInterval.price * (currInterval.range.max - currInterval.range.min);
             } else {
-                amountOut += curr.price * (amountIn - curr.range.min - (finalIndex === 0 ? 0n : 1n));
+                amountOut += currInterval.price * (amountIn - currInterval.range.min - (finalIndex === 0 ? 0n : 1n));
             }
         } while (priceItem.intervals[currentInterval++] !== priceItem.intervals[finalIndex]);
 
