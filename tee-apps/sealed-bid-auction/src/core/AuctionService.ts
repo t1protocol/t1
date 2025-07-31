@@ -72,18 +72,18 @@ export class AuctionService {
     }
 
     private calculateAmountOut(priceItem: PriceListItem, amountIn: bigint): bigint {
-        let currentInterval = 0;
+        let currentIntervalIndex = 0;
         let amountOut = 0n;
         const finalIndex = this.getFinalIntervalIndex(priceItem, amountIn)!;
 
         do {
-            const currInterval = priceItem.intervals[currentInterval]!;
+            const currInterval = priceItem.intervals[currentIntervalIndex]!;
             if (currInterval !== priceItem.intervals[finalIndex]!) {
-                amountOut += currInterval.price * (currInterval.range.max - currInterval.range.min);
+                amountOut += currInterval.price * (currInterval.range.max - (currentIntervalIndex === 0 ? 0n : currInterval.range.min));
             } else {
-                amountOut += currInterval.price * (amountIn - currInterval.range.min - (finalIndex === 0 ? 0n : 1n));
+                amountOut += currInterval.price * (amountIn - (currentIntervalIndex === 0 ? 0n : currInterval.range.min) + (finalIndex === 0 ? 0n : 1n));
             }
-        } while (priceItem.intervals[currentInterval++] !== priceItem.intervals[finalIndex]);
+        } while (priceItem.intervals[currentIntervalIndex++] !== priceItem.intervals[finalIndex]);
 
         return amountOut;
     }
