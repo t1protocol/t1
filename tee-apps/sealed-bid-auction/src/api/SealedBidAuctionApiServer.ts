@@ -1,40 +1,50 @@
-import {SealedBidAuctionController} from "./SealedBidAuctionController.ts";
-import {WinstonLogger} from "../utils/WinstonLogger.ts";
 import type {Server} from "bun";
 
+import {SealedBidAuctionController} from "./SealedBidAuctionController.ts";
+import {WinstonLogger} from "../utils/WinstonLogger.ts";
+import {SolverPriceBook} from "../core/SolverPriceBook.ts";
+import {AuctionService} from "../core/AuctionService.ts";
+
 type AuthData = {
-    token: string;
+    username: string;
 };
 
 export class SealedBidAuctionApiServer {
+    private logger = new WinstonLogger(SealedBidAuctionApiServer.name);
 
-    private logger: WinstonLogger = new WinstonLogger(SealedBidAuctionApiServer.name);
+    private readonly solverPriceBook;
+    private readonly auctionController;
 
     private server: Server | null = null;
 
-    public async start(port: number) {
+    public constructor() {
+        this.solverPriceBook = new SolverPriceBook();
+        this.auctionController = new SealedBidAuctionController(new AuctionService(this.solverPriceBook));
+    }
+
+    public async start(port: number, tls: boolean) {
         if (this.server) {
             this.logger.warn("API server is already running");
             return;
         }
 
-        const auctionController = new SealedBidAuctionController();
+        const solverPriceBook = this.solverPriceBook;
 
         // @ts-ignore
         this.server = Bun.serve<AuthData>({
             port,
-            tls: {
+            tls: tls ? {
                 key: Bun.file("./key.pem"),
                 cert: Bun.file("./cert.pem"),
-            },
+            } : {},
             routes: {
                 "/healthcheck": new Response("OK"),
-                "/api/auction": req => auctionController.auction(req),
+                "/api/preauction": req => this.auctionController.preauction(req),
             },
             fetch(req, server) {
                 const success = server.upgrade(req, {
                     data: {
-                        token: req.headers.get("Authorization")
+                        username: req.headers.get("Authorization")
                     }
                 });
                 if (success) {
@@ -47,15 +57,20 @@ export class SealedBidAuctionApiServer {
             },
             websocket: {
                 open(ws) {
-                    console.log(`Client ${ws.data.token} connected`);
+                    console.log(`Client ${ws.data.username} connected`);
                     ws.send("Welcome!");
                 },
                 message(ws, message) {
-                    console.log(`Received ${message}`);
-                    ws.send(`You said: ${message}`);
+                    try {
+                        const addedCount = solverPriceBook.updatePrice(ws.data.username, message.toString());
+                        ws.send(`I updated [${addedCount}] prices for [${ws.data.username}]!`);
+                    } catch (e: any) {
+                        console.error(`Error when updating price: ${e}`);
+                        ws.send(`Error when updating price: ${e}`);
+                    }
                 },
                 close(ws, _code, _reason) {
-                    console.log(`Client ${ws.data.token} disconnected`);
+                    console.log(`Client ${ws.data.username} disconnected`);
                 },
             },
         });
