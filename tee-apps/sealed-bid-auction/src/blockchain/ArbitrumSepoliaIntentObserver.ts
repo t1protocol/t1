@@ -74,7 +74,10 @@ export class ArbitrumSepoliaIntentObserver implements IntentObserver {
 
             if (result !== null && result.price >= orderData.minAmountOut) {
                 this.apiServer.publishAuctionResult(result!, orderId, resolvedOrder);
+                break;
             }
+
+            await new Promise((resolve) => setTimeout(resolve, 100));
         }
     }
 }

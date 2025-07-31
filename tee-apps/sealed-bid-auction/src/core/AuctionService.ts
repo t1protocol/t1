@@ -16,7 +16,7 @@ export class AuctionService {
         const bestPrice = this.auction(request.srcTokenAddress, request.dstTokenAddress, request.amountIn);
 
         if (!bestPrice) {
-            throw new Error("No quote found for this pair");
+            return null;
         } else {
             return {
                 id: request.id,

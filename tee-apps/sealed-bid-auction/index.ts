@@ -7,9 +7,10 @@ import {ArbitrumSepoliaIntentObserver} from "./src/blockchain/ArbitrumSepoliaInt
 import {SolverPriceBook} from "./src/core/SolverPriceBook.ts";
 import {AuctionService} from "./src/core/AuctionService.ts";
 
-const httpServer = new SealedBidAuctionApiServer();
 const solverPriceBook = new SolverPriceBook();
 const auctionService = new AuctionService(solverPriceBook);
+
+const httpServer = new SealedBidAuctionApiServer();
 const arbitrumIntentObserver = new ArbitrumSepoliaIntentObserver(
     process.env.ARBITRUM_SEPOLIA_RPC as string,
     Number(process.env.ARBITRUM_SEPOLIA_POLLING_INTERVAL_MS as string),

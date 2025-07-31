@@ -75,7 +75,6 @@ export class SealedBidAuctionApiServer {
                     ws.unsubscribe('intent-auction');
                     console.log(`Client ${ws.data.username} disconnected`);
                 },
-
             },
         });
 
