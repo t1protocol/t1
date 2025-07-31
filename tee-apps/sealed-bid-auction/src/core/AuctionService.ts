@@ -2,10 +2,10 @@ import Immutable from "immutable";
 
 import type {AuctionQuote, AuctionRequest} from "../api/types.ts";
 import type {SolverPriceBook} from "./SolverPriceBook.ts";
-import type {Interval, PriceListItem} from "./types.ts";
+import type {PriceListItem} from "./types.ts";
 
 export type Price = {
-    price: bigint;
+    amountOut: bigint;
     solverAddress: string;
 }
 
@@ -21,7 +21,7 @@ export class AuctionService {
             return {
                 id: request.id,
                 request: request as Omit<AuctionRequest, "id">,
-                amountOut: bestPrice.price,
+                amountOut: bestPrice.amountOut,
                 solverAddress: bestPrice.solverAddress,
                 timestamp: Date.now()
             };
@@ -34,40 +34,57 @@ export class AuctionService {
         return this.chooseBestPrice(pricesForAskedTokens);
     }
 
-    private getCorrectInterval(priceListItem: PriceListItem, amount: bigint): Interval | undefined {
-        return priceListItem.intervals.find(interval => interval.range.min <= amount && interval.range.max >= amount);
+    private getFinalIntervalIndex(priceListItem: PriceListItem, amount: bigint): number | undefined {
+        return priceListItem.intervals.findIndex(interval => interval.range.min <= amount && interval.range.max >= amount);
     }
 
     private chooseBestPrice(pricesForAskedTokens: Immutable.List<Price>): Price | null {
         let bestPrice = null;
 
         if (!pricesForAskedTokens.isEmpty()) {
-            let bestPrice = {
-                price: -1n,
+            let bestPrice: Price = {
+                amountOut: -1n,
                 solverAddress: "0xdeadbeef"
             };
 
             pricesForAskedTokens.forEach(price => {
-                if (price.price > bestPrice.price) bestPrice = price;
+                if (price.amountOut > bestPrice.amountOut) bestPrice = price;
             });
         }
 
         return bestPrice;
     }
 
-    private findPricesForAskedTokens(srcTokenAddress: string, dstTokenAddress: string, amountIn: bigint) {
+    private findPricesForAskedTokens(srcTokenAddress: string, dstTokenAddress: string, amountIn: bigint): Immutable.List<Price> {
         return this.solverPricebook.getCurrentPrices().flatMap(
             priceItems => priceItems.filter(
                 priceItem =>
                     priceItem.srcTokenAddresses.includes(srcTokenAddress) &&
                     priceItem.dstTokenAddress.includes(dstTokenAddress) &&
-                    this.getCorrectInterval(priceItem, amountIn) !== undefined
+                    this.getFinalIntervalIndex(priceItem, amountIn) !== undefined
             ).map(priceItem => {
                 return {
-                    price: this.getCorrectInterval(priceItem, amountIn)!.price,
+                    amountOut: this.calculateAmountOut(priceItem, amountIn),
                     solverAddress: priceItem.solverAddress
                 };
             })
         )
+    }
+
+    private calculateAmountOut(priceItem: PriceListItem, amountIn: bigint): bigint {
+        let currentInterval = 0;
+        let amountOut = 0n;
+        const finalIndex = this.getFinalIntervalIndex(priceItem, amountIn)!;
+
+        do {
+            const currInterval = priceItem.intervals[currentInterval]!;
+            if (currInterval !== priceItem.intervals[finalIndex]!) {
+                amountOut += currInterval.price * (currInterval.range.max - currInterval.range.min);
+            } else {
+                amountOut += currInterval.price * (amountIn - currInterval.range.min - (finalIndex === 0 ? 0n : 1n));
+            }
+        } while (priceItem.intervals[currentInterval++] !== priceItem.intervals[finalIndex]);
+
+        return amountOut;
     }
 }
