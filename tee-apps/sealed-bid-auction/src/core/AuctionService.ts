@@ -2,7 +2,7 @@ import Immutable from "immutable";
 
 import type {AuctionQuote, AuctionRequest} from "../api/types.ts";
 import type {SolverPriceBook} from "./SolverPriceBook.ts";
-import type {Interval, PriceListItem} from "./types.ts";
+import type {PriceListItem} from "./types.ts";
 
 type Price = {
     amountOut: bigint;
@@ -30,8 +30,8 @@ export class AuctionService {
         }
     }
 
-    private getFinalInterval(priceListItem: PriceListItem, amount: bigint): Interval | undefined {
-        return priceListItem.intervals.find(interval => interval.range.min <= amount && interval.range.max >= amount);
+    private getFinalIntervalIndex(priceListItem: PriceListItem, amount: bigint): number | undefined {
+        return priceListItem.intervals.findIndex(interval => interval.range.min <= amount && interval.range.max >= amount);
     }
 
     private chooseBestPrice(pricesForAskedTokens: Immutable.List<Price>): Price | null {
@@ -57,7 +57,7 @@ export class AuctionService {
                 priceItem =>
                     priceItem.srcTokenAddresses.includes(request.srcTokenAddress) &&
                     priceItem.dstTokenAddress.includes(request.dstTokenAddress) &&
-                    this.getFinalInterval(priceItem, request.amountIn) !== undefined
+                    this.getFinalIntervalIndex(priceItem, request.amountIn) !== undefined
             ).map(priceItem => {
                 return {
                     amountOut: this.calculateAmountOut(priceItem, request.amountIn),
@@ -70,16 +70,17 @@ export class AuctionService {
     private calculateAmountOut(priceItem: PriceListItem, amountIn: bigint): bigint {
         let currentInterval = 0;
         let amountOut = 0n;
-        const finalInterval = this.getFinalInterval(priceItem, amountIn);
+        const finalIndex = this.getFinalIntervalIndex(priceItem, amountIn)!;
 
         do {
             const curr = priceItem.intervals[currentInterval]!;
-            if (curr !== finalInterval) {
+            const final = priceItem.intervals[finalIndex]!;
+            if (curr !== final) {
                 amountOut += curr.price * (curr.range.max - curr.range.min);
             } else {
-                amountOut += curr.price * (amountIn - curr.range.min - 1n);
+                amountOut += curr.price * (amountIn - curr.range.min - (finalIndex === 0 ? 0n : 1n));
             }
-        } while (priceItem.intervals[currentInterval++] !== finalInterval);
+        } while (priceItem.intervals[currentInterval++] !== priceItem.intervals[finalIndex]);
 
         return amountOut;
     }
