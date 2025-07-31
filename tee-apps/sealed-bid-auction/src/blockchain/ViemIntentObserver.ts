@@ -60,19 +60,19 @@ export class ViemIntentObserver {
             const orderDatas = fillInstructions.map(fillInstruction => decodeAbiParameters(parseAbiParameters(ORDER_DATA_ABI_PARAMETERS), fillInstruction as `0x${string}`));
 
             for (const orderData of orderDatas.map(solidityOrderData => convertSolidityOrderDataToTypescriptOrderData(solidityOrderData))) {
-                auctionPromises.push(this.runAuctionAndNotifySolver(orderData, order.args.orderId, order.args.resolvedOrder as string));
+                auctionPromises.push(this.runAuctionAndNotifySolver(orderData, order.args.orderId));
             }
         }
 
         await Promise.all(auctionPromises);
     }
 
-    private async runAuctionAndNotifySolver(orderData: OrderData, orderId: string, resolvedOrder: string) {
+    private async runAuctionAndNotifySolver(orderData: OrderData, orderId: string) {
         while (Date.now() < orderData.fillDeadline) {
             const winningPrice = this.auctionService.auction(orderData.inputToken, orderData.outputToken, orderData.amountIn);
 
             if (winningPrice !== null && winningPrice.amountOut >= orderData.minAmountOut) {
-                this.apiServer.publishAuctionResult(winningPrice!, orderId, resolvedOrder, this.chain.id);
+                this.apiServer.publishAuctionResult(winningPrice!, orderId, orderData, this.chain.id);
                 break;
             }
 
