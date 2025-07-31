@@ -1,8 +1,7 @@
 import {
     type Chain,
     createPublicClient, decodeFunctionResult,
-    http,
-    parseAbi,
+    http, parseAbi,
     parseAbiItem,
     parseEventLogs,
     type WatchEventOnLogsParameter
@@ -14,7 +13,7 @@ import type {OrderData} from "./types.ts";
 import type {SealedBidAuctionApiServer} from "../api/SealedBidAuctionApiServer.ts";
 
 export class ViemIntentObserver {
-    private readonly OPEN_INTENT_EVENT_SIGNATURE = 'event Open(bytes32 indexed orderId, ResolvedCrossChainOrder resolvedOrder)';
+    private readonly OPEN_INTENT_EVENT_SIGNATURE = 'event Open(bytes32 indexed orderId, bytes32 resolvedOrder)';
 
     private readonly client;
 
