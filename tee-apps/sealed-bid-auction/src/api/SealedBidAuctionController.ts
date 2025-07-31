@@ -1,7 +1,26 @@
 import type {BunRequest} from "bun";
 
+import {AuctionService} from "../core/AuctionService.ts";
+import type {AuctionRequest} from "./types.ts";
+import {serialize} from "../utils/WinstonLogger.ts";
+
 export class SealedBidAuctionController {
-    async auction(req: BunRequest): Promise<Response> {
-        return new Response("Not Implemented", {status: 501});
+
+    constructor(private readonly auctionService: AuctionService) {}
+
+    public async preauction(req: BunRequest): Promise<Response> {
+        try {
+            const auctionRequest: AuctionRequest = JSON.parse(await req.text());
+            const auctionQuote = this.auctionService.auction(auctionRequest);
+
+            if (auctionQuote) {
+                return new Response(serialize(auctionQuote), {status: 200});
+            } else {
+                return new Response("No quote found for this pair", {status: 204});
+            }
+
+        } catch (e: any) {
+            return new Response(`Invalid request: ${e}`, {status: 400});
+        }
     }
 }
