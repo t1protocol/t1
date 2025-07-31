@@ -22,7 +22,7 @@ export interface AuctionQuote {
 }
 
 export interface AuctionResult {
-    winner: string;
+    settlementReceiverAddress: string;
     amountOut: bigint;
     orderId: string;
     resolvedOrder: string;

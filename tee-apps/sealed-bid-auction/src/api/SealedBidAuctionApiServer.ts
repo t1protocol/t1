@@ -92,12 +92,12 @@ export class SealedBidAuctionApiServer {
 
     public publishAuctionResult(price: Price, orderId: string, resolvedOrder: string, chainId: number) {
         const result: AuctionResult = {
-            winner: price.solverAddress,
+            settlementReceiverAddress: price.solverAddress,
             amountOut: price.amountOut,
             orderId,
             resolvedOrder
         }
 
-        this.server?.publish('intent-auction', `[${result.winner}] won auction on chain [${chainId}] : ${JSON.stringify(result)}`);
+        this.server?.publish('intent-auction', `[${result.settlementReceiverAddress}] won auction on chain [${chainId}] : ${JSON.stringify(result)}`);
     }
 }
