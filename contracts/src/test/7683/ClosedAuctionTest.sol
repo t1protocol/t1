@@ -7,10 +7,10 @@ import { OrderData, OrderEncoder } from "../../../src/libraries/7683/OrderEncode
 import { OnchainCrossChainOrder } from "../../../src/interfaces/IERC7683.sol";
 
 import { IT1XChainReader } from "../../libraries/xChain/IT1XChainReader.sol";
+import { IT1ERC7683 } from "../../../src/interfaces/IT1ERC7683.sol";
 import { T1XChainReader } from "../../libraries/xChain/T1XChainReader.sol";
 import { T1XChainReaderBaseTestSetup } from "./T1XChainReaderBaseTestSetup.sol";
 import { T1ERC7683 } from "../../7683/T1ERC7683.sol";
-import { Base7683 } from "../../7683/Base7683.sol";
 
 contract ClosedAuctionTest is T1XChainReaderBaseTestSetup {
     using TypeCasts for address;
@@ -52,7 +52,7 @@ contract ClosedAuctionTest is T1XChainReaderBaseTestSetup {
         (bytes32 root, bytes memory proof) = _generateMerkleTree(requestId, result, position);
 
         originReader.commitProofOfReadRoot(batchIndex, root);
-        l1T1ERC7683.commitWinnerBid(orderId, T1ERC7683.Bid({ settlementReceiver: vegeta, amountOut: amount }));
+        l1T1ERC7683.commitWinnerBid(orderId, IT1ERC7683.Bid({ settlementReceiver: vegeta, amountOut: amount }));
 
         (address actualSettlementReceiver, uint256 actualAmountOut) = l1T1ERC7683.orderToBid(orderId);
         assertEq(actualSettlementReceiver, vegeta);
@@ -66,7 +66,7 @@ contract ClosedAuctionTest is T1XChainReaderBaseTestSetup {
             balanceSolverBeforeSettle + amount, balanceSolverAfterSettle, "vegeta balance increased by input amount"
         );
 
-        assertTrue(l1T1ERC7683.orderVerified(orderId), "Order should be verified");
+        assertEq(uint8(l1T1ERC7683.orderStatus(orderId)), uint8(IT1ERC7683.Status.SETTLED), "Order should be settled");
 
         (actualSettlementReceiver, actualAmountOut) = l1T1ERC7683.orderToBid(orderId);
         assertEq(actualSettlementReceiver, address(0));
@@ -80,7 +80,7 @@ contract ClosedAuctionTest is T1XChainReaderBaseTestSetup {
 
         originReader.commitProofOfReadRoot(batchIndex, root);
 
-        vm.expectRevert(abi.encodeWithSelector(T1ERC7683.InvalidFill.selector, vegeta, address(0), amount, 0));
+        vm.expectRevert(abi.encodeWithSelector(IT1ERC7683.InvalidFill.selector, vegeta, address(0), amount, 0));
         l1T1ERC7683.handleReadResultWithProof(abi.encode(batchIndex, requestId, position, result, proof));
     }
 
@@ -90,9 +90,9 @@ contract ClosedAuctionTest is T1XChainReaderBaseTestSetup {
         (bytes32 root, bytes memory proof) = _generateMerkleTree(requestId, result, position);
 
         originReader.commitProofOfReadRoot(batchIndex, root);
-        l1T1ERC7683.commitWinnerBid(orderId, T1ERC7683.Bid({ settlementReceiver: kakaroto, amountOut: amount }));
+        l1T1ERC7683.commitWinnerBid(orderId, IT1ERC7683.Bid({ settlementReceiver: kakaroto, amountOut: amount }));
 
-        vm.expectRevert(abi.encodeWithSelector(T1ERC7683.InvalidFill.selector, vegeta, kakaroto, amount, amount));
+        vm.expectRevert(abi.encodeWithSelector(IT1ERC7683.InvalidFill.selector, vegeta, kakaroto, amount, amount));
         l1T1ERC7683.handleReadResultWithProof(abi.encode(batchIndex, requestId, position, result, proof));
     }
 
@@ -102,9 +102,9 @@ contract ClosedAuctionTest is T1XChainReaderBaseTestSetup {
         (bytes32 root, bytes memory proof) = _generateMerkleTree(requestId, result, position);
 
         originReader.commitProofOfReadRoot(batchIndex, root);
-        l1T1ERC7683.commitWinnerBid(orderId, T1ERC7683.Bid({ settlementReceiver: vegeta, amountOut: amount * 2 }));
+        l1T1ERC7683.commitWinnerBid(orderId, IT1ERC7683.Bid({ settlementReceiver: vegeta, amountOut: amount * 2 }));
 
-        vm.expectRevert(abi.encodeWithSelector(T1ERC7683.InvalidFill.selector, vegeta, vegeta, amount, amount * 2));
+        vm.expectRevert(abi.encodeWithSelector(IT1ERC7683.InvalidFill.selector, vegeta, vegeta, amount, amount * 2));
         l1T1ERC7683.handleReadResultWithProof(abi.encode(batchIndex, requestId, position, result, proof));
     }
 
@@ -114,9 +114,9 @@ contract ClosedAuctionTest is T1XChainReaderBaseTestSetup {
         (bytes32 root, bytes memory proof) = _generateMerkleTree(requestId, result, position);
 
         originReader.commitProofOfReadRoot(batchIndex, root);
-        l1T1ERC7683.commitWinnerBid(orderId, T1ERC7683.Bid({ settlementReceiver: kakaroto, amountOut: amount * 2 }));
+        l1T1ERC7683.commitWinnerBid(orderId, IT1ERC7683.Bid({ settlementReceiver: kakaroto, amountOut: amount * 2 }));
 
-        vm.expectRevert(abi.encodeWithSelector(T1ERC7683.InvalidFill.selector, vegeta, kakaroto, amount, amount * 2));
+        vm.expectRevert(abi.encodeWithSelector(IT1ERC7683.InvalidFill.selector, vegeta, kakaroto, amount, amount * 2));
         l1T1ERC7683.handleReadResultWithProof(abi.encode(batchIndex, requestId, position, result, proof));
     }
 
@@ -125,7 +125,7 @@ contract ClosedAuctionTest is T1XChainReaderBaseTestSetup {
 
         vm.prank(vegeta);
         vm.expectRevert();
-        l1T1ERC7683.commitWinnerBid(orderId, T1ERC7683.Bid({ settlementReceiver: vegeta, amountOut: amount }));
+        l1T1ERC7683.commitWinnerBid(orderId, IT1ERC7683.Bid({ settlementReceiver: vegeta, amountOut: amount }));
     }
 
     function _openAndFillOrder() internal returns (OrderData memory, bytes32 orderId, bytes32 requestId) {
@@ -141,14 +141,14 @@ contract ClosedAuctionTest is T1XChainReaderBaseTestSetup {
         vm.stopPrank();
 
         (bytes32 orderId_,) = _getOrderIDFromLogs();
-        assertEq(l1T1ERC7683.orderStatus(orderId_), l1T1ERC7683.OPENED());
+        assertEq(uint8(l1T1ERC7683.orderStatus(orderId_)), uint8(IT1ERC7683.Status.OPENED));
 
         vm.startPrank(vegeta);
         outputToken.approve(address(l2T1ERC7683), amount);
         bytes memory originData = OrderEncoder.encode(orderData);
         bytes memory fillerData = abi.encode(amount, TypeCasts.addressToBytes32(vegeta));
         l2T1ERC7683.fill(orderId_, originData, fillerData);
-        assertEq(l2T1ERC7683.orderStatus(orderId_), l2T1ERC7683.FILLED());
+        assertEq(uint8(l2T1ERC7683.orderStatus(orderId_)), uint8(IT1ERC7683.Status.FILLED));
         vm.stopPrank();
 
         vm.startPrank(vegeta);
