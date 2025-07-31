@@ -17,7 +17,7 @@ export interface AuctionQuote {
         amountIn: bigint;
     },
     amountOut: bigint;
-    solverAddress: string;
+    settlementReceiverAddress: string;
     timestamp: number;
 }
 

@@ -6,7 +6,7 @@ import type {PriceListItem} from "./types.ts";
 
 export type Price = {
     amountOut: bigint;
-    solverAddress: string;
+    settlementReceiverAddress: string;
 }
 
 export class AuctionService {
@@ -22,7 +22,7 @@ export class AuctionService {
                 id: request.id,
                 request: request as Omit<AuctionRequest, "id">,
                 amountOut: bestPrice.amountOut,
-                solverAddress: bestPrice.solverAddress,
+                settlementReceiverAddress: bestPrice.settlementReceiverAddress,
                 timestamp: Date.now()
             };
         }
@@ -44,7 +44,7 @@ export class AuctionService {
         if (!pricesForAskedTokens.isEmpty()) {
             let bestPrice: Price = {
                 amountOut: -1n,
-                solverAddress: "0xdeadbeef"
+                settlementReceiverAddress: "0xdeadbeef"
             };
 
             pricesForAskedTokens.forEach(price => {
@@ -65,7 +65,7 @@ export class AuctionService {
             ).map(priceItem => {
                 return {
                     amountOut: this.calculateAmountOut(priceItem, amountIn),
-                    solverAddress: priceItem.solverAddress
+                    settlementReceiverAddress: priceItem.settlementReceiverAddress
                 };
             })
         )

@@ -92,7 +92,7 @@ export class SealedBidAuctionApiServer {
 
     public publishAuctionResult(price: Price, orderId: string, resolvedOrder: string, chainId: number) {
         const result: AuctionResult = {
-            settlementReceiverAddress: price.solverAddress,
+            settlementReceiverAddress: price.settlementReceiverAddress,
             amountOut: price.amountOut,
             orderId,
             resolvedOrder
