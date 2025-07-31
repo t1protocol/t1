@@ -1,4 +1,5 @@
 import {
+    type Chain,
     createPublicClient, decodeFunctionResult,
     http,
     parseAbi,
@@ -6,27 +7,26 @@ import {
     parseEventLogs,
     type WatchEventOnLogsParameter
 } from "viem"
-import {arbitrumSepolia} from "viem/chains"
 
-import type {IntentObserver} from "./IntentObserver.ts";
 import type {AuctionService} from "../core/AuctionService.ts";
 import t1Erc7683Abi from "../../../../contracts/artifacts/src/T1ERC7683.sol/T1ERC7683.json";
 import type {OrderData} from "./types.ts";
 import type {SealedBidAuctionApiServer} from "../api/SealedBidAuctionApiServer.ts";
 
-export class ArbitrumSepoliaIntentObserver implements IntentObserver {
+export class ViemIntentObserver {
     private readonly OPEN_INTENT_EVENT_SIGNATURE = 'event Open(bytes32 indexed orderId, ResolvedCrossChainOrder resolvedOrder)';
 
     private readonly client;
 
     constructor(rpcUrl: string,
+                private readonly chain: Chain,
                 pollingInterval: number,
                 private readonly t1Erc7683ContractAddress: `0x${string}`,
                 private readonly auctionService: AuctionService,
                 private readonly apiServer: SealedBidAuctionApiServer
     ) {
         this.client = createPublicClient({
-            chain: arbitrumSepolia,
+            chain,
             transport: http(rpcUrl),
             pollingInterval
         });
@@ -70,10 +70,10 @@ export class ArbitrumSepoliaIntentObserver implements IntentObserver {
 
     private async runAuctionAndNotifySolver(orderData: OrderData, orderId: string, resolvedOrder: string) {
         while(Date.now() < orderData.fillDeadline) {
-            const result = this.auctionService.auction(orderData.inputToken, orderData.outputToken, orderData.amountIn);
+            const winningPrice = this.auctionService.auction(orderData.inputToken, orderData.outputToken, orderData.amountIn);
 
-            if (result !== null && result.price >= orderData.minAmountOut) {
-                this.apiServer.publishAuctionResult(result!, orderId, resolvedOrder);
+            if (winningPrice !== null && winningPrice.amountOut >= orderData.minAmountOut) {
+                this.apiServer.publishAuctionResult(winningPrice!, orderId, resolvedOrder, this.chain.id);
                 break;
             }
 

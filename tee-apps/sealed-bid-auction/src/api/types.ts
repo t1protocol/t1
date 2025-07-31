@@ -23,7 +23,7 @@ export interface AuctionQuote {
 
 export interface AuctionResult {
     winner: string;
-    price: bigint;
+    amountOut: bigint;
     orderId: string;
     resolvedOrder: string;
 }

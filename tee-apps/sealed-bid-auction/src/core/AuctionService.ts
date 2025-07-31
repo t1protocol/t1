@@ -28,7 +28,7 @@ export class AuctionService {
         }
     }
 
-    public auction(srcTokenAddress: string, dstTokenAddress: string, amountIn: bigint) {
+    public auction(srcTokenAddress: string, dstTokenAddress: string, amountIn: bigint): Price | null {
         const pricesForAskedTokens = this.findPricesForAskedTokens(srcTokenAddress, dstTokenAddress, amountIn);
 
         return this.chooseBestPrice(pricesForAskedTokens);
