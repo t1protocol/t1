@@ -54,6 +54,7 @@ contract RefundTest is BaseTest {
             destinationDomain: destination,
             destinationSettler: TypeCasts.addressToBytes32(counterpart),
             fillDeadline: FILL_DEADLINE_EXPIRED,
+            closedAuction: false,
             data: ""
         });
 

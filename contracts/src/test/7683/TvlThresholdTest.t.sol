@@ -173,6 +173,7 @@ contract TvlThresholdTest is BaseTest {
             destinationDomain: destination,
             destinationSettler: address(t1ERC7683).addressToBytes32(),
             fillDeadline: uint32(block.timestamp + 1 hours),
+            closedAuction: false,
             data: new bytes(0)
         });
     }
