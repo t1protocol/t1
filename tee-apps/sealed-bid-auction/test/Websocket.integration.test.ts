@@ -1,7 +1,8 @@
 import {afterAll, beforeAll, beforeEach, describe, it, expect} from "@jest/globals";
 
 import {SealedBidAuctionApiServer} from "../src/api/SealedBidAuctionApiServer.ts";
-import {PRICE_LIST_WITH_GAP_IN_RANGES, USERNAME, PRICE_LIST_WITH_TWO_ITEMS} from "./constants.ts";
+import {PRICE_LIST_WITH_GAP_IN_RANGES, USERNAME, PRICE_LIST_WITH_TWO_ITEMS, PRIVATE_KEY, SOLVER_ADDRESS} from "./constants.ts";
+import {signMessage} from "viem/accounts";
 
 const wsPort = 3080;
 const httpServer = new SealedBidAuctionApiServer();
@@ -12,9 +13,16 @@ let socketMessage: string | null;
 beforeAll(async () => {
     await httpServer.start(wsPort, false);
 
+    const nonceRes = await fetch(`http://localhost:${wsPort}/api/nonce`);
+    const { nonce } = await nonceRes.json();
+    const blob = { username: USERNAME, nonce };
+    const signature = await signMessage({ message: JSON.stringify(blob), privateKey: PRIVATE_KEY as `0x${string}` });
+
     socket = new WebSocket(`ws://localhost:${wsPort}/`, {
         headers: {
-            Authorization: USERNAME
+            "X-Auth-Username": USERNAME,
+            "X-Auth-Nonce": nonce,
+            "X-Auth-Signature": signature
         }
     });
     socket.onopen = () => {
@@ -55,7 +63,7 @@ describe("Websocket Integration Test", () => {
             await new Promise((resolve) => setTimeout(resolve, 100));
         }
 
-        expect(socketMessage).toBe(`I updated [2] prices for [${USERNAME}]!`);
+        expect(socketMessage).toBe(`Prices updated: 2 entries for solver ${USERNAME}`);
     });
 
     it("Should not add Price List with gap in ranges", async () => {
@@ -65,6 +73,6 @@ describe("Websocket Integration Test", () => {
             await new Promise((resolve) => setTimeout(resolve, 100));
         }
 
-        expect(socketMessage).toBe(`Error when updating price: Error: There is a gap between max of range [0] and min of range [1]`);
+        expect(socketMessage).toBe(`Error when updating price: There is a gap between max of range [0] and min of range [1]`);
     });
 });

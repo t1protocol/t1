@@ -1,4 +1,6 @@
 import type {Server} from "bun";
+import crypto from "node:crypto";
+import {hashMessage, recoverAddress} from "viem";
 
 import {SealedBidAuctionController} from "./SealedBidAuctionController.ts";
 import {WinstonLogger} from "../utils/WinstonLogger.ts";
@@ -9,6 +11,7 @@ import type {OrderData} from "../blockchain/types.ts";
 
 type AuthData = {
     username: string;
+    address: string;
 };
 
 export class SealedBidAuctionApiServer {
@@ -18,6 +21,7 @@ export class SealedBidAuctionApiServer {
     private readonly auctionController;
 
     private server: Server | null = null;
+    private currentNonce: string = crypto.randomUUID();
 
     public constructor() {
         this.solverPriceBook = new SolverPriceBook();
@@ -31,6 +35,8 @@ export class SealedBidAuctionApiServer {
         }
 
         const solverPriceBook = this.solverPriceBook;
+        let currentNonce = this.currentNonce;
+        const self = this;
 
         // @ts-ignore
         this.server = Bun.serve<AuthData>({
@@ -41,40 +47,92 @@ export class SealedBidAuctionApiServer {
             } : {},
             routes: {
                 "/healthcheck": new Response("OK"),
+                "/api/nonce": () => {
+                    const body = JSON.stringify({ nonce: currentNonce });
+                    return new Response(body, { status: 200, headers: { "Content-Type": "application/json" } });
+                },
                 "/api/preauction": req => this.auctionController.preauction(req),
             },
-            fetch(req, server) {
+            async fetch(req, server) {
+                if (req.headers.get("Upgrade")?.toLowerCase() !== "websocket") {
+                    return new Response("OK");
+                }
+
+                const username = req.headers.get("X-Auth-Username");
+                const nonce = req.headers.get("X-Auth-Nonce");
+                const sig = req.headers.get("X-Auth-Signature");
+                if (!username || !nonce || !sig) {
+                    return new Response("Missing authentication credentials", { status: 401 });
+                }
+
+                if (nonce !== currentNonce) {
+                    return new Response("Invalid or expired nonce", { status: 401 });
+                }
+
+                let recoveredAddress: string;
+                try {
+                    const message = JSON.stringify({ username, nonce });
+                    const hash = hashMessage(message);
+                    recoveredAddress = await recoverAddress({ hash, signature: sig });
+                } catch (err) {
+                    console.error("Signature verification failed:", err);
+                    return new Response("Unauthorized (signature verification failed)", { status: 401 });
+                }
+
+                recoveredAddress = recoveredAddress.toLowerCase();
+                console.log(`WebSocket auth success for user "${username}" with address ${recoveredAddress}`);
+
+                currentNonce = crypto.randomUUID();
+                self.currentNonce = currentNonce;
+
                 const success = server.upgrade(req, {
-                    data: {
-                        username: req.headers.get("Authorization")
-                    }
+                    data: { username, address: recoveredAddress }
                 });
                 if (success) {
-                    // Bun automatically returns a 101 Switching Protocols
-                    // if the upgrade succeeds
                     return undefined;
                 }
 
-                return new Response("OK");
+                return new Response("WebSocket Upgrade failed", { status: 500 });
             },
             websocket: {
                 open(ws) {
+                    const addr = ws.data.address;
+                    const user = ws.data.username;
                     ws.subscribe('intent-auction');
-                    console.log(`Client ${ws.data.username} connected`);
-                    ws.send("Welcome!");
+                    console.log(`✅ Solver connected: ${user} (${addr})`);
+                    solverPriceBook.authenticateSolver(addr);
+                    ws.send("Welcome! Authentication successful.");
                 },
                 message(ws, message) {
                     try {
-                        const addedCount = solverPriceBook.updatePrice(ws.data.username, message.toString());
-                        ws.send(`I updated [${addedCount}] prices for [${ws.data.username}]!`);
+                        const addr = ws.data.address;
+                        const user = ws.data.username;
+                        const text = message.toString();
+                        if (!solverPriceBook.isAuthenticated(addr)) {
+                            throw new Error(`${addr} not authenticated`);
+                        }
+                        const priceData = JSON.parse(text);
+                        if (!Array.isArray(priceData)) {
+                            throw new Error("Invalid price list format (expected array)");
+                        }
+                        for (const item of priceData) {
+                            if (item.settlementReceiverAddress?.toLowerCase() !== addr) {
+                                throw new Error(`Solver address mismatch in price update: ${item.settlementReceiverAddress}`);
+                            }
+                        }
+                        const addedCount = solverPriceBook.updatePrice(user, text);
+                        ws.send(`Prices updated: ${addedCount} entries for solver ${user}`);
                     } catch (e: any) {
-                        console.error(`Error when updating price: ${e}`);
-                        ws.send(`Error when updating price: ${e}`);
+                        console.error(`Error processing price update: ${e}`);
+                        ws.send(`Error when updating price: ${e.message || e}`);
                     }
                 },
                 close(ws, _code, _reason) {
+                    const addr = ws.data.address;
+                    const user = ws.data.username;
                     ws.unsubscribe('intent-auction');
-                    console.log(`Client ${ws.data.username} disconnected`);
+                    console.log(`🔒 Solver disconnected: ${user} (${addr})`);
+                    solverPriceBook.logoutSolver(addr);
                 },
             },
         });

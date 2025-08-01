@@ -9,6 +9,7 @@ type PriceBookEntry = {
 
 export class SolverPriceBook {
     private prices: Map<string, PriceBookEntry> = new Map<string, PriceBookEntry>();
+    private authenticatedAddresses: Set<string> = new Set();
 
     constructor(private readonly priceListTTL: number = 600) {}
 
@@ -18,6 +19,18 @@ export class SolverPriceBook {
                 .filter(([_key, value]) => value.timestamp > Date.now() + this.priceListTTL)
                 .map(([_key, value]) => value.priceList)
         );
+    }
+
+    public authenticateSolver(address: string): void {
+        this.authenticatedAddresses.add(address.toLowerCase());
+    }
+
+    public logoutSolver(address: string): void {
+        this.authenticatedAddresses.delete(address.toLowerCase());
+    }
+
+    public isAuthenticated(address: string): boolean {
+        return this.authenticatedAddresses.has(address.toLowerCase());
     }
 
     public updatePrice(username: string, priceBlob: string): number {
