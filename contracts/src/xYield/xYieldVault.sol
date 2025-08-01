@@ -9,10 +9,13 @@ import { Ownable2Step } from "@openzeppelin/contracts/access/Ownable2Step.sol";
 import { ReentrancyGuard } from "@openzeppelin/contracts/security/ReentrancyGuard.sol";
 import { Pausable } from "@openzeppelin/contracts/security/Pausable.sol";
 
+// import { console2 } from "forge-std/console2.sol";
+
 interface IYieldProtocol {
     function deposit(uint256 assets, address receiver) external returns (uint256 shares);
     function withdraw(uint256 assets, address receiver, address owner) external returns (uint256 shares);
     function totalAssets() external view returns (uint256);
+    function convertToAssets(uint256 shares) external view returns (uint256);
     function balanceOf(address account) external view returns (uint256);
 }
 
@@ -54,7 +57,10 @@ contract xYieldVault is ERC4626, Ownable2Step, ReentrancyGuard, Pausable {
         string memory _name,
         string memory _symbol,
         address _yieldProtocol
-    ) ERC4626(underlying) ERC20(_name, _symbol) {
+    )
+        ERC4626(underlying)
+        ERC20(_name, _symbol)
+    {
         guardian = _guardian;
         yieldProtocol = IYieldProtocol(_yieldProtocol);
         isActiveChain = true;
@@ -67,7 +73,17 @@ contract xYieldVault is ERC4626, Ownable2Step, ReentrancyGuard, Pausable {
         _transferOwnership(msg.sender);
     }
 
-    function deposit(uint256 assets, address receiver) public virtual override nonReentrant whenNotPaused returns (uint256) {
+    function deposit(
+        uint256 assets,
+        address receiver
+    )
+        public
+        virtual
+        override
+        nonReentrant
+        whenNotPaused
+        returns (uint256)
+    {
         if (assets == 0) revert ZeroAmount();
         if (!isActiveChain) revert DepositOnInactiveChain();
 
@@ -77,7 +93,17 @@ contract xYieldVault is ERC4626, Ownable2Step, ReentrancyGuard, Pausable {
         return shares;
     }
 
-    function mint(uint256 shares, address receiver) public virtual override nonReentrant whenNotPaused returns (uint256) {
+    function mint(
+        uint256 shares,
+        address receiver
+    )
+        public
+        virtual
+        override
+        nonReentrant
+        whenNotPaused
+        returns (uint256)
+    {
         if (shares == 0) revert ZeroAmount();
         if (!isActiveChain) revert DepositOnInactiveChain();
 
@@ -87,7 +113,17 @@ contract xYieldVault is ERC4626, Ownable2Step, ReentrancyGuard, Pausable {
         return assets;
     }
 
-    function withdraw(uint256 assets, address receiver, address owner) public virtual override nonReentrant returns (uint256) {
+    function withdraw(
+        uint256 assets,
+        address receiver,
+        address owner
+    )
+        public
+        virtual
+        override
+        nonReentrant
+        returns (uint256)
+    {
         if (assets == 0) revert ZeroAmount();
         if (!isActiveChain) revert WithdrawOnInactiveChain();
 
@@ -97,7 +133,17 @@ contract xYieldVault is ERC4626, Ownable2Step, ReentrancyGuard, Pausable {
         return shares;
     }
 
-    function redeem(uint256 shares, address receiver, address owner) public virtual override nonReentrant returns (uint256) {
+    function redeem(
+        uint256 shares,
+        address receiver,
+        address owner
+    )
+        public
+        virtual
+        override
+        nonReentrant
+        returns (uint256)
+    {
         if (shares == 0) revert ZeroAmount();
         if (!isActiveChain) revert WithdrawOnInactiveChain();
 
@@ -130,7 +176,17 @@ contract xYieldVault is ERC4626, Ownable2Step, ReentrancyGuard, Pausable {
         emit Deposit(caller, receiver, assets, shares);
     }
 
-    function _withdraw(address caller, address receiver, address owner, uint256 assets, uint256 shares) internal virtual override {
+    function _withdraw(
+        address caller,
+        address receiver,
+        address owner,
+        uint256 assets,
+        uint256 shares
+    )
+        internal
+        virtual
+        override
+    {
         if (caller != owner) {
             _spendAllowance(owner, caller, shares);
         }
@@ -148,7 +204,7 @@ contract xYieldVault is ERC4626, Ownable2Step, ReentrancyGuard, Pausable {
 
     function totalAssets() public view virtual override returns (uint256) {
         if (isActiveChain && address(yieldProtocol) != address(0)) {
-            return yieldProtocol.totalAssets();
+            return yieldProtocol.convertToAssets(this.totalSupply());
         }
         return virtualTotalAssets;
     }
