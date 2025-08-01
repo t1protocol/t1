@@ -11,7 +11,7 @@ import { MockYieldProtocol } from "./MockYieldProtocol.sol";
 
 contract MockUSDC is ERC20 {
     constructor() ERC20("Mock USDC", "USDC") {
-        _mint(msg.sender, 1_000_000 * 10**18);
+        _mint(msg.sender, 1_000_000 * 10 ** 18);
     }
 
     function mint(address to, uint256 amount) external {
@@ -28,19 +28,13 @@ contract xYieldTest is Test {
     address public user1 = address(0x2);
     address public user2 = address(0x3);
 
-    uint256 public constant INITIAL_DEPOSIT = 1000 * 10**18;
+    uint256 public constant INITIAL_DEPOSIT = 1000 * 10 ** 18;
 
     function setUp() public {
         usdc = new MockUSDC();
         yieldProtocol = new MockYieldProtocol(IERC20(address(usdc)), "Mock Yield USDC", "mUSDC");
 
-        vault = new xYieldVault(
-            IERC20(address(usdc)),
-            guardian,
-            "xYield USDC",
-            "xyUSDC",
-            address(yieldProtocol)
-        );
+        vault = new xYieldVault(IERC20(address(usdc)), guardian, "xYield USDC", "xyUSDC", address(yieldProtocol));
 
         usdc.mint(user1, INITIAL_DEPOSIT);
         usdc.mint(user2, INITIAL_DEPOSIT);
@@ -53,7 +47,7 @@ contract xYieldTest is Test {
     }
 
     function testDeposit() public {
-        uint256 depositAmount = 100 * 10**18;
+        uint256 depositAmount = 100 * 10 ** 18;
 
         vm.prank(user1);
         uint256 shares = vault.deposit(depositAmount, user1);
@@ -65,8 +59,8 @@ contract xYieldTest is Test {
     }
 
     function testWithdraw() public {
-        uint256 depositAmount = 100 * 10**18;
-        uint256 withdrawAmount = 50 * 10**18;
+        uint256 depositAmount = 100 * 10 ** 18;
+        uint256 withdrawAmount = 50 * 10 ** 18;
 
         vm.prank(user1);
         vault.deposit(depositAmount, user1);
@@ -81,7 +75,7 @@ contract xYieldTest is Test {
     }
 
     function testSharePriceCalculation() public {
-        uint256 depositAmount = 100 * 10**18;
+        uint256 depositAmount = 100 * 10 ** 18;
 
         vm.prank(user1);
         uint256 shares1 = vault.deposit(depositAmount, user1);
@@ -89,7 +83,7 @@ contract xYieldTest is Test {
         vm.warp(block.timestamp + 365 days);
 
         vm.prank(guardian);
-        vault.updateSharePrice(110 * 10**18); // Simulate 10% yield
+        vault.updateSharePrice(110 * 10 ** 18); // Simulate 10% yield
 
         vm.prank(user2);
         uint256 shares2 = vault.deposit(depositAmount, user2);
@@ -98,7 +92,7 @@ contract xYieldTest is Test {
     }
 
     function testActiveChainBehavior() public {
-        uint256 depositAmount = 100 * 10**18;
+        uint256 depositAmount = 100 * 10 ** 18;
 
         assertTrue(vault.isActiveChain());
 
@@ -109,7 +103,7 @@ contract xYieldTest is Test {
     }
 
     function testInactiveChainBehavior() public {
-        uint256 depositAmount = 100 * 10**18;
+        uint256 depositAmount = 100 * 10 ** 18;
 
         vm.prank(guardian);
         vault.setActiveChain(false);
@@ -122,7 +116,7 @@ contract xYieldTest is Test {
     }
 
     function testGuardianFunctions() public {
-        uint256 newVirtualAssets = 200 * 10**18;
+        uint256 newVirtualAssets = 200 * 10 ** 18;
 
         vm.prank(guardian);
         vault.updateSharePrice(newVirtualAssets);
