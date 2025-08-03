@@ -13,7 +13,7 @@ let socketMessage: string | null;
 beforeAll(async () => {
     await httpServer.start(wsPort, false);
 
-    const nonceRes = await fetch(`http://localhost:${wsPort}/api/nonce`);
+    const nonceRes = await fetch(`http://localhost:${wsPort}/api/currentNonce?username=${USERNAME}`);
     const { nonce } = await nonceRes.json();
     const blob = { username: USERNAME, nonce };
     const signature = await signMessage({ message: JSON.stringify(blob), privateKey: PRIVATE_KEY as `0x${string}` });

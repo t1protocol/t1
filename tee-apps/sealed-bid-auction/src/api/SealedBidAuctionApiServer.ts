@@ -21,7 +21,7 @@ export class SealedBidAuctionApiServer {
     private readonly auctionController;
 
     private server: Server | null = null;
-    private currentNonce: string = crypto.randomUUID();
+    private readonly nonces: Map<string, string> = new Map();
 
     public constructor() {
         this.solverPriceBook = new SolverPriceBook();
@@ -35,8 +35,7 @@ export class SealedBidAuctionApiServer {
         }
 
         const solverPriceBook = this.solverPriceBook;
-        let currentNonce = this.currentNonce;
-        const self = this;
+        const nonces = this.nonces;
 
         // @ts-ignore
         this.server = Bun.serve<AuthData>({
@@ -47,8 +46,14 @@ export class SealedBidAuctionApiServer {
             } : {},
             routes: {
                 "/healthcheck": new Response("OK"),
-                "/api/nonce": () => {
-                    const body = JSON.stringify({ nonce: currentNonce });
+                "/api/currentNonce": req => {
+                    const username = new URL(req.url).searchParams.get("username");
+                    if (!username) {
+                        return new Response("Missing username", { status: 400 });
+                    }
+                    const nonce = crypto.randomUUID();
+                    nonces.set(username, nonce);
+                    const body = JSON.stringify({ nonce });
                     return new Response(body, { status: 200, headers: { "Content-Type": "application/json" } });
                 },
                 "/api/preauction": req => this.auctionController.preauction(req),
@@ -65,7 +70,8 @@ export class SealedBidAuctionApiServer {
                     return new Response("Missing authentication credentials", { status: 401 });
                 }
 
-                if (nonce !== currentNonce) {
+                const expectedNonce = nonces.get(username);
+                if (!expectedNonce || nonce !== expectedNonce) {
                     return new Response("Invalid or expired nonce", { status: 401 });
                 }
 
@@ -82,8 +88,7 @@ export class SealedBidAuctionApiServer {
                 recoveredAddress = recoveredAddress.toLowerCase();
                 console.log(`WebSocket auth success for user "${username}" with address ${recoveredAddress}`);
 
-                currentNonce = crypto.randomUUID();
-                self.currentNonce = currentNonce;
+                nonces.set(username, crypto.randomUUID());
 
                 const success = server.upgrade(req, {
                     data: { username, address: recoveredAddress }
