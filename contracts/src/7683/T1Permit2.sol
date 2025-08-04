@@ -12,7 +12,13 @@ import { ResolvedCrossChainOrder } from "../interfaces/IERC7683.sol";
 /// enabling gasless order operations where users can sign permit messages instead of making on-chain approvals.
 /// This contract manages nonce tracking and signature validation for gasless transactions.
 abstract contract T1Permit2 {
-    // ============ Constants ============
+    /// @notice Emitted when a nonce is invalidated for an address.
+    /// @param owner The address whose nonce was invalidated.
+    /// @param nonce The invalidated nonce.
+    event NonceInvalidation(address indexed owner, uint256 nonce);
+
+    error InvalidNonce();
+
     /// @notice The instance of the Permit2 contract.
     IPermit2 public immutable PERMIT2;
 
@@ -25,30 +31,14 @@ abstract contract T1Permit2 {
     string public constant witnessTypeString =
         "ResolvedCrossChainOrder witness)ResolvedCrossChainOrder(address user, uint64 originChainId, uint32 openDeadline, uint32 fillDeadline, Output[] maxSpent, Output[] minReceived, FillInstruction[] fillInstructions)Output(bytes32 token, uint256 amount, bytes32 recipient, uint64 chainId)FillInstruction(uint64 destinationChainId, bytes32 destinationSettler, bytes originData)TokenPermissions(address token,uint256 amount)";
 
-    // ============ Public Storage ============
-
     /// @notice Tracks the used nonces for each address.
     mapping(address => mapping(uint256 => bool)) public usedNonces;
 
-    // ============ Events ============
-
-    /// @notice Emitted when a nonce is invalidated for an address.
-    /// @param owner The address whose nonce was invalidated.
-    /// @param nonce The invalidated nonce.
-    event NonceInvalidation(address indexed owner, uint256 nonce);
-
-    // ============ Errors ============
-
-    error InvalidNonce();
-
-    // ============ Constructor ============
     /// @notice Initializes the contract with the given Permit2 contract address.
     /// @param _permit2 The address of the Permit2 contract.
     constructor(address _permit2) {
         PERMIT2 = IPermit2(_permit2);
     }
-
-    // ============ External Functions ============
 
     /// @notice Invalidates a nonce for the user calling the function.
     /// @param _nonce The nonce to invalidate.
@@ -65,8 +55,6 @@ abstract contract T1Permit2 {
     function isValidNonce(address _from, uint256 _nonce) external view virtual returns (bool) {
         return !usedNonces[_from][_nonce];
     }
-
-    // ============ Public Functions ============
 
     /// @notice Computes the Permit2 witness hash for a given ResolvedCrossChainOrder.
     /// @param _resolvedOrder The ResolvedCrossChainOrder to compute the witness hash for.
@@ -85,8 +73,6 @@ abstract contract T1Permit2 {
             )
         );
     }
-
-    // ============ Internal Functions ============
 
     /// @notice Marks a nonce as used by setting its bit in the appropriate bitmap.
     /// @dev Ensures that a nonce cannot be reused by flipping the corresponding bit in the bitmap.
