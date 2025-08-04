@@ -4,30 +4,34 @@ import type {AuctionQuote, AuctionRequest} from "../api/types.ts";
 import type {SolverPriceBook} from "./SolverPriceBook.ts";
 import type {PriceListItem} from "./types.ts";
 
-type Price = {
+export type Price = {
     amountOut: bigint;
-    solverAddress: string;
+    settlementReceiverAddress: string;
 }
 
 export class AuctionService {
     constructor(private readonly solverPricebook: SolverPriceBook) {}
 
-    public auction(request: AuctionRequest): AuctionQuote | null {
-        const pricesForAskedTokens = this.findPricesForAskedTokens(request);
-
-        const bestPrice = this.chooseBestPrice(pricesForAskedTokens);
+    public preauction(request: AuctionRequest): AuctionQuote | null {
+        const bestPrice = this.auction(request.srcTokenAddress, request.dstTokenAddress, request.amountIn);
 
         if (!bestPrice) {
-            throw new Error("No quote found for this pair");
+            return null;
         } else {
             return {
                 id: request.id,
                 request: request as Omit<AuctionRequest, "id">,
                 amountOut: bestPrice.amountOut,
-                solverAddress: bestPrice.solverAddress,
+                settlementReceiverAddress: bestPrice.settlementReceiverAddress,
                 timestamp: Date.now()
             };
         }
+    }
+
+    public auction(srcTokenAddress: string, dstTokenAddress: string, amountIn: bigint): Price | null {
+        const pricesForAskedTokens = this.findPricesForAskedTokens(srcTokenAddress, dstTokenAddress, amountIn);
+
+        return this.chooseBestPrice(pricesForAskedTokens);
     }
 
     private getFinalIntervalIndex(priceListItem: PriceListItem, amount: bigint): number | undefined {
@@ -35,51 +39,51 @@ export class AuctionService {
     }
 
     private chooseBestPrice(pricesForAskedTokens: Immutable.List<Price>): Price | null {
-        let bestPrice = null;
+        let bestPrice: Price | null = null;
 
         if (!pricesForAskedTokens.isEmpty()) {
-            let bestPrice: Price = {
+            bestPrice = {
                 amountOut: -1n,
-                solverAddress: "0xdeadbeef"
+                settlementReceiverAddress: "0xdeadbeef"
             };
 
             pricesForAskedTokens.forEach(price => {
-                if (price.amountOut > bestPrice.amountOut) bestPrice = price;
+                if (price.amountOut > bestPrice!.amountOut) bestPrice = price;
             });
         }
 
         return bestPrice;
     }
 
-    private findPricesForAskedTokens(request: AuctionRequest): Immutable.List<Price> {
+    private findPricesForAskedTokens(srcTokenAddress: string, dstTokenAddress: string, amountIn: bigint): Immutable.List<Price> {
         return this.solverPricebook.getCurrentPrices().flatMap(
             priceItems => priceItems.filter(
                 priceItem =>
-                    priceItem.srcTokenAddresses.includes(request.srcTokenAddress) &&
-                    priceItem.dstTokenAddress.includes(request.dstTokenAddress) &&
-                    this.getFinalIntervalIndex(priceItem, request.amountIn) !== undefined
+                    priceItem.srcTokenAddresses.includes(srcTokenAddress) &&
+                    priceItem.dstTokenAddress.includes(dstTokenAddress) &&
+                    this.getFinalIntervalIndex(priceItem, amountIn) !== undefined
             ).map(priceItem => {
                 return {
-                    amountOut: this.calculateAmountOut(priceItem, request.amountIn),
-                    solverAddress: priceItem.solverAddress
+                    amountOut: this.calculateAmountOut(priceItem, amountIn),
+                    settlementReceiverAddress: priceItem.settlementReceiverAddress
                 };
             })
         )
     }
 
     private calculateAmountOut(priceItem: PriceListItem, amountIn: bigint): bigint {
-        let currentInterval = 0;
+        let currentIntervalIndex = 0;
         let amountOut = 0n;
         const finalIndex = this.getFinalIntervalIndex(priceItem, amountIn)!;
 
         do {
-            const currInterval = priceItem.intervals[currentInterval]!;
+            const currInterval = priceItem.intervals[currentIntervalIndex]!;
             if (currInterval !== priceItem.intervals[finalIndex]!) {
-                amountOut += currInterval.price * (currInterval.range.max - currInterval.range.min);
+                amountOut += currInterval.price * (currInterval.range.max - (currentIntervalIndex === 0 ? 0n : currInterval.range.min));
             } else {
-                amountOut += currInterval.price * (amountIn - currInterval.range.min - (finalIndex === 0 ? 0n : 1n));
+                amountOut += currInterval.price * (amountIn - (currentIntervalIndex === 0 ? 0n : currInterval.range.min) + (finalIndex === 0 ? 0n : 1n));
             }
-        } while (priceItem.intervals[currentInterval++] !== priceItem.intervals[finalIndex]);
+        } while (priceItem.intervals[currentIntervalIndex++] !== priceItem.intervals[finalIndex]);
 
         return amountOut;
     }

@@ -3,7 +3,9 @@ import type {Server} from "bun";
 import {SealedBidAuctionController} from "./SealedBidAuctionController.ts";
 import {WinstonLogger} from "../utils/WinstonLogger.ts";
 import {SolverPriceBook} from "../core/SolverPriceBook.ts";
-import {AuctionService} from "../core/AuctionService.ts";
+import {AuctionService, type Price} from "../core/AuctionService.ts";
+import type {AuctionResult} from "./types.ts";
+import type {OrderData} from "../blockchain/types.ts";
 
 type AuthData = {
     username: string;
@@ -57,6 +59,7 @@ export class SealedBidAuctionApiServer {
             },
             websocket: {
                 open(ws) {
+                    ws.subscribe('intent-auction');
                     console.log(`Client ${ws.data.username} connected`);
                     ws.send("Welcome!");
                 },
@@ -70,6 +73,7 @@ export class SealedBidAuctionApiServer {
                     }
                 },
                 close(ws, _code, _reason) {
+                    ws.unsubscribe('intent-auction');
                     console.log(`Client ${ws.data.username} disconnected`);
                 },
             },
@@ -85,5 +89,16 @@ export class SealedBidAuctionApiServer {
             this.server = null;
             this.logger.info("API server stopped");
         }
+    }
+
+    public publishAuctionResult(price: Price, orderId: string, orderData: OrderData, chainId: number) {
+        const result: AuctionResult = {
+            settlementReceiverAddress: price.settlementReceiverAddress,
+            amountOut: price.amountOut,
+            orderId,
+            orderData
+        }
+
+        this.server?.publish('intent-auction', `[${result.settlementReceiverAddress}] won auction on chain [${chainId}] : ${JSON.stringify(result)}`);
     }
 }

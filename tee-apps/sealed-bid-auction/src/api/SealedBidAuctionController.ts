@@ -11,7 +11,7 @@ export class SealedBidAuctionController {
     public async preauction(req: BunRequest): Promise<Response> {
         try {
             const auctionRequest: AuctionRequest = JSON.parse(await req.text());
-            const auctionQuote = this.auctionService.auction(auctionRequest);
+            const auctionQuote = this.auctionService.preauction(auctionRequest);
 
             if (auctionQuote) {
                 return new Response(serialize(auctionQuote), {status: 200});

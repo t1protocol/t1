@@ -3,7 +3,7 @@ export type PriceListItem = {
     intervals: Interval[];
     srcTokenAddresses: string[];
     dstTokenAddress: string[];
-    solverAddress: string;
+    settlementReceiverAddress: string;
 }
 
 export enum Direction {
