@@ -47,8 +47,12 @@ export class SealedBidAuctionApiServer {
                 if (!username) {
                     return new Response("Missing username", { status: 400 });
                 }
-                const nonce = crypto.randomUUID();
-                nonces.set(username, nonce);
+                const key = username.toLowerCase();
+                let nonce = nonces.get(key);
+                if (!nonce) {
+                    nonce = crypto.randomUUID();
+                    nonces.set(key, nonce);
+                }
                 const body = JSON.stringify({ nonce });
                 return new Response(body, { status: 200, headers: { "Content-Type": "application/json" } });
             },
@@ -79,8 +83,12 @@ export class SealedBidAuctionApiServer {
                     }
 
                     const { username, nonce } = authBlob;
-                    const expectedNonce = username && nonces.get(username);
-                    if (!username || !nonce || !expectedNonce || nonce !== expectedNonce) {
+                    if (!username || !nonce) {
+                        return new Response("Unauthorized", { status: 401 });
+                    }
+                    const key = username.toLowerCase();
+                    const expectedNonce = nonces.get(key);
+                    if (!expectedNonce || nonce !== expectedNonce) {
                         return new Response("Unauthorized", { status: 401 });
                     }
 
@@ -96,7 +104,11 @@ export class SealedBidAuctionApiServer {
                     solverAddress = solverAddress.toLowerCase();
                     console.log(`WebSocket auth success for user "${username}" with address ${solverAddress}`);
 
-                    nonces.set(username, crypto.randomUUID());
+                    const current = nonces.get(key);
+                    if (current !== nonce || !nonces.delete(key)) {
+                        return new Response("Unauthorized", { status: 401 });
+                    }
+                    nonces.set(key, crypto.randomUUID());
                     authenticatedSolvers.add(solverAddress);
 
                     const success = server.upgrade(req, {

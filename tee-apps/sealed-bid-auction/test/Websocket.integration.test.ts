@@ -13,8 +13,11 @@ let socketMessage: string | null;
 beforeAll(async () => {
     await httpServer.start(wsPort, false);
 
-    const nonceRes = await fetch(`http://localhost:${wsPort}/api/currentNonce?username=${USERNAME}`);
-    const { nonce } = await nonceRes.json();
+    const nonceRes1 = await fetch(`http://localhost:${wsPort}/api/currentNonce?username=${USERNAME}`);
+    const { nonce } = await nonceRes1.json();
+    const nonceRes2 = await fetch(`http://localhost:${wsPort}/api/currentNonce?username=${USERNAME}`);
+    const { nonce: nonceAgain } = await nonceRes2.json();
+    expect(nonceAgain).toBe(nonce);
     const blobString = JSON.stringify({ username: USERNAME, nonce });
     const signature = await signMessage({ message: blobString, privateKey: PRIVATE_KEY as `0x${string}` });
 
@@ -37,6 +40,10 @@ beforeAll(async () => {
     while (socketClosed) {
         await new Promise((resolve) => setTimeout(resolve, 100));
     }
+
+    const nonceRes3 = await fetch(`http://localhost:${wsPort}/api/currentNonce?username=${USERNAME}`);
+    const { nonce: rotated } = await nonceRes3.json();
+    expect(rotated).not.toBe(nonce);
 });
 
 afterAll(async () => {
@@ -81,5 +88,29 @@ describe("Websocket Integration Test", () => {
         }
 
         expect(socketMessage).toBe(`Error when updating price: There is a gap between max of range [0] and min of range [1]`);
+    });
+
+    it("Should reject parallel connections with the same nonce", async () => {
+        const nonceRes = await fetch(`http://localhost:${wsPort}/api/currentNonce?username=${USERNAME}`);
+        const { nonce } = await nonceRes.json();
+        const blobString = JSON.stringify({ username: USERNAME, nonce });
+        const signature = await signMessage({ message: blobString, privateKey: PRIVATE_KEY as `0x${string}` });
+
+        const headers = { "X-Auth-Blob": blobString, "X-Auth-Signature": signature };
+        const ws1 = new WebSocket(`ws://localhost:${wsPort}/`, { headers });
+        const ws2 = new WebSocket(`ws://localhost:${wsPort}/`, { headers });
+
+        const wait = (ws: WebSocket) =>
+            new Promise<boolean>((resolve) => {
+                ws.onopen = () => resolve(true);
+                ws.onerror = () => resolve(false);
+                ws.onclose = () => resolve(false);
+            });
+
+        const [r1, r2] = await Promise.all([wait(ws1), wait(ws2)]);
+        expect(Number(r1) + Number(r2)).toBe(1);
+
+        ws1.close();
+        ws2.close();
     });
 });
