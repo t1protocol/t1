@@ -7,32 +7,37 @@ import { DeploymentUtils } from "../lib/DeploymentUtils.sol";
 
 import { T1StandardERC20 } from "../../src/libraries/token/T1StandardERC20.sol";
 import { WrappedEther } from "../../src/L2/predeploys/WrappedEther.sol";
-// import { Usdt } from "../deploy/DeployL1Usdt.s.sol";
 
 contract Setup7683BotsLiquidity is Script, DeploymentUtils {
-    uint256 private FUNDER_PRIVATE_KEY = vm.envUint("FUNDER_PRIVATE_KEY");
-    uint256 private FILL_BOT_PRIVATE_KEY = vm.envUint("L1_7683_FILL_BOT_PRIVATE_KEY");
-    uint256 private SETTLEMENT_BOT_PRIVATE_KEY = vm.envUint("SETTLEMENT_BOT_PRIVATE_KEY");
-    uint256 private SIGNER_PRIVATE_KEY = vm.envUint("SIGNER_PRIVATE_KEY");
-    uint256 private READ_SIGNER_PRIVATE_KEY = vm.envUint("READ_SIGNER_PRIVATE_KEY");
-    uint256 private READ_RESULT_PROOF_BOT_PRIVATE_KEY = vm.envUint("READ_RESULT_PROOF_BOT_PRIVATE_KEY");
-
-    address payable private ARBITRUM_SEPOLIA_WETH_ADDR = payable(vm.envAddress("ARBITRUM_SEPOLIA_WETH_ADDR"));
     address private ARBITRUM_SEPOLIA_USDT_ADDR = vm.envAddress("ARBITRUM_SEPOLIA_USDT_ADDR");
-    address private PULL_BASED_7683_PROXY_ADDR = vm.envAddress("ARB_T1_PULL_BASED_7683_PROXY_ADDR");
+    address payable private ARBITRUM_SEPOLIA_WETH_ADDR = payable(vm.envAddress("ARBITRUM_SEPOLIA_WETH_ADDR"));
+    uint256 private ARBITRUM_SEPOLIA_FILL_BOT_PRIVATE_KEY = vm.envUint("ARBITRUM_SEPOLIA_FILL_BOT_PRIVATE_KEY");
 
     function run() external {
+        vm.createSelectFork(vm.rpcUrl("arbitrum_sepolia"));
+        logStart("[START] Setup Bot liquidity");
+
+        fundBots();
+        approveContracts();
+
+        logStart("[COMPLETE] Setup Bot liquidity");
+    }
+
+    function fundBots() private {
+        uint256 FUNDER_PRIVATE_KEY = vm.envUint("FUNDER_PRIVATE_KEY");
+        uint256 SETTLEMENT_BOT_PRIVATE_KEY = vm.envUint("SETTLEMENT_BOT_PRIVATE_KEY");
+        uint256 SIGNER_PRIVATE_KEY = vm.envUint("SIGNER_PRIVATE_KEY");
+        uint256 READ_SIGNER_PRIVATE_KEY = vm.envUint("READ_SIGNER_PRIVATE_KEY");
+        uint256 READ_RESULT_PROOF_BOT_PRIVATE_KEY = vm.envUint("READ_RESULT_PROOF_BOT_PRIVATE_KEY");
+
         uint256 ethAmount = 90 ether;
         uint256 wethAmount = 2 ether;
         uint256 usdtAmount = 2000 * 1e6;
-        address payable fillBotAddr = payable(vm.addr(FILL_BOT_PRIVATE_KEY));
+        address payable fillBotAddr = payable(vm.addr(ARBITRUM_SEPOLIA_FILL_BOT_PRIVATE_KEY));
         address payable settlementBotAddr = payable(vm.addr(SETTLEMENT_BOT_PRIVATE_KEY));
         address payable signerAddr = payable(vm.addr(SIGNER_PRIVATE_KEY));
         address payable readSignerAddr = payable(vm.addr(READ_SIGNER_PRIVATE_KEY));
         address payable readResultProofBotAddr = payable(vm.addr(READ_RESULT_PROOF_BOT_PRIVATE_KEY));
-
-        vm.createSelectFork(vm.rpcUrl("arbitrum_sepolia"));
-
         // *** FUND BOTS *** //
         vm.startBroadcast(FUNDER_PRIVATE_KEY);
 
@@ -61,13 +66,17 @@ contract Setup7683BotsLiquidity is Script, DeploymentUtils {
         readResultProofBotAddr.transfer(1 ether);
 
         vm.stopBroadcast();
+    }
+
+    function approveContracts() private {
+        address PULL_ARBITRUMD_7683_PROXY_ADDR = vm.envAddress("ARBITRUM_T1_PULL_ARBITRUMD_7683_PROXY_ADDR");
 
         // *** ERC-20 Contract Approvals *** //
-        vm.startBroadcast(FILL_BOT_PRIVATE_KEY);
+        vm.startBroadcast(ARBITRUM_SEPOLIA_FILL_BOT_PRIVATE_KEY);
         // approve L1 7683 Escrow to transfer USDT in the bot's name
-        T1StandardERC20(ARBITRUM_SEPOLIA_USDT_ADDR).approve(PULL_BASED_7683_PROXY_ADDR, type(uint256).max - 1);
+        T1StandardERC20(ARBITRUM_SEPOLIA_USDT_ADDR).approve(PULL_ARBITRUMD_7683_PROXY_ADDR, type(uint256).max - 1);
         // approve L1 7683 Escrow to transfer WETH in the bot's name
-        WrappedEther(ARBITRUM_SEPOLIA_WETH_ADDR).approve(PULL_BASED_7683_PROXY_ADDR, type(uint256).max - 1);
+        WrappedEther(ARBITRUM_SEPOLIA_WETH_ADDR).approve(PULL_ARBITRUMD_7683_PROXY_ADDR, type(uint256).max - 1);
 
         vm.stopBroadcast();
     }
