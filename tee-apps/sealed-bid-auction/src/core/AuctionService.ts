@@ -39,16 +39,16 @@ export class AuctionService {
     }
 
     private chooseBestPrice(pricesForAskedTokens: Immutable.List<Price>): Price | null {
-        let bestPrice = null;
+        let bestPrice: Price | null = null;
 
         if (!pricesForAskedTokens.isEmpty()) {
-            let bestPrice: Price = {
+            bestPrice = {
                 amountOut: -1n,
                 settlementReceiverAddress: "0xdeadbeef"
             };
 
             pricesForAskedTokens.forEach(price => {
-                if (price.amountOut > bestPrice.amountOut) bestPrice = price;
+                if (price.amountOut > bestPrice!.amountOut) bestPrice = price;
             });
         }
 
