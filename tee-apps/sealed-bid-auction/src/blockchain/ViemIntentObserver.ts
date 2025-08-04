@@ -29,7 +29,8 @@ export class ViemIntentObserver {
                 pollingInterval: number,
                 private readonly t1Erc7683ContractAddress: `0x${string}`,
                 private readonly auctionService: AuctionService,
-                private readonly apiServer: SealedBidAuctionApiServer
+                private readonly apiServer: SealedBidAuctionApiServer,
+                private readonly auctionPollingInterval: number = 500
     ) {
         this.client = createPublicClient({
             chain,
@@ -76,7 +77,7 @@ export class ViemIntentObserver {
                 break;
             }
 
-            await new Promise((resolve) => setTimeout(resolve, 100));
+            await new Promise((resolve) => setTimeout(resolve, this.auctionPollingInterval));
         }
     }
 }
