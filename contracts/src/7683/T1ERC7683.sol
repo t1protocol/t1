@@ -6,7 +6,6 @@ import { PausableUpgradeable } from "@openzeppelin/contracts-upgradeable/securit
 import { IERC20 } from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import { SafeERC20 } from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import { Address } from "@openzeppelin/contracts/utils/Address.sol";
-import { StorageSlot } from "@openzeppelin/contracts/utils/StorageSlot.sol";
 import { TypeCasts } from "@hyperlane-xyz/libs/TypeCasts.sol";
 import { Hyperlane7683Message } from "../libraries/7683/Hyperlane7683Message.sol";
 import { OrderData, OrderEncoder } from "../libraries/7683/OrderEncoder.sol";
@@ -301,6 +300,9 @@ contract T1ERC7683 is IT1ERC7683, T1Permit2, OwnableUpgradeable, PausableUpgrade
         emit SettlementVerificationRequested(orderId, requestId);
     }
 
+    /// @notice Initiates a refund verification for an expired order
+    /// @param orderId The ID of the order to verify for refund
+    /// @return requestId The ID of the read request
     function verifyRefund(bytes32 orderId) external returns (bytes32 requestId) {
         (, bytes memory _orderData) = abi.decode(openOrders[orderId], (bytes32, bytes));
         OrderData memory orderData = OrderEncoder.decode(_orderData);
@@ -482,6 +484,29 @@ contract T1ERC7683 is IT1ERC7683, T1Permit2, OwnableUpgradeable, PausableUpgrade
         _refundOrders(OrderEncoder.decode(_orders[0].orderData).originDomain, orderIds);
     }
 
+    /// @notice Verifies that an order is not filled using merkle proof
+    /// @param orderId The ID of the order to verify
+    /// @param encodedProofOfRead The encoded proof of read
+    function _verifyOrderNotFilled(bytes32 orderId, bytes calldata encodedProofOfRead) internal {
+        (bytes32 requestId, bytes memory result) = xChainRead.verifyProofOfRead(encodedProofOfRead);
+
+        // Verify this proof corresponds to the correct order
+        bytes32 expectedOrderId = refundReadRequestToOrderId[requestId];
+        if (expectedOrderId != orderId) revert InvalidRequest();
+
+        delete settlementReadRequestToOrderId[requestId];
+
+        // Check if the order is settled based on result length (same logic as handleReadResultWithProof)
+        if (result.length == 0) return;
+
+        // Remove the first 32 bytes prefix of the message
+        bytes memory _innerMessage = abi.decode(result, (bytes));
+        (bool filled,,) = abi.decode(_innerMessage, (bool, bytes32[], bytes[]));
+
+        // Revert if the order is already settled
+        if (filled) revert OrderAlreadySettled();
+    }
+
     /// @notice Refunds orders by transferring input tokens back to order senders
     /// @param originDomain The chain id of the network where intent has been created
     /// @param orderIds Ids for the orders to refund
@@ -546,6 +571,11 @@ contract T1ERC7683 is IT1ERC7683, T1Permit2, OwnableUpgradeable, PausableUpgrade
         _unpause();
     }
 
+    /// @notice Retrieves the status of a filled order by its ID
+    /// @dev Returns encoded settlement data if the order has filler data, otherwise returns empty bytes
+    /// @param orderId The unique identifier of the order to query
+    /// @return Encoded settlement message containing order IDs and filler data, or empty bytes if order has no filler
+    /// data
     function getFilledOrderStatus(bytes32 orderId) external view returns (bytes memory) {
         FilledOrder memory filledOrder = filledOrders[orderId];
         bytes memory _orderStatus;
@@ -558,29 +588,6 @@ contract T1ERC7683 is IT1ERC7683, T1Permit2, OwnableUpgradeable, PausableUpgrade
             _orderStatus = Hyperlane7683Message.encodeSettle(_orderIds, _ordersFillerData);
         }
         return _orderStatus;
-    }
-
-    /// @notice Verifies that an order is not filled using merkle proof
-    /// @param orderId The ID of the order to verify
-    /// @param encodedProofOfRead The encoded proof of read
-    function _verifyOrderNotFilled(bytes32 orderId, bytes calldata encodedProofOfRead) internal {
-        (bytes32 requestId, bytes memory result) = xChainRead.verifyProofOfRead(encodedProofOfRead);
-
-        // Verify this proof corresponds to the correct order
-        bytes32 expectedOrderId = refundReadRequestToOrderId[requestId];
-        if (expectedOrderId != orderId) revert InvalidRequest();
-
-        delete settlementReadRequestToOrderId[requestId];
-
-        // Check if the order is settled based on result length (same logic as handleReadResultWithProof)
-        if (result.length == 0) return;
-
-        // Remove the first 32 bytes prefix of the message
-        bytes memory _innerMessage = abi.decode(result, (bytes));
-        (bool filled,,) = abi.decode(_innerMessage, (bool, bytes32[], bytes[]));
-
-        // Revert if the order is already settled
-        if (filled) revert OrderAlreadySettled();
     }
 
     /// @notice Transfers tokens or ETH out of the contract.
