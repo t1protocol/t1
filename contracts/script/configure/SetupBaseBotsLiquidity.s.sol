@@ -9,16 +9,9 @@ import { T1StandardERC20 } from "../../src/libraries/token/T1StandardERC20.sol";
 import { WrappedEther } from "../../src/L2/predeploys/WrappedEther.sol";
 
 contract Setup7683BotsLiquidity is Script, DeploymentUtils {
-    uint256 private FUNDER_PRIVATE_KEY = vm.envUint("FUNDER_PRIVATE_KEY");
-    uint256 private BASE_SEPOLIA_FILL_BOT_PRIVATE_KEY = vm.envUint("BASE_SEPOLIA_FILL_BOT_PRIVATE_KEY");
-    uint256 private SETTLEMENT_BOT_PRIVATE_KEY = vm.envUint("SETTLEMENT_BOT_PRIVATE_KEY");
-    uint256 private SIGNER_PRIVATE_KEY = vm.envUint("SIGNER_PRIVATE_KEY");
-    uint256 private READ_SIGNER_PRIVATE_KEY = vm.envUint("READ_SIGNER_PRIVATE_KEY");
-    uint256 private READ_RESULT_PROOF_BOT_PRIVATE_KEY = vm.envUint("READ_RESULT_PROOF_BOT_PRIVATE_KEY");
-
-    address payable private BASE_SEPOLIA_WETH_ADDR = payable(vm.envAddress("BASE_SEPOLIA_WETH_ADDR"));
     address private BASE_SEPOLIA_USDT_ADDR = vm.envAddress("BASE_SEPOLIA_USDT_ADDR");
-    address private PULL_BASED_7683_PROXY_ADDR = vm.envAddress("BASE_T1_PULL_BASED_7683_PROXY_ADDR");
+    address payable private BASE_SEPOLIA_WETH_ADDR = payable(vm.envAddress("BASE_SEPOLIA_WETH_ADDR"));
+    uint256 private BASE_SEPOLIA_FILL_BOT_PRIVATE_KEY = vm.envUint("BASE_SEPOLIA_FILL_BOT_PRIVATE_KEY");
 
     function run() external {
         vm.createSelectFork(vm.rpcUrl("base_sepolia"));
@@ -31,6 +24,12 @@ contract Setup7683BotsLiquidity is Script, DeploymentUtils {
     }
 
     function fundBots() {
+        uint256 FUNDER_PRIVATE_KEY = vm.envUint("FUNDER_PRIVATE_KEY");
+        uint256 SETTLEMENT_BOT_PRIVATE_KEY = vm.envUint("SETTLEMENT_BOT_PRIVATE_KEY");
+        uint256 SIGNER_PRIVATE_KEY = vm.envUint("SIGNER_PRIVATE_KEY");
+        uint256 READ_SIGNER_PRIVATE_KEY = vm.envUint("READ_SIGNER_PRIVATE_KEY");
+        uint256 READ_RESULT_PROOF_BOT_PRIVATE_KEY = vm.envUint("READ_RESULT_PROOF_BOT_PRIVATE_KEY");
+
         uint256 ethAmount = 90 ether;
         uint256 wethAmount = 2 ether;
         uint256 usdtAmount = 2000 * 1e6;
@@ -70,6 +69,8 @@ contract Setup7683BotsLiquidity is Script, DeploymentUtils {
     }
 
     function approveContracts() {
+        address PULL_BASED_7683_PROXY_ADDR = vm.envAddress("BASE_T1_PULL_BASED_7683_PROXY_ADDR");
+
         // *** ERC-20 Contract Approvals *** //
         vm.startBroadcast(BASE_SEPOLIA_FILL_BOT_PRIVATE_KEY);
         // approve L1 7683 Escrow to transfer USDT in the bot's name
