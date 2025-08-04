@@ -25,6 +25,13 @@ export class SealedBidAuctionApiServer {
     private readonly nonces: Map<string, string> = new Map();
     private readonly authenticatedSolvers: Set<string> = new Set();
 
+    private consumeNonce(key: string, expected: string): boolean {
+        const current = this.nonces.get(key);
+        if (!current || current !== expected) return false;
+        this.nonces.delete(key);
+        return true;
+    }
+
     public constructor() {
         this.solverPriceBook = new SolverPriceBook();
         this.auctionController = new SealedBidAuctionController(new AuctionService(this.solverPriceBook));
@@ -37,7 +44,6 @@ export class SealedBidAuctionApiServer {
         }
 
         const solverPriceBook = this.solverPriceBook;
-        const nonces = this.nonces;
         const authenticatedSolvers = this.authenticatedSolvers;
 
         const routes = {
@@ -48,10 +54,10 @@ export class SealedBidAuctionApiServer {
                     return new Response("Missing username", { status: 400 });
                 }
                 const key = username.toLowerCase();
-                let nonce = nonces.get(key);
+                let nonce = this.nonces.get(key);
                 if (!nonce) {
                     nonce = crypto.randomUUID();
-                    nonces.set(key, nonce);
+                    this.nonces.set(key, nonce);
                 }
                 const body = JSON.stringify({ nonce });
                 return new Response(body, { status: 200, headers: { "Content-Type": "application/json" } });
@@ -67,7 +73,7 @@ export class SealedBidAuctionApiServer {
                 cert: Bun.file("./cert.pem"),
             } : {},
             routes,
-            async fetch(req, server) {
+            fetch: async (req, server) => {
                 if (req.headers.get("Upgrade")?.toLowerCase() === "websocket") {
                     const blobHeader = req.headers.get("X-Auth-Blob");
                     const sig = req.headers.get("X-Auth-Signature");
@@ -87,10 +93,6 @@ export class SealedBidAuctionApiServer {
                         return new Response("Unauthorized", { status: 401 });
                     }
                     const key = username.toLowerCase();
-                    const expectedNonce = nonces.get(key);
-                    if (!expectedNonce || nonce !== expectedNonce) {
-                        return new Response("Unauthorized", { status: 401 });
-                    }
 
                     let solverAddress: string;
                     try {
@@ -104,11 +106,10 @@ export class SealedBidAuctionApiServer {
                     solverAddress = solverAddress.toLowerCase();
                     console.log(`WebSocket auth success for user "${username}" with address ${solverAddress}`);
 
-                    const current = nonces.get(key);
-                    if (current !== nonce || !nonces.delete(key)) {
+                    if (!this.consumeNonce(key, nonce)) {
                         return new Response("Unauthorized", { status: 401 });
                     }
-                    nonces.set(key, crypto.randomUUID());
+                    this.nonces.set(key, crypto.randomUUID());
                     authenticatedSolvers.add(solverAddress);
 
                     const success = server.upgrade(req, {
