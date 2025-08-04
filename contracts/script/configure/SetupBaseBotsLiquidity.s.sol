@@ -23,7 +23,7 @@ contract Setup7683BotsLiquidity is Script, DeploymentUtils {
         logStart("[COMPLETE] Setup Bot liquidity");
     }
 
-    function fundBots() {
+    function fundBots() private {
         uint256 FUNDER_PRIVATE_KEY = vm.envUint("FUNDER_PRIVATE_KEY");
         uint256 SETTLEMENT_BOT_PRIVATE_KEY = vm.envUint("SETTLEMENT_BOT_PRIVATE_KEY");
         uint256 SIGNER_PRIVATE_KEY = vm.envUint("SIGNER_PRIVATE_KEY");
@@ -68,7 +68,7 @@ contract Setup7683BotsLiquidity is Script, DeploymentUtils {
         vm.stopBroadcast();
     }
 
-    function approveContracts() {
+    function approveContracts() private {
         address PULL_BASED_7683_PROXY_ADDR = vm.envAddress("BASE_T1_PULL_BASED_7683_PROXY_ADDR");
 
         // *** ERC-20 Contract Approvals *** //
