@@ -39,6 +39,21 @@ export class SealedBidAuctionApiServer {
         const nonces = this.nonces;
         const authenticatedSolvers = this.authenticatedSolvers;
 
+        const routes = {
+            "/healthcheck": new Response("OK"),
+            "/api/currentNonce": (req: Request) => {
+                const username = new URL(req.url).searchParams.get("username");
+                if (!username) {
+                    return new Response("Missing username", { status: 400 });
+                }
+                const nonce = crypto.randomUUID();
+                nonces.set(username, nonce);
+                const body = JSON.stringify({ nonce });
+                return new Response(body, { status: 200, headers: { "Content-Type": "application/json" } });
+            },
+            "/api/preauction": (req: Request) => this.auctionController.preauction(req),
+        };
+
         // @ts-ignore
         this.server = Bun.serve<AuthData>({
             port,
@@ -46,68 +61,61 @@ export class SealedBidAuctionApiServer {
                 key: Bun.file("./key.pem"),
                 cert: Bun.file("./cert.pem"),
             } : {},
-            routes: {
-                "/healthcheck": new Response("OK"),
-                "/api/currentNonce": req => {
-                    const username = new URL(req.url).searchParams.get("username");
-                    if (!username) {
-                        return new Response("Missing username", { status: 400 });
-                    }
-                    const nonce = crypto.randomUUID();
-                    nonces.set(username, nonce);
-                    const body = JSON.stringify({ nonce });
-                    return new Response(body, { status: 200, headers: { "Content-Type": "application/json" } });
-                },
-                "/api/preauction": req => this.auctionController.preauction(req),
-            },
+            routes,
             async fetch(req, server) {
-                if (req.headers.get("Upgrade")?.toLowerCase() !== "websocket") {
-                    return new Response("OK");
+                if (req.headers.get("Upgrade")?.toLowerCase() === "websocket") {
+                    const blobHeader = req.headers.get("X-Auth-Blob");
+                    const sig = req.headers.get("X-Auth-Signature");
+                    if (!blobHeader || !sig) {
+                        return new Response("Unauthorized", { status: 401 });
+                    }
+
+                    let authBlob: AuthBlob;
+                    try {
+                        authBlob = JSON.parse(blobHeader) as AuthBlob;
+                    } catch {
+                        return new Response("Unauthorized", { status: 401 });
+                    }
+
+                    const { username, nonce } = authBlob;
+                    const expectedNonce = username && nonces.get(username);
+                    if (!username || !nonce || !expectedNonce || nonce !== expectedNonce) {
+                        return new Response("Unauthorized", { status: 401 });
+                    }
+
+                    let solverAddress: string;
+                    try {
+                        const hash = hashMessage(blobHeader);
+                        solverAddress = await recoverAddress({ hash, signature: sig });
+                    } catch (err) {
+                        console.error("Signature verification failed:", err);
+                        return new Response("Unauthorized", { status: 401 });
+                    }
+
+                    solverAddress = solverAddress.toLowerCase();
+                    console.log(`WebSocket auth success for user "${username}" with address ${solverAddress}`);
+
+                    nonces.set(username, crypto.randomUUID());
+                    authenticatedSolvers.add(solverAddress);
+
+                    const success = server.upgrade(req, {
+                        data: { username, solverAddress }
+                    });
+                    if (success) {
+                        return undefined;
+                    }
+
+                    authenticatedSolvers.delete(solverAddress);
+                    return new Response("WebSocket Upgrade failed", { status: 500 });
                 }
 
-                const blobHeader = req.headers.get("X-Auth-Blob");
-                const sig = req.headers.get("X-Auth-Signature");
-                if (!blobHeader || !sig) {
-                    return new Response("Unauthorized", { status: 401 });
+                const pathname = new URL(req.url).pathname;
+                const route = routes[pathname as keyof typeof routes];
+                if (route) {
+                    return route instanceof Response ? route : route(req);
                 }
 
-                let authBlob: AuthBlob;
-                try {
-                    authBlob = JSON.parse(blobHeader) as AuthBlob;
-                } catch {
-                    return new Response("Unauthorized", { status: 401 });
-                }
-
-                const { username, nonce } = authBlob;
-                const expectedNonce = username && nonces.get(username);
-                if (!username || !nonce || !expectedNonce || nonce !== expectedNonce) {
-                    return new Response("Unauthorized", { status: 401 });
-                }
-
-                let solverAddress: string;
-                try {
-                    const hash = hashMessage(blobHeader);
-                    solverAddress = await recoverAddress({ hash, signature: sig });
-                } catch (err) {
-                    console.error("Signature verification failed:", err);
-                    return new Response("Unauthorized", { status: 401 });
-                }
-
-                solverAddress = solverAddress.toLowerCase();
-                console.log(`WebSocket auth success for user "${username}" with address ${solverAddress}`);
-
-                nonces.set(username, crypto.randomUUID());
-                authenticatedSolvers.add(solverAddress);
-
-                const success = server.upgrade(req, {
-                    data: { username, solverAddress }
-                });
-                if (success) {
-                    return undefined;
-                }
-
-                authenticatedSolvers.delete(solverAddress);
-                return new Response("WebSocket Upgrade failed", { status: 500 });
+                return new Response("Not Found", { status: 404 });
             },
             websocket: {
                 open: (ws) => {
