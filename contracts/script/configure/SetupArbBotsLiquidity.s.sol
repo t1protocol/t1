@@ -17,8 +17,8 @@ contract Setup7683BotsLiquidity is Script, DeploymentUtils {
     uint256 private READ_SIGNER_PRIVATE_KEY = vm.envUint("READ_SIGNER_PRIVATE_KEY");
     uint256 private READ_RESULT_PROOF_BOT_PRIVATE_KEY = vm.envUint("READ_RESULT_PROOF_BOT_PRIVATE_KEY");
 
-    address payable private WETH_ADDR = payable(vm.envAddress("L1_WETH_ADDR"));
-    address private USDT_ADDR = vm.envAddress("L1_USDT_ADDR");
+    address payable private ARBITRUM_SEPOLIA_WETH_ADDR = payable(vm.envAddress("ARBITRUM_SEPOLIA_WETH_ADDR"));
+    address private ARBITRUM_SEPOLIA_USDT_ADDR = vm.envAddress("ARBITRUM_SEPOLIA_USDT_ADDR");
     address private PULL_BASED_7683_PROXY_ADDR = vm.envAddress("ARB_T1_PULL_BASED_7683_PROXY_ADDR");
 
     function run() external {
@@ -40,9 +40,9 @@ contract Setup7683BotsLiquidity is Script, DeploymentUtils {
         // grant ETH to bot
         fillBotAddr.transfer(ethAmount);
         // grant WETH to bot
-        WrappedEther(WETH_ADDR).transfer(fillBotAddr, wethAmount);
+        WrappedEther(ARBITRUM_SEPOLIA_WETH_ADDR).transfer(fillBotAddr, wethAmount);
         // grant USDT to bot
-        T1StandardERC20(USDT_ADDR).transfer(fillBotAddr, usdtAmount); // 2M USDT
+        T1StandardERC20(ARBITRUM_SEPOLIA_USDT_ADDR).transfer(fillBotAddr, usdtAmount); // 2M USDT
 
         // *** SETTLEMENT BOT *** //
         // grant ETH to bot
@@ -65,9 +65,9 @@ contract Setup7683BotsLiquidity is Script, DeploymentUtils {
         // *** ERC-20 Contract Approvals *** //
         vm.startBroadcast(FILL_BOT_PRIVATE_KEY);
         // approve L1 7683 Escrow to transfer USDT in the bot's name
-        T1StandardERC20(USDT_ADDR).approve(PULL_BASED_7683_PROXY_ADDR, type(uint256).max - 1);
+        T1StandardERC20(ARBITRUM_SEPOLIA_USDT_ADDR).approve(PULL_BASED_7683_PROXY_ADDR, type(uint256).max - 1);
         // approve L1 7683 Escrow to transfer WETH in the bot's name
-        WrappedEther(WETH_ADDR).approve(PULL_BASED_7683_PROXY_ADDR, type(uint256).max - 1);
+        WrappedEther(ARBITRUM_SEPOLIA_WETH_ADDR).approve(PULL_BASED_7683_PROXY_ADDR, type(uint256).max - 1);
 
         vm.stopBroadcast();
     }
