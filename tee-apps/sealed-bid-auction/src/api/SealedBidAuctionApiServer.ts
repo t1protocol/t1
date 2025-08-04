@@ -6,12 +6,12 @@ import {SealedBidAuctionController} from "./SealedBidAuctionController.ts";
 import {WinstonLogger} from "../utils/WinstonLogger.ts";
 import {SolverPriceBook} from "../core/SolverPriceBook.ts";
 import {AuctionService, type Price} from "../core/AuctionService.ts";
-import type {AuctionResult} from "./types.ts";
+import type {AuctionResult, AuthBlob} from "./types.ts";
 import type {OrderData} from "../blockchain/types.ts";
 
 type AuthData = {
     username: string;
-    address: string;
+    solverAddress: string;
 };
 
 export class SealedBidAuctionApiServer {
@@ -22,6 +22,7 @@ export class SealedBidAuctionApiServer {
 
     private server: Server | null = null;
     private readonly nonces: Map<string, string> = new Map();
+    private readonly authenticatedSolvers: Set<string> = new Set();
 
     public constructor() {
         this.solverPriceBook = new SolverPriceBook();
@@ -36,6 +37,7 @@ export class SealedBidAuctionApiServer {
 
         const solverPriceBook = this.solverPriceBook;
         const nonces = this.nonces;
+        const authenticatedSolvers = this.authenticatedSolvers;
 
         // @ts-ignore
         this.server = Bun.serve<AuthData>({
@@ -63,57 +65,64 @@ export class SealedBidAuctionApiServer {
                     return new Response("OK");
                 }
 
-                const username = req.headers.get("X-Auth-Username");
-                const nonce = req.headers.get("X-Auth-Nonce");
+                const blobHeader = req.headers.get("X-Auth-Blob");
                 const sig = req.headers.get("X-Auth-Signature");
-                if (!username || !nonce || !sig) {
-                    return new Response("Missing authentication credentials", { status: 401 });
+                if (!blobHeader || !sig) {
+                    return new Response("Unauthorized", { status: 401 });
                 }
 
-                const expectedNonce = nonces.get(username);
-                if (!expectedNonce || nonce !== expectedNonce) {
-                    return new Response("Invalid or expired nonce", { status: 401 });
-                }
-
-                let recoveredAddress: string;
+                let authBlob: AuthBlob;
                 try {
-                    const message = JSON.stringify({ username, nonce });
-                    const hash = hashMessage(message);
-                    recoveredAddress = await recoverAddress({ hash, signature: sig });
+                    authBlob = JSON.parse(blobHeader) as AuthBlob;
+                } catch {
+                    return new Response("Unauthorized", { status: 401 });
+                }
+
+                const { username, nonce } = authBlob;
+                const expectedNonce = username && nonces.get(username);
+                if (!username || !nonce || !expectedNonce || nonce !== expectedNonce) {
+                    return new Response("Unauthorized", { status: 401 });
+                }
+
+                let solverAddress: string;
+                try {
+                    const hash = hashMessage(blobHeader);
+                    solverAddress = await recoverAddress({ hash, signature: sig });
                 } catch (err) {
                     console.error("Signature verification failed:", err);
-                    return new Response("Unauthorized (signature verification failed)", { status: 401 });
+                    return new Response("Unauthorized", { status: 401 });
                 }
 
-                recoveredAddress = recoveredAddress.toLowerCase();
-                console.log(`WebSocket auth success for user "${username}" with address ${recoveredAddress}`);
+                solverAddress = solverAddress.toLowerCase();
+                console.log(`WebSocket auth success for user "${username}" with address ${solverAddress}`);
 
                 nonces.set(username, crypto.randomUUID());
+                authenticatedSolvers.add(solverAddress);
 
                 const success = server.upgrade(req, {
-                    data: { username, address: recoveredAddress }
+                    data: { username, solverAddress }
                 });
                 if (success) {
                     return undefined;
                 }
 
+                authenticatedSolvers.delete(solverAddress);
                 return new Response("WebSocket Upgrade failed", { status: 500 });
             },
             websocket: {
-                open(ws) {
-                    const addr = ws.data.address;
+                open: (ws) => {
+                    const addr = ws.data.solverAddress;
                     const user = ws.data.username;
                     ws.subscribe('intent-auction');
                     console.log(`✅ Solver connected: ${user} (${addr})`);
-                    solverPriceBook.authenticateSolver(addr);
                     ws.send("Welcome! Authentication successful.");
                 },
                 message(ws, message) {
                     try {
-                        const addr = ws.data.address;
+                        const addr = ws.data.solverAddress;
                         const user = ws.data.username;
                         const text = message.toString();
-                        if (!solverPriceBook.isAuthenticated(addr)) {
+                        if (!authenticatedSolvers.has(addr)) {
                             throw new Error(`${addr} not authenticated`);
                         }
                         const priceData = JSON.parse(text);
@@ -132,12 +141,12 @@ export class SealedBidAuctionApiServer {
                         ws.send(`Error when updating price: ${e.message || e}`);
                     }
                 },
-                close(ws, _code, _reason) {
-                    const addr = ws.data.address;
+                close: (ws, _code, _reason) => {
+                    const addr = ws.data.solverAddress;
                     const user = ws.data.username;
                     ws.unsubscribe('intent-auction');
                     console.log(`🔒 Solver disconnected: ${user} (${addr})`);
-                    solverPriceBook.logoutSolver(addr);
+                    authenticatedSolvers.delete(addr);
                 },
             },
         });

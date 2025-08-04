@@ -15,13 +15,12 @@ beforeAll(async () => {
 
     const nonceRes = await fetch(`http://localhost:${wsPort}/api/currentNonce?username=${USERNAME}`);
     const { nonce } = await nonceRes.json();
-    const blob = { username: USERNAME, nonce };
-    const signature = await signMessage({ message: JSON.stringify(blob), privateKey: PRIVATE_KEY as `0x${string}` });
+    const blobString = JSON.stringify({ username: USERNAME, nonce });
+    const signature = await signMessage({ message: blobString, privateKey: PRIVATE_KEY as `0x${string}` });
 
     socket = new WebSocket(`ws://localhost:${wsPort}/`, {
         headers: {
-            "X-Auth-Username": USERNAME,
-            "X-Auth-Nonce": nonce,
+            "X-Auth-Blob": blobString,
             "X-Auth-Signature": signature
         }
     });
