@@ -301,9 +301,10 @@ contract T1ERC7683 is IT1ERC7683, T1Permit2, OwnableUpgradeable, PausableUpgrade
     }
 
     /// @notice Initiates a refund verification for an expired order
+    /// @dev A 30 seconds delay have been added fill deadline to avoid any race condition issue
     /// @param orderId The ID of the order to verify for refund
     /// @return requestId The ID of the read request
-    function verifyRefund(bytes32 orderId) external returns (bytes32 requestId) {
+    function verifyRefund(bytes32 orderId) external payable returns (bytes32 requestId) {
         (, bytes memory _orderData) = abi.decode(openOrders[orderId], (bytes32, bytes));
         OrderData memory orderData = OrderEncoder.decode(_orderData);
 
@@ -454,7 +455,7 @@ contract T1ERC7683 is IT1ERC7683, T1Permit2, OwnableUpgradeable, PausableUpgrade
     /// This process needs a proof of read triggered by `verifyRefund` that proves the intent has not be filled.
     /// @param _orders An array of GaslessCrossChainOrders to refund.
     /// @param _proofs Array of encoded proofs of read to verify orders are not settled
-    function refund(GaslessCrossChainOrder[] memory _orders, bytes[] calldata _proofs) external payable {
+    function refund(GaslessCrossChainOrder[] memory _orders, bytes[] calldata _proofs) external {
         if (_orders.length != _proofs.length) revert LengthMismatch();
 
         bytes32[] memory orderIds = new bytes32[](_orders.length);
@@ -471,7 +472,7 @@ contract T1ERC7683 is IT1ERC7683, T1Permit2, OwnableUpgradeable, PausableUpgrade
     /// This process needs a proof of read triggered by `verifyRefund` that proves the intent has not be filled.
     /// @param _orders An array of OnchainCrossChainOrders to refund.
     /// @param _proofs Array of encoded proofs of read to verify orders are not settled
-    function refund(OnchainCrossChainOrder[] memory _orders, bytes[] calldata _proofs) external payable {
+    function refund(OnchainCrossChainOrder[] memory _orders, bytes[] calldata _proofs) external {
         if (_orders.length != _proofs.length) revert LengthMismatch();
 
         bytes32[] memory orderIds = new bytes32[](_orders.length);
@@ -482,6 +483,30 @@ contract T1ERC7683 is IT1ERC7683, T1Permit2, OwnableUpgradeable, PausableUpgrade
         }
 
         _refundOrders(OrderEncoder.decode(_orders[0].orderData).originDomain, orderIds);
+    }
+
+    /// @dev Gets the ID of a GaslessCrossChainOrder.
+    /// @param _order The GaslessCrossChainOrder to compute the ID for.
+    /// @return The computed order ID.
+    function _getOrderId(GaslessCrossChainOrder memory _order) internal pure returns (bytes32) {
+        return _getOrderId(_order.orderDataType, _order.orderData);
+    }
+
+    /// @dev Gets the ID of an OnchainCrossChainOrder.
+    /// @param _order The OnchainCrossChainOrder to compute the ID for.
+    /// @return The computed order ID.
+    function _getOrderId(OnchainCrossChainOrder memory _order) internal pure returns (bytes32) {
+        return _getOrderId(_order.orderDataType, _order.orderData);
+    }
+
+    /// @dev Computes the ID of an order given its type and data.
+    /// @param _orderType The type of the order.
+    /// @param _orderData The data of the order.
+    /// @return orderId The computed order ID.
+    function _getOrderId(bytes32 _orderType, bytes memory _orderData) internal pure returns (bytes32 orderId) {
+        if (_orderType != OrderEncoder.orderDataType()) revert InvalidOrderType(_orderType);
+        OrderData memory orderData = OrderEncoder.decode(_orderData);
+        orderId = OrderEncoder.id(orderData);
     }
 
     /// @notice Verifies that an order is not filled using merkle proof
@@ -531,31 +556,8 @@ contract T1ERC7683 is IT1ERC7683, T1Permit2, OwnableUpgradeable, PausableUpgrade
         }
     }
 
-    /// @dev Gets the ID of a GaslessCrossChainOrder.
-    /// @param _order The GaslessCrossChainOrder to compute the ID for.
-    /// @return The computed order ID.
-    function _getOrderId(GaslessCrossChainOrder memory _order) internal pure returns (bytes32) {
-        return _getOrderId(_order.orderDataType, _order.orderData);
-    }
-
-    /// @dev Gets the ID of an OnchainCrossChainOrder.
-    /// @param _order The OnchainCrossChainOrder to compute the ID for.
-    /// @return The computed order ID.
-    function _getOrderId(OnchainCrossChainOrder memory _order) internal pure returns (bytes32) {
-        return _getOrderId(_order.orderDataType, _order.orderData);
-    }
-
-    /// @dev Computes the ID of an order given its type and data.
-    /// @param _orderType The type of the order.
-    /// @param _orderData The data of the order.
-    /// @return orderId The computed order ID.
-    function _getOrderId(bytes32 _orderType, bytes memory _orderData) internal pure returns (bytes32 orderId) {
-        if (_orderType != OrderEncoder.orderDataType()) revert InvalidOrderType(_orderType);
-        OrderData memory orderData = OrderEncoder.decode(_orderData);
-        orderId = OrderEncoder.id(orderData);
-    }
-
     /// @notice Commits a winning bid for a specific order
+    /// @dev Only accessible by owner
     /// @param orderId The ID of the order to set the winner bid for
     /// @param winnerBid The winning bid containing settlement receiver and amount out
     function commitWinnerBid(bytes32 orderId, Bid calldata winnerBid) external onlyOwner {

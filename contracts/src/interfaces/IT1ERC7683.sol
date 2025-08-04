@@ -1,7 +1,12 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.0;
 
-import { IOriginSettler, IDestinationSettler } from "../interfaces/IERC7683.sol";
+import {
+    IOriginSettler,
+    IDestinationSettler,
+    GaslessCrossChainOrder,
+    OnchainCrossChainOrder
+} from "../interfaces/IERC7683.sol";
 
 interface IT1ERC7683 is IOriginSettler, IDestinationSettler {
     enum Status {
@@ -111,4 +116,47 @@ interface IT1ERC7683 is IOriginSettler, IDestinationSettler {
     error InvalidFill(
         address settlementReceiver, address expectedSettlementReceiver, uint256 amountOut, uint256 expectedAmountOut
     );
+
+    /// @notice Initiates a pull-based settlement verification for an order
+    /// @param destinationDomain The domain of the destination chain
+    /// @param orderId The ID of the order to verify
+    /// @return requestId The ID of the read request
+    function verifySettlement(uint32 destinationDomain, bytes32 orderId) external payable returns (bytes32 requestId);
+
+    /// @notice Initiates a refund verification for an expired order
+    /// @dev A 30 seconds delay have been added fill deadline to avoid any race condition issue
+    /// @param orderId The ID of the order to verify for refund
+    /// @return requestId The ID of the read request
+    function verifyRefund(bytes32 orderId) external payable returns (bytes32 requestId);
+
+    /// @notice Use result of proof of read to handle the order depending on the result
+    /// Also enforce auction winner bid if the orderId has closed auction.
+    /// @param encodedProofOfRead The encoded proof of read which is formatted as following:
+    /// abi.encode(uint256 batchIndex, bytes32 requestId, uint256 position, bytes result, bytes proof)
+    function handleReadResultWithProof(bytes calldata encodedProofOfRead) external;
+
+    /// @notice Refunds a batch of expired GaslessCrossChainOrders on the chain where the orders were opened.
+    /// This process needs a proof of read triggered by `verifyRefund` that proves the intent has not be filled.
+    /// @param _orders An array of GaslessCrossChainOrders to refund.
+    /// @param _proofs Array of encoded proofs of read to verify orders are not settled
+    function refund(GaslessCrossChainOrder[] memory _orders, bytes[] calldata _proofs) external;
+
+    /// @notice Refunds a batch of expired OnchainCrossChainOrder on the chain where the orders were opened.
+    /// This process needs a proof of read triggered by `verifyRefund` that proves the intent has not be filled.
+    /// @param _orders An array of OnchainCrossChainOrders to refund.
+    /// @param _proofs Array of encoded proofs of read to verify orders are not settled
+    function refund(OnchainCrossChainOrder[] memory _orders, bytes[] calldata _proofs) external;
+
+    /// @notice Commits a winning bid for a specific order
+    /// @dev Only accessible by owner
+    /// @param orderId The ID of the order to set the winner bid for
+    /// @param winnerBid The winning bid containing settlement receiver and amount out
+    function commitWinnerBid(bytes32 orderId, Bid calldata winnerBid) external;
+
+    /// @notice Retrieves the status of a filled order by its ID
+    /// @dev Returns encoded settlement data if the order has filler data, otherwise returns empty bytes
+    /// @param orderId The unique identifier of the order to query
+    /// @return Encoded settlement message containing order IDs and filler data, or empty bytes if order has no filler
+    /// data
+    function getFilledOrderStatus(bytes32 orderId) external view returns (bytes memory);
 }
