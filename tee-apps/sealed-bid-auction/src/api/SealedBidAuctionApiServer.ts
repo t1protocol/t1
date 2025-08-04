@@ -8,6 +8,7 @@ import {SolverPriceBook} from "../core/SolverPriceBook.ts";
 import {AuctionService, type Price} from "../core/AuctionService.ts";
 import type {AuctionResult, AuthBlob} from "./types.ts";
 import type {OrderData} from "../blockchain/types.ts";
+import type {PriceListItem} from "../core/types.ts";
 
 type AuthData = {
     username: string;
@@ -128,22 +129,20 @@ export class SealedBidAuctionApiServer {
                 message(ws, message) {
                     try {
                         const addr = ws.data.solverAddress;
-                        const user = ws.data.username;
-                        const text = message.toString();
                         if (!authenticatedSolvers.has(addr)) {
-                            throw new Error(`${addr} not authenticated`);
+                            ws.send('Error: not authenticated');
+                            return;
                         }
-                        const priceData = JSON.parse(text);
+                        const text = message.toString();
+                        const priceData: PriceListItem[] = JSON.parse(text);
                         if (!Array.isArray(priceData)) {
                             throw new Error("Invalid price list format (expected array)");
                         }
                         for (const item of priceData) {
-                            if (item.settlementReceiverAddress?.toLowerCase() !== addr) {
-                                throw new Error(`Solver address mismatch in price update: ${item.settlementReceiverAddress}`);
-                            }
+                            item.settlementReceiverAddress = addr;
                         }
-                        const addedCount = solverPriceBook.updatePrice(user, text);
-                        ws.send(`Prices updated: ${addedCount} entries for solver ${user}`);
+                        const addedCount = solverPriceBook.updatePrice(addr, JSON.stringify(priceData));
+                        ws.send(`Prices updated: ${addedCount} entries for solver ${addr}`);
                     } catch (e: any) {
                         console.error(`Error processing price update: ${e}`);
                         ws.send(`Error when updating price: ${e.message || e}`);

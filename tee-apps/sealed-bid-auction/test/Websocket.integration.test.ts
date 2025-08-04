@@ -62,7 +62,15 @@ describe("Websocket Integration Test", () => {
             await new Promise((resolve) => setTimeout(resolve, 100));
         }
 
-        expect(socketMessage).toBe(`Prices updated: 2 entries for solver ${USERNAME}`);
+        expect(socketMessage).toBe(`Prices updated: 2 entries for solver ${SOLVER_ADDRESS.toLowerCase()}`);
+
+        const priceBook = (httpServer as any)["solverPriceBook"];
+        const prices = (priceBook as any)["prices"] as Map<string, any>;
+        const entry = prices.get(SOLVER_ADDRESS.toLowerCase());
+        expect(entry).toBeDefined();
+        entry.priceList.forEach((item: any) => {
+            expect(item.settlementReceiverAddress).toBe(SOLVER_ADDRESS.toLowerCase());
+        });
     });
 
     it("Should not add Price List with gap in ranges", async () => {
