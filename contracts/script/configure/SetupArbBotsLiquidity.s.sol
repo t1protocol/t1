@@ -69,7 +69,7 @@ contract Setup7683BotsLiquidity is Script, DeploymentUtils {
     }
 
     function approveContracts() private {
-        address PULL_BASED_7683_PROXY_ADDR = vm.envAddress("ARBITRUM_T1_PULL_BASED_7683_PROXY_ADDR");
+        address PULL_BASED_7683_PROXY_ADDR = vm.envAddress("ARB_T1_PULL_BASED_7683_PROXY_ADDR");
 
         // *** ERC-20 Contract Approvals *** //
         vm.startBroadcast(ARBITRUM_SEPOLIA_FILL_BOT_PRIVATE_KEY);
