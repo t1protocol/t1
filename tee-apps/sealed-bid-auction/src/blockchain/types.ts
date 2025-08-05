@@ -34,7 +34,7 @@ export const convertSolidityOrderDataToTypescriptOrderData = (
     };
 };
 
-export const OPEN_INTENT_EVENT_SIGNATURE = 'event Open(bytes32 indexed orderId, bytes32 resolvedOrder)';
+export const OPEN_INTENT_EVENT_SIGNATURE = 'event Open(bytes32 indexed orderId, tuple resolvedOrder)';
 
 export const RESOLVER_ORDER_ABI_PARAMETERS = 'string user, uint originChainId, uint openDeadline, ' +
  'uint fillDeadline, bytes orderId, bytes maxSpent, bytes minReceived, bytes fillInstructions';

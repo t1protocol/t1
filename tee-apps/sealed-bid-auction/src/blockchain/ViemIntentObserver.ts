@@ -64,7 +64,7 @@ export class ViemIntentObserver {
         const auctionPromises: Promise<void>[] = [];
 
         for (const order of parsedLogs) {
-            const resolvedOrder = decodeAbiParameters(parseAbiParameters(RESOLVER_ORDER_ABI_PARAMETERS), order.args.resolvedOrder);
+            const resolvedOrder = decodeAbiParameters(parseAbiParameters(RESOLVER_ORDER_ABI_PARAMETERS), order.args.resolvedOrder as `0x${string}`);
             const fillInstructions = decodeAbiParameters(parseAbiParameters(FILL_INSTRUCTION_ABI_PARAMETERS), resolvedOrder[7] as `0x${string}`);
             const orderDatas = fillInstructions.map(fillInstruction => decodeAbiParameters(parseAbiParameters(ORDER_DATA_ABI_PARAMETERS), fillInstruction as `0x${string}`));
 
