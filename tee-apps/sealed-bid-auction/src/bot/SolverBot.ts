@@ -1,4 +1,3 @@
-import {USERNAME} from "../../test/constants.ts";
 import type {PriceListItem} from "../core/types.ts";
 import {serialize} from "../utils/WinstonLogger.ts";
 
@@ -10,10 +9,10 @@ export class SolverBot {
         this.socket = null;
     }
 
-    public async start(socketResponseConsumer: (sockerResponse: string) => void) {
+    public async start(username: string, socketResponseConsumer: (sockerResponse: string) => void) {
         this.socket = new WebSocket(`ws://${this.hostName}:${this.serverPort}/`, {
             headers: {
-                Authorization: USERNAME
+                Authorization: username
             }
         });
         this.socket.onmessage = (event) => {
