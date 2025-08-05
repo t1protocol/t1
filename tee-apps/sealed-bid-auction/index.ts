@@ -2,7 +2,7 @@ import * as dotenv from "dotenv";
 
 dotenv.config();
 
-import {SealedBidAuctionApiServer} from "./src/api/SealedBidAuctionApiServer.ts";
+import {AuctionApiServer} from "./src/api/AuctionApiServer.ts";
 import {ViemIntentObserver} from "./src/blockchain/ViemIntentObserver.ts";
 import {SolverPriceBook} from "./src/core/SolverPriceBook.ts";
 import {AuctionService} from "./src/core/AuctionService.ts";
@@ -11,7 +11,7 @@ import {arbitrumSepolia, baseSepolia} from "viem/chains";
 const solverPriceBook = new SolverPriceBook();
 const auctionService = new AuctionService(solverPriceBook);
 
-const httpServer = new SealedBidAuctionApiServer();
+const httpServer = new AuctionApiServer();
 const arbitrumSepoliaIntentObserver = new ViemIntentObserver(
     process.env.ARBITRUM_SEPOLIA_RPC as string,
     arbitrumSepolia,

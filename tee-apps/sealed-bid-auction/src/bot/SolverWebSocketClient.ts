@@ -1,7 +1,7 @@
 import type {PriceListItem} from "../core/types.ts";
 import {serialize} from "../utils/WinstonLogger.ts";
 
-export class SolverPriceBookWebSocketClient {
+export class SolverWebSocketClient {
 
     private socket: WebSocket | null;
 
@@ -27,10 +27,12 @@ export class SolverPriceBookWebSocketClient {
             this.socket.close();
 
             await this.waitForSocketState(WebSocket.CLOSED);
+
+            this.socket = null;
         }
     }
 
-    public send(message: PriceListItem[]) {
+    public sendPrices(message: PriceListItem[]) {
         if (!this.socket) {
             throw Error("Socket is closed");
         }
