@@ -5,7 +5,7 @@ export class SolverWebSocketClient {
 
     private socket: WebSocket | null;
 
-    constructor(private readonly hostName: string = 'localhost', private readonly serverPort: number) {
+    constructor(private readonly serverPort: number, private readonly hostName: string = 'localhost') {
         this.socket = null;
     }
 
