@@ -8,6 +8,8 @@ import {SolverPriceBook} from "./src/core/SolverPriceBook.ts";
 import {AuctionService} from "./src/core/AuctionService.ts";
 import {arbitrumSepolia, baseSepolia} from "viem/chains";
 
+const USE_TLS = process.env.USE_TLS as string === "true";
+
 const solverPriceBook = new SolverPriceBook();
 const auctionService = new AuctionService(solverPriceBook);
 
@@ -30,7 +32,7 @@ const baseSepoliaIntentObserver = new ViemIntentObserver(
 );
 
 async function main() {
-    await httpServer.start(Number(process.env.SERVER_PORT as string), true);
+    await httpServer.start(Number(process.env.SERVER_PORT as string), USE_TLS);
     arbitrumSepoliaIntentObserver.start();
     baseSepoliaIntentObserver.start();
 }
