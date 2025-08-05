@@ -1,7 +1,7 @@
 import type {PriceListItem} from "../core/types.ts";
 import {serialize} from "../utils/WinstonLogger.ts";
 
-export class SolverBot {
+export class SolverPriceBookWebSocketClient {
 
     private socket: WebSocket | null;
 
