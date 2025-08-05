@@ -14,76 +14,88 @@ abstract contract USDC is ERC20PresetMinterPauser {
 }
 
 contract xYieldForkTest is Test {
-    EVault internal evaultArbitrumUsdc;
-    xYieldVault internal xYield;
+    EVault internal eVaultArbitrumUsdc;
+    xYieldVault internal xYieldArbitrum;
+    // For simplicity in basic unit testing we will pretend that this contract is deployed on Base
+    xYieldVault internal xYieldBase;
 
     address internal guardian = address(0xbeb);
-    address internal alice = 0xB9B7402f36608D3D7c9Cb3d2b17075241b6ee43f;
-    USDC internal usdcArbitrum = USDC(0xaf88d065e77c8cC2239327C5EDb3A432268e5831);
-    address internal usdcMasterMinter = 0x8aFf09e2259cacbF4Fc4e3E53F3bf799EfEEab36;
     address internal usdcMinter = address(0x333);
+    address internal alice = 0xB9B7402f36608D3D7c9Cb3d2b17075241b6ee43f;
+    address internal bob = address(0xbbb);
+    // address internal usdcMasterMinter = 0x8aFf09e2259cacbF4Fc4e3E53F3bf799EfEEab36;
+    USDC internal usdcArbitrum = USDC(0xaf88d065e77c8cC2239327C5EDb3A432268e5831);
 
     function setUp() public {
         string memory arbitrumRpcUrl = vm.envString("ARBITRUM_RPC");
         uint256 arbitrumBlock = vm.envUint("ARBITRUM_BLOCK");
         vm.createSelectFork(arbitrumRpcUrl, arbitrumBlock);
 
-        address evault_arbitrum_usdc_proxy_address = 0x0a1eCC5Fe8C9be3C809844fcBe615B46A869b899;
+        address eVaultArbitrumUsdcProxyAddress = 0x0a1eCC5Fe8C9be3C809844fcBe615B46A869b899;
 
-        evaultArbitrumUsdc = EVault(evault_arbitrum_usdc_proxy_address);
+        eVaultArbitrumUsdc = EVault(eVaultArbitrumUsdcProxyAddress);
 
-        xYield = new xYieldVault(
-            IERC20(address(usdcArbitrum)), guardian, "xYield USDC", "xyUSDC", evault_arbitrum_usdc_proxy_address
+        xYieldArbitrum = new xYieldVault(
+            IERC20(address(usdcArbitrum)), guardian, "xYieldArbitrum USDC", "xyUSDCArb", eVaultArbitrumUsdcProxyAddress
         );
+        xYieldBase = new xYieldVault(
+            IERC20(address(usdcArbitrum)), guardian, "xYieldBase USDC", "xyUSDCBase", eVaultArbitrumUsdcProxyAddress
+        );
+
+        vm.prank(guardian);
+        xYieldArbitrum.setActiveChain(true);
+
+        vm.startPrank(alice);
+        usdcArbitrum.transfer(bob, 100e6);
+        vm.stopPrank();
     }
 
     function testDepositToEulerVault() public {
-        uint256 evaultUsdcBalanceBefore = usdcArbitrum.balanceOf(address(evaultArbitrumUsdc));
+        uint256 eVaultUsdcBalanceBefore = usdcArbitrum.balanceOf(address(eVaultArbitrumUsdc));
         uint256 aliceUsdcDepositAmount = 100e6;
         vm.startPrank(alice);
-        usdcArbitrum.approve(address(xYield), type(uint256).max);
-        uint256 aliceShares = xYield.deposit(aliceUsdcDepositAmount, alice);
-
+        usdcArbitrum.approve(address(xYieldArbitrum), type(uint256).max);
+        uint256 aliceShares = xYieldArbitrum.deposit(aliceUsdcDepositAmount, alice);
         vm.stopPrank();
 
-        uint256 aliceAssets = xYield.convertToAssets(aliceShares);
+        uint256 aliceAssets = xYieldArbitrum.convertToAssets(aliceShares);
         assertGe(aliceAssets, aliceShares, "Alice assets to redeem are greater than her shares");
 
-        uint256 evaultUsdcBalanceAfter = usdcArbitrum.balanceOf(address(evaultArbitrumUsdc));
+        uint256 eVaultUsdcBalanceAfter = usdcArbitrum.balanceOf(address(eVaultArbitrumUsdc));
         assertEq(
-            evaultUsdcBalanceAfter,
-            evaultUsdcBalanceBefore + aliceUsdcDepositAmount,
+            eVaultUsdcBalanceAfter,
+            eVaultUsdcBalanceBefore + aliceUsdcDepositAmount,
             "EVault should have received 100 USDC from deposit"
         );
 
-        uint256 xYieldEvaultBalance = evaultArbitrumUsdc.balanceOf(address(xYield));
-        assertGt(xYieldEvaultBalance, 0, "xYield vault should have received EVault shares");
+        uint256 xYieldEvaultBalance = eVaultArbitrumUsdc.balanceOf(address(xYieldArbitrum));
+        assertGt(xYieldEvaultBalance, 0, "xYieldArbitrum vault should have received EVault shares");
     }
 
     function testWithdrawFromEulerVault() public {
         uint256 aliceUsdcDepositAmount = 100e6;
 
         vm.startPrank(alice);
-        usdcArbitrum.approve(address(xYield), type(uint256).max);
-        uint256 aliceShares = xYield.deposit(aliceUsdcDepositAmount, alice);
+        usdcArbitrum.approve(address(xYieldArbitrum), type(uint256).max);
+        uint256 aliceShares = xYieldArbitrum.deposit(aliceUsdcDepositAmount, alice);
         vm.stopPrank();
 
-        uint256 evaultUsdcBalanceBeforeWithdraw = usdcArbitrum.balanceOf(address(evaultArbitrumUsdc));
+        uint256 eVaultUsdcBalanceBeforeWithdraw = usdcArbitrum.balanceOf(address(eVaultArbitrumUsdc));
         uint256 aliceUsdcBalanceBeforeWithdraw = usdcArbitrum.balanceOf(alice);
-        uint256 xYieldEvaultBalanceBefore = evaultArbitrumUsdc.balanceOf(address(xYield));
+        uint256 xYieldEvaultBalanceBefore = eVaultArbitrumUsdc.balanceOf(address(xYieldArbitrum));
 
         uint256 withdrawAmount = 50e6;
         vm.startPrank(alice);
-        uint256 sharesRedeemed = xYield.withdraw(withdrawAmount, alice, alice);
+        uint256 sharesRedeemed = xYieldArbitrum.withdraw(withdrawAmount, alice, alice);
         vm.stopPrank();
 
-        uint256 evaultUsdcBalanceAfterWithdraw = usdcArbitrum.balanceOf(address(evaultArbitrumUsdc));
+        uint256 eVaultUsdcBalanceAfterWithdraw = usdcArbitrum.balanceOf(address(eVaultArbitrumUsdc));
         uint256 aliceUsdcBalanceAfterWithdraw = usdcArbitrum.balanceOf(alice);
-        uint256 xYieldEvaultBalanceAfter = evaultArbitrumUsdc.balanceOf(address(xYield));
+        uint256 xYieldEvaultBalanceAfter = eVaultArbitrumUsdc.balanceOf(address(xYieldArbitrum));
 
         assertEq(
-            evaultUsdcBalanceAfterWithdraw,
-            evaultUsdcBalanceBeforeWithdraw - withdrawAmount,
+            eVaultUsdcBalanceAfterWithdraw,
+            eVaultUsdcBalanceBeforeWithdraw - withdrawAmount,
             "EVault should have 50 USDC less after withdrawal"
         );
         assertEq(
@@ -94,9 +106,13 @@ contract xYieldForkTest is Test {
         assertLt(
             xYieldEvaultBalanceAfter,
             xYieldEvaultBalanceBefore,
-            "xYield vault should have fewer EVault shares after withdrawal"
+            "xYieldArbitrum vault should have fewer EVault shares after withdrawal"
         );
-        assertLt(xYield.balanceOf(alice), aliceShares, "Alice should have fewer xYield shares after withdrawal");
+        assertLt(
+            xYieldArbitrum.balanceOf(alice),
+            aliceShares,
+            "Alice should have fewer xYieldArbitrum shares after withdrawal"
+        );
         assertGt(sharesRedeemed, 0, "Shares redeemed should be greater than 0");
     }
 
@@ -104,20 +120,99 @@ contract xYieldForkTest is Test {
         uint256 aliceUsdcDepositAmount = 100e6;
 
         vm.startPrank(alice);
-        usdcArbitrum.approve(address(xYield), type(uint256).max);
-        uint256 aliceShares = xYield.deposit(aliceUsdcDepositAmount, alice);
+        usdcArbitrum.approve(address(xYieldArbitrum), type(uint256).max);
+        uint256 aliceShares = xYieldArbitrum.deposit(aliceUsdcDepositAmount, alice);
         vm.stopPrank();
 
-        uint256 aliceAssetsBeforeInterest = xYield.convertToAssets(aliceShares);
-        uint256 totalBorrowsBefore = evaultArbitrumUsdc.totalBorrows();
+        uint256 aliceAssetsBeforeInterest = xYieldArbitrum.convertToAssets(aliceShares);
+        uint256 totalBorrowsBefore = eVaultArbitrumUsdc.totalBorrows();
 
         vm.warp(block.timestamp + 365 days);
 
-        uint256 aliceAssetsAfterInterest = xYield.convertToAssets(aliceShares);
-        uint256 totalBorrowsAfter = evaultArbitrumUsdc.totalBorrows();
+        uint256 aliceAssetsAfterInterest = xYieldArbitrum.convertToAssets(aliceShares);
+        uint256 totalBorrowsAfter = eVaultArbitrumUsdc.totalBorrows();
 
-        console2.log("alice interest as percentage x 100:: ", (aliceAssetsAfterInterest - aliceAssetsBeforeInterest) * 10000 / aliceAssetsBeforeInterest);
-        assertGt(aliceAssetsAfterInterest, aliceAssetsBeforeInterest, "Alice's assets should increase due to interest accrual when there are existing borrowers");
+        console2.log(
+            "alice interest as percentage x 100:: ",
+            (aliceAssetsAfterInterest - aliceAssetsBeforeInterest) * 10_000 / aliceAssetsBeforeInterest
+        );
+        assertGt(
+            aliceAssetsAfterInterest,
+            aliceAssetsBeforeInterest,
+            "Alice's assets should increase due to interest accrual when there are existing borrowers"
+        );
         assertGt(totalBorrowsAfter, totalBorrowsBefore, "Total borrows should increase due to interest accrual");
+    }
+
+    function testRemoteDeposit() public {
+        uint256 eVaultUsdcBalanceBefore = usdcArbitrum.balanceOf(address(eVaultArbitrumUsdc));
+        uint256 aliceXyusdBalanceBefore = xYieldArbitrum.balanceOf(alice);
+        // initiate deposit from A
+        // mock bridge from A to B
+        // assets land on B, but share price is not yet updated. If no distinction between total assets before
+        // and after share price is updated, older shareholders could withdraw more than they are entitled to
+        // (since share price has not caught up with underlying assets). we want to instead always base the shares on a
+        // virtual total assets
+        // we need to ensure that local deposits use that virtual amount (amount pre remote deposit) until share price
+        // is updated
+        uint256 aliceUsdcDepositAmount = 100e6;
+
+        vm.startPrank(alice); // acting as filler for her own intent
+        usdcArbitrum.approve(address(xYieldArbitrum), type(uint256).max);
+        uint256 aliceShares = xYieldArbitrum.depositFrom(aliceUsdcDepositAmount, alice);
+        vm.stopPrank();
+
+        uint256 aliceXyusdBalanceAfter = xYieldArbitrum.balanceOf(alice);
+
+        assertEq(aliceXyusdBalanceBefore, aliceXyusdBalanceAfter, "Alice was not minted any share tokens on this chain");
+        assertEq(0, aliceXyusdBalanceAfter, "Alice does not own any share tokens");
+
+        uint256 aliceAssets = xYieldArbitrum.convertToAssets(aliceShares);
+        assertGe(aliceAssets, aliceShares, "Alice assets to redeem are greater than her shares");
+
+        uint256 eVaultUsdcBalanceAfter = usdcArbitrum.balanceOf(address(eVaultArbitrumUsdc));
+        assertEq(
+            eVaultUsdcBalanceAfter,
+            eVaultUsdcBalanceBefore + aliceUsdcDepositAmount,
+            "EVault should have received 100 USDC from deposit"
+        );
+
+        uint256 xYieldEvaultBalance = eVaultArbitrumUsdc.balanceOf(address(xYieldArbitrum));
+        assertGt(xYieldEvaultBalance, 0, "xYieldArbitrum vault should have received EVault shares");
+    }
+
+    function testRemoteDepositUpdateTotalShares() public {
+        // native chain deposit
+        uint256 eVaultUsdcBalanceBeforeDeposit0 = usdcArbitrum.balanceOf(address(eVaultArbitrumUsdc));
+        uint256 aliceUsdcDepositAmount = 100e6;
+        vm.startPrank(alice);
+        usdcArbitrum.approve(address(xYieldArbitrum), type(uint256).max);
+        uint256 aliceSharesNative = xYieldArbitrum.deposit(aliceUsdcDepositAmount, alice);
+        vm.stopPrank();
+
+        uint256 bobXyusdBalanceBefore = xYieldArbitrum.balanceOf(bob);
+
+        // remote chain deposit
+        vm.startPrank(bob); // acting as filler for his own intent
+        usdcArbitrum.approve(address(xYieldArbitrum), type(uint256).max);
+        uint256 bobSharesRemote = xYieldArbitrum.depositFrom(aliceUsdcDepositAmount, bob);
+        vm.stopPrank();
+
+        uint256 bobXyusdBalanceAfter = xYieldArbitrum.balanceOf(bob);
+
+        assertEq(bobXyusdBalanceBefore, bobXyusdBalanceAfter, "Bob was not minted any share tokens on this chain");
+        assertEq(0, bobXyusdBalanceAfter, "Bob does not own any share tokens on this chain");
+
+        uint256 eVaultUsdcBalanceAfterDeposit1 = usdcArbitrum.balanceOf(address(eVaultArbitrumUsdc));
+        assertEq(
+            eVaultUsdcBalanceAfterDeposit1,
+            eVaultUsdcBalanceBeforeDeposit0 + aliceUsdcDepositAmount * 2,
+            "EVault should have received 100 USDC from deposit"
+        );
+
+        assertGt(aliceSharesNative, bobSharesRemote, "Alice is minted more shares than Bob");
+
+        // TODO - mint bobSharesRemote to bob on remote chain
+        // TODO - update total shares on remote and this chain
     }
 }
