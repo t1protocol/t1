@@ -2,8 +2,8 @@ import * as dotenv from "dotenv";
 
 dotenv.config();
 
-import {SolverWebSocketClient} from "./src/bot/SolverWebSocketClient.ts";
-import {ATTRACTIVE_ARBITRUM_PRICE, ATTRACTIVE_BASE_PRICE} from "./src/bot/samplePriceLists.ts";
+import {SolverWebSocketClient} from "../src/bot/SolverWebSocketClient.ts";
+import {ATTRACTIVE_ARBITRUM_PRICE, ATTRACTIVE_BASE_PRICE} from "../src/bot/samplePriceLists.ts";
 
 const USE_TLS = process.env.USE_TLS as string === "true";
 

@@ -2,10 +2,10 @@ import * as dotenv from "dotenv";
 
 dotenv.config();
 
-import {AuctionApiServer} from "./src/api/AuctionApiServer.ts";
-import {ViemIntentObserver} from "./src/blockchain/ViemIntentObserver.ts";
-import {SolverPriceBook} from "./src/core/SolverPriceBook.ts";
-import {AuctionService} from "./src/core/AuctionService.ts";
+import {AuctionApiServer} from "../src/api/AuctionApiServer.ts";
+import {ViemIntentObserver} from "../src/blockchain/ViemIntentObserver.ts";
+import {SolverPriceBook} from "../src/core/SolverPriceBook.ts";
+import {AuctionService} from "../src/core/AuctionService.ts";
 import {arbitrumSepolia, baseSepolia} from "viem/chains";
 
 const USE_TLS = process.env.USE_TLS as string === "true";
