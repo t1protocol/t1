@@ -12,11 +12,25 @@ export type OrderData = {
     fillDeadline: bigint;
     closedAuction: boolean;
     data: string;
-}
+};
 
 export const convertSolidityOrderDataToTypescriptOrderData = (
-    parsedAbi: readonly [`0x${string}`, `0x${string}`, `0x${string}`, `0x${string}`,
-        bigint, bigint, bigint, bigint, bigint, `0x${string}`, bigint, boolean, `0x${string}`]): OrderData => {
+    parsedAbi: readonly [
+        `0x${string}`,
+        `0x${string}`,
+        `0x${string}`,
+        `0x${string}`,
+        bigint,
+        bigint,
+        bigint,
+        bigint,
+        bigint,
+        `0x${string}`,
+        bigint,
+        boolean,
+        `0x${string}`
+    ]
+): OrderData => {
     return {
         sender: parsedAbi[0],
         recipient: parsedAbi[1],
@@ -30,15 +44,17 @@ export const convertSolidityOrderDataToTypescriptOrderData = (
         destinationSettler: parsedAbi[9],
         fillDeadline: parsedAbi[10],
         closedAuction: parsedAbi[11],
-        data: parsedAbi[12]
+        data: parsedAbi[12],
     };
 };
 
 export const OPEN_INTENT_EVENT_SIGNATURE = 'event Open(bytes32 indexed orderId, bytes32 resolvedOrder)';
 
-export const RESOLVER_ORDER_ABI_PARAMETERS = 'string user, uint originChainId, uint openDeadline, ' +
- 'uint fillDeadline, bytes orderId, bytes maxSpent, bytes minReceived, bytes fillInstructions';
+export const RESOLVER_ORDER_ABI_PARAMETERS =
+    'address user, uint256 originChainId, uint256 openDeadline, uint256 fillDeadline, bytes orderId, bytes maxSpent, bytes minReceived, bytes fillInstructions';
 
-export const FILL_INSTRUCTION_ABI_PARAMETERS = '[uint destinationChainId, bytes destinationSettler, bytes originData]';
+export const FILL_INSTRUCTION_ABI_PARAMETERS =
+    'tuple(uint256 destinationChainId, address destinationSettler, bytes originData)[]';
 
-export const ORDER_DATA_ABI_PARAMETERS = 'bytes sender, bytes recipient, bytes inputToken, bytes outputToken, uint amountIn, uint minAmountOut, uint senderNonce, uint originDomain, uint destinationDomain, bytes destinationSettler, uint fillDeadline, bool closedAuction, bytes data';
+export const ORDER_DATA_ABI_PARAMETERS =
+    'address sender, address recipient, address inputToken, address outputToken, uint256 amountIn, uint256 minAmountOut, uint256 senderNonce, uint256 originDomain, uint256 destinationDomain, address destinationSettler, uint256 fillDeadline, bool closedAuction, bytes data';
