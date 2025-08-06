@@ -14,7 +14,7 @@ export class SolverPriceBook {
 
     public getCurrentPrices(): ImmutableList<PriceListItem[]> {
         return ImmutableList(
-            this.prices.entries()
+            this.prices.entries().toArray()
                 .filter(([_key, value]) => value.timestamp + this.priceListTTL > Date.now())
                 .map(([_key, value]) => value.priceList)
         );
