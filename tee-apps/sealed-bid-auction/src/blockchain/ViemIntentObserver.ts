@@ -63,14 +63,10 @@ export class ViemIntentObserver {
             for (const fillInstruction of order.args.resolvedOrder.fillInstructions) {
                 const originDataHex = fillInstruction.originData;
 
-                // Decode originData if needed
-                const decodedOrderData = decodeAbiParameters(
-                    parseAbiParameters(ORDER_DATA_ABI_PARAMETERS),
-                    originDataHex
-                );
+                const params = parseAbiParameters(`tuple(${ORDER_DATA_ABI_PARAMETERS})`);
 
-                // Convert to TypeScript order data
-                const orderData = convertSolidityOrderDataToTypescriptOrderData(decodedOrderData);
+                // Decode originData if needed
+                const orderData = convertSolidityOrderDataToTypescriptOrderData(decodeAbiParameters(params, originDataHex));
 
                 // Run auction and notify solver
                 auctionPromises.push(this.runAuctionAndNotifySolver(orderData, order.args.orderId));
