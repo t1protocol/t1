@@ -61,7 +61,10 @@ export class AuctionService {
     }
 
     private findPricesForAskedTokens(srcTokenAddress: string, dstTokenAddress: string, amountIn: bigint): Immutable.List<Price> {
-        return this.solverPricebook.getCurrentPrices().flatMap(
+        const currentPrices = this.solverPricebook.getCurrentPrices();
+        this.logger.debug(`current prices: ${serialize(currentPrices)}`);
+
+        return currentPrices.flatMap(
             priceItems => priceItems.filter(
                 priceItem =>
                     priceItem.srcTokenAddresses.includes(srcTokenAddress) &&
