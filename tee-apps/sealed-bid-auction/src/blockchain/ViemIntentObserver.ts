@@ -9,7 +9,6 @@ import {
 
 import type {AuctionService} from "../core/AuctionService.ts";
 import {
-    convertSolidityOrderDataToTypescriptOrderData,
     OPEN_INTENT_ABI_EVENT,
     ORDER_DATA_ABI_PARAMETERS_WRAPPED_IN_TUPLE,
     type OrderData,
@@ -61,9 +60,8 @@ export class ViemIntentObserver {
         for (const order of parsedLogs) {
             for (const fillInstruction of order.args.resolvedOrder.fillInstructions) {
                 const [decodedOrder] = decodeAbiParameters(ORDER_DATA_ABI_PARAMETERS_WRAPPED_IN_TUPLE, fillInstruction.originData);
-                const orderData = convertSolidityOrderDataToTypescriptOrderData([decodedOrder]);
 
-                auctionPromises.push(this.runAuctionAndNotifySolver(orderData, order.args.orderId));
+                auctionPromises.push(this.runAuctionAndNotifySolver(decodedOrder as OrderData, order.args.orderId));
             }
         }
 
@@ -75,7 +73,7 @@ export class ViemIntentObserver {
     private async runAuctionAndNotifySolver(orderData: OrderData, orderId: string) {
         this.logger.info(`Running auction for order ${orderId}`);
 
-        while (Date.now() < orderData.fillDeadline) {
+        while (Date.now() / 1000 < orderData.fillDeadline) {
             const winningPrice = this.auctionService.auction(orderData.inputToken, orderData.outputToken, orderData.amountIn);
 
             if (winningPrice !== null && winningPrice.amountOut >= orderData.minAmountOut) {
