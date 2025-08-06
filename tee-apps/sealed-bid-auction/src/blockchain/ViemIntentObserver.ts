@@ -67,10 +67,14 @@ export class ViemIntentObserver {
             }
         }
 
+        this.logger.info(`I will run ${auctionPromises.length} auctions!`);
+
         await Promise.all(auctionPromises);
     }
 
     private async runAuctionAndNotifySolver(orderData: OrderData, orderId: string) {
+        this.logger.info(`Running auction for order ${orderId}`);
+
         while (Date.now() < orderData.fillDeadline) {
             const winningPrice = this.auctionService.auction(orderData.inputToken, orderData.outputToken, orderData.amountIn);
 
