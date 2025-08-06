@@ -23,7 +23,6 @@ contract xYieldVault is ERC4626, Ownable2Step, ReentrancyGuard, Pausable {
 
     address public guardian;
     IYieldProtocol public yieldProtocol;
-    T1ERC7683 public t17683;
 
     uint256 public virtualTotalAssets;
     uint256 public virtualTotalSupply;
