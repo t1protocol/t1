@@ -55,19 +55,13 @@ export class ViemIntentObserver {
             logs
         });
 
-        const auctionPromises: Promise<void>[] = [];
-
         for (const order of parsedLogs) {
             for (const fillInstruction of order.args.resolvedOrder.fillInstructions) {
                 const [decodedOrder] = decodeAbiParameters(ORDER_DATA_ABI_PARAMETERS_WRAPPED_IN_TUPLE, fillInstruction.originData);
 
-                auctionPromises.push(this.runAuctionAndNotifySolver(decodedOrder as OrderData, order.args.orderId));
+                await this.runAuctionAndNotifySolver(decodedOrder as OrderData, order.args.orderId);
             }
         }
-
-        this.logger.info(`I will run ${auctionPromises.length} auctions!`);
-
-        await Promise.all(auctionPromises);
     }
 
     private async runAuctionAndNotifySolver(orderData: OrderData, orderId: string) {
