@@ -3,7 +3,6 @@ import {
     createPublicClient,
     decodeAbiParameters,
     http,
-    parseAbiParameters,
     parseEventLogs,
     type WatchEventOnLogsParameter
 } from "viem"
@@ -12,7 +11,7 @@ import type {AuctionService} from "../core/AuctionService.ts";
 import {
     convertSolidityOrderDataToTypescriptOrderData,
     OPEN_INTENT_ABI_EVENT,
-    ORDER_DATA_ABI_PARAMETERS,
+    ORDER_DATA_ABI_PARAMETERS_WRAPPED_IN_TUPLE,
     type OrderData,
 } from "./types.ts";
 import type {AuctionApiServer} from "../api/AuctionApiServer.ts";
@@ -61,14 +60,9 @@ export class ViemIntentObserver {
 
         for (const order of parsedLogs) {
             for (const fillInstruction of order.args.resolvedOrder.fillInstructions) {
-                const originDataHex = fillInstruction.originData;
+                const [decodedOrder] = decodeAbiParameters(ORDER_DATA_ABI_PARAMETERS_WRAPPED_IN_TUPLE, fillInstruction.originData);
+                const orderData = convertSolidityOrderDataToTypescriptOrderData(decodedOrder);
 
-                const params = parseAbiParameters(`tuple(${ORDER_DATA_ABI_PARAMETERS})`);
-
-                // Decode originData if needed
-                const orderData = convertSolidityOrderDataToTypescriptOrderData(decodeAbiParameters(params, originDataHex));
-
-                // Run auction and notify solver
                 auctionPromises.push(this.runAuctionAndNotifySolver(orderData, order.args.orderId));
             }
         }
