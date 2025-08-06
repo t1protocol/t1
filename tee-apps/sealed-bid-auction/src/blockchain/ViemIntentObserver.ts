@@ -1,10 +1,8 @@
 import {
-    type AbiEvent,
     type Chain,
     createPublicClient,
     decodeAbiParameters,
     http,
-    parseAbi,
     parseAbiParameters,
     parseEventLogs,
     type WatchEventOnLogsParameter
@@ -13,8 +11,8 @@ import {
 import type {AuctionService} from "../core/AuctionService.ts";
 import {
     convertSolidityOrderDataToTypescriptOrderData,
-    FILL_INSTRUCTION_ABI_PARAMETERS, OPEN_INTENT_EVENT_ABI,
-    OPEN_INTENT_EVENT_SIGNATURE,
+    FILL_INSTRUCTION_ABI_PARAMETERS,
+    OPEN_INTENT_ABI_EVENT,
     ORDER_DATA_ABI_PARAMETERS,
     type OrderData,
     RESOLVER_ORDER_ABI_PARAMETERS
@@ -46,7 +44,7 @@ export class ViemIntentObserver {
     public start() {
         this.client.watchEvent({
             address: this.t1Erc7683ContractAddress,
-            event: OPEN_INTENT_EVENT_ABI as AbiEvent,
+            event: OPEN_INTENT_ABI_EVENT,
             onLogs: logs => this.processIntentLogs(logs)
         });
 
@@ -57,7 +55,7 @@ export class ViemIntentObserver {
         this.logger.info('Intent was Open-ed!');
 
         const parsedLogs = parseEventLogs({
-            abi: parseAbi([OPEN_INTENT_EVENT_SIGNATURE]),
+            abi: [OPEN_INTENT_ABI_EVENT],
             logs
         });
 
