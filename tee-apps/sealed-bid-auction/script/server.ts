@@ -13,7 +13,7 @@ const USE_TLS = process.env.USE_TLS as string === "true";
 const solverPriceBook = new SolverPriceBook();
 const auctionService = new AuctionService(solverPriceBook);
 
-const httpServer = new AuctionApiServer();
+const httpServer = new AuctionApiServer(solverPriceBook, auctionService);
 const arbitrumSepoliaIntentObserver = new ViemIntentObserver(
     process.env.ARBITRUM_SEPOLIA_RPC as string,
     arbitrumSepolia,

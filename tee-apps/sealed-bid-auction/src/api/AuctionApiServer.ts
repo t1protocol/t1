@@ -14,14 +14,12 @@ type AuthData = {
 export class AuctionApiServer {
     private logger = new WinstonLogger(AuctionApiServer.name);
 
-    private readonly solverPriceBook;
     private readonly auctionController;
 
     private server: Server | null = null;
 
-    public constructor() {
-        this.solverPriceBook = new SolverPriceBook();
-        this.auctionController = new AuctionController(new AuctionService(this.solverPriceBook));
+    public constructor(private readonly solverPriceBook: SolverPriceBook, auctionService: AuctionService) {
+        this.auctionController = new AuctionController(auctionService);
     }
 
     public async start(port: number, tls: boolean) {
@@ -29,7 +27,6 @@ export class AuctionApiServer {
             this.logger.warn("API server is already running");
             return;
         }
-
         const solverPriceBook = this.solverPriceBook;
 
         // @ts-ignore
