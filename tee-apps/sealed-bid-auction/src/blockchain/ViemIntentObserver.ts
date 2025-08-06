@@ -93,6 +93,8 @@ export class ViemIntentObserver {
 
             if (winningPrice !== null && winningPrice.amountOut >= orderData.minAmountOut) {
                 this.apiServer.publishAuctionResult(winningPrice!, orderId, orderData, this.chain.id);
+
+                this.logger.info(`I finished auction for order ${orderId} and notified solvers!`);
                 break;
             }
 
