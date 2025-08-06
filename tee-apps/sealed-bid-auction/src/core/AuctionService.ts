@@ -3,6 +3,7 @@ import Immutable from "immutable";
 import type {AuctionQuote, AuctionRequest} from "../api/types.ts";
 import type {SolverPriceBook} from "./SolverPriceBook.ts";
 import type {PriceListItem} from "./types.ts";
+import {serialize, WinstonLogger} from "../utils/WinstonLogger.ts";
 
 export type Price = {
     amountOut: bigint;
@@ -10,6 +11,8 @@ export type Price = {
 }
 
 export class AuctionService {
+    private logger = new WinstonLogger(AuctionService.name);
+
     constructor(private readonly solverPricebook: SolverPriceBook) {}
 
     public preauction(request: AuctionRequest): AuctionQuote | null {
@@ -30,6 +33,8 @@ export class AuctionService {
 
     public auction(srcTokenAddress: string, dstTokenAddress: string, amountIn: bigint): Price | null {
         const pricesForAskedTokens = this.findPricesForAskedTokens(srcTokenAddress, dstTokenAddress, amountIn);
+
+        this.logger.debug(`Found these prices for asked tokens: ${serialize(pricesForAskedTokens)}`);
 
         return this.chooseBestPrice(pricesForAskedTokens);
     }
