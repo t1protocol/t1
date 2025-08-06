@@ -9,7 +9,7 @@ export const ATTRACTIVE_ARBITRUM_PRICE: PriceListItem[] = [{
                 "max": 99n
             },
             "rangeUnit": Token["Base_USDC"],
-            "price": 97_000_000n,
+            "price": 970_000n,
             "priceUnit": Token["Arbitrum_USDC"]
         },
         {
@@ -18,7 +18,7 @@ export const ATTRACTIVE_ARBITRUM_PRICE: PriceListItem[] = [{
                 "max": 1000n
             },
             "rangeUnit": Token["Base_USDC"],
-            "price": 98_000_000n,
+            "price": 980_000n,
             "priceUnit": Token["Arbitrum_USDC"]
         }
     ],
@@ -35,7 +35,7 @@ export const ATTRACTIVE_ARBITRUM_PRICE: PriceListItem[] = [{
                     max: 99n
                 },
                 rangeUnit: Token["Arbitrum_USDC"],
-                price: 95_000_000n,
+                price: 950_000n,
                 priceUnit: Token["Base_USDC"]
             },
             {
@@ -44,7 +44,7 @@ export const ATTRACTIVE_ARBITRUM_PRICE: PriceListItem[] = [{
                     max: 1000n
                 },
                 rangeUnit: Token["Arbitrum_USDC"],
-                price: 96_000_000n,
+                price: 960_000n,
                 priceUnit: Token["Base_USDC"]
             }
         ],
@@ -62,7 +62,7 @@ export const ATTRACTIVE_BASE_PRICE: PriceListItem[] = [{
                 max: 99n
             },
             rangeUnit: Token["Base_USDC"],
-            price: 95_000_000n,
+            price: 950_000n,
             priceUnit: Token["Arbitrum_USDC"]
         },
         {
@@ -71,7 +71,7 @@ export const ATTRACTIVE_BASE_PRICE: PriceListItem[] = [{
                 max: 1000n
             },
             rangeUnit: Token["Base_USDC"],
-            price: 96_000_000n,
+            price: 960_000n,
             priceUnit: Token["Arbitrum_USDC"]
         }
     ],
@@ -88,7 +88,7 @@ export const ATTRACTIVE_BASE_PRICE: PriceListItem[] = [{
                     max: 99n
                 },
                 rangeUnit: Token["Arbitrum_USDC"],
-                price: 97_000_000n,
+                price: 970_000n,
                 priceUnit: Token["Base_USDC"]
             },
             {
@@ -97,7 +97,7 @@ export const ATTRACTIVE_BASE_PRICE: PriceListItem[] = [{
                     max: 1000n
                 },
                 rangeUnit: Token["Arbitrum_USDC"],
-                price: 98_000_000n,
+                price: 980_000n,
                 priceUnit: Token["Base_USDC"]
             }
         ],
