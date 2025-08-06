@@ -1,6 +1,10 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { Logger as LoggerClass, type LoggerOptions, createLogger, format, transports } from "winston";
 
+import * as dotenv from "dotenv";
+
+dotenv.config();
+
 export class WinstonLogger {
   private logger: LoggerClass;
   public readonly name: string;
@@ -15,7 +19,7 @@ export class WinstonLogger {
     const { align, combine, colorize, timestamp, printf, errors, splat, label } = format;
 
     this.logger = createLogger({
-      level: "info",
+      level: process.env.LOG_LEVEL as string,
       format: combine(
         timestamp(),
         errors({ stack: true }),

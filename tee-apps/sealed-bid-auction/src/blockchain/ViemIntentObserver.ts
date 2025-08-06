@@ -15,7 +15,7 @@ import {
     type OrderData,
 } from "./types.ts";
 import type {AuctionApiServer} from "../api/AuctionApiServer.ts";
-import { WinstonLogger} from "../utils/WinstonLogger.ts";
+import { serialize, WinstonLogger} from "../utils/WinstonLogger.ts";
 
 export class ViemIntentObserver {
     private logger: WinstonLogger;
@@ -84,8 +84,12 @@ export class ViemIntentObserver {
     private async runAuctionAndNotifySolver(orderData: OrderData, orderId: string) {
         this.logger.info(`Running auction for order ${orderId}`);
 
+        this.logger.debug(`Running auction for orderData ${serialize(orderData)}`);
+
         while (Date.now() / 1000 < orderData.fillDeadline) {
             const winningPrice = this.auctionService.auction(orderData.inputToken, orderData.outputToken, orderData.amountIn);
+
+            this.logger.debug(`Auction winner: ${serialize(winningPrice)}`);
 
             if (winningPrice !== null && winningPrice.amountOut >= orderData.minAmountOut) {
                 this.apiServer.publishAuctionResult(winningPrice!, orderId, orderData, this.chain.id);
