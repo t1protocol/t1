@@ -62,14 +62,16 @@ export class AuctionService {
 
     private findPricesForAskedTokens(srcTokenAddress: string, dstTokenAddress: string, amountIn: bigint): Immutable.List<Price> {
         const currentPrices = this.solverPricebook.getCurrentPrices();
-        this.logger.debug(`current prices: ${serialize(currentPrices)}`);
+        this.logger.debug(`Current prices: ${serialize(currentPrices)}`);
 
         return currentPrices.flatMap(
             priceItems => priceItems.filter(
-                priceItem =>
-                    priceItem.srcTokenAddresses.includes(srcTokenAddress) &&
-                    priceItem.dstTokenAddresses.includes(dstTokenAddress) &&
-                    this.getFinalIntervalIndex(priceItem, amountIn) !== undefined
+                priceItem => {
+                    this.logger.debug(`Checking if src=[${srcTokenAddress}], dst=[${dstTokenAddress}] amountIn=[${amountIn}] is included in [${serialize(priceItem)}]`);
+                    return priceItem.srcTokenAddresses.includes(srcTokenAddress) &&
+                            priceItem.dstTokenAddresses.includes(dstTokenAddress) &&
+                            this.getFinalIntervalIndex(priceItem, amountIn) !== undefined;
+                }
             ).map(priceItem => {
                 return {
                     amountOut: this.calculateAmountOut(priceItem, amountIn),
