@@ -4,6 +4,7 @@ import {
     decodeAbiParameters,
     http,
     parseEventLogs,
+    trim,
     type WatchEventOnLogsParameter
 } from "viem"
 
@@ -59,7 +60,23 @@ export class ViemIntentObserver {
             for (const fillInstruction of order.args.resolvedOrder.fillInstructions) {
                 const [decodedOrder] = decodeAbiParameters(ORDER_DATA_ABI_PARAMETERS_WRAPPED_IN_TUPLE, fillInstruction.originData);
 
-                await this.runAuctionAndNotifySolver(decodedOrder as OrderData, order.args.orderId);
+                const orderData = decodedOrder as OrderData;
+
+                await this.runAuctionAndNotifySolver({
+                    sender: trim(orderData.sender),
+                    recipient: trim(orderData.recipient),
+                    inputToken: trim(orderData.inputToken),
+                    outputToken: trim(orderData.outputToken),
+                    amountIn: BigInt(orderData.amountIn),
+                    minAmountOut: BigInt(orderData.minAmountOut),
+                    senderNonce: Number(orderData.senderNonce),
+                    originDomain: orderData.originDomain,
+                    destinationDomain: orderData.destinationDomain,
+                    destinationSettler: trim(orderData.destinationSettler),
+                    fillDeadline: orderData.fillDeadline,
+                    closedAuction: orderData.closedAuction,
+                    data: orderData.data,
+                }, order.args.orderId);
             }
         }
     }

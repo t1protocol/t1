@@ -1,17 +1,17 @@
 export type OrderData = {
-    sender: string;
-    recipient: string;
-    inputToken: string;
-    outputToken: string;
+    sender: `0x${string}`;
+    recipient: `0x${string}`;
+    inputToken: `0x${string}`;
+    outputToken: `0x${string}`;
     amountIn: bigint;
     minAmountOut: bigint;
     senderNonce: number;
     originDomain: number;
     destinationDomain: number;
-    destinationSettler: string;
+    destinationSettler: `0x${string}`;
     fillDeadline: number;
     closedAuction: boolean;
-    data: string;
+    data: `0x${string}`;
 };
 
 export const OPEN_INTENT_ABI_EVENT = {"name":"Open","type":"event","inputs":[{"name":"orderId","type":"bytes32","indexed":true},{"name":"resolvedOrder","type":"tuple","indexed":false,"components":[{"name":"user","type":"address"},{"name":"originChainId","type":"uint256"},{"name":"openDeadline","type":"uint32"},{"name":"fillDeadline","type":"uint32"},{"name":"orderId","type":"bytes32"},{"name":"maxSpent","type":"tuple[]","components":[{"name":"token","type":"bytes32"},{"name":"amount","type":"uint256"},{"name":"recipient","type":"bytes32"},{"name":"chainId","type":"uint256"}]},{"name":"minReceived","type":"tuple[]","components":[{"name":"token","type":"bytes32"},{"name":"amount","type":"uint256"},{"name":"recipient","type":"bytes32"},{"name":"chainId","type":"uint256"}]},{"name":"fillInstructions","type":"tuple[]","components":[{"name":"destinationChainId","type":"uint256"},{"name":"destinationSettler","type":"bytes32"},{"name":"originData","type":"bytes"}]}]}]}
