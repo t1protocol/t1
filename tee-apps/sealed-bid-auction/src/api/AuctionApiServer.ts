@@ -32,7 +32,6 @@ export class AuctionApiServer {
 
         const solverPriceBook = this.solverPriceBook;
 
-        // @ts-ignore
         this.server = Bun.serve<AuthData>({
             port,
             tls: tls ? {
@@ -41,7 +40,9 @@ export class AuctionApiServer {
             } : {},
             routes: {
                 "/healthcheck": new Response("OK"),
-                "/api/preauction": req => this.auctionController.preauction(req),
+                "/api/preauction": {
+                    POST: async (req) => await this.auctionController.preauction(req)
+                }
             },
             fetch(req, server) {
                 const success = server.upgrade(req, {
