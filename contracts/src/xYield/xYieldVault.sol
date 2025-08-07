@@ -9,6 +9,8 @@ import { Ownable2Step } from "@openzeppelin/contracts/access/Ownable2Step.sol";
 import { ReentrancyGuard } from "@openzeppelin/contracts/security/ReentrancyGuard.sol";
 import { Pausable } from "@openzeppelin/contracts/security/Pausable.sol";
 
+import { console2 } from "forge-std/console2.sol";
+
 // TODO: replace with actual Euler interface
 interface IYieldProtocol {
     function deposit(uint256 assets, address receiver) external returns (uint256 shares);
@@ -173,6 +175,8 @@ contract xYieldVault is ERC4626, Ownable2Step, ReentrancyGuard, Pausable {
     //     revert NotImplemented();
     // }
 
+    // used on remote chain to mint share tokens
+    // used on highest yield chain to update virtual totals
     function updateTotals(
         uint256 totalSupply_,
         address[] calldata _recipients,
@@ -185,7 +189,12 @@ contract xYieldVault is ERC4626, Ownable2Step, ReentrancyGuard, Pausable {
         // TODO - update incrementally like virtualTotalAssets?
         virtualTotalSupply = totalSupply_;
         _updateBalances(_recipients, _amounts);
+        virtualTotalAssets = this.totalAssets();
         emit TotalSupplyUpdated(totalSupply_);
+    }
+
+    function updateVirtualTotalAssets() external onlyGuardian {
+        virtualTotalAssets = super.totalAssets();
     }
 
     // TODO - submit proofs for remote deposits
@@ -194,7 +203,8 @@ contract xYieldVault is ERC4626, Ownable2Step, ReentrancyGuard, Pausable {
         for (uint256 i = 0; i < recipients.length; i++) {
             _mint(recipients[i], amounts[i]);
             // increment underlying ERC20, e.g. USDC, based on remote deposits
-            virtualTotalAssets += amounts[i];
+            // or should we just make this equal to totalAssets()?
+            // virtualTotalAssets += amounts[i];
         }
     }
 
@@ -241,7 +251,8 @@ contract xYieldVault is ERC4626, Ownable2Step, ReentrancyGuard, Pausable {
         if (!isActiveChain) revert WithdrawOnInactiveChain();
 
         yieldProtocol.withdraw(assets, address(this), address(this));
-        // virtualTotalAssets -= assets;
+        virtualTotalAssets -= assets;
+        virtualTotalSupply -= shares;
         _burn(owner, shares);
         IERC20(asset()).transfer(receiver, assets);
 
@@ -255,10 +266,10 @@ contract xYieldVault is ERC4626, Ownable2Step, ReentrancyGuard, Pausable {
 
     function totalAssets() public view virtual override returns (uint256) {
         // TODO - test edge cases where virtual total assets are pending
-        if (isActiveChain && address(yieldProtocol) != address(0)) {
-            return yieldProtocol.convertToAssets(this.totalSupply());
-        }
-        return virtualTotalAssets;
+        // if (isActiveChain && address(yieldProtocol) != address(0)) {
+        return yieldProtocol.convertToAssets(this.totalSupply());
+        // }
+        // return virtualTotalAssets;
     }
 
     function setActiveChain(bool _isActive) external onlyGuardian {

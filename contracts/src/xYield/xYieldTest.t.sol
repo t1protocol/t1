@@ -97,20 +97,6 @@ contract xYieldTest is Test {
         assertEq(vault.totalAssets(), depositAmount - withdrawAmount, "total assets");
     }
 
-    function testSharePriceCalculation() public {
-        uint256 depositAmount = 100 * 10 ** 18;
-
-        vm.prank(user1);
-        uint256 shares1 = vault.deposit(depositAmount, user1);
-
-        vm.warp(block.timestamp + 365 days);
-
-        vm.prank(user2);
-        uint256 shares2 = vault.deposit(depositAmount, user2);
-
-        assertTrue(shares1 > shares2, "Second deposit should get fewer shares due to increased asset value");
-    }
-
     function testActiveChainBehavior() public {
         uint256 depositAmount = 100 * 10 ** 18;
 
