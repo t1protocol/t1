@@ -19,9 +19,12 @@ import {
     type OrderData,
     RESOLVER_ORDER_ABI_PARAMETERS
 } from "./types.ts";
-import type {SealedBidAuctionApiServer} from "../api/SealedBidAuctionApiServer.ts";
+import type {AuctionApiServer} from "../api/AuctionApiServer.ts";
+import {WinstonLogger} from "../utils/WinstonLogger.ts";
 
 export class ViemIntentObserver {
+    private logger: WinstonLogger;
+
     private readonly client;
 
     constructor(rpcUrl: string,
@@ -29,9 +32,10 @@ export class ViemIntentObserver {
                 pollingInterval: number,
                 private readonly t1Erc7683ContractAddress: `0x${string}`,
                 private readonly auctionService: AuctionService,
-                private readonly apiServer: SealedBidAuctionApiServer,
+                private readonly apiServer: AuctionApiServer,
                 private readonly auctionPollingInterval: number = 500
     ) {
+        this.logger = new WinstonLogger(`${ViemIntentObserver.name}[${chain.name}]`);
         this.client = createPublicClient({
             chain,
             transport: http(rpcUrl),
@@ -44,10 +48,14 @@ export class ViemIntentObserver {
             address: this.t1Erc7683ContractAddress,
             event: parseAbiItem(OPEN_INTENT_EVENT_SIGNATURE),
             onLogs: logs => this.processIntentLogs(logs)
-        })
+        });
+
+        this.logger.info(`Watching for Open Intent events on chain [${this.chain.name}] and contract [${this.t1Erc7683ContractAddress}]`);
     }
 
     private async processIntentLogs(logs: WatchEventOnLogsParameter) {
+        this.logger.info('Intent was Open-ed!');
+
         const parsedLogs = parseEventLogs({
             abi: parseAbi([OPEN_INTENT_EVENT_SIGNATURE]),
             logs

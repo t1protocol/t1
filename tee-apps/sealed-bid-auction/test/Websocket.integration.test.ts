@@ -1,10 +1,10 @@
 import {afterAll, beforeAll, beforeEach, describe, it, expect} from "@jest/globals";
 
-import {SealedBidAuctionApiServer} from "../src/api/SealedBidAuctionApiServer.ts";
+import {AuctionApiServer} from "../src/api/AuctionApiServer.ts";
 import {PRICE_LIST_WITH_GAP_IN_RANGES, USERNAME, PRICE_LIST_WITH_TWO_ITEMS} from "./constants.ts";
 
 const wsPort = 3080;
-const httpServer = new SealedBidAuctionApiServer();
+const httpServer = new AuctionApiServer();
 let socketClosed = true;
 let socket: WebSocket;
 let socketMessage: string | null;

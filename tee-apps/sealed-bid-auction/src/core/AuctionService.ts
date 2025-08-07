@@ -60,7 +60,7 @@ export class AuctionService {
             priceItems => priceItems.filter(
                 priceItem =>
                     priceItem.srcTokenAddresses.includes(srcTokenAddress) &&
-                    priceItem.dstTokenAddress.includes(dstTokenAddress) &&
+                    priceItem.dstTokenAddresses.includes(dstTokenAddress) &&
                     this.getFinalIntervalIndex(priceItem, amountIn) !== undefined
             ).map(priceItem => {
                 return {

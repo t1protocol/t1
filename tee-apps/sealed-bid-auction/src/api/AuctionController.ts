@@ -4,7 +4,7 @@ import {AuctionService} from "../core/AuctionService.ts";
 import type {AuctionRequest} from "./types.ts";
 import {serialize} from "../utils/WinstonLogger.ts";
 
-export class SealedBidAuctionController {
+export class AuctionController {
 
     constructor(private readonly auctionService: AuctionService) {}
 

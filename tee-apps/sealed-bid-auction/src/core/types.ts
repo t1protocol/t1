@@ -2,7 +2,7 @@ export type PriceListItem = {
     direction: Direction;
     intervals: Interval[];
     srcTokenAddresses: string[];
-    dstTokenAddress: string[];
+    dstTokenAddresses: string[];
     settlementReceiverAddress: string;
 }
 
@@ -13,7 +13,7 @@ export enum Direction {
     "Arbitrum_WETH->Base_USDC",
 }
 
-enum Token {
+export enum Token {
     Base_USDC = "Base_USDC",
     Base_WETH = "Base_WETH",
     Arbitrum_USDC = "Arbitrum_USDC",
