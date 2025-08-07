@@ -10,7 +10,6 @@ import { Ownable2Step } from "@openzeppelin/contracts/access/Ownable2Step.sol";
 import { ReentrancyGuard } from "@openzeppelin/contracts/security/ReentrancyGuard.sol";
 import { Pausable } from "@openzeppelin/contracts/security/Pausable.sol";
 
-
 contract xYieldVault is ERC4626, Ownable2Step, ReentrancyGuard, Pausable {
     using Math for uint256;
 
@@ -197,7 +196,6 @@ contract xYieldVault is ERC4626, Ownable2Step, ReentrancyGuard, Pausable {
     }
 
     function _deposit(address caller, address receiver, uint256 assets, uint256 shares) internal virtual override {
-
         virtualTotalAssets += assets;
         virtualTotalSupply += shares;
         _mint(receiver, shares);
@@ -208,7 +206,8 @@ contract xYieldVault is ERC4626, Ownable2Step, ReentrancyGuard, Pausable {
         emit Deposit(caller, receiver, assets, shares);
     }
 
-    // NOTE - for remote deposits we update virtualTotalAssets after deposit to prevent share price inflation before global shares is updated
+    // NOTE - for remote deposits we update virtualTotalAssets after deposit to prevent share price inflation before
+    // global shares is updated
     function _depositFrom(address caller, address receiver, uint256 assets, uint256 shares) internal {
         IERC20(asset()).transferFrom(caller, address(this), assets);
         yieldProtocol.deposit(assets, address(this));
