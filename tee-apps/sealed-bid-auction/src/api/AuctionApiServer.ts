@@ -2,8 +2,8 @@ import type {Server} from "bun";
 import crypto from "node:crypto";
 import {hashMessage, recoverAddress} from "viem";
 
-import {SealedBidAuctionController} from "./SealedBidAuctionController.ts";
-import {WinstonLogger} from "../utils/WinstonLogger.ts";
+import {AuctionController} from "./AuctionController.ts";
+import {serialize, WinstonLogger} from "../utils/WinstonLogger.ts";
 import {SolverPriceBook} from "../core/SolverPriceBook.ts";
 import {AuctionService, type Price} from "../core/AuctionService.ts";
 import type {AuctionResult, AuthBlob} from "./types.ts";
@@ -15,10 +15,9 @@ type AuthData = {
     solverAddress: string;
 };
 
-export class SealedBidAuctionApiServer {
-    private logger = new WinstonLogger(SealedBidAuctionApiServer.name);
+export class AuctionApiServer {
+    private logger = new WinstonLogger(AuctionApiServer.name);
 
-    private readonly solverPriceBook;
     private readonly auctionController;
 
     private server: Server | null = null;
@@ -32,9 +31,8 @@ export class SealedBidAuctionApiServer {
         return true;
     }
 
-    public constructor() {
-        this.solverPriceBook = new SolverPriceBook();
-        this.auctionController = new SealedBidAuctionController(new AuctionService(this.solverPriceBook));
+    public constructor(private readonly solverPriceBook: SolverPriceBook, auctionService: AuctionService) {
+        this.auctionController = new AuctionController(auctionService);
     }
 
     public async start(port: number, tls: boolean) {
@@ -42,7 +40,6 @@ export class SealedBidAuctionApiServer {
             this.logger.warn("API server is already running");
             return;
         }
-
         const solverPriceBook = this.solverPriceBook;
         const authenticatedSolvers = this.authenticatedSolvers;
 
@@ -191,6 +188,6 @@ export class SealedBidAuctionApiServer {
             orderData
         }
 
-        this.server?.publish('intent-auction', `[${result.settlementReceiverAddress}] won auction on chain [${chainId}] : ${JSON.stringify(result)}`);
+        this.server?.publish('intent-auction', `[${result.settlementReceiverAddress}] won auction on chain [${chainId}] : ${serialize(result)}`);
     }
 }

@@ -1,11 +1,14 @@
 import {afterAll, beforeAll, beforeEach, describe, it, expect} from "@jest/globals";
 
-import {SealedBidAuctionApiServer} from "../src/api/SealedBidAuctionApiServer.ts";
-import {PRICE_LIST_WITH_GAP_IN_RANGES, USERNAME, PRICE_LIST_WITH_TWO_ITEMS, PRIVATE_KEY, SOLVER_ADDRESS} from "./constants.ts";
+import {AuctionApiServer} from "../src/api/AuctionApiServer.ts";
+import {PRICE_LIST_WITH_GAP_IN_RANGES, USERNAME, PRICE_LIST_WITH_TWO_ITEMS} from "./constants.ts";
+import {SolverPriceBook} from "../src/core/SolverPriceBook.ts";
+import {AuctionService} from "../src/core/AuctionService.ts";
 import {signMessage} from "viem/accounts";
 
 const wsPort = 3080;
-const httpServer = new SealedBidAuctionApiServer();
+const solverPriceBook  = new SolverPriceBook();
+const httpServer = new AuctionApiServer(solverPriceBook, new AuctionService(solverPriceBook));
 let socketClosed = true;
 let socket: WebSocket;
 let socketMessage: string | null;

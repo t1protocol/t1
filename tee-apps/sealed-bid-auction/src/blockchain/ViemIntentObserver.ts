@@ -3,25 +3,23 @@ import {
     createPublicClient,
     decodeAbiParameters,
     http,
-    parseAbi,
-    parseAbiItem,
-    parseAbiParameters,
     parseEventLogs,
+    trim,
     type WatchEventOnLogsParameter
 } from "viem"
 
 import type {AuctionService} from "../core/AuctionService.ts";
 import {
-    convertSolidityOrderDataToTypescriptOrderData,
-    FILL_INSTRUCTION_ABI_PARAMETERS,
-    OPEN_INTENT_EVENT_SIGNATURE,
-    ORDER_DATA_ABI_PARAMETERS,
+    OPEN_INTENT_ABI_EVENT,
+    ORDER_DATA_ABI_PARAMETERS_WRAPPED_IN_TUPLE,
     type OrderData,
-    RESOLVER_ORDER_ABI_PARAMETERS
 } from "./types.ts";
-import type {SealedBidAuctionApiServer} from "../api/SealedBidAuctionApiServer.ts";
+import type {AuctionApiServer} from "../api/AuctionApiServer.ts";
+import { serialize, WinstonLogger} from "../utils/WinstonLogger.ts";
 
 export class ViemIntentObserver {
+    private logger: WinstonLogger;
+
     private readonly client;
 
     constructor(rpcUrl: string,
@@ -29,9 +27,10 @@ export class ViemIntentObserver {
                 pollingInterval: number,
                 private readonly t1Erc7683ContractAddress: `0x${string}`,
                 private readonly auctionService: AuctionService,
-                private readonly apiServer: SealedBidAuctionApiServer,
+                private readonly apiServer: AuctionApiServer,
                 private readonly auctionPollingInterval: number = 500
     ) {
+        this.logger = new WinstonLogger(`${ViemIntentObserver.name}[${chain.name}]`);
         this.client = createPublicClient({
             chain,
             transport: http(rpcUrl),
@@ -42,38 +41,60 @@ export class ViemIntentObserver {
     public start() {
         this.client.watchEvent({
             address: this.t1Erc7683ContractAddress,
-            event: parseAbiItem(OPEN_INTENT_EVENT_SIGNATURE),
+            event: OPEN_INTENT_ABI_EVENT,
             onLogs: logs => this.processIntentLogs(logs)
-        })
+        });
+
+        this.logger.info(`Watching for Open Intent events on chain [${this.chain.name}] and contract [${this.t1Erc7683ContractAddress}]`);
     }
 
     private async processIntentLogs(logs: WatchEventOnLogsParameter) {
+        this.logger.info('Intent was Open-ed!');
+
         const parsedLogs = parseEventLogs({
-            abi: parseAbi([OPEN_INTENT_EVENT_SIGNATURE]),
+            abi: [OPEN_INTENT_ABI_EVENT],
             logs
         });
 
-        const auctionPromises: Promise<void>[] = [];
-
         for (const order of parsedLogs) {
-            const resolvedOrder = decodeAbiParameters(parseAbiParameters(RESOLVER_ORDER_ABI_PARAMETERS), order.args.resolvedOrder);
-            const fillInstructions = decodeAbiParameters(parseAbiParameters(FILL_INSTRUCTION_ABI_PARAMETERS), resolvedOrder[7] as `0x${string}`);
-            const orderDatas = fillInstructions.map(fillInstruction => decodeAbiParameters(parseAbiParameters(ORDER_DATA_ABI_PARAMETERS), fillInstruction as `0x${string}`));
+            for (const fillInstruction of order.args.resolvedOrder.fillInstructions) {
+                const [decodedOrder] = decodeAbiParameters(ORDER_DATA_ABI_PARAMETERS_WRAPPED_IN_TUPLE, fillInstruction.originData);
 
-            for (const orderData of orderDatas.map(solidityOrderData => convertSolidityOrderDataToTypescriptOrderData(solidityOrderData))) {
-                auctionPromises.push(this.runAuctionAndNotifySolver(orderData, order.args.orderId));
+                const orderData = decodedOrder as OrderData;
+
+                await this.runAuctionAndNotifySolver({
+                    sender: trim(orderData.sender),
+                    recipient: trim(orderData.recipient),
+                    inputToken: trim(orderData.inputToken),
+                    outputToken: trim(orderData.outputToken),
+                    amountIn: BigInt(orderData.amountIn),
+                    minAmountOut: BigInt(orderData.minAmountOut),
+                    senderNonce: Number(orderData.senderNonce),
+                    originDomain: orderData.originDomain,
+                    destinationDomain: orderData.destinationDomain,
+                    destinationSettler: trim(orderData.destinationSettler),
+                    fillDeadline: orderData.fillDeadline,
+                    closedAuction: orderData.closedAuction,
+                    data: orderData.data,
+                }, order.args.orderId);
             }
         }
-
-        await Promise.all(auctionPromises);
     }
 
     private async runAuctionAndNotifySolver(orderData: OrderData, orderId: string) {
-        while (Date.now() < orderData.fillDeadline) {
+        this.logger.info(`Running auction for order ${orderId}`);
+
+        this.logger.debug(`Running auction for orderData ${serialize(orderData)}`);
+
+        while (Date.now() / 1000 < orderData.fillDeadline) {
             const winningPrice = this.auctionService.auction(orderData.inputToken, orderData.outputToken, orderData.amountIn);
+
+            this.logger.debug(`Auction winner: ${serialize(winningPrice)}`);
 
             if (winningPrice !== null && winningPrice.amountOut >= orderData.minAmountOut) {
                 this.apiServer.publishAuctionResult(winningPrice!, orderId, orderData, this.chain.id);
+
+                this.logger.info(`I finished auction for order ${orderId} and notified solvers!`);
                 break;
             }
             
