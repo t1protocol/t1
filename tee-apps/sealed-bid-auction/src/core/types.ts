@@ -1,9 +1,9 @@
 export type PriceListItem = {
     direction: Direction;
     intervals: Interval[];
-    srcTokenAddresses: string[];
-    dstTokenAddresses: string[];
-    settlementReceiverAddress: string;
+    srcTokenAddresses: `0x${string}`[];
+    dstTokenAddresses: `0x${string}`[];
+    settlementReceiverAddress: `0x${string}`;
 }
 
 export enum Direction {

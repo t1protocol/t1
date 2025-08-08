@@ -2,9 +2,12 @@ import {afterAll, beforeAll, beforeEach, describe, it, expect} from "@jest/globa
 
 import {AuctionApiServer} from "../src/api/AuctionApiServer.ts";
 import {PRICE_LIST_WITH_GAP_IN_RANGES, USERNAME, PRICE_LIST_WITH_TWO_ITEMS} from "./constants.ts";
+import {SolverPriceBook} from "../src/core/SolverPriceBook.ts";
+import {AuctionService} from "../src/core/AuctionService.ts";
 
 const wsPort = 3080;
-const httpServer = new AuctionApiServer();
+const solverPriceBook  = new SolverPriceBook();
+const httpServer = new AuctionApiServer(solverPriceBook, new AuctionService(solverPriceBook));
 let socketClosed = true;
 let socket: WebSocket;
 let socketMessage: string | null;

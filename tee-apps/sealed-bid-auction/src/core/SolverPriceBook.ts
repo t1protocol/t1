@@ -1,6 +1,6 @@
 import { List as ImmutableList } from 'immutable';
 
-import {type PriceListItem} from "./types.ts";
+import {type Interval, type PriceListItem} from "./types.ts";
 
 type PriceBookEntry = {
     timestamp: number;
@@ -14,7 +14,7 @@ export class SolverPriceBook {
 
     public getCurrentPrices(): ImmutableList<PriceListItem[]> {
         return ImmutableList(
-            this.prices.entries()
+            this.prices.entries().toArray()
                 .filter(([_key, value]) => value.timestamp + this.priceListTTL > Date.now())
                 .map(([_key, value]) => value.priceList)
         );
@@ -29,7 +29,16 @@ export class SolverPriceBook {
     }
 
     private validatePriceList(priceBlob: string): PriceListItem[] {
-        const priceList: PriceListItem[] = JSON.parse(priceBlob);
+        let priceList: PriceListItem[] = JSON.parse(priceBlob);
+        priceList = priceList.map(item => {
+            return {
+                direction: item.direction,
+                intervals: item.intervals.map(interval => this.parseInterval(interval)),
+                srcTokenAddresses: item.srcTokenAddresses,
+                dstTokenAddresses: item.dstTokenAddresses,
+                settlementReceiverAddress: item.settlementReceiverAddress,
+            };
+        });
 
         priceList.forEach((priceListItem) => {
             const intervals = priceListItem.intervals;
@@ -41,5 +50,17 @@ export class SolverPriceBook {
         });
 
         return priceList;
+    }
+
+    private parseInterval(interval: Interval): Interval {
+        return {
+            range: {
+                min: BigInt(interval.range.min),
+                max: BigInt(interval.range.max),
+            },
+            rangeUnit: interval.rangeUnit,
+            price: BigInt(interval.price),
+            priceUnit: interval.priceUnit,
+        };
     }
 }
