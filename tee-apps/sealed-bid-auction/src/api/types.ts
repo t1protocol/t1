@@ -39,3 +39,10 @@ export interface AuctionResult {
     orderId: string;
     orderData: OrderData;
 }
+
+export interface AuthAttempt {
+    username: string;
+    blobHeader: string;
+    nonce: string;
+    sig: `0x${string}`;
+}

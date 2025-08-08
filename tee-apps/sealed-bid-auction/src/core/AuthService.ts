@@ -1,7 +1,40 @@
 import crypto from "node:crypto";
+import {hashMessage, recoverAddress} from "viem";
+import type {AuthAttempt} from "../api/types.ts";
 
 export class AuthService {
+    private readonly authenticatedSolvers: Set<string> = new Set();
     private readonly nonces: Map<string, string> = new Map();
+
+    public isLoggedIn(solverAddress: string) {
+        return this.authenticatedSolvers.has(solverAddress);
+    }
+
+    public async login(authAttempt: AuthAttempt): Promise<{solverAddress: string, username: string} | null> {
+        const key = authAttempt.username.toLowerCase();
+
+        let solverAddress: string;
+        try {
+            const hash = hashMessage(authAttempt.blobHeader);
+            solverAddress = await recoverAddress({ hash, signature: authAttempt.sig });
+        } catch (err) {
+            return null;
+        }
+
+        solverAddress = solverAddress.toLowerCase();
+        console.log(`WebSocket auth success for user "${authAttempt.username}" with address ${solverAddress}`);
+
+        if (!this.consumeNonce(key, authAttempt.nonce)) {
+            return null;
+        }
+        this.authenticatedSolvers.add(solverAddress);
+
+        return {solverAddress, username: authAttempt.username};
+    }
+
+    public logout(solverAddress: string) {
+        this.authenticatedSolvers.delete(solverAddress);
+    }
 
     public nextNonce(username: string): string {
         const key = username.toLowerCase();

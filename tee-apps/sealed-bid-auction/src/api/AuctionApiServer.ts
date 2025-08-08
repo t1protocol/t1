@@ -1,11 +1,10 @@
 import type {BunRequest, Server} from "bun";
-import {hashMessage, recoverAddress} from "viem";
 
 import {AuctionController} from "./AuctionController.ts";
 import {serialize, WinstonLogger} from "../utils/WinstonLogger.ts";
 import {SolverPriceBook} from "../core/SolverPriceBook.ts";
 import {AuctionService, type Price} from "../core/AuctionService.ts";
-import type {AuctionResult, AuthBlob} from "./types.ts";
+import type {AuctionResult} from "./types.ts";
 import type {OrderData} from "../blockchain/types.ts";
 import type {PriceListItem} from "../core/types.ts";
 import {AuthController} from "./AuthController.ts";
@@ -25,7 +24,6 @@ export class AuctionApiServer {
     private readonly authService;
 
     private server: Server | null = null;
-    private readonly authenticatedSolvers: Set<string> = new Set();
 
     public constructor(private readonly solverPriceBook: SolverPriceBook, auctionService: AuctionService) {
         this.auctionController = new AuctionController(auctionService);
@@ -39,7 +37,7 @@ export class AuctionApiServer {
             return;
         }
         const solverPriceBook = this.solverPriceBook;
-        const authenticatedSolvers = this.authenticatedSolvers;
+        const authService = this.authService;
 
         // @ts-ignore
         this.server = Bun.serve<AuthData>({
@@ -57,48 +55,28 @@ export class AuctionApiServer {
                 if (req.headers.get("Upgrade")?.toLowerCase() === "websocket") {
                     const blobHeader = req.headers.get("X-Auth-Blob");
                     const sig = req.headers.get("X-Auth-Signature") as `0x${string}`;
-                    if (!blobHeader || !sig) {
+                    const authAttempt = this.authController.validateAuthAttempt(blobHeader, sig);
+                    if (!authAttempt) {
+                        return new Response(
+                            `Incorrect login data; blobheader=[${blobHeader}] or sig=[${sig}]`,
+                            { status: 400 }
+                        );
+                    }
+                    const authenticatedUser = await this.authService.login(authAttempt);
+
+                    if (!authenticatedUser) {
                         return new Response("Unauthorized", { status: 401 });
                     }
-
-                    let authBlob: AuthBlob;
-                    try {
-                        authBlob = JSON.parse(blobHeader) as AuthBlob;
-                    } catch {
-                        return new Response("Unauthorized", { status: 401 });
-                    }
-
-                    const { username, nonce } = authBlob;
-                    if (!username || !nonce) {
-                        return new Response("Unauthorized", { status: 401 });
-                    }
-                    const key = username.toLowerCase();
-
-                    let solverAddress: string;
-                    try {
-                        const hash = hashMessage(blobHeader);
-                        solverAddress = await recoverAddress({ hash, signature: sig });
-                    } catch (err) {
-                        console.error("Signature verification failed:", err);
-                        return new Response("Unauthorized", { status: 401 });
-                    }
-
-                    solverAddress = solverAddress.toLowerCase();
-                    console.log(`WebSocket auth success for user "${username}" with address ${solverAddress}`);
-
-                    if (!this.authService.consumeNonce(key, nonce)) {
-                        return new Response("Unauthorized", { status: 401 });
-                    }
-                    authenticatedSolvers.add(solverAddress);
 
                     const success = server.upgrade(req, {
-                        data: { username, solverAddress }
+                        data: { username: authenticatedUser.username, solverAddress: authenticatedUser.solverAddress }
                     });
                     if (success) {
                         return undefined;
                     }
 
-                    authenticatedSolvers.delete(solverAddress);
+                    this.authService.logout(authenticatedUser.solverAddress);
+
                     return new Response("WebSocket Upgrade failed", { status: 500 });
                 }
 
@@ -115,7 +93,7 @@ export class AuctionApiServer {
                 message(ws, message) {
                     try {
                         const addr = ws.data.solverAddress as `0x${string}`;
-                        if (!authenticatedSolvers.has(addr)) {
+                        if (!authService.isLoggedIn(addr)) {
                             ws.send('Error: not authenticated');
                             return;
                         }
@@ -139,7 +117,7 @@ export class AuctionApiServer {
                     const user = ws.data.username;
                     ws.unsubscribe('intent-auction');
                     console.log(`🔒 Solver disconnected: ${user} (${addr})`);
-                    authenticatedSolvers.delete(addr);
+                    authService.logout(addr);
                 },
             },
         });
