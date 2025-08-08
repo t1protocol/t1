@@ -1,16 +1,22 @@
 import type {PriceListItem} from "../core/types.ts";
-import {serialize} from "../utils/WinstonLogger.ts";
+import {serialize, WinstonLogger} from "../utils/WinstonLogger.ts";
 
 export class SolverWebSocketClient {
+    private logger!: WinstonLogger;
 
     private socket: WebSocket | null;
 
-    constructor(private readonly hostName: string = 'localhost', private readonly serverPort: number) {
+    constructor(private readonly serverPort: number, private readonly hostName: string = 'localhost') {
         this.socket = null;
     }
 
-    public async start(username: string, socketResponseConsumer: (sockerResponse: string) => void) {
-        this.socket = new WebSocket(`ws://${this.hostName}:${this.serverPort}/`, {
+    public async start(username: string, socketResponseConsumer: (sockerResponse: string) => void, tls: boolean) {
+        this.logger = new WinstonLogger(`SolverWebSocketClient[${username}]`);
+
+        const serverUrl = `ws${tls ? 's' : ''}://${this.hostName}:${this.serverPort}/`;
+
+        this.logger.info(`Connecting to server ${serverUrl}`);
+        this.socket = new WebSocket(serverUrl, {
             headers: {
                 Authorization: username
             }
@@ -20,6 +26,8 @@ export class SolverWebSocketClient {
         };
 
         await this.waitForSocketState(WebSocket.OPEN);
+
+        this.logger.info(`Connected client ${username}`);
     }
 
     public async stop() {
@@ -29,6 +37,8 @@ export class SolverWebSocketClient {
             await this.waitForSocketState(WebSocket.CLOSED);
 
             this.socket = null;
+
+            this.logger.info("Stopped client");
         }
     }
 
@@ -38,6 +48,8 @@ export class SolverWebSocketClient {
         }
 
         this.socket.send(serialize(message));
+
+        this.logger.info("Sent message");
     }
 
     private async waitForSocketState(state: 0 | 1 | 2 | 3, timeoutMs: number = 100) {

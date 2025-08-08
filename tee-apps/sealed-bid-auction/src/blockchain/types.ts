@@ -1,44 +1,39 @@
 export type OrderData = {
-    sender: string;
-    recipient: string;
-    inputToken: string;
-    outputToken: string;
+    sender: `0x${string}`;
+    recipient: `0x${string}`;
+    inputToken: `0x${string}`;
+    outputToken: `0x${string}`;
     amountIn: bigint;
     minAmountOut: bigint;
-    senderNonce: bigint;
-    originDomain: bigint;
-    destinationDomain: bigint;
-    destinationSettler: string;
-    fillDeadline: bigint;
+    senderNonce: number;
+    originDomain: number;
+    destinationDomain: number;
+    destinationSettler: `0x${string}`;
+    fillDeadline: number;
     closedAuction: boolean;
-    data: string;
-}
-
-export const convertSolidityOrderDataToTypescriptOrderData = (
-    parsedAbi: readonly [`0x${string}`, `0x${string}`, `0x${string}`, `0x${string}`,
-        bigint, bigint, bigint, bigint, bigint, `0x${string}`, bigint, boolean, `0x${string}`]): OrderData => {
-    return {
-        sender: parsedAbi[0],
-        recipient: parsedAbi[1],
-        inputToken: parsedAbi[2],
-        outputToken: parsedAbi[3],
-        amountIn: parsedAbi[4],
-        minAmountOut: parsedAbi[5],
-        senderNonce: parsedAbi[6],
-        originDomain: parsedAbi[7],
-        destinationDomain: parsedAbi[8],
-        destinationSettler: parsedAbi[9],
-        fillDeadline: parsedAbi[10],
-        closedAuction: parsedAbi[11],
-        data: parsedAbi[12]
-    };
+    data: `0x${string}`;
 };
 
-export const OPEN_INTENT_EVENT_SIGNATURE = 'event Open(bytes32 indexed orderId, bytes32 resolvedOrder)';
+export const OPEN_INTENT_ABI_EVENT = {"name":"Open","type":"event","inputs":[{"name":"orderId","type":"bytes32","indexed":true},{"name":"resolvedOrder","type":"tuple","indexed":false,"components":[{"name":"user","type":"address"},{"name":"originChainId","type":"uint256"},{"name":"openDeadline","type":"uint32"},{"name":"fillDeadline","type":"uint32"},{"name":"orderId","type":"bytes32"},{"name":"maxSpent","type":"tuple[]","components":[{"name":"token","type":"bytes32"},{"name":"amount","type":"uint256"},{"name":"recipient","type":"bytes32"},{"name":"chainId","type":"uint256"}]},{"name":"minReceived","type":"tuple[]","components":[{"name":"token","type":"bytes32"},{"name":"amount","type":"uint256"},{"name":"recipient","type":"bytes32"},{"name":"chainId","type":"uint256"}]},{"name":"fillInstructions","type":"tuple[]","components":[{"name":"destinationChainId","type":"uint256"},{"name":"destinationSettler","type":"bytes32"},{"name":"originData","type":"bytes"}]}]}]}
 
-export const RESOLVER_ORDER_ABI_PARAMETERS = 'string user, uint originChainId, uint openDeadline, ' +
- 'uint fillDeadline, bytes orderId, bytes maxSpent, bytes minReceived, bytes fillInstructions';
-
-export const FILL_INSTRUCTION_ABI_PARAMETERS = 'bytes[]';
-
-export const ORDER_DATA_ABI_PARAMETERS = 'bytes sender, bytes recipient, bytes inputToken, bytes outputToken, uint amountIn, uint minAmountOut, uint senderNonce, uint originDomain, uint destinationDomain, bytes destinationSettler, uint fillDeadline, bool closedAuction, bytes data';
+export const ORDER_DATA_ABI_PARAMETERS_WRAPPED_IN_TUPLE = [
+    {
+        type: 'tuple',
+        name: 'order',
+        components: [
+            { name: 'sender', type: 'bytes32' },
+            { name: 'recipient', type: 'bytes32' },
+            { name: 'inputToken', type: 'bytes32' },
+            { name: 'outputToken', type: 'bytes32' },
+            { name: 'amountIn', type: 'uint256' },
+            { name: 'minAmountOut', type: 'uint256' },
+            { name: 'senderNonce', type: 'uint256' },
+            { name: 'originDomain', type: 'uint32' },
+            { name: 'destinationDomain', type: 'uint32' },
+            { name: 'destinationSettler', type: 'bytes32' },
+            { name: 'fillDeadline', type: 'uint32' },
+            { name: 'closedAuction', type: 'bool' },
+            { name: 'data', type: 'bytes' },
+        ],
+    },
+];

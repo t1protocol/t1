@@ -3,6 +3,7 @@ import Immutable from "immutable";
 import type {AuctionQuote, AuctionRequest} from "../api/types.ts";
 import type {SolverPriceBook} from "./SolverPriceBook.ts";
 import type {PriceListItem} from "./types.ts";
+import {serialize, WinstonLogger} from "../utils/WinstonLogger.ts";
 
 export type Price = {
     amountOut: bigint;
@@ -10,6 +11,8 @@ export type Price = {
 }
 
 export class AuctionService {
+    private logger = new WinstonLogger(AuctionService.name);
+
     constructor(private readonly solverPricebook: SolverPriceBook) {}
 
     public preauction(request: AuctionRequest): AuctionQuote | null {
@@ -30,6 +33,8 @@ export class AuctionService {
 
     public auction(srcTokenAddress: string, dstTokenAddress: string, amountIn: bigint): Price | null {
         const pricesForAskedTokens = this.findPricesForAskedTokens(srcTokenAddress, dstTokenAddress, amountIn);
+
+        this.logger.debug(`Found these prices for asked tokens: ${serialize(pricesForAskedTokens)}`);
 
         return this.chooseBestPrice(pricesForAskedTokens);
     }
@@ -56,12 +61,17 @@ export class AuctionService {
     }
 
     private findPricesForAskedTokens(srcTokenAddress: string, dstTokenAddress: string, amountIn: bigint): Immutable.List<Price> {
-        return this.solverPricebook.getCurrentPrices().flatMap(
+        const currentPrices = this.solverPricebook.getCurrentPrices();
+        this.logger.debug(`Current prices: ${serialize(currentPrices)}`);
+
+        return currentPrices.flatMap(
             priceItems => priceItems.filter(
-                priceItem =>
-                    priceItem.srcTokenAddresses.includes(srcTokenAddress) &&
-                    priceItem.dstTokenAddress.includes(dstTokenAddress) &&
-                    this.getFinalIntervalIndex(priceItem, amountIn) !== undefined
+                priceItem => {
+                    this.logger.debug(`Checking if src=[${srcTokenAddress}], dst=[${dstTokenAddress}] amountIn=[${amountIn}] is included in [${serialize(priceItem)}]`);
+                    return priceItem.srcTokenAddresses.map(addr => addr.toLowerCase()).includes(srcTokenAddress.toLowerCase()) &&
+                            priceItem.dstTokenAddresses.map(addr => addr.toLowerCase()).includes(dstTokenAddress.toLowerCase()) &&
+                            this.getFinalIntervalIndex(priceItem, amountIn) !== undefined;
+                }
             ).map(priceItem => {
                 return {
                     amountOut: this.calculateAmountOut(priceItem, amountIn),

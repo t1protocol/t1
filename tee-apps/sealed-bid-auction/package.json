@@ -1,7 +1,11 @@
 {
   "name": "sealed-bid-auction",
-  "module": "index.ts",
+  "module": "script/server.ts",
   "type": "module",
+  "scripts": {
+    "server": "bun run script/server.ts",
+    "bot": "bun run script/solverBot.ts"
+  },
   "private": true,
   "devDependencies": {
     "@types/bun": "latest"
