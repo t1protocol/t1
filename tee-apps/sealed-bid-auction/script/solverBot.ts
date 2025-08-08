@@ -5,7 +5,7 @@ dotenv.config();
 import {SolverWebSocketClient} from "../src/bot/SolverWebSocketClient.ts";
 import {ATTRACTIVE_ARBITRUM_PRICE, ATTRACTIVE_BASE_PRICE} from "../src/bot/samplePriceLists.ts";
 
-const WS_URL = prfix: jkocess.env.WS_URL as string;
+const WS_URL = process.env.WS_URL as string;
 
 const tokkaSolver = new SolverWebSocketClient(WS_URL);
 const ecoSolver = new SolverWebSocketClient(WS_URL);
