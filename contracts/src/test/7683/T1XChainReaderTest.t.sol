@@ -660,4 +660,36 @@ contract T1XChainReaderTest is T1XChainReaderBaseTestSetup {
 
         assertEq(feeRecipient.balance, preBalance, "Fee recipient balance should not change when no fees");
     }
+
+    function test_verifyProofOfReadWithResult() public {
+        (, bytes32 orderId, bytes32 requestId) = _openAndFillOrder();
+        bytes memory result = abi.encode(l2T1ERC7683.getFilledOrderStatus(orderId));
+        (bytes32 root, bytes memory proof) = _generateMerkleTree(requestId, result, position);
+
+        originReader.commitProofOfReadRoot(batchIndex, root);
+
+        // Encode the proof without the result (verifyProofOfReadWithResult expects this format)
+        bytes memory encodedProofOfRead = abi.encode(batchIndex, requestId, position, proof);
+        bytes32 returnedRequestId = originReader.verifyProofOfReadWithResult(encodedProofOfRead, result);
+
+        assertEq(returnedRequestId, requestId, "Returned request ID should match expected");
+    }
+
+    function test_verifyProofOfReadWithResult_InvalidProof() public {
+        (, bytes32 orderId, bytes32 requestId) = _openAndFillOrder();
+        bytes memory result = abi.encode(l2T1ERC7683.getFilledOrderStatus(orderId));
+        (bytes32 root,) = _generateMerkleTree(requestId, result, position);
+
+        originReader.commitProofOfReadRoot(batchIndex, root);
+
+        // Create an invalid proof
+        bytes memory invalidProof = abi.encodePacked(
+            bytes32(0x1111111111111111111111111111111111111111111111111111111111111111),
+            bytes32(0x2222222222222222222222222222222222222222222222222222222222222222)
+        );
+        bytes memory encodedProofOfRead = abi.encode(batchIndex, requestId, position, invalidProof);
+
+        vm.expectRevert(T1XChainReader.InvalidProof.selector);
+        originReader.verifyProofOfReadWithResult(encodedProofOfRead, result);
+    }
 }
