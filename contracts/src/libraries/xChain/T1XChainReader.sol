@@ -220,7 +220,10 @@ contract T1XChainReader is IT1XChainReader, OwnableUpgradeable, ReentrancyGuardU
         uint256 position,
         bytes memory result,
         bytes memory proof
-    ) internal view {
+    )
+        internal
+        view
+    {
         bytes32 root = proofOfReadRoots[batchIndex];
         bytes32 xChainReadResultHash = keccak256(result);
         bytes32 leaf = keccak256(abi.encodePacked(xChainReadResultHash, requestId));
