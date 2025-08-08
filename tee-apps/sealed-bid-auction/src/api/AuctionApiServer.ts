@@ -1,5 +1,4 @@
-import type {Server} from "bun";
-import crypto from "node:crypto";
+import type {BunRequest, Server} from "bun";
 import {hashMessage, recoverAddress} from "viem";
 
 import {AuctionController} from "./AuctionController.ts";
@@ -9,6 +8,8 @@ import {AuctionService, type Price} from "../core/AuctionService.ts";
 import type {AuctionResult, AuthBlob} from "./types.ts";
 import type {OrderData} from "../blockchain/types.ts";
 import type {PriceListItem} from "../core/types.ts";
+import {AuthController} from "./AuthController.ts";
+import {AuthService} from "../core/AuthService.ts";
 
 type AuthData = {
     username: string;
@@ -19,20 +20,17 @@ export class AuctionApiServer {
     private logger = new WinstonLogger(AuctionApiServer.name);
 
     private readonly auctionController;
+    private readonly authController;
+
+    private readonly authService;
 
     private server: Server | null = null;
-    private readonly nonces: Map<string, string> = new Map();
     private readonly authenticatedSolvers: Set<string> = new Set();
-
-    private consumeNonce(key: string, expected: string): boolean {
-        const current = this.nonces.get(key);
-        if (!current || current !== expected) return false;
-        this.nonces.delete(key);
-        return true;
-    }
 
     public constructor(private readonly solverPriceBook: SolverPriceBook, auctionService: AuctionService) {
         this.auctionController = new AuctionController(auctionService);
+        this.authService = new AuthService();
+        this.authController = new AuthController(this.authService);
     }
 
     public async start(port: number, tls: boolean) {
@@ -43,25 +41,6 @@ export class AuctionApiServer {
         const solverPriceBook = this.solverPriceBook;
         const authenticatedSolvers = this.authenticatedSolvers;
 
-        const routes = {
-            "/healthcheck": new Response("OK"),
-            "/api/currentNonce": (req: Request) => {
-                const username = new URL(req.url).searchParams.get("username");
-                if (!username) {
-                    return new Response("Missing username", { status: 400 });
-                }
-                const key = username.toLowerCase();
-                let nonce = this.nonces.get(key);
-                if (!nonce) {
-                    nonce = crypto.randomUUID();
-                    this.nonces.set(key, nonce);
-                }
-                const body = JSON.stringify({ nonce });
-                return new Response(body, { status: 200, headers: { "Content-Type": "application/json" } });
-            },
-            "/api/preauction": (req: Request) => this.auctionController.preauction(req),
-        };
-
         // @ts-ignore
         this.server = Bun.serve<AuthData>({
             port,
@@ -69,11 +48,15 @@ export class AuctionApiServer {
                 key: Bun.file("./key.pem"),
                 cert: Bun.file("./cert.pem"),
             } : {},
-            routes,
+            routes: {
+                "/healthcheck": new Response("OK"),
+                "/api/currentNonce": (req: BunRequest) => this.authController.currentNonce(req),
+                "/api/preauction": (req: BunRequest) => this.auctionController.preauction(req)
+            },
             fetch: async (req, server) => {
                 if (req.headers.get("Upgrade")?.toLowerCase() === "websocket") {
                     const blobHeader = req.headers.get("X-Auth-Blob");
-                    const sig = req.headers.get("X-Auth-Signature");
+                    const sig = req.headers.get("X-Auth-Signature") as `0x${string}`;
                     if (!blobHeader || !sig) {
                         return new Response("Unauthorized", { status: 401 });
                     }
@@ -103,10 +86,9 @@ export class AuctionApiServer {
                     solverAddress = solverAddress.toLowerCase();
                     console.log(`WebSocket auth success for user "${username}" with address ${solverAddress}`);
 
-                    if (!this.consumeNonce(key, nonce)) {
+                    if (!this.authService.consumeNonce(key, nonce)) {
                         return new Response("Unauthorized", { status: 401 });
                     }
-                    this.nonces.set(key, crypto.randomUUID());
                     authenticatedSolvers.add(solverAddress);
 
                     const success = server.upgrade(req, {
@@ -118,12 +100,6 @@ export class AuctionApiServer {
 
                     authenticatedSolvers.delete(solverAddress);
                     return new Response("WebSocket Upgrade failed", { status: 500 });
-                }
-
-                const pathname = new URL(req.url).pathname;
-                const route = routes[pathname as keyof typeof routes];
-                if (route) {
-                    return route instanceof Response ? route : route(req);
                 }
 
                 return new Response("Not Found", { status: 404 });
@@ -138,7 +114,7 @@ export class AuctionApiServer {
                 },
                 message(ws, message) {
                     try {
-                        const addr = ws.data.solverAddress;
+                        const addr = ws.data.solverAddress as `0x${string}`;
                         if (!authenticatedSolvers.has(addr)) {
                             ws.send('Error: not authenticated');
                             return;
