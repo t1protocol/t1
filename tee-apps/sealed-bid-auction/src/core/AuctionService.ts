@@ -16,7 +16,7 @@ export class AuctionService {
     constructor(private readonly solverPricebook: SolverPriceBook) {}
 
     public preauction(request: AuctionRequest): AuctionQuote | null {
-        const bestPrice = this.auction(request.srcTokenAddress, request.dstTokenAddress, request.amountIn);
+        const bestPrice = this.auction(request.srcTokenAddress, request.dstTokenAddress, BigInt(request.amountIn));
 
         if (!bestPrice) {
             return null;
