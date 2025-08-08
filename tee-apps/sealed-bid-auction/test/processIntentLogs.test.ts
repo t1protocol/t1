@@ -31,6 +31,7 @@ const observer = new ViemIntentObserver(
 );
 
 beforeAll(async () => {
+  vi.spyOn(Date, "now").mockReturnValue(1754447574000);
   // call the freshly‑public method with the captured logs
   await observer.processIntentLogs(logs as any);
 });
