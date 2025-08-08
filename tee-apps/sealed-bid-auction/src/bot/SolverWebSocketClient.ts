@@ -6,17 +6,15 @@ export class SolverWebSocketClient {
 
     private socket: WebSocket | null;
 
-    constructor(private readonly serverPort: number, private readonly hostName: string = 'localhost') {
+    constructor(private readonly serverUrl: string) {
         this.socket = null;
     }
 
-    public async start(username: string, socketResponseConsumer: (sockerResponse: string) => void, tls: boolean) {
+    public async start(username: string, socketResponseConsumer: (sockerResponse: string) => void) {
         this.logger = new WinstonLogger(`SolverWebSocketClient[${username}]`);
 
-        const serverUrl = `ws${tls ? 's' : ''}://${this.hostName}:${this.serverPort}/`;
-
-        this.logger.info(`Connecting to server ${serverUrl}`);
-        this.socket = new WebSocket(serverUrl, {
+        this.logger.info(`Connecting to server ${this.serverUrl}`);
+        this.socket = new WebSocket(this.serverUrl, {
             headers: {
                 Authorization: username
             }
