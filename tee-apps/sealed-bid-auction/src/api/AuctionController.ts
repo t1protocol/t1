@@ -22,7 +22,7 @@ export class AuctionController {
             if (auctionQuote) {
                 return new Response(serialize(auctionQuote), {status: 200, headers: CORS_HEADERS});
             } else {
-                return new Response("No quote found for this pair", {status: 204, headers: CORS_HEADERS});
+                return new Response(null, {status: 204, headers: CORS_HEADERS});
             }
 
         } catch (e: any) {
