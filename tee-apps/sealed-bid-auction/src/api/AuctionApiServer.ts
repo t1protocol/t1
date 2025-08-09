@@ -38,8 +38,8 @@ export class AuctionApiServer {
             } : {},
             routes: {
                 "/healthcheck": new Response("OK"),
-                "/api/preauction": {
-                    GET: _req => new Response("Use POST", {status: 405}),
+                "/api/`preauction": {
+                    GET: _req => this.auctionController.wrongMethodError(),
                     POST: async (req) => await this.auctionController.preauction(req)
                 }
             },

@@ -29,4 +29,8 @@ export class AuctionController {
             return new Response(`Invalid request: ${e}`, {status: 400, headers: CORS_HEADERS});
         }
     }
+
+    public wrongMethodError(): Response {
+        return new Response("Use POST", {status: 405, headers: CORS_HEADERS});
+    }
 }
