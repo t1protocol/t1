@@ -22,12 +22,6 @@ export class ViemAuctionCommiter {
         this.logger = new WinstonLogger(`${ViemAuctionCommiter.name}[${client.publicClient.chain.name}]`);
     }
 
-    public async test() {
-        const localDomain = await this.t1Erc7683Contract.read.owner!();
-
-        this.logger.info(`I connected to t1erc7683 at address=[${this.t1Erc7683Contract.address}] . I read owner=[${localDomain}] from it.`);
-    }
-
     public async commitWinnerBid(result: AuctionResult): Promise<`0x${string}`> {
         return await this.t1Erc7683Contract.write.commitWinnerBid!([
             result.orderId, {

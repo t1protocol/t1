@@ -55,8 +55,6 @@ async function main() {
     await httpServer.start(Number(process.env.SERVER_PORT as string), USE_TLS);
     arbitrumSepoliaIntentObserver.start();
     baseSepoliaIntentObserver.start();
-    await arbitrumSepoliaAuctionCommiter.test();
-    await baseSepoliaAuctionCommiter.test();
 }
 
 async function stopAll() {
