@@ -60,9 +60,15 @@ export class SolverPriceBook {
                 min: BigInt(interval.range.min),
                 max: BigInt(interval.range.max),
             },
-            rangeUnit: interval.rangeUnit,
+            rangeUnit: {
+                token: interval.rangeUnit.token,
+                decimal: BigInt(interval.rangeUnit.decimal)
+            },
             price: BigInt(interval.price),
-            priceUnit: interval.priceUnit,
+            priceUnit: {
+                token: interval.priceUnit.token,
+                decimal: BigInt(interval.priceUnit.decimal)
+            }
         };
     }
 }
