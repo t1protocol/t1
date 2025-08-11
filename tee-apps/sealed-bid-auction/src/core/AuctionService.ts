@@ -93,11 +93,10 @@ export class AuctionService {
 
         do {
             const currInterval = priceItem.intervals[currentIntervalIndex]!;
-            const mappedRange = this.getRangeInLowestDenomination(currInterval);
             if (currInterval !== priceItem.intervals[finalIndex]!) {
-                amountOut += currInterval.price * (mappedRange.max - (currentIntervalIndex === 0 ? 0n : mappedRange.min));
+                amountOut += currInterval.price * (currInterval.range.max - (currentIntervalIndex === 0 ? 0n : currInterval.range.min));
             } else {
-                amountOut += currInterval.price * (amountIn - (currentIntervalIndex === 0 ? 0n : mappedRange.min) + (finalIndex === 0 ? 0n : 1n));
+                amountOut += currInterval.price * (amountIn - (currentIntervalIndex === 0 ? 0n : currInterval.range.min) + (finalIndex === 0 ? 0n : 1n));
             }
         } while (priceItem.intervals[currentIntervalIndex++] !== priceItem.intervals[finalIndex]);
 
