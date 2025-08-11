@@ -20,13 +20,13 @@ export class ViemIntentObserver {
 
     private readonly client;
 
-    constructor(blockchaintClient: BlockchainClient,
+    constructor(blockchainClient: BlockchainClient,
                 private readonly t1Erc7683ContractAddress: `0x${string}`,
                 private readonly auctionService: AuctionService,
                 private readonly apiServer: AuctionApiServer,
                 private readonly auctionPollingInterval: number = 500
     ) {
-        this.client = blockchaintClient.client;
+        this.client = blockchainClient.publicClient;
         this.logger = new WinstonLogger(`${ViemIntentObserver.name}[${this.client.chain.name}]`);
     }
 

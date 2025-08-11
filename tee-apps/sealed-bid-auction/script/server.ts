@@ -8,6 +8,7 @@ import {SolverPriceBook} from "../src/core/SolverPriceBook.ts";
 import {AuctionService} from "../src/core/AuctionService.ts";
 import {arbitrumSepolia, baseSepolia} from "viem/chains";
 import {BlockchainClient} from "../src/blockchain/BlockchainClient.ts";
+import {ViemAuctionCommiter} from "../src/blockchain/ViemAuctionCommiter.ts";
 
 const USE_TLS = process.env.USE_TLS as string === "true";
 
@@ -18,7 +19,8 @@ const httpServer = new AuctionApiServer(solverPriceBook, auctionService);
 const arbitrumClient = new BlockchainClient(
     process.env.ARBITRUM_SEPOLIA_RPC as string,
     arbitrumSepolia,
-    Number(process.env.ARBITRUM_SEPOLIA_POLLING_INTERVAL_MS as string)
+    Number(process.env.ARBITRUM_SEPOLIA_POLLING_INTERVAL_MS as string),
+    process.env.ARBITRUM_SIGNER_PRIVATE_KEY as `0x${string}`
 );
 const arbitrumSepoliaIntentObserver = new ViemIntentObserver(
     arbitrumClient,
@@ -29,7 +31,8 @@ const arbitrumSepoliaIntentObserver = new ViemIntentObserver(
 const baseClient = new BlockchainClient(
     process.env.BASE_SEPOLIA_RPC as string,
     baseSepolia,
-    Number(process.env.BASE_SEPOLIA_POLLING_INTERVAL_MS as string)
+    Number(process.env.BASE_SEPOLIA_POLLING_INTERVAL_MS as string),
+    process.env.BASE_SIGNER_PRIVATE_KEY as `0x${string}`
 );
 const baseSepoliaIntentObserver = new ViemIntentObserver(
     baseClient,
@@ -37,11 +40,21 @@ const baseSepoliaIntentObserver = new ViemIntentObserver(
     auctionService,
     httpServer
 );
+const arbitrumSepoliaAuctionCommiter = new ViemAuctionCommiter(
+    process.env.ARBITRUM_T1_ERC7683_CONTRACT_ADDRESS as `0x${string}`,
+    arbitrumClient
+);
+const baseSepoliaAuctionCommiter = new ViemAuctionCommiter(
+    process.env.BASE_T1_ERC7683_CONTRACT_ADDRESS as `0x${string}`,
+    baseClient
+);
 
 async function main() {
     await httpServer.start(Number(process.env.SERVER_PORT as string), USE_TLS);
     arbitrumSepoliaIntentObserver.start();
     baseSepoliaIntentObserver.start();
+    await arbitrumSepoliaAuctionCommiter.test();
+    await baseSepoliaAuctionCommiter.test();
 }
 
 async function stopAll() {
