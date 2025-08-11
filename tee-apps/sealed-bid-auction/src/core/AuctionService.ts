@@ -75,7 +75,7 @@ export class AuctionService {
                     this.logger.debug(`Checking if src=[${srcTokenAddress}], dst=[${dstTokenAddress}] amountIn=[${amountIn}] is included in [${serialize(priceItem)}]`);
                     return priceItem.srcTokenAddresses.map(addr => addr.toLowerCase()).includes(srcTokenAddress.toLowerCase()) &&
                             priceItem.dstTokenAddresses.map(addr => addr.toLowerCase()).includes(dstTokenAddress.toLowerCase()) &&
-                            this.getFinalIntervalIndex(priceItem, amountIn) !== undefined;
+                            this.getFinalIntervalIndex(priceItem, amountIn) !== -1;
                 }
             ).map(priceItem => {
                 return {
