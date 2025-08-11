@@ -23,11 +23,17 @@ export class ViemAuctionCommiter {
     }
 
     public async commitWinnerBid(result: AuctionResult): Promise<`0x${string}`> {
-        return await this.t1Erc7683Contract.write.commitWinnerBid!([
-            result.orderId, {
-                settlementReceiver: result.settlementReceiverAddress,
-                amountOut: result.amountOut
-            }
-        ]);
+        try {
+            return await this.t1Erc7683Contract.write.commitWinnerBid!([
+                result.orderId,
+                {
+                    settlementReceiver: result.settlementReceiverAddress,
+                    amountOut: result.amountOut
+                }
+            ]);
+        } catch (error) {
+            this.logger.error(`Failed to commit winner bid for orderId=${result.orderId}`, error);
+            throw error;
+        }
     }
 }
