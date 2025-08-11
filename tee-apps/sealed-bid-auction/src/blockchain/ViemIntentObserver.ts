@@ -84,7 +84,7 @@ export class ViemIntentObserver {
             this.logger.debug(`Auction winner: ${serialize(winningPrice)}`);
 
             if (winningPrice !== null && winningPrice.amountOut >= orderData.minAmountOut) {
-                this.apiServer.publishAuctionResult(winningPrice!, orderId, orderData, this.client.chain.id);
+                await this.apiServer.publishAuctionResult(winningPrice!, orderId, orderData, this.client.chain.id);
 
                 this.logger.info(`I finished auction for order ${orderId} and notified solvers!`);
                 break;
