@@ -7,17 +7,17 @@ type PriceBookEntry = {
     priceList: PriceListItem[];
 }
 
-const TEN_MINUTES_IN_MS = 600_000;
+const TEN_MINUTES_IN_SECONDS = 600;
 
 export class SolverPriceBook {
     private prices: Map<string, PriceBookEntry> = new Map<string, PriceBookEntry>();
 
-    constructor(private readonly priceListTTLms: number = TEN_MINUTES_IN_MS) {}
+    constructor(private readonly priceListTTLms: number = TEN_MINUTES_IN_SECONDS) {}
 
     public getCurrentPrices(): ImmutableList<PriceListItem[]> {
         return ImmutableList(
             this.prices.entries().toArray()
-                .filter(([_key, value]) => value.timestamp + this.priceListTTLms > Date.now())
+                .filter(([_key, value]) => value.timestamp + (this.priceListTTLms * 1000) > Date.now())
                 .map(([_key, value]) => value.priceList)
         );
     }
