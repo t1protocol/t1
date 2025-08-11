@@ -3,10 +3,8 @@ import type {Server} from "bun";
 import {AuctionController} from "./AuctionController.ts";
 import {serialize, WinstonLogger} from "../utils/WinstonLogger.ts";
 import {SolverPriceBook} from "../core/SolverPriceBook.ts";
-import {AuctionService, type Price} from "../core/AuctionService.ts";
+import {AuctionService} from "../core/AuctionService.ts";
 import type {AuctionResult} from "./types.ts";
-import type {OrderData} from "../blockchain/types.ts";
-import type {ViemAuctionCommiter} from "../blockchain/ViemAuctionCommiter.ts";
 
 type AuthData = {
     username: string;
@@ -21,7 +19,6 @@ export class AuctionApiServer {
 
     public constructor(
         private readonly solverPriceBook: SolverPriceBook,
-        private readonly auctionCommiter: ViemAuctionCommiter,
         auctionService: AuctionService
     ) {
         this.auctionController = new AuctionController(auctionService);
@@ -97,15 +94,7 @@ export class AuctionApiServer {
         }
     }
 
-    public async publishAuctionResult(price: Price, orderId: string, orderData: OrderData, chainId: number) {
-        const result: AuctionResult = {
-            settlementReceiverAddress: price.settlementReceiverAddress,
-            amountOut: price.amountOut,
-            orderId,
-            orderData
-        }
-
+    public async notifySolvers(result: AuctionResult, chainId: number) {
         this.server?.publish('intent-auction', `[${result.settlementReceiverAddress}] won auction on chain [${chainId}] : ${serialize(result)}`);
-        this.logger.info(`I sent commitWinnerBid in txHash=[${await this.auctionCommiter.commitWinnerBid(result)}]`);
     }
 }

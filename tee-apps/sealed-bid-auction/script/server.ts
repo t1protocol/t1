@@ -22,23 +22,11 @@ const arbitrumClient = new BlockchainClient(
     Number(process.env.ARBITRUM_SEPOLIA_POLLING_INTERVAL_MS as string),
     process.env.ARBITRUM_SIGNER_PRIVATE_KEY as `0x${string}`
 );
-const arbitrumSepoliaIntentObserver = new ViemIntentObserver(
-    arbitrumClient,
-    process.env.ARBITRUM_T1_ERC7683_CONTRACT_ADDRESS as `0x${string}`,
-    auctionService,
-    httpServer
-);
 const baseClient = new BlockchainClient(
     process.env.BASE_SEPOLIA_RPC as string,
     baseSepolia,
     Number(process.env.BASE_SEPOLIA_POLLING_INTERVAL_MS as string),
     process.env.BASE_SIGNER_PRIVATE_KEY as `0x${string}`
-);
-const baseSepoliaIntentObserver = new ViemIntentObserver(
-    baseClient,
-    process.env.BASE_T1_ERC7683_CONTRACT_ADDRESS as `0x${string}`,
-    auctionService,
-    httpServer
 );
 const arbitrumSepoliaAuctionCommiter = new ViemAuctionCommiter(
     process.env.ARBITRUM_T1_ERC7683_CONTRACT_ADDRESS as `0x${string}`,
@@ -47,6 +35,20 @@ const arbitrumSepoliaAuctionCommiter = new ViemAuctionCommiter(
 const baseSepoliaAuctionCommiter = new ViemAuctionCommiter(
     process.env.BASE_T1_ERC7683_CONTRACT_ADDRESS as `0x${string}`,
     baseClient
+);
+const arbitrumSepoliaIntentObserver = new ViemIntentObserver(
+    arbitrumClient,
+    arbitrumSepoliaAuctionCommiter,
+    process.env.ARBITRUM_T1_ERC7683_CONTRACT_ADDRESS as `0x${string}`,
+    auctionService,
+    httpServer
+);
+const baseSepoliaIntentObserver = new ViemIntentObserver(
+    baseClient,
+    baseSepoliaAuctionCommiter,
+    process.env.BASE_T1_ERC7683_CONTRACT_ADDRESS as `0x${string}`,
+    auctionService,
+    httpServer
 );
 
 async function main() {
