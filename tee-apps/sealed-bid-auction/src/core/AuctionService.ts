@@ -96,8 +96,8 @@ export class AuctionService {
             if (currInterval !== priceItem.intervals[finalIndex]!) {
                 amountOut += currInterval.price * (currInterval.range.max - (currentIntervalIndex === 0 ? 0n : currInterval.range.min));
             } else {
-                const unFactoredPrice = currInterval.price * (amountIn - (currentIntervalIndex === 0 ? 0n : currInterval.range.min) + (finalIndex === 0 ? 0n : 1n));
-                amountOut += unFactoredPrice / 10n ** currInterval.rangeUnit.decimal;
+                const factoredAmountIn = amountIn / 10n ** currInterval.rangeUnit.decimal;
+                amountOut += currInterval.price * (factoredAmountIn - (currentIntervalIndex === 0 ? 0n : currInterval.range.min) + (finalIndex === 0 ? 0n : 1n));
             }
         } while (priceItem.intervals[currentIntervalIndex++] !== priceItem.intervals[finalIndex]);
 
