@@ -2,7 +2,7 @@ import Immutable from "immutable";
 
 import type {AuctionQuote, AuctionRequest} from "../api/types.ts";
 import type {SolverPriceBook} from "./SolverPriceBook.ts";
-import type {PriceListItem} from "./types.ts";
+import type {Interval, PriceListItem} from "./types.ts";
 import {serialize, WinstonLogger} from "../utils/WinstonLogger.ts";
 
 export type Price = {
@@ -14,6 +14,15 @@ export class AuctionService {
     private logger = new WinstonLogger(AuctionService.name);
 
     constructor(private readonly solverPricebook: SolverPriceBook) {}
+
+    private getFinalIntervalIndex(priceListItem: PriceListItem, amount: bigint): number | undefined {
+        return priceListItem.intervals.findIndex(
+            interval => {
+                const mappedRange = this.getRangeInLowestDenomination(interval);
+                return mappedRange.min <= amount && mappedRange.max >= amount
+            }
+    );
+    }
 
     public preauction(request: AuctionRequest): AuctionQuote | null {
         const bestPrice = this.auction(request.srcTokenAddress, request.dstTokenAddress, BigInt(request.amountIn));
@@ -37,10 +46,6 @@ export class AuctionService {
         this.logger.debug(`Found these prices for asked tokens: ${serialize(pricesForAskedTokens)}`);
 
         return this.chooseBestPrice(pricesForAskedTokens);
-    }
-
-    private getFinalIntervalIndex(priceListItem: PriceListItem, amount: bigint): number | undefined {
-        return priceListItem.intervals.findIndex(interval => interval.range.min <= amount && interval.range.max >= amount);
     }
 
     private chooseBestPrice(pricesForAskedTokens: Immutable.List<Price>): Price | null {
@@ -91,10 +96,18 @@ export class AuctionService {
             if (currInterval !== priceItem.intervals[finalIndex]!) {
                 amountOut += currInterval.price * (currInterval.range.max - (currentIntervalIndex === 0 ? 0n : currInterval.range.min));
             } else {
-                amountOut += currInterval.price * (amountIn - (currentIntervalIndex === 0 ? 0n : currInterval.range.min) + (finalIndex === 0 ? 0n : 1n));
+                const factoredAmountIn = amountIn / 10n ** currInterval.rangeUnit.decimal;
+                amountOut += currInterval.price * (factoredAmountIn - (currentIntervalIndex === 0 ? 0n : currInterval.range.min) + (finalIndex === 0 ? 0n : 1n));
             }
         } while (priceItem.intervals[currentIntervalIndex++] !== priceItem.intervals[finalIndex]);
 
         return amountOut;
+    }
+
+    private getRangeInLowestDenomination(interval: Interval): {min: bigint, max: bigint} {
+        return {
+            min: interval.range.min * 10n ** interval.rangeUnit.decimal,
+            max: interval.range.max * 10n ** interval.rangeUnit.decimal,
+        };
     }
 }

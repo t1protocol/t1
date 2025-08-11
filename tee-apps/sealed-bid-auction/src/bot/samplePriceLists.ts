@@ -8,18 +8,30 @@ export const ATTRACTIVE_ARBITRUM_PRICE: PriceListItem[] = [{
                 "min": 0n,
                 "max": 99n
             },
-            "rangeUnit": Token["Base_USDC"],
+            "rangeUnit": {
+                token: Token["Base_USDC"],
+                decimal: 6n
+            },
             "price": 970_000n,
-            "priceUnit": Token["Arbitrum_USDC"]
+            "priceUnit": {
+                token: Token["Arbitrum_USDC"],
+                decimal: 6n
+            }
         },
         {
             "range": {
                 "min": 100n,
                 "max": 1000n
             },
-            "rangeUnit": Token["Base_USDC"],
+            "rangeUnit": {
+                token: Token["Base_USDC"],
+                decimal: 6n
+            },
             "price": 980_000n,
-            "priceUnit": Token["Arbitrum_USDC"]
+            "priceUnit": {
+                token: Token["Arbitrum_USDC"],
+                decimal: 6n
+            }
         }
     ],
     srcTokenAddresses: ["0x228eE6c1C297E2Eba0e95A71684B26f89385b4eC"],
@@ -34,18 +46,30 @@ export const ATTRACTIVE_ARBITRUM_PRICE: PriceListItem[] = [{
                     min: 0n,
                     max: 99n
                 },
-                rangeUnit: Token["Arbitrum_USDC"],
+                rangeUnit: {
+                token: Token["Arbitrum_USDC"],
+                decimal: 6n
+            },
                 price: 950_000n,
-                priceUnit: Token["Base_USDC"]
+                priceUnit: {
+                token: Token["Base_USDC"],
+                decimal: 6n
+            }
             },
             {
                 "range": {
                     min: 100n,
                     max: 1000n
                 },
-                rangeUnit: Token["Arbitrum_USDC"],
+                rangeUnit: {
+                token: Token["Arbitrum_USDC"],
+                decimal: 6n
+            },
                 price: 960_000n,
-                priceUnit: Token["Base_USDC"]
+                priceUnit: {
+                token: Token["Base_USDC"],
+                decimal: 6n
+            }
             }
         ],
         srcTokenAddresses: ["0xF6232a871BF3B33F5bc181f55d770F9FB062A457"],
@@ -61,18 +85,30 @@ export const ATTRACTIVE_BASE_PRICE: PriceListItem[] = [{
                 min: 0n,
                 max: 99n
             },
-            rangeUnit: Token["Base_USDC"],
+            rangeUnit: {
+                token: Token["Base_USDC"],
+                decimal: 6n
+            },
             price: 950_000n,
-            priceUnit: Token["Arbitrum_USDC"]
+            priceUnit: {
+                token: Token["Arbitrum_USDC"],
+                decimal: 6n
+            }
         },
         {
             "range": {
                 min: 100n,
                 max: 1000n
             },
-            rangeUnit: Token["Base_USDC"],
+            rangeUnit: {
+                token: Token["Base_USDC"],
+                decimal: 6n
+            },
             price: 960_000n,
-            priceUnit: Token["Arbitrum_USDC"]
+            priceUnit: {
+                token: Token["Arbitrum_USDC"],
+                decimal: 6n
+            }
         }
     ],
     srcTokenAddresses: ["0x228eE6c1C297E2Eba0e95A71684B26f89385b4eC"],
@@ -87,18 +123,30 @@ export const ATTRACTIVE_BASE_PRICE: PriceListItem[] = [{
                     min: 0n,
                     max: 99n
                 },
-                rangeUnit: Token["Arbitrum_USDC"],
+                rangeUnit: {
+                token: Token["Arbitrum_USDC"],
+                decimal: 6n
+            },
                 price: 970_000n,
-                priceUnit: Token["Base_USDC"]
+                priceUnit: {
+                token: Token["Base_USDC"],
+                decimal: 6n
+            }
             },
             {
                 "range": {
                     min: 100n,
                     max: 1000n
                 },
-                rangeUnit: Token["Arbitrum_USDC"],
+                rangeUnit: {
+                token: Token["Arbitrum_USDC"],
+                decimal: 6n
+            },
                 price: 980_000n,
-                priceUnit: Token["Base_USDC"]
+                priceUnit: {
+                token: Token["Base_USDC"],
+                decimal: 6n
+            }
             }
         ],
         srcTokenAddresses: ["0xF6232a871BF3B33F5bc181f55d770F9FB062A457"],

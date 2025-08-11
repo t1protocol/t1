@@ -20,12 +20,17 @@ export enum Token {
     Arbitrum_WETH = "Arbitrum_WETH",
 }
 
+export interface TokenWithDecimal {
+    token: Token,
+    decimal: bigint
+}
+
 export type Interval = {
     range: {
         min: bigint; // must be an integer representing full tokens
         max: bigint; // must be an integer representing full tokens
     };
-    rangeUnit: Token;
+    rangeUnit: TokenWithDecimal;
     price: bigint; // must be an integer representing the smallest denomination of the token
-    priceUnit: Token;
+    priceUnit: TokenWithDecimal;
 };
