@@ -7,6 +7,7 @@ import {ViemIntentObserver} from "../src/blockchain/ViemIntentObserver.ts";
 import {SolverPriceBook} from "../src/core/SolverPriceBook.ts";
 import {AuctionService} from "../src/core/AuctionService.ts";
 import {arbitrumSepolia, baseSepolia} from "viem/chains";
+import {BlockchainClient} from "../src/blockchain/BlockchainClient.ts";
 
 const USE_TLS = process.env.USE_TLS as string === "true";
 
@@ -14,18 +15,24 @@ const solverPriceBook = new SolverPriceBook();
 const auctionService = new AuctionService(solverPriceBook);
 
 const httpServer = new AuctionApiServer(solverPriceBook, auctionService);
-const arbitrumSepoliaIntentObserver = new ViemIntentObserver(
+const arbitrumClient = new BlockchainClient(
     process.env.ARBITRUM_SEPOLIA_RPC as string,
     arbitrumSepolia,
-    Number(process.env.ARBITRUM_SEPOLIA_POLLING_INTERVAL_MS as string),
+    Number(process.env.ARBITRUM_SEPOLIA_POLLING_INTERVAL_MS as string)
+);
+const arbitrumSepoliaIntentObserver = new ViemIntentObserver(
+    arbitrumClient,
     process.env.ARBITRUM_T1_ERC7683_CONTRACT_ADDRESS as `0x${string}`,
     auctionService,
     httpServer
 );
-const baseSepoliaIntentObserver = new ViemIntentObserver(
+const baseClient = new BlockchainClient(
     process.env.BASE_SEPOLIA_RPC as string,
     baseSepolia,
-    Number(process.env.BASE_SEPOLIA_POLLING_INTERVAL_MS as string),
+    Number(process.env.BASE_SEPOLIA_POLLING_INTERVAL_MS as string)
+);
+const baseSepoliaIntentObserver = new ViemIntentObserver(
+    baseClient,
     process.env.BASE_T1_ERC7683_CONTRACT_ADDRESS as `0x${string}`,
     auctionService,
     httpServer

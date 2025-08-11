@@ -1,8 +1,5 @@
 import {
-    type Chain,
-    createPublicClient,
     decodeAbiParameters,
-    http,
     parseEventLogs,
     trim,
     type WatchEventOnLogsParameter
@@ -16,26 +13,21 @@ import {
 } from "./types.ts";
 import type {AuctionApiServer} from "../api/AuctionApiServer.ts";
 import { serialize, WinstonLogger} from "../utils/WinstonLogger.ts";
+import type {BlockchainClient} from "./BlockchainClient.ts";
 
 export class ViemIntentObserver {
     private logger: WinstonLogger;
 
     private readonly client;
 
-    constructor(rpcUrl: string,
-                private readonly chain: Chain,
-                pollingInterval: number,
+    constructor(blockchaintClient: BlockchainClient,
                 private readonly t1Erc7683ContractAddress: `0x${string}`,
                 private readonly auctionService: AuctionService,
                 private readonly apiServer: AuctionApiServer,
                 private readonly auctionPollingInterval: number = 500
     ) {
-        this.logger = new WinstonLogger(`${ViemIntentObserver.name}[${chain.name}]`);
-        this.client = createPublicClient({
-            chain,
-            transport: http(rpcUrl),
-            pollingInterval
-        });
+        this.client = blockchaintClient.client;
+        this.logger = new WinstonLogger(`${ViemIntentObserver.name}[${this.client.chain.name}]`);
     }
 
     public start() {
@@ -45,7 +37,7 @@ export class ViemIntentObserver {
             onLogs: logs => this.processIntentLogs(logs)
         });
 
-        this.logger.info(`Watching for Open Intent events on chain [${this.chain.name}] and contract [${this.t1Erc7683ContractAddress}]`);
+        this.logger.info(`Watching for Open Intent events on chain [${this.client.chain.name}] and contract [${this.t1Erc7683ContractAddress}]`);
     }
 
     private async processIntentLogs(logs: WatchEventOnLogsParameter) {
@@ -92,7 +84,7 @@ export class ViemIntentObserver {
             this.logger.debug(`Auction winner: ${serialize(winningPrice)}`);
 
             if (winningPrice !== null && winningPrice.amountOut >= orderData.minAmountOut) {
-                this.apiServer.publishAuctionResult(winningPrice!, orderId, orderData, this.chain.id);
+                this.apiServer.publishAuctionResult(winningPrice!, orderId, orderData, this.client.chain.id);
 
                 this.logger.info(`I finished auction for order ${orderId} and notified solvers!`);
                 break;
