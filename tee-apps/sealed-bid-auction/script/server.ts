@@ -11,8 +11,9 @@ import {BlockchainClient} from "../src/blockchain/BlockchainClient.ts";
 import {ViemAuctionCommiter} from "../src/blockchain/ViemAuctionCommiter.ts";
 
 const USE_TLS = process.env.USE_TLS as string === "true";
+const SOLVER_PRICE_TTL = process.env.SOLVER_PRICE_TTL as string;
 
-const solverPriceBook = new SolverPriceBook();
+const solverPriceBook = new SolverPriceBook(SOLVER_PRICE_TTL ? Number(SOLVER_PRICE_TTL) : undefined);
 const auctionService = new AuctionService(solverPriceBook);
 
 const httpServer = new AuctionApiServer(solverPriceBook, auctionService);
