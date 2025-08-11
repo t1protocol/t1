@@ -6,6 +6,7 @@ import {SolverWebSocketClient} from "../src/bot/SolverWebSocketClient.ts";
 import {ATTRACTIVE_ARBITRUM_PRICE, ATTRACTIVE_BASE_PRICE} from "../src/bot/samplePriceLists.ts";
 
 const WS_URL = process.env.WS_URL as string;
+const NINE_MINUTES_IN_MS = 540_000;
 
 const tokkaSolver = new SolverWebSocketClient(WS_URL);
 const ecoSolver = new SolverWebSocketClient(WS_URL);
@@ -17,7 +18,7 @@ async function main() {
     while (true) {
         tokkaSolver.sendPrices(ATTRACTIVE_ARBITRUM_PRICE);
         ecoSolver.sendPrices(ATTRACTIVE_BASE_PRICE);
-        await new Promise((resolve) => setTimeout(resolve, 2000));
+        await new Promise((resolve) => setTimeout(resolve, NINE_MINUTES_IN_MS));
     }
 }
 
