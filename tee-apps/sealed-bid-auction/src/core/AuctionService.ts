@@ -93,11 +93,12 @@ export class AuctionService {
 
         do {
             const currInterval = priceItem.intervals[currentIntervalIndex]!;
+            const factoredRange = this.getRangeInLowestDenomination(currInterval);
             if (currInterval !== priceItem.intervals[finalIndex]!) {
                 amountOut += currInterval.price * (currInterval.range.max - (currentIntervalIndex === 0 ? 0n : currInterval.range.min));
             } else {
-                const factoredAmountIn = amountIn / 10n ** currInterval.rangeUnit.decimal;
-                amountOut += currInterval.price * (factoredAmountIn - (currentIntervalIndex === 0 ? 0n : currInterval.range.min) + (finalIndex === 0 ? 0n : 1n));
+                const unfactoredAmount = amountIn - (currentIntervalIndex === 0 ? 0n : factoredRange.min) + (finalIndex === 0 ? 0n : 1n);
+                amountOut += currInterval.price * (unfactoredAmount / 10n ** currInterval.rangeUnit.decimal);
             }
         } while (priceItem.intervals[currentIntervalIndex++] !== priceItem.intervals[finalIndex]);
 
