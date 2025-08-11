@@ -56,6 +56,7 @@ export class SolverWebSocketClient {
         }
 
         while (this.socket.readyState !== state) {
+            this.logger.debug(`Waiting for socket state [${state}] but was [${this.socket.readyState}] ...`)
             await new Promise((resolve) => setTimeout(resolve, timeoutMs));
         }
     }
