@@ -40,7 +40,11 @@ export class AuctionService {
     }
 
     private getFinalIntervalIndex(priceListItem: PriceListItem, amount: bigint): number | undefined {
-        return priceListItem.intervals.findIndex(interval => interval.range.min <= amount && interval.range.max >= amount);
+        return priceListItem.intervals.findIndex(
+            interval =>
+                interval.range.min * interval.rangeUnit.decimal <= amount &&
+                interval.range.max * interval.rangeUnit.decimal >= amount
+        );
     }
 
     private chooseBestPrice(pricesForAskedTokens: Immutable.List<Price>): Price | null {
@@ -89,9 +93,9 @@ export class AuctionService {
         do {
             const currInterval = priceItem.intervals[currentIntervalIndex]!;
             if (currInterval !== priceItem.intervals[finalIndex]!) {
-                amountOut += currInterval.price * (currInterval.range.max - (currentIntervalIndex === 0 ? 0n : currInterval.range.min));
+                amountOut += currInterval.price * (currInterval.range.max * currInterval.rangeUnit.decimal - (currentIntervalIndex === 0 ? 0n : currInterval.range.min * currInterval.rangeUnit.decimal));
             } else {
-                amountOut += currInterval.price * (amountIn - (currentIntervalIndex === 0 ? 0n : currInterval.range.min) + (finalIndex === 0 ? 0n : 1n));
+                amountOut += currInterval.price * (amountIn - (currentIntervalIndex === 0 ? 0n : currInterval.range.min * currInterval.rangeUnit.decimal) + (finalIndex === 0 ? 0n : 1n));
             }
         } while (priceItem.intervals[currentIntervalIndex++] !== priceItem.intervals[finalIndex]);
 
