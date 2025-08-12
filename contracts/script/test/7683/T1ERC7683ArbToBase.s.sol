@@ -39,14 +39,14 @@ contract AliceSetupScript is Script {
             inputToken: TypeCasts.addressToBytes32(address(inputToken)),
             outputToken: TypeCasts.addressToBytes32(address(outputToken)),
             amountIn: 100,
-            minAmountOut: 100,
+            minAmountOut: 90,
             senderNonce: uint32(
                 uint256(keccak256(abi.encodePacked(block.timestamp, block.prevrandao, msg.sender))) % 10_000
             ), // Random number between 0 and 9999
             originDomain: ORIGIN_CHAIN,
             destinationDomain: DESTINATION_CHAIN,
             destinationSettler: TypeCasts.addressToBytes32(vm.envAddress("BASE_T1_PULL_BASED_7683_PROXY_ADDR")),
-            fillDeadline: uint32(block.timestamp + 24 hours),
+            fillDeadline: uint32(block.timestamp + 1 minutes),
             closedAuction: false,
             data: new bytes(0)
         });

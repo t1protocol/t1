@@ -3,9 +3,8 @@ import type {Server} from "bun";
 import {AuctionController, CORS_HEADERS} from "./AuctionController.ts";
 import {serialize, WinstonLogger} from "../utils/WinstonLogger.ts";
 import {SolverPriceBook} from "../core/SolverPriceBook.ts";
-import {AuctionService, type Price} from "../core/AuctionService.ts";
+import {AuctionService} from "../core/AuctionService.ts";
 import type {AuctionResult} from "./types.ts";
-import type {OrderData} from "../blockchain/types.ts";
 
 type AuthData = {
     username: string;
@@ -18,7 +17,10 @@ export class AuctionApiServer {
 
     private server: Server | null = null;
 
-    public constructor(private readonly solverPriceBook: SolverPriceBook, auctionService: AuctionService) {
+    public constructor(
+        private readonly solverPriceBook: SolverPriceBook,
+        auctionService: AuctionService
+    ) {
         this.auctionController = new AuctionController(auctionService);
     }
 
@@ -93,14 +95,7 @@ export class AuctionApiServer {
         }
     }
 
-    public publishAuctionResult(price: Price, orderId: string, orderData: OrderData, chainId: number) {
-        const result: AuctionResult = {
-            settlementReceiverAddress: price.settlementReceiverAddress,
-            amountOut: price.amountOut,
-            orderId,
-            orderData
-        }
-
+    public async notifySolvers(result: AuctionResult, chainId: number) {
         this.server?.publish('intent-auction', `[${result.settlementReceiverAddress}] won auction on chain [${chainId}] : ${serialize(result)}`);
     }
 }

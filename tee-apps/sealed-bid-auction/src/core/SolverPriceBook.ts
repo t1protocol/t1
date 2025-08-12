@@ -12,12 +12,12 @@ const TEN_MINUTES_IN_MS = 600_000;
 export class SolverPriceBook {
     private prices: Map<string, PriceBookEntry> = new Map<string, PriceBookEntry>();
 
-    constructor(private readonly priceListTTLms: number = TEN_MINUTES_IN_MS) {}
+    constructor(private readonly priceListTTLseconds: number) {}
 
     public getCurrentPrices(): ImmutableList<PriceListItem[]> {
         return ImmutableList(
             this.prices.entries().toArray()
-                .filter(([_key, value]) => value.timestamp + this.priceListTTLms > Date.now())
+                .filter(([_key, value]) => value.timestamp + (this.priceListTTLseconds * 1000) > Date.now())
                 .map(([_key, value]) => value.priceList)
         );
     }

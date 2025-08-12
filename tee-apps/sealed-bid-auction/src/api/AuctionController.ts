@@ -7,12 +7,13 @@ import {serialize} from "../utils/WinstonLogger.ts";
 export const CORS_HEADERS = {
     'Access-Control-Allow-Origin': '*',
     'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS',
-    'Access-Control-Allow-Headers': 'Content-Type',
+    'Access-Control-Allow-Headers': 'Content-Type,Authorization,X-Auth-Blob,X-Auth-Signature',
 };
 
 export class AuctionController {
 
-    constructor(private readonly auctionService: AuctionService) {}
+    constructor(private readonly auctionService: AuctionService) {
+    }
 
     public async preauction(req: BunRequest): Promise<Response> {
         try {
@@ -20,7 +21,12 @@ export class AuctionController {
             const auctionQuote = this.auctionService.preauction(auctionRequest);
 
             if (auctionQuote) {
-                return new Response(serialize(auctionQuote), {status: 200, headers: CORS_HEADERS});
+                return new Response(serialize(auctionQuote), {
+                    status: 200, headers: {
+                        ...CORS_HEADERS,
+                        "Content-Type": "application/json"
+                    }
+                });
             } else {
                 return new Response(null, {status: 204, headers: CORS_HEADERS});
             }

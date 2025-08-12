@@ -3,6 +3,7 @@ import { resolve } from "node:path";
 import { beforeAll, expect, test, vi } from "vitest";
 import { ViemIntentObserver } from "../src/blockchain/ViemIntentObserver";
 import { arbitrumSepolia } from "viem/chains";
+import {BlockchainClient} from "../src/blockchain/BlockchainClient.ts";
 
 /* ---------- 1. load logs from the Foundry broadcast file ---------- */
 const fixturePath = resolve(__dirname, "fixtures/arb-sepolia-run.json");
@@ -21,10 +22,13 @@ const apiServer = { publishAuctionResult: vi.fn() };
 
 /* ---------- 3. system‑under‑test ----------------------------------- */
 const intentContract = "0xc7b348fa0a01e292818df7226cfbaa86d0a391a9";
+const blockchainClient = new BlockchainClient(
+    process.env.ARBITRUM_SEPOLIA_RPC ?? "https://sepolia-rollup.arbitrum.io/rpc",
+    arbitrumSepolia,
+    /* poll */ 1_000
+);
 const observer = new ViemIntentObserver(
-  process.env.ARBITRUM_SEPOLIA_RPC ?? "https://sepolia-rollup.arbitrum.io/rpc",
-  arbitrumSepolia,
-  /* poll */ 1_000,
+  blockchainClient,
   intentContract,
   auctionSvc as any,
   apiServer  as any,
