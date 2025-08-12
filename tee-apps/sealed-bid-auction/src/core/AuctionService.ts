@@ -7,7 +7,7 @@ import {serialize, WinstonLogger} from "../utils/WinstonLogger.ts";
 
 export type Price = {
     amountOut: bigint;
-    settlementReceiverAddress: string;
+    settlementReceiverAddress: `0x${string}`;
 }
 
 export class AuctionService {

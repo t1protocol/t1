@@ -1,7 +1,7 @@
 import {type Chain, createPublicClient, createWalletClient, http} from "viem";
 import {privateKeyToAccount} from "viem/accounts";
 
-export class BlockchainClient {
+export class ViemBlockchainClient {
     private _publicClient;
     private _walletClient;
 

@@ -13,8 +13,8 @@ import {
 } from "./types.ts";
 import type {AuctionApiServer} from "../api/AuctionApiServer.ts";
 import { serialize, WinstonLogger} from "../utils/WinstonLogger.ts";
-import type {BlockchainClient} from "./BlockchainClient.ts";
-import type {ViemAuctionCommiter} from "./ViemAuctionCommiter.ts";
+import type {ViemBlockchainClient} from "./ViemBlockchainClient.ts";
+import type {ViemT1ERC7683Client} from "./ViemT1ERC7683Client.ts";
 import type {AuctionResult} from "../api/types.ts";
 
 export class ViemIntentObserver {
@@ -22,8 +22,8 @@ export class ViemIntentObserver {
 
     private readonly client;
 
-    constructor(blockchainClient: BlockchainClient,
-                private readonly auctionCommiter: ViemAuctionCommiter,
+    constructor(blockchainClient: ViemBlockchainClient,
+                private readonly auctionCommiter: ViemT1ERC7683Client,
                 private readonly t1Erc7683ContractAddress: `0x${string}`,
                 private readonly auctionService: AuctionService,
                 private readonly apiServer: AuctionApiServer,

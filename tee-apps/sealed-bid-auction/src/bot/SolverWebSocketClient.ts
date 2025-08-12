@@ -1,13 +1,27 @@
 import type {PriceListItem} from "../core/types.ts";
 import {serialize, WinstonLogger} from "../utils/WinstonLogger.ts";
+import type {AuctionResult} from "../api/types.ts";
+import type {ViemT1ERC7683Client} from "../blockchain/ViemT1ERC7683Client.ts";
+import {arbitrumSepolia, baseSepolia} from "viem/chains";
 
 export class SolverWebSocketClient {
     private logger!: WinstonLogger;
 
     private socket: WebSocket | null;
 
-    constructor(private readonly serverUrl: string) {
+    private readonly winningAuctionRegexp = new RegExp('^\[0x.*?\] won auction on chain \[\d*\] : (\{.*?\})$');
+    private ownArbitrumFillerAddresses: `0x${string}`[];
+    private ownBaseFillerAddresses: `0x${string}`[];
+
+    constructor(
+        private readonly serverUrl: string,
+        private readonly arbitrumT1ERC7683Client: ViemT1ERC7683Client,
+        private readonly baseT1ERC7683Client: ViemT1ERC7683Client,
+        private readonly priceList: PriceListItem[]
+    ) {
         this.socket = null;
+        this.ownArbitrumFillerAddresses = priceList.filter(item => item.dstChainId === arbitrumSepolia.id).flatMap(item => item.settlementReceiverAddress);
+        this.ownBaseFillerAddresses = priceList.filter(item => item.dstChainId === baseSepolia.id).flatMap(item => item.settlementReceiverAddress);
     }
 
     public async start(username: string, socketResponseConsumer: (sockerResponse: string) => void) {
@@ -21,6 +35,17 @@ export class SolverWebSocketClient {
         });
         this.socket.onmessage = (event) => {
             socketResponseConsumer(event.data);
+
+            const regexpResult = this.winningAuctionRegexp.exec(event.data);
+            if (regexpResult) {
+                const parsedAuctionResult: AuctionResult = JSON.parse(regexpResult.groups![1]!);
+
+                if (this.ownArbitrumFillerAddresses.includes(parsedAuctionResult.settlementReceiverAddress)) {
+                    this.fillIntent(parsedAuctionResult, this.arbitrumT1ERC7683Client, parsedAuctionResult.orderData.destinationDomain);
+                } else if (this.ownBaseFillerAddresses.includes(parsedAuctionResult.settlementReceiverAddress)) {
+                    this.fillIntent(parsedAuctionResult, this.baseT1ERC7683Client, parsedAuctionResult.orderData.destinationDomain)
+                }
+            }
         };
 
         await this.waitForSocketState(WebSocket.OPEN);
@@ -40,12 +65,12 @@ export class SolverWebSocketClient {
         }
     }
 
-    public sendPrices(message: PriceListItem[]) {
+    public sendPrices() {
         if (!this.socket) {
             throw Error("Socket is closed");
         }
 
-        this.socket.send(serialize(message));
+        this.socket.send(serialize(this.priceList));
 
         this.logger.info("Sent message");
     }
@@ -59,5 +84,11 @@ export class SolverWebSocketClient {
             this.logger.debug(`Waiting for socket state [${state}] but was [${this.socket.readyState}] ...`);
             await new Promise((resolve) => setTimeout(resolve, timeoutMs));
         }
+    }
+
+    private async fillIntent(auctionResult: AuctionResult, client: ViemT1ERC7683Client, chainId: number) {
+        const txHash = await client.fill(auctionResult);
+
+        this.logger.info(`I filled an intent on chainId=[${chainId}] in a txHash=[${txHash}]`);
     }
 }

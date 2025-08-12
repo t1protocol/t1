@@ -4,6 +4,8 @@ export type PriceListItem = {
     srcTokenAddresses: `0x${string}`[];
     dstTokenAddresses: `0x${string}`[];
     settlementReceiverAddress: `0x${string}`;
+    srcChainId: number;
+    dstChainId: number;
 }
 
 export enum Direction {

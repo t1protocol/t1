@@ -7,8 +7,8 @@ import {ViemIntentObserver} from "../src/blockchain/ViemIntentObserver.ts";
 import {SolverPriceBook} from "../src/core/SolverPriceBook.ts";
 import {AuctionService} from "../src/core/AuctionService.ts";
 import {arbitrumSepolia, baseSepolia} from "viem/chains";
-import {BlockchainClient} from "../src/blockchain/BlockchainClient.ts";
-import {ViemAuctionCommiter} from "../src/blockchain/ViemAuctionCommiter.ts";
+import {ViemBlockchainClient} from "../src/blockchain/ViemBlockchainClient.ts";
+import {ViemT1ERC7683Client} from "../src/blockchain/ViemT1ERC7683Client.ts";
 
 const USE_TLS = process.env.USE_TLS as string === "true";
 const SOLVER_PRICE_TTL_SECONDS = process.env.SOLVER_PRICE_TTL_SECONDS
@@ -18,23 +18,23 @@ const solverPriceBook = new SolverPriceBook(SOLVER_PRICE_TTL_SECONDS ? Number(SO
 const auctionService = new AuctionService(solverPriceBook);
 
 const httpServer = new AuctionApiServer(solverPriceBook, auctionService);
-const arbitrumClient = new BlockchainClient(
+const arbitrumClient = new ViemBlockchainClient(
     process.env.ARBITRUM_SEPOLIA_RPC as string,
     arbitrumSepolia,
     Number(process.env.ARBITRUM_SEPOLIA_POLLING_INTERVAL_MS as string),
     process.env.ARBITRUM_SIGNER_PRIVATE_KEY as `0x${string}`
 );
-const baseClient = new BlockchainClient(
+const baseClient = new ViemBlockchainClient(
     process.env.BASE_SEPOLIA_RPC as string,
     baseSepolia,
     Number(process.env.BASE_SEPOLIA_POLLING_INTERVAL_MS as string),
     process.env.BASE_SIGNER_PRIVATE_KEY as `0x${string}`
 );
-const arbitrumSepoliaAuctionCommiter = new ViemAuctionCommiter(
+const arbitrumSepoliaAuctionCommiter = new ViemT1ERC7683Client(
     process.env.ARBITRUM_T1_ERC7683_CONTRACT_ADDRESS as `0x${string}`,
     arbitrumClient
 );
-const baseSepoliaAuctionCommiter = new ViemAuctionCommiter(
+const baseSepoliaAuctionCommiter = new ViemT1ERC7683Client(
     process.env.BASE_T1_ERC7683_CONTRACT_ADDRESS as `0x${string}`,
     baseClient
 );

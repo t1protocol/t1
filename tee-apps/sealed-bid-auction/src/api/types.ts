@@ -14,17 +14,17 @@ export interface AuctionQuote {
     request: {
         srcChainId: number;
         dstChainId: number;
-        srcTokenAddress: string;
-        dstTokenAddress: string;
+        srcTokenAddress: `0x${string}`;
+        dstTokenAddress: `0x${string}`;
         amountIn: bigint;
     },
     amountOut: bigint;
-    settlementReceiverAddress: string;
+    settlementReceiverAddress: `0x${string}`;
     timestamp: number;
 }
 
 export interface AuctionResult {
-    settlementReceiverAddress: string;
+    settlementReceiverAddress: `0x${string}`;
     amountOut: bigint;
     orderId: string;
     orderData: OrderData;
