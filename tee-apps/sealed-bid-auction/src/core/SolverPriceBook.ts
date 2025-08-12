@@ -7,6 +7,8 @@ type PriceBookEntry = {
     priceList: PriceListItem[];
 }
 
+const TEN_MINUTES_IN_MS = 600_000;
+
 export class SolverPriceBook {
     private prices: Map<string, PriceBookEntry> = new Map<string, PriceBookEntry>();
 
