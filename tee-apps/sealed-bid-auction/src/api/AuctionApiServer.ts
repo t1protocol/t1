@@ -1,6 +1,6 @@
 import type {Server} from "bun";
 
-import {AuctionController} from "./AuctionController.ts";
+import {AuctionController, CORS_HEADERS} from "./AuctionController.ts";
 import {serialize, WinstonLogger} from "../utils/WinstonLogger.ts";
 import {SolverPriceBook} from "../core/SolverPriceBook.ts";
 import {AuctionService, type Price} from "../core/AuctionService.ts";
@@ -28,6 +28,7 @@ export class AuctionApiServer {
             return;
         }
         const solverPriceBook = this.solverPriceBook;
+        const websocketLogger = new WinstonLogger(`${AuctionApiServer.name}-websocket`);
 
         // @ts-ignore
         this.server = Bun.serve<AuthData>({
@@ -38,7 +39,11 @@ export class AuctionApiServer {
             } : {},
             routes: {
                 "/healthcheck": new Response("OK"),
-                "/api/preauction": req => this.auctionController.preauction(req),
+                "/api/preauction": {
+                    OPTIONS: () => new Response(null, { status: 204, headers: CORS_HEADERS}),
+                    GET: _req => this.auctionController.wrongMethodError(),
+                    POST: async (req) => await this.auctionController.preauction(req)
+                }
             },
             fetch(req, server) {
                 const success = server.upgrade(req, {
@@ -57,7 +62,7 @@ export class AuctionApiServer {
             websocket: {
                 open(ws) {
                     ws.subscribe('intent-auction');
-                    console.log(`Client ${ws.data.username} connected`);
+                    websocketLogger.info(`Client ${ws.data.username} connected`);
                     ws.send("Welcome!");
                 },
                 message(ws, message) {
@@ -65,13 +70,13 @@ export class AuctionApiServer {
                         const addedCount = solverPriceBook.updatePrice(ws.data.username, message.toString());
                         ws.send(`I updated [${addedCount}] prices for [${ws.data.username}]!`);
                     } catch (e: any) {
-                        console.error(`Error when updating price: ${e}`);
+                        websocketLogger.error(`Error when updating price: ${e}`);
                         ws.send(`Error when updating price: ${e}`);
                     }
                 },
                 close(ws, _code, _reason) {
                     ws.unsubscribe('intent-auction');
-                    console.log(`Client ${ws.data.username} disconnected`);
+                    websocketLogger.info(`Client ${ws.data.username} disconnected`);
                 },
             },
         });

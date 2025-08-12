@@ -7,15 +7,17 @@ type PriceBookEntry = {
     priceList: PriceListItem[];
 }
 
+const TEN_MINUTES_IN_MS = 600_000;
+
 export class SolverPriceBook {
     private prices: Map<string, PriceBookEntry> = new Map<string, PriceBookEntry>();
 
-    constructor(private readonly priceListTTL: number = 600) {}
+    constructor(private readonly priceListTTLms: number = TEN_MINUTES_IN_MS) {}
 
     public getCurrentPrices(): ImmutableList<PriceListItem[]> {
         return ImmutableList(
             this.prices.entries().toArray()
-                .filter(([_key, value]) => value.timestamp + this.priceListTTL > Date.now())
+                .filter(([_key, value]) => value.timestamp + this.priceListTTLms > Date.now())
                 .map(([_key, value]) => value.priceList)
         );
     }
@@ -58,9 +60,15 @@ export class SolverPriceBook {
                 min: BigInt(interval.range.min),
                 max: BigInt(interval.range.max),
             },
-            rangeUnit: interval.rangeUnit,
+            rangeUnit: {
+                token: interval.rangeUnit.token,
+                decimal: BigInt(interval.rangeUnit.decimal)
+            },
             price: BigInt(interval.price),
-            priceUnit: interval.priceUnit,
+            priceUnit: {
+                token: interval.priceUnit.token,
+                decimal: BigInt(interval.priceUnit.decimal)
+            }
         };
     }
 }
