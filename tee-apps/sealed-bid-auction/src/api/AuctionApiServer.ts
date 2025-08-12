@@ -1,6 +1,6 @@
 import type {Server} from "bun";
 
-import {AuctionController} from "./AuctionController.ts";
+import {AuctionController, CORS_HEADERS} from "./AuctionController.ts";
 import {serialize, WinstonLogger} from "../utils/WinstonLogger.ts";
 import {SolverPriceBook} from "../core/SolverPriceBook.ts";
 import {AuctionService} from "../core/AuctionService.ts";
@@ -42,6 +42,7 @@ export class AuctionApiServer {
             routes: {
                 "/healthcheck": new Response("OK"),
                 "/api/preauction": {
+                    OPTIONS: () => new Response(null, { status: 204, headers: CORS_HEADERS}),
                     GET: _req => this.auctionController.wrongMethodError(),
                     POST: async (req) => await this.auctionController.preauction(req)
                 }

@@ -4,7 +4,7 @@ import {AuctionService} from "../core/AuctionService.ts";
 import type {AuctionRequest} from "./types.ts";
 import {serialize} from "../utils/WinstonLogger.ts";
 
-const CORS_HEADERS = {
+export const CORS_HEADERS = {
     'Access-Control-Allow-Origin': '*',
     'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS',
     'Access-Control-Allow-Headers': 'Content-Type',
