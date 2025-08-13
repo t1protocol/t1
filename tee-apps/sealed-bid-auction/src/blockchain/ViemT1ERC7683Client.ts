@@ -11,15 +11,12 @@ export class ViemT1ERC7683Client {
 
     private readonly t1Erc7683Contract;
 
-    constructor(t1Erc7683ContractAddress: `0x${string}`, client: ViemBlockchainClient) {
+    constructor(t1Erc7683ContractAddress: `0x${string}`, private readonly client: ViemBlockchainClient) {
         this.t1Erc7683Contract = getContract({
             address: t1Erc7683ContractAddress,
             abi: t1Erc7683Artifact.abi,
             client: {
-                public: client.publicClient, wallet: client.walletClient.extend((config) => ({
-                    ...config,
-                    timeout: 15000,
-                }))
+                public: client.publicClient, wallet: client.walletClient
             }
         });
 
@@ -51,7 +48,14 @@ export class ViemT1ERC7683Client {
                 [result.amountOut, result.settlementReceiverAddress as `0x${string}`]
             )
 
-            return await this.t1Erc7683Contract.write.fill!([result.orderId, this.encodeOrderData(result.orderData), fillerData]);
+            return await this.t1Erc7683Contract.write.fill!(
+                [result.orderId, this.encodeOrderData(result.orderData), fillerData],
+                {
+                    account: this.client.walletClient.account, // ensure it's set
+                    // maxFeePerGas: BigInt(20_000_000_000), // 20 gwei
+                    // maxPriorityFeePerGas: BigInt(2_000_000_000), // 2 gwei
+                }
+            );
         } catch (error) {
             this.logger.error(`Failed to fillIntent orderId=${result.orderId}`, error);
         }
