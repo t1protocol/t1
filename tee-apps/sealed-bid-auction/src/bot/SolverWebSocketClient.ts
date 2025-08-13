@@ -40,10 +40,18 @@ export class SolverWebSocketClient {
             if (regexpResult) {
                 const parsedAuctionResult: AuctionResult = JSON.parse(regexpResult[1]!);
 
-                if (this.ownArbitrumFillerAddresses.includes(parsedAuctionResult.settlementReceiverAddress)) {
+                if (
+                    this.ownArbitrumFillerAddresses.includes(parsedAuctionResult.settlementReceiverAddress) &&
+                    parsedAuctionResult.orderData.destinationDomain === arbitrumSepolia.id
+                ) {
                     this.fillIntent(parsedAuctionResult, this.arbitrumT1ERC7683Client, parsedAuctionResult.orderData.destinationDomain);
-                } else if (this.ownBaseFillerAddresses.includes(parsedAuctionResult.settlementReceiverAddress)) {
+                } else if (
+                    this.ownBaseFillerAddresses.includes(parsedAuctionResult.settlementReceiverAddress) &&
+                    parsedAuctionResult.orderData.destinationDomain === baseSepolia.id
+                ) {
                     this.fillIntent(parsedAuctionResult, this.baseT1ERC7683Client, parsedAuctionResult.orderData.destinationDomain)
+                } else {
+                    throw new Error(`Unexpected dstDomain=[${parsedAuctionResult.orderData.destinationDomain}] !`);
                 }
             }
         };
