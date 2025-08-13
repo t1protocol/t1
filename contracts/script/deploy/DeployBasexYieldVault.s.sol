@@ -8,7 +8,6 @@ import { xYieldVault } from "../../src/xYield/xYieldVault.sol";
 import { T1Constants } from "../../src/libraries/constants/T1Constants.sol";
 
 contract DeployBasexYieldVault is DeploymentUtils {
-
     function deploy() external {
         vm.createSelectFork(vm.rpcUrl("base"));
         logStart("DeployxYieldVault to Base");
@@ -22,13 +21,7 @@ contract DeployBasexYieldVault is DeploymentUtils {
 
         vm.startBroadcast(deployerPk);
 
-        xYieldVault vault = new xYieldVault(
-            IERC20(underlyingToken),
-            guardian,
-            name,
-            symbol,
-            yieldProtocol
-        );
+        xYieldVault vault = new xYieldVault(IERC20(underlyingToken), guardian, name, symbol, yieldProtocol);
 
         vm.stopBroadcast();
 

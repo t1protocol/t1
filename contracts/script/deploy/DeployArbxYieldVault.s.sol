@@ -8,7 +8,6 @@ import { xYieldVault } from "../../src/xYield/xYieldVault.sol";
 import { T1Constants } from "../../src/libraries/constants/T1Constants.sol";
 
 contract DeployArbxYieldVault is DeploymentUtils {
-
     function run() external {
         vm.createSelectFork(vm.rpcUrl("arbitrum"));
         logStart("DeployxYieldVault to Arbitrum");
@@ -22,13 +21,7 @@ contract DeployArbxYieldVault is DeploymentUtils {
 
         vm.startBroadcast(deployerPk);
 
-        xYieldVault vault = new xYieldVault(
-            IERC20(underlyingToken),
-            guardian,
-            name,
-            symbol,
-            yieldProtocol
-        );
+        xYieldVault vault = new xYieldVault(IERC20(underlyingToken), guardian, name, symbol, yieldProtocol);
 
         vm.stopBroadcast();
 
