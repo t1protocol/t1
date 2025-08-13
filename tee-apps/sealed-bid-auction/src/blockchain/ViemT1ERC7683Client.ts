@@ -4,6 +4,7 @@ import t1Erc7683Artifact from "../../../../contracts/artifacts/src/T1ERC7683.sol
 import {WinstonLogger} from "../utils/WinstonLogger.ts";
 import type {ViemBlockchainClient} from "./ViemBlockchainClient.ts";
 import type {AuctionResult} from "../api/types.ts";
+import type {OrderData} from "./types.ts";
 
 export class ViemT1ERC7683Client {
     private logger: WinstonLogger;
@@ -47,10 +48,45 @@ export class ViemT1ERC7683Client {
                 [result.amountOut, result.settlementReceiverAddress as `0x${string}`]
             )
 
-            return await this.t1Erc7683Contract.write.fill!([result.orderId, result.orderData, fillerData]);
+            return await this.t1Erc7683Contract.write.fill!([result.orderId, this.encodeOrderData(result.orderData), fillerData]);
         } catch (error) {
             this.logger.error(`Failed to fillIntent orderId=${result.orderId}`, error);
             throw error;
         }
+    }
+
+    private encodeOrderData(orderData: OrderData): `0x${string}` {
+        return encodeAbiParameters(
+            [
+                { type: "address" },
+                { type: "address" },
+                { type: "address" },
+                { type: "address" },
+                { type: "uint256" },
+                { type: "uint256" },
+                { type: "uint256" },
+                { type: "uint32" },
+                { type: "uint32" },
+                { type: "address" },
+                { type: "uint256" },
+                { type: "bool" },
+                { type: "bytes" },
+            ],
+            [
+                orderData.sender,
+                orderData.recipient,
+                orderData.inputToken,
+                orderData.outputToken,
+                BigInt(orderData.amountIn),
+                BigInt(orderData.minAmountOut),
+                BigInt(orderData.senderNonce),
+                orderData.originDomain,
+                orderData.destinationDomain,
+                orderData.destinationSettler,
+                BigInt(orderData.fillDeadline),
+                orderData.closedAuction,
+                orderData.data,
+            ]
+        );
     }
 }
