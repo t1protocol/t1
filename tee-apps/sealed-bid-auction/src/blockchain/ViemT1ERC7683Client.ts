@@ -52,8 +52,8 @@ export class ViemT1ERC7683Client {
                 [result.orderId, this.encodeOrderData(result.orderData), fillerData],
                 {
                     account: this.client.walletClient.account, // ensure it's set
-                    // maxFeePerGas: BigInt(20_000_000_000), // 20 gwei
-                    // maxPriorityFeePerGas: BigInt(2_000_000_000), // 2 gwei
+                    maxFeePerGas: BigInt(20_000_000_000), // 20 gwei
+                    maxPriorityFeePerGas: BigInt(2_000_000_000), // 2 gwei
                 }
             );
         } catch (error) {
