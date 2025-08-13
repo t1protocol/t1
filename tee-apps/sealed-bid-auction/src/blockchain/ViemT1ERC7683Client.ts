@@ -51,7 +51,6 @@ export class ViemT1ERC7683Client {
             return await this.t1Erc7683Contract.write.fill!([result.orderId, this.encodeOrderData(result.orderData), fillerData]);
         } catch (error) {
             this.logger.error(`Failed to fillIntent orderId=${result.orderId}`, error);
-            throw error;
         }
     }
 
