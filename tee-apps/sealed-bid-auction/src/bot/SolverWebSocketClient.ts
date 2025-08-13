@@ -9,7 +9,7 @@ export class SolverWebSocketClient {
 
     private socket: WebSocket | null;
 
-    private readonly winningAuctionRegexp = new RegExp('^\[0x.*?\] won auction on chain \[\d*\] : (\{.*?\})$');
+    private readonly winningAuctionRegexp = /^\[0x.*?] won auction on chain \[\d*] : ({.*?})$/;
     private ownArbitrumFillerAddresses: `0x${string}`[];
     private ownBaseFillerAddresses: `0x${string}`[];
 
@@ -36,9 +36,9 @@ export class SolverWebSocketClient {
         this.socket.onmessage = (event) => {
             socketResponseConsumer(event.data);
 
-            const regexpResult = this.winningAuctionRegexp.exec(event.data);
+            const regexpResult = event.data.match(this.winningAuctionRegexp);
             if (regexpResult) {
-                const parsedAuctionResult: AuctionResult = JSON.parse(regexpResult.groups![1]!);
+                const parsedAuctionResult: AuctionResult = JSON.parse(regexpResult[1]!);
 
                 if (this.ownArbitrumFillerAddresses.includes(parsedAuctionResult.settlementReceiverAddress)) {
                     this.fillIntent(parsedAuctionResult, this.arbitrumT1ERC7683Client, parsedAuctionResult.orderData.destinationDomain);
