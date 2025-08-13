@@ -16,7 +16,10 @@ export class ViemT1ERC7683Client {
             address: t1Erc7683ContractAddress,
             abi: t1Erc7683Artifact.abi,
             client: {
-                public: client.publicClient, wallet: client.walletClient
+                public: client.publicClient, wallet: client.walletClient.extend((config) => ({
+                    ...config,
+                    timeout: 15000,
+                }))
             }
         });
 
