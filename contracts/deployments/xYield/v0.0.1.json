@@ -1,0 +1,19 @@
+{
+  "metadata": {
+    "version": "v0.0.1",
+    "date": "2025-08-13",
+    "by": "Evan",
+    "from_machine": "localhost",
+    "from_branch": "fix/x-chain-read-eco-integration",
+    "from_commit": "e1d402db8b12e09db6a16939488b3bbfb34eba41"
+  },
+  "addresses": {
+    "arbitrum": {
+      "xYieldUsdc": "0x1D0dBA3F23Bf0b2653a23363245528635dDe0eaA",
+      "guardian": "0xB458Ff684cCEDb45Be3a41584B7a25fD5FCcB10F",
+      "usdc": "0xaf88d065e77c8cC2239327C5EDb3A432268e5831",
+      "eulerUsdcVault": "0x0a1eCC5Fe8C9be3C809844fcBe615B46A869b899"
+    },
+    "deployerAddress": "0xB458Ff684cCEDb45Be3a41584B7a25fD5FCcB10F"
+  }
+}
