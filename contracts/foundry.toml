@@ -10,7 +10,7 @@
   cache = true                                                  # whether to cache builds or not
   # force = true                                                # whether to ignore the cache (clean build)
   evm_version = 'cancun'                                        # the evm version (by hardfork name)
-  solc_version = '0.8.25'                                       # override for the solc version (setting this ignores `auto_detect_solc`)
+  solc_version = '0.8.28'                                       # override for the solc version (setting this ignores `auto_detect_solc`)
   optimizer = true                                              # enable or disable the solc optimizer
   optimizer_runs = 200                                          # the number of optimizer runs
   verbosity = 3                                                 # the verbosity of tests
@@ -45,7 +45,7 @@
   wrap_comments = true
 
 [rpc_endpoints]
-  arbitrum = "https://arbitrum-mainnet.infura.io/v3/${API_KEY_INFURA}"
+  arbitrum = "${ARBITRUM_RPC}"
   avalanche = "https://avalanche-mainnet.infura.io/v3/${API_KEY_INFURA}"
   base = "https://mainnet.base.org"
   bnb_smart_chain = "https://bsc-dataseed.binance.org"
