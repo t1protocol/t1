@@ -123,15 +123,13 @@ contract xYieldTest is Test {
 
     function testGuardianFunctions() public {
         uint256 newVirtualTotalSupply = 200 * 10 ** 18;
-        address[] memory addresses = new address[](2);
-        uint256[] memory amounts = new uint256[](2);
-        addresses[0] = user1;
-        addresses[1] = user2;
-        amounts[0] = 100 * 10 ** 18;
-        amounts[1] = 100 * 10 ** 18;
+
+        xYieldVault.BalanceUpdate[] memory balanceUpdates = new xYieldVault.BalanceUpdate[](2);
+        balanceUpdates[0] = xYieldVault.BalanceUpdate({ recipient: user1, amount: 100 * 10 ** 18, isMint: true });
+        balanceUpdates[1] = xYieldVault.BalanceUpdate({ recipient: user2, amount: 100 * 10 ** 18, isMint: true });
 
         vm.prank(guardian);
-        vault.updateTotals(newVirtualTotalSupply, addresses, amounts);
+        vault.updateTotals(newVirtualTotalSupply, balanceUpdates);
 
         assertEq(vault.virtualTotalSupply(), newVirtualTotalSupply, "virtual total supply");
 
@@ -144,7 +142,8 @@ contract xYieldTest is Test {
     function testRevertOnUnauthorizedAccess() public {
         vm.expectRevert(abi.encodeWithSelector(xYieldVault.NotGuardian.selector));
         vm.prank(user1);
-        vault.updateTotals(100, emptyAddresses, emptyAmounts);
+        xYieldVault.BalanceUpdate[] memory balanceUpdates = new xYieldVault.BalanceUpdate[](0);
+        vault.updateTotals(100, balanceUpdates);
 
         vm.expectRevert(abi.encodeWithSelector(xYieldVault.NotGuardian.selector));
         vm.prank(user1);

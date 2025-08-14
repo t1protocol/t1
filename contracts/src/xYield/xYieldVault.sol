@@ -17,15 +17,21 @@ contract xYieldVault is ERC4626, Ownable2Step, ReentrancyGuard, Pausable {
     IERC4626 public yieldProtocol;
 
     uint256 public virtualTotalAssets;
+    uint256 public minRebalanceGap;
+    uint256 public lastRebalanceTime;
     uint256 public virtualTotalSupply;
     bool public isActiveChain;
 
+    struct BalanceUpdate {
+        address recipient;
+        uint256 amount;
+        bool isMint;
+    }
+
     mapping(uint256 => address) public siblingVaults;
 
-    uint256 public minRebalanceGap;
-    uint256 public lastRebalanceTime;
-
     event DepositRemote(address indexed sender, address indexed owner, uint256 assets, uint256 shares);
+    event WithdrawRemote(address indexed sender, address indexed owner, uint256 assets, uint256 shares);
 
     error NotGuardian();
     error ZeroAmount();
@@ -159,26 +165,26 @@ contract xYieldVault is ERC4626, Ownable2Step, ReentrancyGuard, Pausable {
         return assets;
     }
 
-    // function remoteWithdraw(uint256 assets, address receiver, uint64 chainId) external nonReentrant returns (uint256)
-    // {
-    //     // TODO: Implement cross-chain withdraw coordination
-    //     revert NotImplemented();
-    // }
+    function withdrawFrom(uint256 assets, address owner, uint64 chainId) external nonReentrant returns (uint256) {
+        _withdrawFrom(owner, assets);
+    }
+
+    // NOTE - for remote withdrawals we update virtualTotalAssets after withdrawal to prevent share price inflation
+    // before
+    // global shares is updated
+    function _withdrawFrom(address owner, uint256 assets) internal {
+        // TODO - deposit into escrow instead of transferring user's underlying to this contract
+        uint256 shares = yieldProtocol.withdraw(assets, address(this), address(this));
+        emit WithdrawRemote(_msgSender(), owner, assets, shares);
+    }
 
     // used on remote chain to mint share tokens
     // used on highest yield chain to update virtual totals
     // TODO - split out based on active chain
-    function updateTotals(
-        uint256 totalSupply_,
-        address[] calldata _recipients,
-        uint256[] calldata _amounts
-    )
-        external
-        onlyGuardian
-    {
+    function updateTotals(uint256 totalSupply_, BalanceUpdate[] calldata balanceUpdates) external onlyGuardian {
         // TODO - update incrementally like virtualTotalAssets using proof of remote supply change
         virtualTotalSupply = totalSupply_;
-        _updateBalances(_recipients, _amounts);
+        _updateBalances(balanceUpdates);
         virtualTotalAssets = this.totalAssets();
         emit TotalSupplyUpdated(totalSupply_);
     }
@@ -188,10 +194,13 @@ contract xYieldVault is ERC4626, Ownable2Step, ReentrancyGuard, Pausable {
     }
 
     // TODO - submit proofs for remote deposits
-    function _updateBalances(address[] calldata recipients, uint256[] calldata amounts) private {
-        if (recipients.length != amounts.length) revert LengthMismatch();
-        for (uint256 i = 0; i < recipients.length; i++) {
-            _mint(recipients[i], amounts[i]);
+    function _updateBalances(BalanceUpdate[] calldata balanceUpdates) private {
+        for (uint256 i = 0; i < balanceUpdates.length; i++) {
+            if (balanceUpdates[i].isMint) {
+                _mint(balanceUpdates[i].recipient, balanceUpdates[i].amount);
+            } else {
+                _burn(balanceUpdates[i].recipient, balanceUpdates[i].amount);
+            }
         }
     }
 

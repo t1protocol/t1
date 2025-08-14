@@ -247,14 +247,12 @@ contract xYieldForkTest is Test {
 
         uint256 totalSharesArbitrum = xYieldArbitrum.totalSupply();
         uint256 totalSharesGlobal = totalSharesArbitrum + bobSharesRemote;
-        address[] memory addresses = new address[](1);
-        uint256[] memory amounts = new uint256[](1);
-        addresses[0] = bob;
-        amounts[0] = bobSharesRemote;
+        xYieldVault.BalanceUpdate[] memory balanceUpdates = new xYieldVault.BalanceUpdate[](1);
+        balanceUpdates[0] = xYieldVault.BalanceUpdate({ recipient: bob, amount: bobSharesRemote, isMint: true });
 
         vm.startPrank(guardian);
-        xYieldArbitrum.updateTotals(totalSharesGlobal, emptyAddresses, emptyAmounts);
-        xYieldBase.updateTotals(totalSharesGlobal, addresses, amounts);
+        xYieldArbitrum.updateTotals(totalSharesGlobal, balanceUpdates);
+        xYieldBase.updateTotals(totalSharesGlobal, balanceUpdates);
         vm.stopPrank();
 
         assertEq(
@@ -292,6 +290,101 @@ contract xYieldForkTest is Test {
         assertTrue(aliceAssets + bobAssets > 0, "Sum of assets should be positive");
     }
 
+    function testRemoteWithdrawUpdateTotalShares() public {
+        // Setup: First do deposits to have assets to withdraw from
+        vm.startPrank(alice);
+        usdcArbitrum.approve(address(xYieldArbitrum), type(uint256).max);
+        uint256 aliceSharesNative = xYieldArbitrum.deposit(depositAmount, alice);
+        vm.stopPrank();
+
+        vm.startPrank(bob);
+        usdcArbitrum.approve(address(xYieldArbitrum), type(uint256).max);
+        uint256 bobSharesRemote = xYieldArbitrum.depositFrom(depositAmount, bob);
+        vm.stopPrank();
+
+        // Update totals to reflect both deposits
+        uint256 totalSharesGlobal = aliceSharesNative + bobSharesRemote;
+        xYieldVault.BalanceUpdate[] memory balanceUpdates = new xYieldVault.BalanceUpdate[](1);
+        balanceUpdates[0] = xYieldVault.BalanceUpdate({ recipient: bob, amount: bobSharesRemote, isMint: true });
+
+        vm.startPrank(guardian);
+        xYieldArbitrum.updateTotals(totalSharesGlobal, balanceUpdates);
+        xYieldBase.updateTotals(totalSharesGlobal, balanceUpdates);
+        vm.stopPrank();
+
+        // Verify initial state
+        assertEq(xYieldArbitrum.virtualTotalSupply(), totalSharesGlobal, "Initial virtual total supply should match global total");
+        assertEq(xYieldBase.balanceOf(bob), bobSharesRemote, "Bob should have shares on Base");
+
+        uint256 withdrawAmount = 30e6; // Withdraw 30 USDC from Bob's remote shares
+        uint256 bobInitialShares = xYieldBase.balanceOf(bob);
+        uint256 aliceInitialShares = xYieldArbitrum.balanceOf(alice);
+        uint256 initialVirtualSupply = xYieldArbitrum.virtualTotalSupply();
+
+        // Simulate remote withdrawal by Bob (would happen on Base chain)
+        uint256 sharesToBurn = xYieldArbitrum.previewWithdraw(withdrawAmount);
+
+        uint64 baseChainId = 8453;
+
+        // Mock the remote withdrawal call that would happen on Base
+        vm.startPrank(guardian);
+        xYieldArbitrum.withdrawFrom(withdrawAmount, bob, baseChainId);
+        vm.stopPrank();
+
+        // Update totals to reflect the withdrawal
+        uint256 newTotalSharesGlobal = totalSharesGlobal - sharesToBurn;
+        xYieldVault.BalanceUpdate[] memory withdrawUpdates = new xYieldVault.BalanceUpdate[](1);
+        withdrawUpdates[0] = xYieldVault.BalanceUpdate({ recipient: bob, amount: sharesToBurn, isMint: false });
+
+        vm.startPrank(guardian);
+        xYieldArbitrum.updateTotals(newTotalSharesGlobal, withdrawUpdates);
+        xYieldBase.updateTotals(newTotalSharesGlobal, withdrawUpdates);
+        vm.stopPrank();
+
+        // Verify the withdrawal updated total shares correctly
+        assertEq(
+            xYieldArbitrum.virtualTotalSupply(),
+            newTotalSharesGlobal,
+            "Virtual total supply should be reduced by withdrawn shares"
+        );
+
+        assertLt(
+            xYieldBase.balanceOf(bob),
+            bobInitialShares,
+            "Bob's shares on Base should be reduced after withdrawal"
+        );
+
+        assertEq(
+            xYieldArbitrum.balanceOf(alice),
+            aliceInitialShares,
+            "Alice's shares on Arbitrum should remain unchanged"
+        );
+
+        assertEq(
+            xYieldBase.balanceOf(bob),
+            bobInitialShares - sharesToBurn,
+            "Bob's remaining shares should equal initial minus burned shares"
+        );
+
+        assertEq(
+            xYieldArbitrum.virtualTotalSupply(),
+            aliceInitialShares + xYieldBase.balanceOf(bob),
+            "Virtual total supply should equal sum of all remaining shares across chains"
+        );
+
+        // Verify that share price remains consistent
+        uint256 aliceAssetsAfter = xYieldArbitrum.convertToAssets(aliceInitialShares);
+        uint256 bobAssetsAfter = xYieldArbitrum.convertToAssets(xYieldBase.balanceOf(bob));
+        uint256 totalAssetsAfter = xYieldArbitrum.totalAssets();
+
+        // Account for the expected 1 wei difference due to ERC4626 virtual assets
+        uint256 difference = totalAssetsAfter > (aliceAssetsAfter + bobAssetsAfter)
+            ? totalAssetsAfter - (aliceAssetsAfter + bobAssetsAfter)
+            : (aliceAssetsAfter + bobAssetsAfter) - totalAssetsAfter;
+
+        assertTrue(difference <= 1, "Asset conversion difference should be at most 1 wei after withdrawal");
+    }
+
     /// @notice Proves that the 1 wei difference is expected ERC4626 behavior across all scenarios
     function testProveERC4626VirtualAssetsAreExpected() public {
         // Scenario 1: Test with Alice's deposit only
@@ -316,14 +409,12 @@ contract xYieldForkTest is Test {
 
         // Update totals to create the virtual supply scenario
         uint256 totalSharesGlobal = xYieldArbitrum.totalSupply() + bobSharesRemote;
-        address[] memory addresses = new address[](1);
-        uint256[] memory amounts = new uint256[](1);
-        addresses[0] = bob;
-        amounts[0] = bobSharesRemote;
+        xYieldVault.BalanceUpdate[] memory balanceUpdates = new xYieldVault.BalanceUpdate[](1);
+        balanceUpdates[0] = xYieldVault.BalanceUpdate({ recipient: bob, amount: bobSharesRemote, isMint: true });
 
         vm.startPrank(guardian);
-        xYieldArbitrum.updateTotals(totalSharesGlobal, emptyAddresses, emptyAmounts);
-        xYieldBase.updateTotals(totalSharesGlobal, addresses, amounts);
+        xYieldArbitrum.updateTotals(totalSharesGlobal, balanceUpdates);
+        xYieldBase.updateTotals(totalSharesGlobal, balanceUpdates);
         vm.stopPrank();
 
         // Now test the 1 wei difference scenario
