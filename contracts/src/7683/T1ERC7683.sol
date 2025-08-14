@@ -203,13 +203,9 @@ contract T1ERC7683 is IT1ERC7683, T1Permit2, OwnableUpgradeable, PausableUpgrade
     {
         if (_orderType != OrderEncoder.orderDataType()) revert InvalidOrderType(_orderType);
 
-        // IDEA: _orderData should not be directly typed as OrderData, it should contain information that is not
-        // present on the type used for open the order. So _fillDeadline and _user should be passed as arguments
         OrderData memory orderData = OrderEncoder.decode(_orderData);
 
         if (orderData.originDomain != localDomain) revert InvalidOriginDomain(orderData.originDomain);
-
-        // bytes32 destinationSettler = _mustHaveRemoteCounterpart(orderData.destinationDomain);
 
         // enforce fillDeadline into orderData
         orderData.fillDeadline = _fillDeadline;
