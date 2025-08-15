@@ -39,8 +39,6 @@ contract T1ERC7683 is IT1ERC7683, T1Permit2, OwnableUpgradeable, PausableUpgrade
     mapping(bytes32 requestId => uint256 batchIndex) public requestIdToBatchIndex;
     /// @notice Maps request IDs to order IDs for cross-chain read requests for refunds
     mapping(bytes32 => bytes32) public refundReadRequestToOrderId;
-    /// @notice Maps order IDs to their winning bid information
-    mapping(bytes32 orderId => Bid winnerBid) public orderToBid;
     /// @notice Maps request IDs to order IDs for cross-chain read requests for settlements
     mapping(bytes32 => bytes32) public settlementReadRequestToOrderId;
     address public counterpart;
@@ -364,20 +362,7 @@ contract T1ERC7683 is IT1ERC7683, T1Permit2, OwnableUpgradeable, PausableUpgrade
 
             for (uint256 i = 0; i < _orderIds.length; i++) {
                 if (_settled) {
-                    (uint256 amountOut, address settlementReceiver) =
-                        abi.decode(_ordersFillerData[i], (uint256, address));
-                    Bid memory winnerBid = orderToBid[orderId];
-
-                    if (
-                        orderData.closedAuction == true
-                            && (settlementReceiver != winnerBid.settlementReceiver || amountOut != winnerBid.amountOut)
-                    ) {
-                        revert InvalidFill(
-                            settlementReceiver, winnerBid.settlementReceiver, amountOut, winnerBid.amountOut
-                        );
-                    }
-                    delete orderToBid[orderId];
-
+                    (, address settlementReceiver) = abi.decode(_ordersFillerData[i], (uint256, address));
                     _handleSettleOrder(
                         orderData.destinationDomain, orderData.destinationSettler, _orderIds[i], settlementReceiver
                     );
@@ -550,15 +535,6 @@ contract T1ERC7683 is IT1ERC7683, T1Permit2, OwnableUpgradeable, PausableUpgrade
 
             emit Refunded(orderId, orderSender);
         }
-    }
-
-    /// @notice Commits a winning bid for a specific order
-    /// @dev Only accessible by owner
-    /// @param orderId The ID of the order to set the winner bid for
-    /// @param winnerBid The winning bid containing settlement receiver and amount out
-    function commitWinnerBid(bytes32 orderId, Bid calldata winnerBid) external onlyOwner {
-        orderToBid[orderId] = winnerBid;
-        emit WinnerBidCommited(orderId, winnerBid.settlementReceiver);
     }
 
     function pause() external onlyOwner {
