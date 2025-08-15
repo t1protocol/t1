@@ -108,7 +108,7 @@ interface IT1ERC7683 is IOriginSettler, IDestinationSettler {
     error InvalidOrder();
     error OrderFillNotExpired();
     error NotEligible();
-    error InvalidFillAuthorization(address recoveredSigner);
+    error InvalidFillAuthorization();
 
     /// @notice Initiates a pull-based settlement verification for an order
     /// @param destinationDomain The domain of the destination chain

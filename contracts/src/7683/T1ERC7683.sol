@@ -47,7 +47,7 @@ contract T1ERC7683 is IT1ERC7683, T1Permit2, OwnableUpgradeable, PausableUpgrade
     address public counterpart;
 
     /// @notice EIP-712 typehash for fill authorization
-    bytes32 private constant FILL_AUTHORIZATION_TYPEHASH =
+    bytes32 public constant FILL_AUTHORIZATION_TYPEHASH =
         keccak256("FillAuthorization(bytes32 orderId,address filler,uint256 amountOut)");
 
     /// @notice Initializes the contract with the specified dependencies
@@ -318,7 +318,7 @@ contract T1ERC7683 is IT1ERC7683, T1Permit2, OwnableUpgradeable, PausableUpgrade
         bytes32 structHash = keccak256(abi.encode(FILL_AUTHORIZATION_TYPEHASH, orderId, msg.sender, amountOut));
         bytes32 digest = _hashTypedDataV4(structHash);
         (address signer,) = ECDSA.tryRecover(digest, authorization);
-        if (signer != auctionBackend) revert InvalidFillAuthorization(signer);
+        if (signer != auctionBackend) revert InvalidFillAuthorization();
     }
 
     /// @notice Initiates a pull-based settlement verification for an order
@@ -599,6 +599,11 @@ contract T1ERC7683 is IT1ERC7683, T1Permit2, OwnableUpgradeable, PausableUpgrade
             _orderStatus = Hyperlane7683Message.encodeSettle(_orderIds, _ordersFillerData);
         }
         return _orderStatus;
+    }
+
+    /// @notice Expose domain separator
+    function domainSeparator() external view returns (bytes32) {
+        return _domainSeparatorV4();
     }
 
     /// @notice Transfers tokens or ETH out of the contract.
