@@ -10,6 +10,7 @@ import { ERC20 } from "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 import { TypeCasts } from "@hyperlane-xyz/libs/TypeCasts.sol";
 import { InterchainGasPaymaster } from "@hyperlane-xyz/hooks/igp/InterchainGasPaymaster.sol";
 import { ISignatureTransfer } from "@uniswap/permit2/src/interfaces/IPermit2.sol";
+import { IT1ERC7683 } from "../../../src/interfaces/IT1ERC7683.sol";
 
 import { ProxyAdmin } from "@openzeppelin/contracts/proxy/transparent/ProxyAdmin.sol";
 import { TransparentUpgradeableProxy } from "@openzeppelin/contracts/proxy/transparent/TransparentUpgradeableProxy.sol";
@@ -20,13 +21,13 @@ import {
     ResolvedCrossChainOrder
 } from "../../../src/interfaces/IERC7683.sol";
 
-import { Base7683 } from "../../../src/7683/Base7683.sol";
+import { T1ERC7683 } from "../../../src/7683/T1ERC7683.sol";
 import { EmptyContract } from "../../misc/EmptyContract.sol";
 
 event Open(bytes32 indexed orderId, ResolvedCrossChainOrder resolvedOrder);
 
 contract BaseTest is Test, DeployPermit2 {
-    Base7683 internal _base7683;
+    T1ERC7683 internal _t1ERC7683;
 
     address permit2;
     ERC20 internal inputToken;
@@ -332,7 +333,7 @@ contract BaseTest is Test, DeployPermit2 {
     }
 
     function _orderDataById(bytes32 orderId) internal view returns (bytes memory orderData) {
-        (, orderData) = abi.decode(_base7683.openOrders(orderId), (bytes32, bytes));
+        (, orderData) = abi.decode(_t1ERC7683.openOrders(orderId), (bytes32, bytes));
     }
 
     function _assertOpenOrder(
@@ -347,10 +348,10 @@ contract BaseTest is Test, DeployPermit2 {
     {
         bytes memory savedOrderData = _orderDataById(orderId);
 
-        assertFalse(_base7683.isValidNonce(sender, 1));
+        assertFalse(_t1ERC7683.isValidNonce(sender, 1));
         assertEq(savedOrderData, orderData);
         _assertOrder(
-            orderId, orderData, balancesBefore, inputToken, user, address(_base7683), _base7683.OPENED(), false
+            orderId, orderData, balancesBefore, inputToken, user, address(_t1ERC7683), IT1ERC7683.Status.OPENED, false
         );
     }
 
@@ -367,10 +368,10 @@ contract BaseTest is Test, DeployPermit2 {
     {
         bytes memory savedOrderData = _orderDataById(orderId);
 
-        assertFalse(_base7683.isValidNonce(sender, 1));
+        assertFalse(_t1ERC7683.isValidNonce(sender, 1));
         assertEq(savedOrderData, orderData);
         _assertOrder(
-            orderId, orderData, balancesBefore, inputToken, user, address(_base7683), _base7683.OPENED(), native
+            orderId, orderData, balancesBefore, inputToken, user, address(_t1ERC7683), IT1ERC7683.Status.OPENED, native
         );
     }
 
@@ -381,14 +382,14 @@ contract BaseTest is Test, DeployPermit2 {
         ERC20 token,
         address sender,
         address receiver,
-        bytes32 expectedStatus,
+        IT1ERC7683.Status expectedStatus,
         bool native
     )
         internal
         view
     {
         bytes memory savedOrderData = _orderDataById(orderId);
-        bytes32 status = _base7683.orderStatus(orderId);
+        IT1ERC7683.Status status = _t1ERC7683.orderStatus(orderId);
 
         assertEq(savedOrderData, orderData);
         assertTrue(status == expectedStatus);
