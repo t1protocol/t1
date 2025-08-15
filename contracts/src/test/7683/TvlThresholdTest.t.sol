@@ -36,7 +36,7 @@ contract TvlThresholdTest is BaseTest {
         t1ERC7683 = T1ERC7683(payable(_deployProxy(address(0))));
         admin.upgrade(
             ITransparentUpgradeableProxy(address(t1ERC7683)),
-            address(new T1ERC7683(permit2, address(reader), uint32(origin)))
+            address(new T1ERC7683(permit2, address(reader), uint32(origin), auctionBackend))
         );
         t1ERC7683.initialize(address(t1ERC7683));
     }

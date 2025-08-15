@@ -7,6 +7,8 @@ import { IERC20 } from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import { SafeERC20 } from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import { Address } from "@openzeppelin/contracts/utils/Address.sol";
 import { TypeCasts } from "@hyperlane-xyz/libs/TypeCasts.sol";
+import { ECDSA } from "@openzeppelin/contracts/utils/cryptography/ECDSA.sol";
+import { EIP712 } from "@openzeppelin/contracts/utils/cryptography/EIP712.sol";
 import { Hyperlane7683Message } from "../libraries/7683/Hyperlane7683Message.sol";
 import { OrderData, OrderEncoder } from "../libraries/7683/OrderEncoder.sol";
 
@@ -23,7 +25,7 @@ import { IT1XChainReader } from "../libraries/xChain/IT1XChainReader.sol";
 
 /// @title T1ERC7683
 /// @author t1 Labs
-contract T1ERC7683 is IT1ERC7683, T1Permit2, OwnableUpgradeable, PausableUpgradeable {
+contract T1ERC7683 is IT1ERC7683, T1Permit2, OwnableUpgradeable, PausableUpgradeable, EIP712 {
     using SafeERC20 for IERC20;
 
     /// @notice chain id
@@ -41,15 +43,30 @@ contract T1ERC7683 is IT1ERC7683, T1Permit2, OwnableUpgradeable, PausableUpgrade
     mapping(bytes32 => bytes32) public refundReadRequestToOrderId;
     /// @notice Maps request IDs to order IDs for cross-chain read requests for settlements
     mapping(bytes32 => bytes32) public settlementReadRequestToOrderId;
+    address public immutable auctionBackend;
     address public counterpart;
+
+    /// @notice EIP-712 typehash for fill authorization
+    bytes32 private constant FILL_AUTHORIZATION_TYPEHASH =
+        keccak256("FillAuthorization(bytes32 orderId,address filler,uint256 amountOut)");
 
     /// @notice Initializes the contract with the specified dependencies
     /// @param _permit2 The address of the permit2 contract
     /// @param _xChainRead The address of the cross-chain read contract
     /// @param _localDomain The local domain (chain id)
-    constructor(address _permit2, address _xChainRead, uint32 _localDomain) T1Permit2(_permit2) {
+    constructor(
+        address _permit2,
+        address _xChainRead,
+        uint32 _localDomain,
+        address _auctionBackend
+    )
+        T1Permit2(_permit2)
+        EIP712("T1ERC7683", "1")
+    {
+        if (_xChainRead == address(0) || _auctionBackend == address(0)) revert ZeroAddress();
         xChainRead = IT1XChainReader(_xChainRead);
         localDomain = _localDomain;
+        auctionBackend = _auctionBackend;
     }
 
     /// @notice Initializes the contract
@@ -256,18 +273,31 @@ contract T1ERC7683 is IT1ERC7683, T1Permit2, OwnableUpgradeable, PausableUpgrade
     /// @param orderId Unique order identifier for this order
     /// @param originData Data emitted on the origin to parameterize the fill
     /// @param fillerData Data provided by the filler to inform the amount they want to fill and the address they
-    /// want to receive the source chain settle on.
-    /// Formatted as: abi.encode(uint256 amountOut, address settlementReceiver)
+    /// want to receive the source chain settle on + optional auction backend signature representing the
+    /// authorization for winner if closed auction
+    /// Formatted as: abi.encode(uint256 amountOut, address settlementReceiver, bytes authorization)
     function fill(bytes32 orderId, bytes calldata originData, bytes calldata fillerData) external payable virtual {
         if (orderStatus[orderId] != Status.UNKNOWN) revert InvalidOrderStatus();
 
         OrderData memory orderData = OrderEncoder.decode(originData);
-        (uint256 amountOut,) = abi.decode(fillerData, (uint256, address));
+        // Check if authorization is provided (for closed auctions)
+        uint256 amountOut;
+        bytes memory authorization;
+        if (fillerData.length > 64) {
+            // More than amountOut + filler address
+            (amountOut,, authorization) = abi.decode(fillerData, (uint256, address, bytes));
+        } else {
+            (amountOut,) = abi.decode(fillerData, (uint256, address));
+        }
 
         if (orderId != OrderEncoder.id(orderData)) revert InvalidOrderId();
         if (block.timestamp > orderData.fillDeadline) revert OrderFillExpired();
         if (orderData.destinationDomain != localDomain) revert InvalidOrderDomain();
         if (amountOut < orderData.minAmountOut) revert AmountOutTooLow();
+        // Only verify authorization for closed auctions and if authorization is provided
+        if (orderData.closedAuction && authorization.length > 0) {
+            _verifyAuthorization(orderId, amountOut, authorization);
+        }
 
         address outputToken = TypeCasts.bytes32ToAddress(orderData.outputToken);
         address recipient = TypeCasts.bytes32ToAddress(orderData.recipient);
@@ -282,6 +312,13 @@ contract T1ERC7683 is IT1ERC7683, T1Permit2, OwnableUpgradeable, PausableUpgrade
         filledOrders[orderId] = FilledOrder(originData, fillerData);
 
         emit Filled(orderId, originData, fillerData);
+    }
+
+    function _verifyAuthorization(bytes32 orderId, uint256 amountOut, bytes memory authorization) private view {
+        bytes32 structHash = keccak256(abi.encode(FILL_AUTHORIZATION_TYPEHASH, orderId, msg.sender, amountOut));
+        bytes32 digest = _hashTypedDataV4(structHash);
+        (address signer,) = ECDSA.tryRecover(digest, authorization);
+        if (signer != auctionBackend) revert InvalidFillAuthorization(signer);
     }
 
     /// @notice Initiates a pull-based settlement verification for an order

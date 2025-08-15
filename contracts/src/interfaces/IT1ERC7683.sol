@@ -89,6 +89,7 @@ interface IT1ERC7683 is IOriginSettler, IDestinationSettler {
      */
     event Refunded(bytes32 indexed orderId, address receiver);
 
+    error ZeroAddress();
     error InvalidOrderId();
     error OrderFillExpired();
     error InvalidOrderDomain();
@@ -107,6 +108,7 @@ interface IT1ERC7683 is IOriginSettler, IDestinationSettler {
     error InvalidOrder();
     error OrderFillNotExpired();
     error NotEligible();
+    error InvalidFillAuthorization(address recoveredSigner);
 
     /// @notice Initiates a pull-based settlement verification for an order
     /// @param destinationDomain The domain of the destination chain

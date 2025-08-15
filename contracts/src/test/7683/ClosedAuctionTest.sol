@@ -36,11 +36,11 @@ contract ClosedAuctionTest is T1XChainReaderBaseTestSetup {
         l2T1ERC7683 = T1ERC7683(payable(_deployProxy(address(proxyOwner))));
         admin.upgrade(
             ITransparentUpgradeableProxy(address(l1T1ERC7683)),
-            address(new T1ERC7683(address(0), address(originReader), uint32(origin)))
+            address(new T1ERC7683(address(0), address(originReader), uint32(origin), auctionBackend))
         );
         admin.upgrade(
             ITransparentUpgradeableProxy(address(l2T1ERC7683)),
-            address(new T1ERC7683(address(0), address(destinationReader), uint32(destination)))
+            address(new T1ERC7683(address(0), address(destinationReader), uint32(destination), auctionBackend))
         );
         l1T1ERC7683.initialize(address(l2T1ERC7683));
         l2T1ERC7683.initialize(address(l1T1ERC7683));
