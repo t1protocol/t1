@@ -280,38 +280,61 @@ contract T1ERC7683 is IT1ERC7683, T1Permit2, OwnableUpgradeable, PausableUpgrade
         if (orderStatus[orderId] != Status.UNKNOWN) revert InvalidOrderStatus();
 
         OrderData memory orderData = OrderEncoder.decode(originData);
-        // Check if authorization is provided (for closed auctions)
-        uint256 amountOut;
-        bytes memory authorization;
-        if (fillerData.length > 64) {
-            // More than amountOut + filler address
-            (amountOut,, authorization) = abi.decode(fillerData, (uint256, address, bytes));
-        } else {
-            (amountOut,) = abi.decode(fillerData, (uint256, address));
-        }
+        (uint256 amountOut, bytes memory authorization) = _decodeFillerData(fillerData);
 
-        if (orderId != OrderEncoder.id(orderData)) revert InvalidOrderId();
-        if (block.timestamp > orderData.fillDeadline) revert OrderFillExpired();
-        if (orderData.destinationDomain != localDomain) revert InvalidOrderDomain();
-        if (amountOut < orderData.minAmountOut) revert AmountOutTooLow();
-        // Only verify authorization for closed auctions and if authorization is provided
-        if (orderData.closedAuction && authorization.length > 0) {
-            _verifyAuthorization(orderId, amountOut, authorization);
-        }
+        _validateFillParameters(orderId, orderData, amountOut, authorization);
 
         address outputToken = TypeCasts.bytes32ToAddress(orderData.outputToken);
         address recipient = TypeCasts.bytes32ToAddress(orderData.recipient);
 
+        _executeTransfer(outputToken, recipient, amountOut);
+
+        orderStatus[orderId] = Status.FILLED;
+        filledOrders[orderId] = FilledOrder(originData, fillerData);
+
+        emit Filled(orderId, originData, fillerData);
+    }
+
+    /// @dev Decodes filler data to extract amount and authorization
+    function _decodeFillerData(bytes calldata fillerData)
+        private
+        pure
+        returns (uint256 amountOut, bytes memory authorization)
+    {
+        if (fillerData.length > 64) {
+            (amountOut,, authorization) = abi.decode(fillerData, (uint256, address, bytes));
+        } else {
+            (amountOut,) = abi.decode(fillerData, (uint256, address));
+        }
+    }
+
+    /// @dev Validates fill parameters and authorization
+    function _validateFillParameters(
+        bytes32 orderId,
+        OrderData memory orderData,
+        uint256 amountOut,
+        bytes memory authorization
+    )
+        private
+        view
+    {
+        if (orderId != OrderEncoder.id(orderData)) revert InvalidOrderId();
+        if (block.timestamp > orderData.fillDeadline) revert OrderFillExpired();
+        if (orderData.destinationDomain != localDomain) revert InvalidOrderDomain();
+        if (amountOut < orderData.minAmountOut) revert AmountOutTooLow();
+        if (orderData.closedAuction && authorization.length > 0) {
+            _verifyAuthorization(orderId, amountOut, authorization);
+        }
+    }
+
+    /// @dev Executes the token transfer (ETH or ERC20)
+    function _executeTransfer(address outputToken, address recipient, uint256 amountOut) private {
         if (outputToken == address(0)) {
             if (amountOut != msg.value) revert InvalidNativeAmount();
             Address.sendValue(payable(recipient), amountOut);
         } else {
             IERC20(outputToken).safeTransferFrom(msg.sender, recipient, amountOut);
         }
-        orderStatus[orderId] = Status.FILLED;
-        filledOrders[orderId] = FilledOrder(originData, fillerData);
-
-        emit Filled(orderId, originData, fillerData);
     }
 
     function _verifyAuthorization(bytes32 orderId, uint256 amountOut, bytes memory authorization) private view {
