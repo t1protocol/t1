@@ -91,9 +91,9 @@ interface IT1ERC7683 is IOriginSettler, IDestinationSettler {
     /**
      * @notice Emitted when a winner bid is committed for an order
      * @param orderId The ID of the order
-     * @param settlementSeceiver The address of the settlement receiver
+     * @param settlementReceiver The address of the settlement receiver
      */
-    event WinnerBidCommited(bytes32 indexed orderId, address indexed settlementSeceiver);
+    event WinnerBidCommited(bytes32 indexed orderId, address indexed settlementReceiver);
 
     /**
      * @notice Emitted when open operations are paused

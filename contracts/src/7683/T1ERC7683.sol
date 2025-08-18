@@ -538,7 +538,7 @@ contract T1ERC7683 is IT1ERC7683, T1Permit2, AccessControlUpgradeable {
         bytes32 expectedOrderId = refundReadRequestToOrderId[requestId];
         if (expectedOrderId != orderId) revert InvalidRequest();
 
-        delete settlementReadRequestToOrderId[requestId];
+        delete refundReadRequestToOrderId[requestId];
 
         // Check if the order is settled based on result length (same logic as handleReadResultWithProof)
         if (result.length == 0) return;
