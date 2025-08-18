@@ -281,9 +281,17 @@ contract T1ERC7683 is IT1ERC7683, T1Permit2, OwnableUpgradeable, PausableUpgrade
         if (orderStatus[orderId] != Status.UNKNOWN) revert InvalidOrderStatus();
 
         OrderData memory orderData = OrderEncoder.decode(originData);
-        (uint256 amountOut, bytes memory authorization) = _decodeFillerData(fillerData);
+        // (uint256 amountOut, bytes memory authorization) = _decodeFillerData(fillerData);
+        uint256 amountOut;
+        if (orderData.closedAuction) {
+            bytes memory authorization;
+            (amountOut,, authorization) = abi.decode(fillerData, (uint256, address, bytes));
+            _verifyAuthorization(orderId, amountOut, authorization);
+        } else {
+            (amountOut,) = abi.decode(fillerData, (uint256, address));
+        }
 
-        _validateFillParameters(orderId, orderData, amountOut, authorization);
+        _validateFillParameters(orderId, orderData, amountOut);
 
         address outputToken = TypeCasts.bytes32ToAddress(orderData.outputToken);
         address recipient = TypeCasts.bytes32ToAddress(orderData.recipient);
@@ -310,22 +318,11 @@ contract T1ERC7683 is IT1ERC7683, T1Permit2, OwnableUpgradeable, PausableUpgrade
     }
 
     /// @dev Validates fill parameters and authorization
-    function _validateFillParameters(
-        bytes32 orderId,
-        OrderData memory orderData,
-        uint256 amountOut,
-        bytes memory authorization
-    )
-        private
-        view
-    {
+    function _validateFillParameters(bytes32 orderId, OrderData memory orderData, uint256 amountOut) private view {
         if (orderId != OrderEncoder.id(orderData)) revert InvalidOrderId();
         if (block.timestamp > orderData.fillDeadline) revert OrderFillExpired();
         if (orderData.destinationDomain != localDomain) revert InvalidOrderDomain();
         if (amountOut < orderData.minAmountOut) revert AmountOutTooLow();
-        if (orderData.closedAuction) {
-            _verifyAuthorization(orderId, amountOut, authorization);
-        }
     }
 
     /// @dev Executes the token transfer (ETH or ERC20)

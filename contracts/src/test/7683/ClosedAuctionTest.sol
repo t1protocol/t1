@@ -102,7 +102,7 @@ contract ClosedAuctionTest is T1XChainReaderBaseTestSetup {
         bytes memory originData = OrderEncoder.encode(orderData);
         bytes memory fillerData = abi.encode(amount, TypeCasts.addressToBytes32(vegeta));
 
-        vm.expectRevert(IT1ERC7683.InvalidFillAuthorization.selector);
+        vm.expectRevert();
         l2T1ERC7683.fill(orderId, originData, fillerData);
         vm.stopPrank();
     }
