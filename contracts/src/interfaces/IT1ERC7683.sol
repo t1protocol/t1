@@ -19,16 +19,6 @@ interface IT1ERC7683 is IOriginSettler, IDestinationSettler {
     }
 
     /**
-     * @notice Represents a bid for order settlement
-     * @param settlementReceiver The address that will receive the settlement on src chain
-     * @param amountOut The amount of output tokens to be received on dst chain
-     */
-    struct Bid {
-        address settlementReceiver;
-        uint256 amountOut;
-    }
-
-    /**
      * @dev Represents data for an order that has been filled.
      * @param originData The origin-specific data for the order.
      * @param fillerData The filler-specific data for the order.
