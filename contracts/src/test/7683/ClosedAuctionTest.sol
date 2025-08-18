@@ -94,6 +94,34 @@ contract ClosedAuctionTest is T1XChainReaderBaseTestSetup {
         vm.stopPrank();
     }
 
+    function test_revertIfNoAuthorization() public {
+        (OrderData memory orderData, bytes32 orderId) = _openOrder(true);
+
+        vm.startPrank(vegeta);
+        outputToken.approve(address(l2T1ERC7683), amount);
+        bytes memory originData = OrderEncoder.encode(orderData);
+        bytes memory fillerData = abi.encode(amount, TypeCasts.addressToBytes32(vegeta));
+
+        vm.expectRevert(IT1ERC7683.InvalidFillAuthorization.selector);
+        l2T1ERC7683.fill(orderId, originData, fillerData);
+        vm.stopPrank();
+    }
+
+    function test_revertIfEmptyAuthorization() public {
+        (OrderData memory orderData, bytes32 orderId) = _openOrder(true);
+
+        bytes memory malformedAuthorization = abi.encodePacked(bytes32(0));
+
+        vm.startPrank(vegeta);
+        outputToken.approve(address(l2T1ERC7683), amount);
+        bytes memory originData = OrderEncoder.encode(orderData);
+        bytes memory fillerData = abi.encode(amount, TypeCasts.addressToBytes32(vegeta), malformedAuthorization);
+
+        vm.expectRevert(IT1ERC7683.InvalidFillAuthorization.selector);
+        l2T1ERC7683.fill(orderId, originData, fillerData);
+        vm.stopPrank();
+    }
+
     function test_revertIfMalformedAuthorization() public {
         (OrderData memory orderData, bytes32 orderId) = _openOrder(true);
 

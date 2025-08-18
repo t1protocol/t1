@@ -322,7 +322,7 @@ contract T1ERC7683 is IT1ERC7683, T1Permit2, OwnableUpgradeable, PausableUpgrade
         if (block.timestamp > orderData.fillDeadline) revert OrderFillExpired();
         if (orderData.destinationDomain != localDomain) revert InvalidOrderDomain();
         if (amountOut < orderData.minAmountOut) revert AmountOutTooLow();
-        if (orderData.closedAuction && authorization.length > 0) {
+        if (orderData.closedAuction) {
             _verifyAuthorization(orderId, amountOut, authorization);
         }
     }
