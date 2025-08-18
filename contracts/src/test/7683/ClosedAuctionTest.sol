@@ -128,7 +128,7 @@ contract ClosedAuctionTest is T1XChainReaderBaseTestSetup {
         l1T1ERC7683.commitWinnerBid(orderId, IT1ERC7683.Bid({ settlementReceiver: vegeta, amountOut: amount }));
     }
 
-    function _openAndFillOrder() internal returns (OrderData memory, bytes32 orderId, bytes32 requestId) {
+    function _openAndFillOrder() internal override returns (OrderData memory, bytes32 orderId, bytes32 requestId) {
         OrderData memory orderData = _prepareOrderData();
         orderData.closedAuction = true;
         OnchainCrossChainOrder memory order =
@@ -156,77 +156,5 @@ contract ClosedAuctionTest is T1XChainReaderBaseTestSetup {
         vm.stopPrank();
 
         return (orderData, orderId_, requestId_);
-    }
-
-    /// @dev Generate a merkle tree with depth 2 (4 leaves) including the result value and a proof
-    /// @param requestId Proof of read request id
-    /// @param result Result of the read
-    /// @param position position of the leaf where result is stored (0-3)
-    /// @return root Root of the merkle tree
-    /// @return proof Proof of for the leaf where result is stored
-    function _generateMerkleTree(
-        bytes32 requestId,
-        bytes memory result,
-        uint256 position
-    )
-        private
-        pure
-        returns (bytes32 root, bytes memory proof)
-    {
-        require(position < 4, "position must be < 4 for depth 2 tree");
-
-        // Generate 4 leaves, one for the result and three for the mock leaves
-        bytes32[] memory leafs = new bytes32[](4);
-        for (uint256 i = 0; i < leafs.length; i++) {
-            if (i == position) {
-                bytes32 xChainReadResultHash = keccak256(result);
-                // Use abi.encodePacked to match T1ERC7683.sol line 138
-                leafs[i] = keccak256(abi.encodePacked(xChainReadResultHash, requestId));
-            } else {
-                bytes32 mockLeaf = keccak256(abi.encodePacked("mock_leaf", i));
-                leafs[i] = mockLeaf;
-            }
-        }
-
-        // Build intermediate nodes
-        bytes32[] memory level1 = new bytes32[](2);
-        level1[0] = _efficientHash(leafs[0], leafs[1]);
-        level1[1] = _efficientHash(leafs[2], leafs[3]);
-
-        root = _efficientHash(level1[0], level1[1]);
-
-        // Generate proof for the target leaf at position position
-        bytes32[] memory proofElements = new bytes32[](2);
-        uint256 currentposition = position;
-
-        // Leaf sibling
-        if (currentposition % 2 == 0) {
-            proofElements[0] = leafs[currentposition + 1];
-        } else {
-            proofElements[0] = leafs[currentposition - 1];
-        }
-        currentposition /= 2;
-
-        // Intermediate node sibling
-        if (currentposition % 2 == 0) {
-            proofElements[1] = level1[currentposition + 1];
-        } else {
-            proofElements[1] = level1[currentposition - 1];
-        }
-
-        // Encode proof as concatenated bytes32 values (WithdrawTrieVerifier expects this format)
-        proof = new bytes(64); // 2 * 32 bytes
-        assembly {
-            mstore(add(proof, 0x20), mload(add(proofElements, 0x20)))
-            mstore(add(proof, 0x40), mload(add(proofElements, 0x40)))
-        }
-    }
-
-    function _efficientHash(bytes32 a, bytes32 b) private pure returns (bytes32 value) {
-        assembly {
-            mstore(0x00, a)
-            mstore(0x20, b)
-            value := keccak256(0x00, 0x40)
-        }
     }
 }

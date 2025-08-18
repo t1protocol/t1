@@ -95,6 +95,26 @@ interface IT1ERC7683 is IOriginSettler, IDestinationSettler {
      */
     event WinnerBidCommited(bytes32 indexed orderId, address indexed settlementSeceiver);
 
+    /**
+     * @notice Emitted when open operations are paused
+     */
+    event OpenPaused();
+
+    /**
+     * @notice Emitted when open operations are unpaused
+     */
+    event OpenUnpaused();
+
+    /**
+     * @notice Emitted when settlement operations are paused
+     */
+    event SettlePaused();
+
+    /**
+     * @notice Emitted when settlement operations are unpaused
+     */
+    event SettleUnpaused();
+
     error InvalidOrderId();
     error OrderFillExpired();
     error InvalidOrderDomain();
@@ -116,6 +136,8 @@ interface IT1ERC7683 is IOriginSettler, IDestinationSettler {
     error InvalidFill(
         address settlementReceiver, address expectedSettlementReceiver, uint256 amountOut, uint256 expectedAmountOut
     );
+    error OpenOperationsPaused();
+    error SettleOperationsPaused();
 
     /// @notice Initiates a pull-based settlement verification for an order
     /// @param destinationDomain The domain of the destination chain

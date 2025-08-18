@@ -1,8 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.30;
 
-import { OwnableUpgradeable } from "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
-import { PausableUpgradeable } from "@openzeppelin/contracts-upgradeable/security/PausableUpgradeable.sol";
+import { AccessControlUpgradeable } from "@openzeppelin/contracts-upgradeable/access/AccessControlUpgradeable.sol";
 import { IERC20 } from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import { SafeERC20 } from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import { Address } from "@openzeppelin/contracts/utils/Address.sol";
@@ -23,9 +22,13 @@ import { IT1XChainReader } from "../libraries/xChain/IT1XChainReader.sol";
 
 /// @title T1ERC7683
 /// @author t1 Labs
-contract T1ERC7683 is IT1ERC7683, T1Permit2, OwnableUpgradeable, PausableUpgradeable {
+contract T1ERC7683 is IT1ERC7683, T1Permit2, AccessControlUpgradeable {
     using SafeERC20 for IERC20;
 
+    /// @notice Role for pausing/unpausing open operations
+    bytes32 public constant OPEN_PAUSER_ROLE = keccak256("OPEN_PAUSER_ROLE");
+    /// @notice Role for pausing/unpausing settlement operations
+    bytes32 public constant SETTLE_PAUSER_ROLE = keccak256("SETTLE_PAUSER_ROLE");
     /// @notice chain id
     uint32 public immutable localDomain;
     IT1XChainReader public immutable xChainRead;
@@ -43,7 +46,23 @@ contract T1ERC7683 is IT1ERC7683, T1Permit2, OwnableUpgradeable, PausableUpgrade
     mapping(bytes32 orderId => Bid winnerBid) public orderToBid;
     /// @notice Maps request IDs to order IDs for cross-chain read requests for settlements
     mapping(bytes32 => bytes32) public settlementReadRequestToOrderId;
+    /// @notice Sibling settler contract
     address public counterpart;
+    /// @notice Separate pausable states
+    bool public openPaused;
+    bool public settlePaused;
+
+    /// @notice Modifier to check if open operations are not paused
+    modifier whenOpenNotPaused() {
+        if (openPaused) revert OpenOperationsPaused();
+        _;
+    }
+
+    /// @notice Modifier to check if settlement operations are not paused
+    modifier whenSettleNotPaused() {
+        if (settlePaused) revert SettleOperationsPaused();
+        _;
+    }
 
     /// @notice Initializes the contract with the specified dependencies
     /// @param _permit2 The address of the permit2 contract
@@ -58,15 +77,19 @@ contract T1ERC7683 is IT1ERC7683, T1Permit2, OwnableUpgradeable, PausableUpgrade
     /// @param _counterpart the counterpart contract on another chain
     function initialize(address _counterpart) external initializer {
         counterpart = _counterpart;
-        __Ownable_init();
-        __Pausable_init();
+        _setRoleAdmin(DEFAULT_ADMIN_ROLE, DEFAULT_ADMIN_ROLE);
+        _setRoleAdmin(OPEN_PAUSER_ROLE, DEFAULT_ADMIN_ROLE);
+        _setRoleAdmin(SETTLE_PAUSER_ROLE, DEFAULT_ADMIN_ROLE);
+        _grantRole(DEFAULT_ADMIN_ROLE, msg.sender);
+        _grantRole(OPEN_PAUSER_ROLE, msg.sender);
+        _grantRole(SETTLE_PAUSER_ROLE, msg.sender);
     }
 
     /// @notice Opens a cross-chain order
     /// @dev To be called by the user
     /// @dev This method must emit the Open event
     /// @param _order The OnchainCrossChainOrder definition
-    function open(OnchainCrossChainOrder calldata _order) external payable override whenNotPaused {
+    function open(OnchainCrossChainOrder calldata _order) external payable override whenOpenNotPaused {
         (ResolvedCrossChainOrder memory resolvedOrder, bytes32 orderId, uint256 nonce) = _resolveOrder(_order);
 
         openOrders[orderId] = abi.encode(_order.orderDataType, _order.orderData);
@@ -101,7 +124,7 @@ contract T1ERC7683 is IT1ERC7683, T1Permit2, OwnableUpgradeable, PausableUpgrade
     )
         external
         override
-        whenNotPaused
+        whenOpenNotPaused
     {
         if (block.timestamp > _order.openDeadline) revert OrderOpenExpired();
         if (_order.originSettler != address(this)) revert InvalidGaslessOrderSettler();
@@ -337,7 +360,7 @@ contract T1ERC7683 is IT1ERC7683, T1Permit2, OwnableUpgradeable, PausableUpgrade
     /// Also enforce auction winner bid if the orderId has closed auction.
     /// @param encodedProofOfRead The encoded proof of read which is formatted as following:
     /// abi.encode(uint256 batchIndex, bytes32 requestId, uint256 position, bytes result, bytes proof)
-    function handleReadResultWithProof(bytes calldata encodedProofOfRead) external {
+    function handleReadResultWithProof(bytes calldata encodedProofOfRead) external whenSettleNotPaused {
         (bytes32 requestId, bytes memory result) = xChainRead.verifyProofOfRead(encodedProofOfRead);
 
         bytes32 orderId = settlementReadRequestToOrderId[requestId];
@@ -556,17 +579,29 @@ contract T1ERC7683 is IT1ERC7683, T1Permit2, OwnableUpgradeable, PausableUpgrade
     /// @dev Only accessible by owner
     /// @param orderId The ID of the order to set the winner bid for
     /// @param winnerBid The winning bid containing settlement receiver and amount out
-    function commitWinnerBid(bytes32 orderId, Bid calldata winnerBid) external onlyOwner {
+    function commitWinnerBid(bytes32 orderId, Bid calldata winnerBid) external onlyRole(DEFAULT_ADMIN_ROLE) {
         orderToBid[orderId] = winnerBid;
         emit WinnerBidCommited(orderId, winnerBid.settlementReceiver);
     }
 
-    function pause() external onlyOwner {
-        _pause();
+    function pauseOpen() external onlyRole(OPEN_PAUSER_ROLE) {
+        openPaused = true;
+        emit OpenPaused();
     }
 
-    function unpause() external onlyOwner {
-        _unpause();
+    function unpauseOpen() external onlyRole(OPEN_PAUSER_ROLE) {
+        openPaused = false;
+        emit OpenUnpaused();
+    }
+
+    function pauseSettle() external onlyRole(SETTLE_PAUSER_ROLE) {
+        settlePaused = true;
+        emit SettlePaused();
+    }
+
+    function unpauseSettle() external onlyRole(SETTLE_PAUSER_ROLE) {
+        settlePaused = false;
+        emit SettleUnpaused();
     }
 
     /// @notice Retrieves the status of a filled order by its ID
