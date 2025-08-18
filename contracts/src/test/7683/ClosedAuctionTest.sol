@@ -36,11 +36,11 @@ contract ClosedAuctionTest is T1XChainReaderBaseTestSetup {
         l2T1ERC7683 = T1ERC7683(payable(_deployProxy(address(proxyOwner))));
         admin.upgrade(
             ITransparentUpgradeableProxy(address(l1T1ERC7683)),
-            address(new T1ERC7683(address(0), address(originReader), uint32(origin), auctionBackend))
+            address(new T1ERC7683(address(0), address(originReader), uint32(origin), auctionWitness))
         );
         admin.upgrade(
             ITransparentUpgradeableProxy(address(l2T1ERC7683)),
-            address(new T1ERC7683(address(0), address(destinationReader), uint32(destination), auctionBackend))
+            address(new T1ERC7683(address(0), address(destinationReader), uint32(destination), auctionWitness))
         );
         l1T1ERC7683.initialize(address(l2T1ERC7683));
         l2T1ERC7683.initialize(address(l1T1ERC7683));
@@ -50,7 +50,7 @@ contract ClosedAuctionTest is T1XChainReaderBaseTestSetup {
         (OrderData memory orderData, bytes32 orderId) = _openOrder(true);
 
         // Generate EIP-712 authorization signature
-        bytes memory authorization = _generateAuthorization(orderId, vegeta, amount, auctionBackendPK);
+        bytes memory authorization = _generateAuthorization(orderId, vegeta, amount, auctionWitnessPK);
 
         vm.startPrank(vegeta);
         outputToken.approve(address(l2T1ERC7683), amount);
@@ -66,7 +66,7 @@ contract ClosedAuctionTest is T1XChainReaderBaseTestSetup {
         (OrderData memory orderData, bytes32 orderId) = _openOrder(false);
 
         // Not matching authorization signature
-        bytes memory authorization = _generateAuthorization(orderId, kakaroto, amount + 1, auctionBackendPK);
+        bytes memory authorization = _generateAuthorization(orderId, kakaroto, amount + 1, auctionWitnessPK);
 
         vm.startPrank(vegeta);
         outputToken.approve(address(l2T1ERC7683), amount);
@@ -81,7 +81,7 @@ contract ClosedAuctionTest is T1XChainReaderBaseTestSetup {
     function test_revertIfInvalidAuthorization() public {
         (OrderData memory orderData, bytes32 orderId) = _openOrder(true);
 
-        // Generate invalid authorization by signing with wrong private key (vegeta instead of auctionBackend)
+        // Generate invalid authorization by signing with wrong private key (vegeta instead of auctionWitness)
         bytes memory invalidAuthorization = _generateAuthorization(orderId, vegeta, amount, vegetaPK);
 
         vm.startPrank(vegeta);
@@ -142,7 +142,7 @@ contract ClosedAuctionTest is T1XChainReaderBaseTestSetup {
         (OrderData memory orderData, bytes32 orderId) = _openOrder(true);
 
         // Generate authorization with an invalid amountOut value
-        bytes memory authorization = _generateAuthorization(orderId, vegeta, amount + 1, auctionBackendPK);
+        bytes memory authorization = _generateAuthorization(orderId, vegeta, amount + 1, auctionWitnessPK);
 
         vm.startPrank(vegeta);
         outputToken.approve(address(l2T1ERC7683), amount);
@@ -159,7 +159,7 @@ contract ClosedAuctionTest is T1XChainReaderBaseTestSetup {
 
         // Generate authorization with an invalid orderId
         bytes32 invalidOrderId = bytes32(vm.randomUint());
-        bytes memory authorization = _generateAuthorization(invalidOrderId, vegeta, amount, auctionBackendPK);
+        bytes memory authorization = _generateAuthorization(invalidOrderId, vegeta, amount, auctionWitnessPK);
 
         vm.startPrank(vegeta);
         outputToken.approve(address(l2T1ERC7683), amount);
@@ -174,7 +174,7 @@ contract ClosedAuctionTest is T1XChainReaderBaseTestSetup {
     function test_revertIfInvalidSolver() public {
         (OrderData memory orderData, bytes32 orderId) = _openOrder(true);
 
-        bytes memory authorization = _generateAuthorization(orderId, vegeta, amount, auctionBackendPK);
+        bytes memory authorization = _generateAuthorization(orderId, vegeta, amount, auctionWitnessPK);
 
         // Call fill with invalid solver account
         vm.startPrank(kakaroto);

@@ -43,7 +43,7 @@ contract T1ERC7683 is IT1ERC7683, T1Permit2, OwnableUpgradeable, PausableUpgrade
     mapping(bytes32 => bytes32) public refundReadRequestToOrderId;
     /// @notice Maps request IDs to order IDs for cross-chain read requests for settlements
     mapping(bytes32 => bytes32) public settlementReadRequestToOrderId;
-    address public immutable auctionBackend;
+    address public immutable auctionWitness;
     address public counterpart;
 
     /// @notice EIP-712 typehash for fill authorization
@@ -54,19 +54,20 @@ contract T1ERC7683 is IT1ERC7683, T1Permit2, OwnableUpgradeable, PausableUpgrade
     /// @param _permit2 The address of the permit2 contract
     /// @param _xChainRead The address of the cross-chain read contract
     /// @param _localDomain The local domain (chain id)
+    /// @param _auctionWitness Address of the auction result signer
     constructor(
         address _permit2,
         address _xChainRead,
         uint32 _localDomain,
-        address _auctionBackend
+        address _auctionWitness
     )
         T1Permit2(_permit2)
         EIP712("T1ERC7683", "1")
     {
-        if (_xChainRead == address(0) || _auctionBackend == address(0)) revert ZeroAddress();
+        if (_xChainRead == address(0) || _auctionWitness == address(0)) revert ZeroAddress();
         xChainRead = IT1XChainReader(_xChainRead);
         localDomain = _localDomain;
-        auctionBackend = _auctionBackend;
+        auctionWitness = _auctionWitness;
     }
 
     /// @notice Initializes the contract
@@ -273,7 +274,7 @@ contract T1ERC7683 is IT1ERC7683, T1Permit2, OwnableUpgradeable, PausableUpgrade
     /// @param orderId Unique order identifier for this order
     /// @param originData Data emitted on the origin to parameterize the fill
     /// @param fillerData Data provided by the filler to inform the amount they want to fill and the address they
-    /// want to receive the source chain settle on + optional auction backend signature representing the
+    /// want to receive the source chain settle on + optional auction witness signature representing the
     /// authorization for winner if closed auction
     /// Formatted as: abi.encode(uint256 amountOut, address settlementReceiver, bytes authorization)
     function fill(bytes32 orderId, bytes calldata originData, bytes calldata fillerData) external payable virtual {
@@ -341,7 +342,7 @@ contract T1ERC7683 is IT1ERC7683, T1Permit2, OwnableUpgradeable, PausableUpgrade
         bytes32 structHash = keccak256(abi.encode(FILL_AUTHORIZATION_TYPEHASH, orderId, msg.sender, amountOut));
         bytes32 digest = _hashTypedDataV4(structHash);
         (address signer,) = ECDSA.tryRecover(digest, authorization);
-        if (signer != auctionBackend) revert InvalidFillAuthorization();
+        if (signer != auctionWitness) revert InvalidFillAuthorization();
     }
 
     /// @notice Initiates a pull-based settlement verification for an order

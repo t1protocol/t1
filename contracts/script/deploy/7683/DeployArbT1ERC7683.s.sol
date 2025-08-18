@@ -12,7 +12,7 @@ import { T1Constants } from "../../../src/libraries/constants/T1Constants.sol";
 contract DeployArbT1ERC7683 is DeploymentUtils {
     uint32 internal constant ARB = uint32(T1Constants.ARBITRUM_SEPOLIA_CHAIN_ID);
     uint32 internal constant BASE = uint32(T1Constants.BASE_SEPOLIA_CHAIN_ID);
-    address private auctionBackend;
+    address private auctionWitness;
     ProxyAdmin private proxyAdmin;
 
     function deploy() external {
@@ -22,7 +22,7 @@ contract DeployArbT1ERC7683 is DeploymentUtils {
         address ARB_T1_X_CHAIN_READ_PROXY_ADDR = vm.envAddress("ARB_T1_X_CHAIN_READ_PROXY_ADDR");
         address ARB_T1_PROXY_ADMIN_ADDR = vm.envAddress("ARB_T1_PROXY_ADMIN_ADDR");
         proxyAdmin = ProxyAdmin(ARB_T1_PROXY_ADMIN_ADDR);
-        auctionBackend = vm.envAddress("AUCTION_BACKEND");
+        auctionWitness = vm.envAddress("AUCTION_WITNESS");
 
         vm.startBroadcast(deployerPk);
 
@@ -30,7 +30,7 @@ contract DeployArbT1ERC7683 is DeploymentUtils {
             address(0), // No Permit2 for now
             ARB_T1_X_CHAIN_READ_PROXY_ADDR,
             ARB,
-            auctionBackend
+            auctionWitness
         );
 
         TransparentUpgradeableProxy proxy =

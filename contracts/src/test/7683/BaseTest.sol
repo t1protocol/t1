@@ -39,8 +39,8 @@ contract BaseTest is Test, DeployPermit2 {
     uint256 internal karpinchoPK;
     address internal vegeta;
     uint256 internal vegetaPK;
-    address internal auctionBackend;
-    uint256 internal auctionBackendPK;
+    address internal auctionWitness;
+    uint256 internal auctionWitnessPK;
     address internal counterpart = makeAddr("counterpart");
 
     uint32 internal origin = 11_155_111;
@@ -77,7 +77,7 @@ contract BaseTest is Test, DeployPermit2 {
         (kakaroto, kakarotoPK) = makeAddrAndKey("kakaroto");
         (karpincho, karpinchoPK) = makeAddrAndKey("karpincho");
         (vegeta, vegetaPK) = makeAddrAndKey("vegeta");
-        (auctionBackend, auctionBackendPK) = makeAddrAndKey("auctionBackend");
+        (auctionWitness, auctionWitnessPK) = makeAddrAndKey("auctionWitness");
 
         inputToken = new ERC20("Input Token", "IN");
         outputToken = new ERC20("Output Token", "OUT");
