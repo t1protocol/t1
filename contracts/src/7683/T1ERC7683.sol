@@ -281,7 +281,7 @@ contract T1ERC7683 is IT1ERC7683, T1Permit2, OwnableUpgradeable, PausableUpgrade
         if (orderStatus[orderId] != Status.UNKNOWN) revert InvalidOrderStatus();
 
         OrderData memory orderData = OrderEncoder.decode(originData);
-        // (uint256 amountOut, bytes memory authorization) = _decodeFillerData(fillerData);
+
         uint256 amountOut;
         if (orderData.closedAuction) {
             bytes memory authorization;
