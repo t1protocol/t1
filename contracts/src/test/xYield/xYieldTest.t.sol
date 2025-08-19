@@ -7,7 +7,7 @@ import { IERC20 } from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import { ERC20 } from "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 import { ERC4626 } from "@openzeppelin/contracts/token/ERC20/extensions/ERC4626.sol";
 
-import { xYieldVault } from "./xYieldVault.sol";
+import { xYieldVault } from "../../xYield/xYieldVault.sol";
 import { MockYieldProtocol } from "./MockYieldProtocol.sol";
 
 contract MockUSDC is ERC20 {

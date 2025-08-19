@@ -7,7 +7,7 @@ import { EVault } from "@euler-xyz/EVault/EVault.sol";
 import { IERC20 } from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import { ERC20PresetMinterPauser } from "@openzeppelin/contracts/token/ERC20/presets/ERC20PresetMinterPauser.sol";
 
-import { xYieldVault } from "./xYieldVault.sol";
+import { xYieldVault } from "../../xYield/xYieldVault.sol";
 
 abstract contract USDC is ERC20PresetMinterPauser {
     function configureMinter(address minter, uint256 minterAllowedAmount) external returns (bool) { }
