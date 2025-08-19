@@ -44,15 +44,15 @@ contract PausableTest is T1XChainReaderBaseTestSetup {
 
         admin.upgrade(
             ITransparentUpgradeableProxy(address(l1T1ERC7683)),
-            address(new T1ERC7683(permit2, address(originReader), uint32(origin), auctionWitness))
+            address(new T1ERC7683(permit2, address(originReader), uint32(origin)))
         );
-        l1T1ERC7683.initialize(address(l2T1ERC7683));
+        l1T1ERC7683.initialize(address(l2T1ERC7683), auctionWitness);
 
         admin.upgrade(
             ITransparentUpgradeableProxy(address(l2T1ERC7683)),
-            address(new T1ERC7683(permit2, address(destinationReader), uint32(destination), auctionWitness))
+            address(new T1ERC7683(permit2, address(destinationReader), uint32(destination)))
         );
-        l2T1ERC7683.initialize(address(l1T1ERC7683));
+        l2T1ERC7683.initialize(address(l1T1ERC7683), auctionWitness);
     }
 
     function test_pauseAndUnpause() public {

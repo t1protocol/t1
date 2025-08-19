@@ -47,7 +47,7 @@ contract T1ERC7683 is IT1ERC7683, T1Permit2, AccessControlUpgradeable, EIP712 {
     /// @notice Maps request IDs to order IDs for cross-chain read requests for settlements
     mapping(bytes32 => bytes32) public settlementReadRequestToOrderId;
     /// @notice Authorization signer for off chain auction results
-    address public immutable auctionWitness;
+    address public auctionWitness;
     /// @notice Separate pausable states
     bool public openPaused;
     bool public settlePaused;
@@ -74,26 +74,25 @@ contract T1ERC7683 is IT1ERC7683, T1Permit2, AccessControlUpgradeable, EIP712 {
     /// @param _permit2 The address of the permit2 contract
     /// @param _xChainRead The address of the cross-chain read contract
     /// @param _localDomain The local domain (chain id)
-    /// @param _auctionWitness Address of the auction result signer
     constructor(
         address _permit2,
         address _xChainRead,
-        uint32 _localDomain,
-        address _auctionWitness
+        uint32 _localDomain
     )
         T1Permit2(_permit2)
         EIP712("T1ERC7683", "1")
     {
-        if (_xChainRead == address(0) || _auctionWitness == address(0)) revert ZeroAddress();
         xChainRead = IT1XChainReader(_xChainRead);
         localDomain = _localDomain;
-        auctionWitness = _auctionWitness;
     }
 
     /// @notice Initializes the contract
     /// @param _counterpart the counterpart contract on another chain
-    function initialize(address _counterpart) external initializer {
+    /// @param _auctionWitness Address of the auction result signer
+    function initialize(address _counterpart, address _auctionWitness) external initializer {
+        if (_counterpart == address(0) || _auctionWitness == address(0)) revert ZeroAddress();
         counterpart = _counterpart;
+        auctionWitness = _auctionWitness;
         _setRoleAdmin(DEFAULT_ADMIN_ROLE, DEFAULT_ADMIN_ROLE);
         _setRoleAdmin(OPEN_PAUSER_ROLE, DEFAULT_ADMIN_ROLE);
         _setRoleAdmin(SETTLE_PAUSER_ROLE, DEFAULT_ADMIN_ROLE);
@@ -617,6 +616,12 @@ contract T1ERC7683 is IT1ERC7683, T1Permit2, AccessControlUpgradeable, EIP712 {
 
             emit Refunded(orderId, orderSender);
         }
+    }
+
+    function updateAuctionWitness(address newAuctionWitness) external onlyRole(DEFAULT_ADMIN_ROLE) {
+        if (newAuctionWitness == address(0)) revert ZeroAddress();
+        emit AuctionWitnessUpdated(auctionWitness, newAuctionWitness);
+        auctionWitness = newAuctionWitness;
     }
 
     function pauseOpen() external onlyRole(OPEN_PAUSER_ROLE) {

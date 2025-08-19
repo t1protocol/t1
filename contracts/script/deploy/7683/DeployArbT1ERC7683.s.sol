@@ -29,8 +29,7 @@ contract DeployArbT1ERC7683 is DeploymentUtils {
         T1ERC7683 impl = new T1ERC7683(
             address(0), // No Permit2 for now
             ARB_T1_X_CHAIN_READ_PROXY_ADDR,
-            ARB,
-            auctionWitness
+            ARB
         );
 
         TransparentUpgradeableProxy proxy =
@@ -52,7 +51,7 @@ contract DeployArbT1ERC7683 is DeploymentUtils {
 
         vm.startBroadcast(deployerPk);
 
-        T1ERC7683(ARB_T1_7683_PROXY_ADDR).initialize(BASE_T1_7683_PROXY_ADDR);
+        T1ERC7683(ARB_T1_7683_PROXY_ADDR).initialize(BASE_T1_7683_PROXY_ADDR, auctionWitness);
 
         vm.stopBroadcast();
     }

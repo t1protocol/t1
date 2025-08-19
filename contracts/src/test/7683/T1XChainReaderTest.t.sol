@@ -34,16 +34,17 @@ contract T1XChainReaderTest is T1XChainReaderBaseTestSetup {
 
         l1T1ERC7683 = T1ERC7683(payable(_deployProxy(address(proxyOwner))));
         l2T1ERC7683 = T1ERC7683(payable(_deployProxy(address(proxyOwner))));
+
         admin.upgrade(
             ITransparentUpgradeableProxy(address(l1T1ERC7683)),
-            address(new T1ERC7683(address(0), address(originReader), uint32(origin), auctionWitness))
+            address(new T1ERC7683(address(0), address(originReader), uint32(origin)))
         );
         admin.upgrade(
             ITransparentUpgradeableProxy(address(l2T1ERC7683)),
-            address(new T1ERC7683(address(0), address(destinationReader), uint32(destination), auctionWitness))
+            address(new T1ERC7683(address(0), address(destinationReader), uint32(destination)))
         );
-        l1T1ERC7683.initialize(address(l2T1ERC7683));
-        l2T1ERC7683.initialize(address(l1T1ERC7683));
+        l1T1ERC7683.initialize(address(l2T1ERC7683), auctionWitness);
+        l2T1ERC7683.initialize(address(l1T1ERC7683), auctionWitness);
     }
 
     // 1. user opens intent on source chain
@@ -590,5 +591,38 @@ contract T1XChainReaderTest is T1XChainReaderBaseTestSetup {
 
         vm.expectRevert(T1XChainReader.InvalidProof.selector);
         originReader.verifyProofOfReadWithResult(encodedProofOfRead, result);
+    }
+
+    // Auction Witness
+
+    function test_auctionWitnessIsCorrectlyInitialized() public {
+        assertEq(l1T1ERC7683.auctionWitness(), auctionWitness);
+    }
+
+    function test_updateAuctionWitness() public {
+        address newAuctionWitness = makeAddr("newAuctionWitness");
+        address currentAuctionWitness = l1T1ERC7683.auctionWitness();
+
+        vm.expectEmit(true, true, false, true);
+        emit IT1ERC7683.AuctionWitnessUpdated(currentAuctionWitness, newAuctionWitness);
+
+        l1T1ERC7683.updateAuctionWitness(newAuctionWitness);
+
+        assertEq(l1T1ERC7683.auctionWitness(), newAuctionWitness);
+    }
+
+    function test_updateAuctionWitnessRevertZeroAddress() public {
+        vm.expectRevert(IT1ERC7683.ZeroAddress.selector);
+        l1T1ERC7683.updateAuctionWitness(address(0));
+    }
+
+    function test_updateAuctionWitnessRevertIfNotAdmin() public {
+        address newAuctionWitness = makeAddr("newAuctionWitness");
+        address nonAdmin = makeAddr("nonAdmin");
+
+        // Test revert when called by non-admin
+        vm.prank(nonAdmin);
+        vm.expectRevert();
+        l1T1ERC7683.updateAuctionWitness(newAuctionWitness);
     }
 }

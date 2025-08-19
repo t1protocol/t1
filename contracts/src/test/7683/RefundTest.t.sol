@@ -31,10 +31,10 @@ contract RefundTest is BaseTest {
         address mockProver = makeAddr("mockProver");
         mockXChainReader = new T1XChainReader(mockProver);
 
-        T1ERC7683 implementation = new T1ERC7683(permit2, address(mockXChainReader), origin, auctionWitness);
+        T1ERC7683 implementation = new T1ERC7683(permit2, address(mockXChainReader), origin);
 
         TransparentUpgradeableProxy proxy = new TransparentUpgradeableProxy(
-            address(implementation), address(admin), abi.encodeWithSelector(T1ERC7683.initialize.selector, counterpart)
+            address(implementation), address(admin), abi.encodeWithSelector(T1ERC7683.initialize.selector, counterpart, auctionWitness)
         );
 
         settlerContract = T1ERC7683(address(proxy));

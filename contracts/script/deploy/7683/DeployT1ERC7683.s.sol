@@ -29,8 +29,7 @@ contract DeployT1ERC7683 is Script {
         T1ERC7683 implementation = new T1ERC7683(
             l1Messenger,
             address(0), // No Permit2 for now
-            ORIGIN_CHAIN,
-            auctionWitness
+            ORIGIN_CHAIN
         );
 
         TransparentUpgradeableProxy proxy =
@@ -50,7 +49,7 @@ contract DeployT1ERC7683 is Script {
 
         vm.startBroadcast(deployerPk);
 
-        T1ERC7683(L1_T1_7683_PROXY_ADDR).initialize(L2_T1_7683_PROXY_ADDR);
+        T1ERC7683(L1_T1_7683_PROXY_ADDR).initialize(L2_T1_7683_PROXY_ADDR, auctionWitness);
 
         vm.stopBroadcast();
     }
@@ -69,8 +68,7 @@ contract DeployT1ERC7683 is Script {
         T1ERC7683 implementation = new T1ERC7683(
             l2Messenger,
             address(0), // No Permit2 for now
-            DESTINATION_CHAIN,
-            auctionWitness
+            DESTINATION_CHAIN
         );
 
         TransparentUpgradeableProxy proxy =
@@ -90,7 +88,7 @@ contract DeployT1ERC7683 is Script {
 
         vm.startBroadcast(deployerPk);
 
-        T1ERC7683(L2_T1_7683_PROXY_ADDR).initialize(L1_T1_7683_PROXY_ADDR);
+        T1ERC7683(L2_T1_7683_PROXY_ADDR).initialize(L1_T1_7683_PROXY_ADDR, auctionWitness);
 
         vm.stopBroadcast();
     }

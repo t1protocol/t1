@@ -94,6 +94,12 @@ interface IT1ERC7683 is IOriginSettler, IDestinationSettler {
      * @notice Emitted when settlement operations are unpaused
      */
     event SettleUnpaused();
+    /**
+     * @notice Emitted when the auction witness address is updated
+     * @param oldAuctionWitness The previous auction witness address
+     * @param newAuctionWitness The new auction witness address
+     */
+    event AuctionWitnessUpdated(address oldAuctionWitness, address newAuctionWitness);
 
     error ZeroAddress();
     error InvalidOrderId();
