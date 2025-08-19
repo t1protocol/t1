@@ -1,9 +1,9 @@
 import type {BunRequest, Server} from "bun";
 
-import {AuctionController} from "./AuctionController.ts";
+import {AuctionController, CORS_HEADERS} from "./AuctionController.ts";
 import {serialize, WinstonLogger} from "../utils/WinstonLogger.ts";
 import {SolverPriceBook} from "../core/SolverPriceBook.ts";
-import {AuctionService, type Price} from "../core/AuctionService.ts";
+import {AuctionService} from "../core/AuctionService.ts";
 import type {AuctionResult} from "./types.ts";
 import type {OrderData} from "../blockchain/types.ts";
 import type {PriceListItem} from "../core/types.ts";
@@ -25,7 +25,10 @@ export class AuctionApiServer {
 
     private server: Server | null = null;
 
-    public constructor(private readonly solverPriceBook: SolverPriceBook, auctionService: AuctionService) {
+    public constructor(
+        private readonly solverPriceBook: SolverPriceBook,
+        auctionService: AuctionService
+    ) {
         this.auctionController = new AuctionController(auctionService);
         this.authService = new AuthService();
         this.authController = new AuthController(this.authService);
@@ -38,6 +41,7 @@ export class AuctionApiServer {
         }
         const solverPriceBook = this.solverPriceBook;
         const authService = this.authService;
+        const websocketLogger = new WinstonLogger(`${AuctionApiServer.name}-websocket`);
 
         // @ts-ignore
         this.server = Bun.serve<AuthData>({
@@ -49,7 +53,11 @@ export class AuctionApiServer {
             routes: {
                 "/healthcheck": new Response("OK"),
                 "/api/currentNonce": (req: BunRequest) => this.authController.currentNonce(req),
-                "/api/preauction": (req: BunRequest) => this.auctionController.preauction(req)
+                "/api/preauction": {
+                    OPTIONS: () => new Response(null, { status: 204, headers: CORS_HEADERS}),
+                    GET: _req => this.auctionController.wrongMethodError(),
+                    POST: async (req) => await this.auctionController.preauction(req)
+                }
             },
             fetch: async (req, server) => {
                 if (req.headers.get("Upgrade")?.toLowerCase() === "websocket") {
@@ -87,7 +95,7 @@ export class AuctionApiServer {
                     const addr = ws.data.solverAddress;
                     const user = ws.data.username;
                     ws.subscribe('intent-auction');
-                    console.log(`✅ Solver connected: ${user} (${addr})`);
+                    websocketLogger.info(`✅ Solver connected: ${user} (${addr})`);
                     ws.send("Welcome! Authentication successful.");
                 },
                 message(ws, message) {
@@ -108,7 +116,7 @@ export class AuctionApiServer {
                         const addedCount = solverPriceBook.updatePrice(addr, JSON.stringify(priceData));
                         ws.send(`Prices updated: ${addedCount} entries for solver ${addr}`);
                     } catch (e: any) {
-                        console.error(`Error processing price update: ${e}`);
+                        websocketLogger.error(`Error processing price update: ${e}`);
                         ws.send(`Error when updating price: ${e.message || e}`);
                     }
                 },
@@ -116,7 +124,7 @@ export class AuctionApiServer {
                     const addr = ws.data.solverAddress;
                     const user = ws.data.username;
                     ws.unsubscribe('intent-auction');
-                    console.log(`🔒 Solver disconnected: ${user} (${addr})`);
+                    websocketLogger.info(`🔒 Solver disconnected: ${user} (${addr})`);
                     authService.logout(addr);
                 },
             },
@@ -134,14 +142,7 @@ export class AuctionApiServer {
         }
     }
 
-    public publishAuctionResult(price: Price, orderId: string, orderData: OrderData, chainId: number) {
-        const result: AuctionResult = {
-            settlementReceiverAddress: price.settlementReceiverAddress,
-            amountOut: price.amountOut,
-            orderId,
-            orderData
-        }
-
+    public async notifySolvers(result: AuctionResult, chainId: number) {
         this.server?.publish('intent-auction', `[${result.settlementReceiverAddress}] won auction on chain [${chainId}] : ${serialize(result)}`);
     }
 }

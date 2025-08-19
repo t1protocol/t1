@@ -5,6 +5,7 @@ import { TypeCasts } from "@hyperlane-xyz/libs/TypeCasts.sol";
 import { ITransparentUpgradeableProxy } from "@openzeppelin/contracts/proxy/transparent/TransparentUpgradeableProxy.sol";
 import { ISignatureTransfer } from "@uniswap/permit2/src/interfaces/IPermit2.sol";
 
+import { IT1ERC7683 } from "../../../src/interfaces/IT1ERC7683.sol";
 import { BaseTest } from "./BaseTest.sol";
 import { T1XChainReader } from "../../libraries/xChain/T1XChainReader.sol";
 import { T1ERC7683 } from "../../7683/T1ERC7683.sol";
@@ -35,7 +36,7 @@ contract TvlThresholdTest is BaseTest {
         t1ERC7683 = T1ERC7683(payable(_deployProxy(address(0))));
         admin.upgrade(
             ITransparentUpgradeableProxy(address(t1ERC7683)),
-            address(new T1ERC7683(permit2, address(reader), uint32(origin)))
+            address(new T1ERC7683(permit2, address(reader), uint32(origin), auctionWitness))
         );
         t1ERC7683.initialize(address(t1ERC7683));
     }
@@ -83,8 +84,8 @@ contract TvlThresholdTest is BaseTest {
         vm.stopPrank();
 
         bytes32 orderId = OrderEncoder.id(orderData);
-        bytes32 status = t1ERC7683.orderStatus(orderId);
-        assertEq(status, t1ERC7683.OPENED());
+        IT1ERC7683.Status status = t1ERC7683.orderStatus(orderId);
+        assertEq(uint8(status), uint8(IT1ERC7683.Status.OPENED));
     }
 
     function test_canOpenForWhenNotPaused() public {
@@ -120,8 +121,7 @@ contract TvlThresholdTest is BaseTest {
         t1ERC7683.openFor(order, sig, new bytes(0));
 
         bytes32 orderId = OrderEncoder.id(orderData);
-        bytes32 status = t1ERC7683.orderStatus(orderId);
-        assertEq(status, t1ERC7683.OPENED());
+        assertEq(uint8(t1ERC7683.orderStatus(orderId)), uint8(IT1ERC7683.Status.OPENED));
     }
 
     function test_cannotOpenWhenPaused() public {

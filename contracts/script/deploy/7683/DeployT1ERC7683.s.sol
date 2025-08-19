@@ -12,6 +12,7 @@ import { T1Constants } from "../../../src/libraries/constants/T1Constants.sol";
 contract DeployT1ERC7683 is Script {
     uint32 private constant ORIGIN_CHAIN = uint32(T1Constants.L1_CHAIN_ID); // Sepolia
     uint32 private constant DESTINATION_CHAIN = uint32(T1Constants.T1_DEVNET_CHAIN_ID); // t1 devnet
+    address private auctionWitness;
     ProxyAdmin private proxyAdmin;
 
     function deploy_l1_7683() external {
@@ -19,6 +20,7 @@ contract DeployT1ERC7683 is Script {
         uint256 deployerPk = vm.envUint("L1_DEPLOYER_PRIVATE_KEY");
         address l1Messenger = vm.envAddress("L1_T1_MESSENGER_PROXY_ADDR");
         address L1_PROXY_ADMIN_ADDR = vm.envAddress("L1_PROXY_ADMIN_ADDR");
+        auctionWitness = vm.envAddress("AUCTION_WITNESS");
 
         vm.startBroadcast(deployerPk);
 
@@ -27,7 +29,8 @@ contract DeployT1ERC7683 is Script {
         T1ERC7683 implementation = new T1ERC7683(
             l1Messenger,
             address(0), // No Permit2 for now
-            ORIGIN_CHAIN
+            ORIGIN_CHAIN,
+            auctionWitness
         );
 
         TransparentUpgradeableProxy proxy =
@@ -66,7 +69,8 @@ contract DeployT1ERC7683 is Script {
         T1ERC7683 implementation = new T1ERC7683(
             l2Messenger,
             address(0), // No Permit2 for now
-            DESTINATION_CHAIN
+            DESTINATION_CHAIN,
+            auctionWitness
         );
 
         TransparentUpgradeableProxy proxy =

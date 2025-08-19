@@ -6,11 +6,11 @@ import { ITransparentUpgradeableProxy } from "@openzeppelin/contracts/proxy/tran
 import { OrderData, OrderEncoder } from "../../../src/libraries/7683/OrderEncoder.sol";
 import { OnchainCrossChainOrder } from "../../../src/interfaces/IERC7683.sol";
 
+import { IT1ERC7683 } from "../../../src/interfaces/IT1ERC7683.sol";
 import { IT1XChainReader } from "../../libraries/xChain/IT1XChainReader.sol";
 import { T1XChainReader } from "../../libraries/xChain/T1XChainReader.sol";
 import { T1XChainReaderBaseTestSetup } from "./T1XChainReaderBaseTestSetup.sol";
 import { T1ERC7683 } from "../../7683/T1ERC7683.sol";
-import { Base7683 } from "../../7683/Base7683.sol";
 
 contract T1XChainReaderTest is T1XChainReaderBaseTestSetup {
     using TypeCasts for address;
@@ -36,11 +36,11 @@ contract T1XChainReaderTest is T1XChainReaderBaseTestSetup {
         l2T1ERC7683 = T1ERC7683(payable(_deployProxy(address(proxyOwner))));
         admin.upgrade(
             ITransparentUpgradeableProxy(address(l1T1ERC7683)),
-            address(new T1ERC7683(address(0), address(originReader), uint32(origin)))
+            address(new T1ERC7683(address(0), address(originReader), uint32(origin), auctionWitness))
         );
         admin.upgrade(
             ITransparentUpgradeableProxy(address(l2T1ERC7683)),
-            address(new T1ERC7683(address(0), address(destinationReader), uint32(destination)))
+            address(new T1ERC7683(address(0), address(destinationReader), uint32(destination), auctionWitness))
         );
         l1T1ERC7683.initialize(address(l2T1ERC7683));
         l2T1ERC7683.initialize(address(l1T1ERC7683));
@@ -76,7 +76,7 @@ contract T1XChainReaderTest is T1XChainReaderBaseTestSetup {
         }
 
         // Verify the final state on L1
-        assertTrue(l1T1ERC7683.orderVerified(orderId), "Order should be verified");
+        assertEq(uint8(l1T1ERC7683.orderStatus(orderId)), uint8(IT1ERC7683.Status.SETTLED), "Order should be settled");
     }
 
     function test_ERC7683SettlementFlowWithAnotherTreePosition() public {
@@ -102,7 +102,7 @@ contract T1XChainReaderTest is T1XChainReaderBaseTestSetup {
         }
 
         // Verify the final state on L1
-        assertTrue(l1T1ERC7683.orderVerified(orderId), "Order should be verified");
+        assertEq(uint8(l1T1ERC7683.orderStatus(orderId)), uint8(IT1ERC7683.Status.SETTLED), "Order should be settled");
     }
 
     function test_shouldFillWithAmountOutHigherThanLimit() public {
@@ -117,7 +117,7 @@ contract T1XChainReaderTest is T1XChainReaderBaseTestSetup {
         vm.stopPrank();
 
         (bytes32 orderId,) = _getOrderIDFromLogs();
-        assertEq(l1T1ERC7683.orderStatus(orderId), l1T1ERC7683.OPENED());
+        assertEq(uint8(l1T1ERC7683.orderStatus(orderId)), uint8(IT1ERC7683.Status.OPENED));
 
         uint256 amountOut = amount * 2;
         vm.startPrank(vegeta);
@@ -125,7 +125,7 @@ contract T1XChainReaderTest is T1XChainReaderBaseTestSetup {
         bytes memory originData = OrderEncoder.encode(orderData);
         bytes memory fillerData = abi.encode(amountOut, TypeCasts.addressToBytes32(vegeta));
         l2T1ERC7683.fill(orderId, originData, fillerData);
-        assertEq(l2T1ERC7683.orderStatus(orderId), l2T1ERC7683.FILLED());
+        assertEq(uint8(l2T1ERC7683.orderStatus(orderId)), uint8(IT1ERC7683.Status.FILLED));
         vm.stopPrank();
     }
 
@@ -141,14 +141,14 @@ contract T1XChainReaderTest is T1XChainReaderBaseTestSetup {
         vm.stopPrank();
 
         (bytes32 orderId,) = _getOrderIDFromLogs();
-        assertEq(l1T1ERC7683.orderStatus(orderId), l1T1ERC7683.OPENED());
+        assertEq(uint8(l1T1ERC7683.orderStatus(orderId)), uint8(IT1ERC7683.Status.OPENED));
 
         uint256 amountOut = amount - 1;
         vm.startPrank(vegeta);
         outputToken.approve(address(l2T1ERC7683), amountOut);
         bytes memory originData = OrderEncoder.encode(orderData);
         bytes memory fillerData = abi.encode(amountOut, TypeCasts.addressToBytes32(vegeta));
-        vm.expectRevert(Base7683.AmountOutTooLow.selector);
+        vm.expectRevert(IT1ERC7683.AmountOutTooLow.selector);
         l2T1ERC7683.fill(orderId, originData, fillerData);
     }
 
@@ -229,11 +229,11 @@ contract T1XChainReaderTest is T1XChainReaderBaseTestSetup {
         originReader.commitProofOfReadRoot(batchIndex, root);
         l1T1ERC7683.handleReadResultWithProof(abi.encode(batchIndex, requestId, position, result, proof));
 
-        vm.expectRevert(T1ERC7683.InvalidOrder.selector);
+        vm.expectRevert(IT1ERC7683.InvalidOrder.selector);
         l1T1ERC7683.handleReadResultWithProof(abi.encode(batchIndex, requestId, position, result, proof));
 
         // Verify the final state on L1
-        assertTrue(l1T1ERC7683.orderVerified(orderId), "Order should be verified");
+        assertEq(uint8(l1T1ERC7683.orderStatus(orderId)), uint8(IT1ERC7683.Status.SETTLED), "Order should be settled");
     }
 
     function test_settlementIfStatusIsRefundRequested() public {
@@ -249,7 +249,7 @@ contract T1XChainReaderTest is T1XChainReaderBaseTestSetup {
         vm.prank(kakaroto);
         l1T1ERC7683.verifyRefund(orderId);
 
-        assertEq(l1T1ERC7683.orderStatus(orderId), "REFUND_REQUESTED");
+        assertEq(uint8(l1T1ERC7683.orderStatus(orderId)), uint8(IT1ERC7683.Status.REFUND_REQUESTED));
 
         uint256 balanceSolverBeforeSettle = inputToken.balanceOf(address(vegeta));
         vm.prank(vegeta);
@@ -260,8 +260,8 @@ contract T1XChainReaderTest is T1XChainReaderBaseTestSetup {
             balanceSolverBeforeSettle + amount, balanceSolverAfterSettle, "vegeta balance increased by input amount"
         );
 
-        assertTrue(l1T1ERC7683.orderVerified(orderId), "Order should be verified");
-        assertEq(l1T1ERC7683.orderStatus(orderId), "SETTLED");
+        assertEq(uint8(l1T1ERC7683.orderStatus(orderId)), uint8(IT1ERC7683.Status.SETTLED), "Order should be settled");
+        assertEq(uint8(l1T1ERC7683.orderStatus(orderId)), uint8(IT1ERC7683.Status.SETTLED));
     }
 
     function test_settlementIfReadRequestedTwice() public {
@@ -285,8 +285,8 @@ contract T1XChainReaderTest is T1XChainReaderBaseTestSetup {
             balanceSolverBeforeSettle + amount, balanceSolverAfterSettle, "vegeta balance increased by input amount"
         );
 
-        assertTrue(l1T1ERC7683.orderVerified(orderId), "Order should be verified");
-        assertEq(l1T1ERC7683.orderStatus(orderId), "SETTLED");
+        assertEq(uint8(l1T1ERC7683.orderStatus(orderId)), uint8(IT1ERC7683.Status.SETTLED), "Order should be settled");
+        assertEq(uint8(l1T1ERC7683.orderStatus(orderId)), uint8(IT1ERC7683.Status.SETTLED));
     }
 
     function test_settlementWithEmptyResultData() public {
@@ -306,7 +306,7 @@ contract T1XChainReaderTest is T1XChainReaderBaseTestSetup {
         uint256 balanceSolverBeforeSettle = inputToken.balanceOf(address(vegeta));
 
         vm.expectEmit(true, true, true, true);
-        emit T1ERC7683.SettlementVerified(orderId, false);
+        emit IT1ERC7683.SettlementVerified(orderId, false);
         l1T1ERC7683.handleReadResultWithProof(abi.encode(batchIndex, requestId, position, result, proof));
 
         uint256 balanceSolverAfterSettle = inputToken.balanceOf(address(vegeta));
@@ -406,14 +406,14 @@ contract T1XChainReaderTest is T1XChainReaderBaseTestSetup {
         vm.stopPrank();
 
         (bytes32 orderId_,) = _getOrderIDFromLogs();
-        assertEq(l1T1ERC7683.orderStatus(orderId_), l1T1ERC7683.OPENED());
+        assertEq(uint8(l1T1ERC7683.orderStatus(orderId_)), uint8(IT1ERC7683.Status.OPENED));
 
         vm.startPrank(vegeta);
         outputToken.approve(address(l2T1ERC7683), amount);
         bytes memory originData = OrderEncoder.encode(orderData);
         bytes memory fillerData = abi.encode(amount, TypeCasts.addressToBytes32(vegeta));
         l2T1ERC7683.fill(orderId_, originData, fillerData);
-        assertEq(l2T1ERC7683.orderStatus(orderId_), l2T1ERC7683.FILLED());
+        assertEq(uint8(l2T1ERC7683.orderStatus(orderId_)), uint8(IT1ERC7683.Status.FILLED));
         vm.stopPrank();
 
         vm.startPrank(vegeta);
@@ -659,5 +659,37 @@ contract T1XChainReaderTest is T1XChainReaderBaseTestSetup {
         originReader.withdrawFees();
 
         assertEq(feeRecipient.balance, preBalance, "Fee recipient balance should not change when no fees");
+    }
+
+    function test_verifyProofOfReadWithResult() public {
+        (, bytes32 orderId, bytes32 requestId) = _openAndFillOrder();
+        bytes memory result = abi.encode(l2T1ERC7683.getFilledOrderStatus(orderId));
+        (bytes32 root, bytes memory proof) = _generateMerkleTree(requestId, result, position);
+
+        originReader.commitProofOfReadRoot(batchIndex, root);
+
+        // Encode the proof without the result (verifyProofOfReadWithResult expects this format)
+        bytes memory encodedProofOfRead = abi.encode(batchIndex, requestId, position, proof);
+        bytes32 returnedRequestId = originReader.verifyProofOfReadWithResult(encodedProofOfRead, result);
+
+        assertEq(returnedRequestId, requestId, "Returned request ID should match expected");
+    }
+
+    function test_verifyProofOfReadWithResult_InvalidProof() public {
+        (, bytes32 orderId, bytes32 requestId) = _openAndFillOrder();
+        bytes memory result = abi.encode(l2T1ERC7683.getFilledOrderStatus(orderId));
+        (bytes32 root,) = _generateMerkleTree(requestId, result, position);
+
+        originReader.commitProofOfReadRoot(batchIndex, root);
+
+        // Create an invalid proof
+        bytes memory invalidProof = abi.encodePacked(
+            bytes32(0x1111111111111111111111111111111111111111111111111111111111111111),
+            bytes32(0x2222222222222222222222222222222222222222222222222222222222222222)
+        );
+        bytes memory encodedProofOfRead = abi.encode(batchIndex, requestId, position, invalidProof);
+
+        vm.expectRevert(T1XChainReader.InvalidProof.selector);
+        originReader.verifyProofOfReadWithResult(encodedProofOfRead, result);
     }
 }

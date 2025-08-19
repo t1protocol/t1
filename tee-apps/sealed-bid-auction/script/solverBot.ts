@@ -5,20 +5,21 @@ dotenv.config();
 import {SolverWebSocketClient} from "../src/bot/SolverWebSocketClient.ts";
 import {ATTRACTIVE_ARBITRUM_PRICE, ATTRACTIVE_BASE_PRICE} from "../src/bot/samplePriceLists.ts";
 
-const USE_TLS = process.env.USE_TLS as string === "true";
+const WS_URL = process.env.WS_URL as string;
+// const NINE_MINUTES_IN_MS = 540_000;
+const TWO_SECONDS = 2_000;
 
-const serverPort = Number(process.env.SERVER_PORT as string);
-const tokkaSolver = new SolverWebSocketClient(serverPort);
-const ecoSolver = new SolverWebSocketClient(serverPort);
+const tokkaSolver = new SolverWebSocketClient(WS_URL);
+const ecoSolver = new SolverWebSocketClient(WS_URL);
 
 async function main() {
-    await tokkaSolver.start('tokka', console.log, USE_TLS);
-    await ecoSolver.start('eco', console.log, USE_TLS);
+    await tokkaSolver.start('tokka', console.log);
+    await ecoSolver.start('eco', console.log);
 
     while (true) {
         tokkaSolver.sendPrices(ATTRACTIVE_ARBITRUM_PRICE);
         ecoSolver.sendPrices(ATTRACTIVE_BASE_PRICE);
-        await new Promise((resolve) => setTimeout(resolve, 2000));
+        await new Promise((resolve) => setTimeout(resolve, TWO_SECONDS));
     }
 }
 
