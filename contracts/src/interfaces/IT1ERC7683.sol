@@ -19,16 +19,6 @@ interface IT1ERC7683 is IOriginSettler, IDestinationSettler {
     }
 
     /**
-     * @notice Represents a bid for order settlement
-     * @param settlementReceiver The address that will receive the settlement on src chain
-     * @param amountOut The amount of output tokens to be received on dst chain
-     */
-    struct Bid {
-        address settlementReceiver;
-        uint256 amountOut;
-    }
-
-    /**
      * @dev Represents data for an order that has been filled.
      * @param originData The origin-specific data for the order.
      * @param fillerData The filler-specific data for the order.
@@ -89,32 +79,23 @@ interface IT1ERC7683 is IOriginSettler, IDestinationSettler {
      */
     event Refunded(bytes32 indexed orderId, address receiver);
     /**
-     * @notice Emitted when a winner bid is committed for an order
-     * @param orderId The ID of the order
-     * @param settlementReceiver The address of the settlement receiver
-     */
-    event WinnerBidCommited(bytes32 indexed orderId, address indexed settlementReceiver);
-
-    /**
      * @notice Emitted when open operations are paused
      */
     event OpenPaused();
-
     /**
      * @notice Emitted when open operations are unpaused
      */
     event OpenUnpaused();
-
     /**
      * @notice Emitted when settlement operations are paused
      */
     event SettlePaused();
-
     /**
      * @notice Emitted when settlement operations are unpaused
      */
     event SettleUnpaused();
 
+    error ZeroAddress();
     error InvalidOrderId();
     error OrderFillExpired();
     error InvalidOrderDomain();
@@ -133,11 +114,9 @@ interface IT1ERC7683 is IOriginSettler, IDestinationSettler {
     error InvalidOrder();
     error OrderFillNotExpired();
     error NotEligible();
-    error InvalidFill(
-        address settlementReceiver, address expectedSettlementReceiver, uint256 amountOut, uint256 expectedAmountOut
-    );
     error OpenOperationsPaused();
     error SettleOperationsPaused();
+    error InvalidFillAuthorization();
 
     /// @notice Initiates a pull-based settlement verification for an order
     /// @param destinationDomain The domain of the destination chain
@@ -168,12 +147,6 @@ interface IT1ERC7683 is IOriginSettler, IDestinationSettler {
     /// @param _orders An array of OnchainCrossChainOrders to refund.
     /// @param _proofs Array of encoded proofs of read to verify orders are not settled
     function refund(OnchainCrossChainOrder[] memory _orders, bytes[] calldata _proofs) external;
-
-    /// @notice Commits a winning bid for a specific order
-    /// @dev Only accessible by owner
-    /// @param orderId The ID of the order to set the winner bid for
-    /// @param winnerBid The winning bid containing settlement receiver and amount out
-    function commitWinnerBid(bytes32 orderId, Bid calldata winnerBid) external;
 
     /// @notice Retrieves the status of a filled order by its ID
     /// @dev Returns encoded settlement data if the order has filler data, otherwise returns empty bytes

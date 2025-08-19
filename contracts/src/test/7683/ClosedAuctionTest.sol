@@ -36,101 +36,160 @@ contract ClosedAuctionTest is T1XChainReaderBaseTestSetup {
         l2T1ERC7683 = T1ERC7683(payable(_deployProxy(address(proxyOwner))));
         admin.upgrade(
             ITransparentUpgradeableProxy(address(l1T1ERC7683)),
-            address(new T1ERC7683(address(0), address(originReader), uint32(origin)))
+            address(new T1ERC7683(address(0), address(originReader), uint32(origin), auctionWitness))
         );
         admin.upgrade(
             ITransparentUpgradeableProxy(address(l2T1ERC7683)),
-            address(new T1ERC7683(address(0), address(destinationReader), uint32(destination)))
+            address(new T1ERC7683(address(0), address(destinationReader), uint32(destination), auctionWitness))
         );
         l1T1ERC7683.initialize(address(l2T1ERC7683));
         l2T1ERC7683.initialize(address(l1T1ERC7683));
     }
 
-    function test_settleWithCorrectBid() public {
-        (, bytes32 orderId, bytes32 requestId) = _openAndFillOrder();
-        bytes memory result = abi.encode(l2T1ERC7683.getFilledOrderStatus(orderId));
-        (bytes32 root, bytes memory proof) = _generateMerkleTree(requestId, result, position);
+    function test_fillWithValidAuthorization() public {
+        (OrderData memory orderData, bytes32 orderId) = _openOrder(true);
 
-        originReader.commitProofOfReadRoot(batchIndex, root);
-        l1T1ERC7683.commitWinnerBid(orderId, IT1ERC7683.Bid({ settlementReceiver: vegeta, amountOut: amount }));
+        // Generate EIP-712 authorization signature
+        bytes memory authorization = _generateAuthorization(orderId, vegeta, amount, auctionWitnessPK);
 
-        (address actualSettlementReceiver, uint256 actualAmountOut) = l1T1ERC7683.orderToBid(orderId);
-        assertEq(actualSettlementReceiver, vegeta);
-        assertEq(actualAmountOut, amount);
+        vm.startPrank(vegeta);
+        outputToken.approve(address(l2T1ERC7683), amount);
+        bytes memory originData = OrderEncoder.encode(orderData);
+        bytes memory fillerData = abi.encode(amount, TypeCasts.addressToBytes32(vegeta), authorization);
+        l2T1ERC7683.fill(orderId, originData, fillerData);
+        vm.stopPrank();
 
-        uint256 balanceSolverBeforeSettle = inputToken.balanceOf(address(vegeta));
-        l1T1ERC7683.handleReadResultWithProof(abi.encode(batchIndex, requestId, position, result, proof));
-        uint256 balanceSolverAfterSettle = inputToken.balanceOf(address(vegeta));
-
-        assertEq(
-            balanceSolverBeforeSettle + amount, balanceSolverAfterSettle, "vegeta balance increased by input amount"
-        );
-
-        assertEq(uint8(l1T1ERC7683.orderStatus(orderId)), uint8(IT1ERC7683.Status.SETTLED), "Order should be settled");
-
-        (actualSettlementReceiver, actualAmountOut) = l1T1ERC7683.orderToBid(orderId);
-        assertEq(actualSettlementReceiver, address(0));
-        assertEq(actualAmountOut, 0);
+        assertEq(uint8(l2T1ERC7683.orderStatus(orderId)), uint8(IT1ERC7683.Status.FILLED));
     }
 
-    function test_revertIfWinnerBidNotCommited() public {
-        (, bytes32 orderId, bytes32 requestId) = _openAndFillOrder();
-        bytes memory result = abi.encode(l2T1ERC7683.getFilledOrderStatus(orderId));
-        (bytes32 root, bytes memory proof) = _generateMerkleTree(requestId, result, position);
+    function test_authorizationDataIsIgnoreIfNotClosedAuction() public {
+        (OrderData memory orderData, bytes32 orderId) = _openOrder(false);
 
-        originReader.commitProofOfReadRoot(batchIndex, root);
+        // Not matching authorization signature
+        bytes memory authorization = _generateAuthorization(orderId, kakaroto, amount + 1, auctionWitnessPK);
 
-        vm.expectRevert(abi.encodeWithSelector(IT1ERC7683.InvalidFill.selector, vegeta, address(0), amount, 0));
-        l1T1ERC7683.handleReadResultWithProof(abi.encode(batchIndex, requestId, position, result, proof));
+        vm.startPrank(vegeta);
+        outputToken.approve(address(l2T1ERC7683), amount);
+        bytes memory originData = OrderEncoder.encode(orderData);
+        bytes memory fillerData = abi.encode(amount, TypeCasts.addressToBytes32(vegeta), authorization);
+        l2T1ERC7683.fill(orderId, originData, fillerData);
+        vm.stopPrank();
+
+        assertEq(uint8(l2T1ERC7683.orderStatus(orderId)), uint8(IT1ERC7683.Status.FILLED));
     }
 
-    function test_revertIfInvalidReceiver() public {
-        (, bytes32 orderId, bytes32 requestId) = _openAndFillOrder();
-        bytes memory result = abi.encode(l2T1ERC7683.getFilledOrderStatus(orderId));
-        (bytes32 root, bytes memory proof) = _generateMerkleTree(requestId, result, position);
+    function test_revertIfInvalidAuthorization() public {
+        (OrderData memory orderData, bytes32 orderId) = _openOrder(true);
 
-        originReader.commitProofOfReadRoot(batchIndex, root);
-        l1T1ERC7683.commitWinnerBid(orderId, IT1ERC7683.Bid({ settlementReceiver: kakaroto, amountOut: amount }));
+        // Generate invalid authorization by signing with wrong private key (vegeta instead of auctionWitness)
+        bytes memory invalidAuthorization = _generateAuthorization(orderId, vegeta, amount, vegetaPK);
 
-        vm.expectRevert(abi.encodeWithSelector(IT1ERC7683.InvalidFill.selector, vegeta, kakaroto, amount, amount));
-        l1T1ERC7683.handleReadResultWithProof(abi.encode(batchIndex, requestId, position, result, proof));
+        vm.startPrank(vegeta);
+        outputToken.approve(address(l2T1ERC7683), amount);
+        bytes memory originData = OrderEncoder.encode(orderData);
+        bytes memory fillerData = abi.encode(amount, TypeCasts.addressToBytes32(vegeta), invalidAuthorization);
+
+        vm.expectRevert(IT1ERC7683.InvalidFillAuthorization.selector);
+        l2T1ERC7683.fill(orderId, originData, fillerData);
+        vm.stopPrank();
+    }
+
+    function test_revertIfNoAuthorization() public {
+        (OrderData memory orderData, bytes32 orderId) = _openOrder(true);
+
+        vm.startPrank(vegeta);
+        outputToken.approve(address(l2T1ERC7683), amount);
+        bytes memory originData = OrderEncoder.encode(orderData);
+        bytes memory fillerData = abi.encode(amount, TypeCasts.addressToBytes32(vegeta));
+
+        vm.expectRevert();
+        l2T1ERC7683.fill(orderId, originData, fillerData);
+        vm.stopPrank();
+    }
+
+    function test_revertIfEmptyAuthorization() public {
+        (OrderData memory orderData, bytes32 orderId) = _openOrder(true);
+
+        bytes memory malformedAuthorization = abi.encodePacked(bytes32(0));
+
+        vm.startPrank(vegeta);
+        outputToken.approve(address(l2T1ERC7683), amount);
+        bytes memory originData = OrderEncoder.encode(orderData);
+        bytes memory fillerData = abi.encode(amount, TypeCasts.addressToBytes32(vegeta), malformedAuthorization);
+
+        vm.expectRevert(IT1ERC7683.InvalidFillAuthorization.selector);
+        l2T1ERC7683.fill(orderId, originData, fillerData);
+        vm.stopPrank();
+    }
+
+    function test_revertIfMalformedAuthorization() public {
+        (OrderData memory orderData, bytes32 orderId) = _openOrder(true);
+
+        // Use completely invalid authorization data
+        bytes memory malformedAuthorization = hex"deadbeef";
+
+        vm.startPrank(vegeta);
+        outputToken.approve(address(l2T1ERC7683), amount);
+        bytes memory originData = OrderEncoder.encode(orderData);
+        bytes memory fillerData = abi.encode(amount, TypeCasts.addressToBytes32(vegeta), malformedAuthorization);
+
+        vm.expectRevert(IT1ERC7683.InvalidFillAuthorization.selector);
+        l2T1ERC7683.fill(orderId, originData, fillerData);
+        vm.stopPrank();
     }
 
     function test_revertIfInvalidAmountOut() public {
-        (, bytes32 orderId, bytes32 requestId) = _openAndFillOrder();
-        bytes memory result = abi.encode(l2T1ERC7683.getFilledOrderStatus(orderId));
-        (bytes32 root, bytes memory proof) = _generateMerkleTree(requestId, result, position);
+        (OrderData memory orderData, bytes32 orderId) = _openOrder(true);
 
-        originReader.commitProofOfReadRoot(batchIndex, root);
-        l1T1ERC7683.commitWinnerBid(orderId, IT1ERC7683.Bid({ settlementReceiver: vegeta, amountOut: amount * 2 }));
+        // Generate authorization with an invalid amountOut value
+        bytes memory authorization = _generateAuthorization(orderId, vegeta, amount + 1, auctionWitnessPK);
 
-        vm.expectRevert(abi.encodeWithSelector(IT1ERC7683.InvalidFill.selector, vegeta, vegeta, amount, amount * 2));
-        l1T1ERC7683.handleReadResultWithProof(abi.encode(batchIndex, requestId, position, result, proof));
+        vm.startPrank(vegeta);
+        outputToken.approve(address(l2T1ERC7683), amount);
+        bytes memory originData = OrderEncoder.encode(orderData);
+        bytes memory fillerData = abi.encode(amount, TypeCasts.addressToBytes32(vegeta), authorization);
+
+        vm.expectRevert(IT1ERC7683.InvalidFillAuthorization.selector);
+        l2T1ERC7683.fill(orderId, originData, fillerData);
+        vm.stopPrank();
     }
 
-    function test_revertIfInvalidBid() public {
-        (, bytes32 orderId, bytes32 requestId) = _openAndFillOrder();
-        bytes memory result = abi.encode(l2T1ERC7683.getFilledOrderStatus(orderId));
-        (bytes32 root, bytes memory proof) = _generateMerkleTree(requestId, result, position);
+    function test_revertIfInvalidOrderId() public {
+        (OrderData memory orderData, bytes32 orderId) = _openOrder(true);
 
-        originReader.commitProofOfReadRoot(batchIndex, root);
-        l1T1ERC7683.commitWinnerBid(orderId, IT1ERC7683.Bid({ settlementReceiver: kakaroto, amountOut: amount * 2 }));
+        // Generate authorization with an invalid orderId
+        bytes32 invalidOrderId = bytes32(vm.randomUint());
+        bytes memory authorization = _generateAuthorization(invalidOrderId, vegeta, amount, auctionWitnessPK);
 
-        vm.expectRevert(abi.encodeWithSelector(IT1ERC7683.InvalidFill.selector, vegeta, kakaroto, amount, amount * 2));
-        l1T1ERC7683.handleReadResultWithProof(abi.encode(batchIndex, requestId, position, result, proof));
+        vm.startPrank(vegeta);
+        outputToken.approve(address(l2T1ERC7683), amount);
+        bytes memory originData = OrderEncoder.encode(orderData);
+        bytes memory fillerData = abi.encode(amount, TypeCasts.addressToBytes32(vegeta), authorization);
+
+        vm.expectRevert(IT1ERC7683.InvalidFillAuthorization.selector);
+        l2T1ERC7683.fill(orderId, originData, fillerData);
+        vm.stopPrank();
     }
 
-    function test_revertCommitIfNotOwner() public {
-        (, bytes32 orderId,) = _openAndFillOrder();
+    function test_revertIfInvalidSolver() public {
+        (OrderData memory orderData, bytes32 orderId) = _openOrder(true);
 
-        vm.prank(vegeta);
-        vm.expectRevert();
-        l1T1ERC7683.commitWinnerBid(orderId, IT1ERC7683.Bid({ settlementReceiver: vegeta, amountOut: amount }));
+        bytes memory authorization = _generateAuthorization(orderId, vegeta, amount, auctionWitnessPK);
+
+        // Call fill with invalid solver account
+        vm.startPrank(kakaroto);
+        outputToken.approve(address(l2T1ERC7683), amount);
+        bytes memory originData = OrderEncoder.encode(orderData);
+        bytes memory fillerData = abi.encode(amount, TypeCasts.addressToBytes32(vegeta), authorization);
+
+        vm.expectRevert(IT1ERC7683.InvalidFillAuthorization.selector);
+        l2T1ERC7683.fill(orderId, originData, fillerData);
+        vm.stopPrank();
     }
 
-    function _openAndFillOrder() internal override returns (OrderData memory, bytes32 orderId, bytes32 requestId) {
-        OrderData memory orderData = _prepareOrderData();
-        orderData.closedAuction = true;
+    function _openOrder(bool closedAuction) internal returns (OrderData memory orderData, bytes32 orderId) {
+        orderData = _prepareOrderData();
+        orderData.closedAuction = closedAuction;
         OnchainCrossChainOrder memory order =
             _prepareOnchainOrder(OrderEncoder.encode(orderData), orderData.fillDeadline, OrderEncoder.orderDataType());
 
@@ -143,18 +202,24 @@ contract ClosedAuctionTest is T1XChainReaderBaseTestSetup {
         (bytes32 orderId_,) = _getOrderIDFromLogs();
         assertEq(uint8(l1T1ERC7683.orderStatus(orderId_)), uint8(IT1ERC7683.Status.OPENED));
 
-        vm.startPrank(vegeta);
-        outputToken.approve(address(l2T1ERC7683), amount);
-        bytes memory originData = OrderEncoder.encode(orderData);
-        bytes memory fillerData = abi.encode(amount, TypeCasts.addressToBytes32(vegeta));
-        l2T1ERC7683.fill(orderId_, originData, fillerData);
-        assertEq(uint8(l2T1ERC7683.orderStatus(orderId_)), uint8(IT1ERC7683.Status.FILLED));
-        vm.stopPrank();
+        return (orderData, orderId_);
+    }
 
-        vm.startPrank(vegeta);
-        bytes32 requestId_ = l1T1ERC7683.verifySettlement(destination, orderId_);
-        vm.stopPrank();
+    function _generateAuthorization(
+        bytes32 orderId,
+        address filler,
+        uint256 amountOut,
+        uint256 signerPK
+    )
+        internal
+        view
+        returns (bytes memory)
+    {
+        bytes32 structHash =
+            keccak256(abi.encode(l2T1ERC7683.FILL_AUTHORIZATION_TYPEHASH(), orderId, filler, amountOut));
+        bytes32 digest = keccak256(abi.encodePacked("\x19\x01", l2T1ERC7683.domainSeparator(), structHash));
+        (uint8 v, bytes32 r, bytes32 s) = vm.sign(signerPK, digest);
 
-        return (orderData, orderId_, requestId_);
+        return abi.encodePacked(r, s, v);
     }
 }

@@ -44,13 +44,13 @@ contract PausableTest is T1XChainReaderBaseTestSetup {
 
         admin.upgrade(
             ITransparentUpgradeableProxy(address(l1T1ERC7683)),
-            address(new T1ERC7683(permit2, address(originReader), uint32(origin)))
+            address(new T1ERC7683(permit2, address(originReader), uint32(origin), auctionWitness))
         );
         l1T1ERC7683.initialize(address(l2T1ERC7683));
 
         admin.upgrade(
             ITransparentUpgradeableProxy(address(l2T1ERC7683)),
-            address(new T1ERC7683(permit2, address(destinationReader), uint32(destination)))
+            address(new T1ERC7683(permit2, address(destinationReader), uint32(destination), auctionWitness))
         );
         l2T1ERC7683.initialize(address(l1T1ERC7683));
     }
@@ -227,5 +227,133 @@ contract PausableTest is T1XChainReaderBaseTestSetup {
 
         vm.expectRevert(IT1ERC7683.SettleOperationsPaused.selector);
         l1T1ERC7683.handleReadResultWithProof(abi.encode(batchIndex, requestId, position, result, proof));
+    }
+
+    function test_cannotRefundWhenPaused() public {
+        uint32 deadline = 1000; // Past deadline for testing refund
+        OrderData memory defaultOrderData = OrderData({
+            sender: TypeCasts.addressToBytes32(kakaroto),
+            recipient: TypeCasts.addressToBytes32(vegeta),
+            inputToken: TypeCasts.addressToBytes32(address(inputToken)),
+            outputToken: TypeCasts.addressToBytes32(address(outputToken)),
+            amountIn: amount,
+            minAmountOut: amount,
+            senderNonce: 1,
+            originDomain: origin,
+            destinationDomain: destination,
+            destinationSettler: TypeCasts.addressToBytes32(counterpart),
+            fillDeadline: deadline,
+            closedAuction: false,
+            data: ""
+        });
+        bytes memory orderData = OrderEncoder.encode(defaultOrderData);
+
+        OnchainCrossChainOrder memory order = _prepareOnchainOrder(orderData, deadline, OrderEncoder.orderDataType());
+
+        vm.startPrank(kakaroto);
+        inputToken.approve(address(l1T1ERC7683), type(uint256).max);
+        l1T1ERC7683.open(order);
+        vm.stopPrank();
+
+        bytes32 orderId = OrderEncoder.id(defaultOrderData);
+
+        // Mock the xChainReader requestRead to return a mock requestId
+        bytes32 expectedRequestId = keccak256("mock_request_id");
+        vm.mockCall(
+            address(originReader),
+            abi.encodeWithSelector(originReader.requestRead.selector),
+            abi.encode(expectedRequestId)
+        );
+
+        vm.warp(2000); // Set block.timestamp to 2000
+        vm.prank(kakaroto);
+        l1T1ERC7683.verifyRefund(orderId);
+        vm.mockCall(
+            address(originReader),
+            abi.encodeWithSelector(originReader.verifyProofOfRead.selector),
+            abi.encode(expectedRequestId, bytes(""))
+        );
+
+        OnchainCrossChainOrder[] memory orders = new OnchainCrossChainOrder[](1);
+        orders[0] = order;
+        bytes[] memory proofs = new bytes[](1);
+        proofs[0] = "mock_proof";
+
+        l1T1ERC7683.pauseSettle(); // Pause settlement operations
+
+        vm.expectRevert(IT1ERC7683.SettleOperationsPaused.selector);
+        l1T1ERC7683.refund(orders, proofs);
+    }
+
+    function test_cannotRefundForWhenPaused() public {
+        vm.warp(2000); // Set block.timestamp to 2000
+        uint32 deadline = 1000; // Past deadline for testing refund
+        OrderData memory defaultOrderData = _prepareOrderData();
+        defaultOrderData.fillDeadline = deadline;
+        bytes memory orderData = OrderEncoder.encode(defaultOrderData);
+
+        GaslessCrossChainOrder memory order = _prepareGaslessOrder(
+            address(l1T1ERC7683),
+            kakaroto,
+            uint64(origin),
+            orderData,
+            defaultOrderData.senderNonce,
+            1_000_000_000,
+            deadline,
+            OrderEncoder.orderDataType()
+        );
+
+        bytes memory originFillerData = new bytes(0);
+        ResolvedCrossChainOrder memory resolvedOrder = l1T1ERC7683.resolveFor(order, originFillerData);
+
+        bytes memory sig = _getSignature(
+            address(l1T1ERC7683),
+            l1T1ERC7683.witnessHash(resolvedOrder),
+            address(inputToken),
+            order.nonce,
+            defaultOrderData.amountIn,
+            1_000_000_000,
+            kakarotoPK
+        );
+
+        vm.prank(kakaroto);
+        inputToken.approve(permit2, type(uint256).max);
+        vm.prank(vegeta);
+        l1T1ERC7683.openFor(order, sig, new bytes(0));
+
+        bytes32 orderId = OrderEncoder.id(defaultOrderData);
+
+        assertEq(uint8(l1T1ERC7683.orderStatus(orderId)), uint8(IT1ERC7683.Status.OPENED));
+
+        bytes32 expectedRequestId = keccak256("mock_request_id");
+        vm.mockCall(
+            address(originReader),
+            abi.encodeWithSelector(originReader.requestRead.selector),
+            abi.encode(expectedRequestId)
+        );
+
+        vm.warp(2000); // Set block.timestamp to 2000
+        vm.prank(kakaroto);
+        l1T1ERC7683.verifyRefund(orderId);
+
+        assertEq(uint8(l1T1ERC7683.orderStatus(orderId)), uint8(IT1ERC7683.Status.REFUND_REQUESTED));
+
+        assertEq(l1T1ERC7683.refundReadRequestToOrderId(expectedRequestId), orderId);
+
+        vm.mockCall(
+            address(originReader),
+            abi.encodeWithSelector(originReader.verifyProofOfRead.selector),
+            abi.encode(expectedRequestId, bytes(""))
+        );
+
+        GaslessCrossChainOrder[] memory orders = new GaslessCrossChainOrder[](1);
+        orders[0] = order;
+        bytes[] memory proofs = new bytes[](1);
+        proofs[0] = "mock_proof";
+
+        l1T1ERC7683.pauseSettle(); // Pause settlement operations
+
+        vm.expectRevert(IT1ERC7683.SettleOperationsPaused.selector);
+        l1T1ERC7683.refund(orders, proofs);
     }
 }
