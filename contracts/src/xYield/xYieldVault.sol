@@ -68,7 +68,7 @@ contract xYieldVault is ERC4626, Ownable2Step, ReentrancyGuard, Pausable {
     }
 
     function deposit(
-        uint256 assets,
+        uint256 amount,
         address receiver
     )
         public
@@ -78,25 +78,25 @@ contract xYieldVault is ERC4626, Ownable2Step, ReentrancyGuard, Pausable {
         whenNotPaused
         returns (uint256)
     {
-        if (assets == 0) revert ZeroAmount();
+        if (amount == 0) revert ZeroAmount();
         if (!isActiveChain) revert DepositOnInactiveChain();
 
-        uint256 shares = previewDeposit(assets);
-        _deposit(msg.sender, receiver, assets, shares);
+        uint256 shares = previewDeposit(amount);
+        _deposit(msg.sender, receiver, amount, shares);
 
         return shares;
     }
 
     // called on behalf of a user who has deposited from a remote chain
-    function depositFrom(uint256 assets, address receiver) public nonReentrant whenNotPaused returns (uint256 shares) {
-        if (assets == 0) revert ZeroAmount();
+    function depositFrom(uint256 amount, address receiver) public nonReentrant whenNotPaused returns (uint256 shares) {
+        if (amount == 0) revert ZeroAmount();
         if (!isActiveChain) revert DepositOnInactiveChain();
         // deposit assets into underlying
         // credit user with virtual deposit
         // render virtual deposits into real deposits when updateTotals is called
         // this means that we will always use virtual deposits to calculate share price
-        shares = previewDeposit(assets);
-        _depositFrom(msg.sender, receiver, assets, shares);
+        shares = previewDeposit(amount);
+        _depositFrom(msg.sender, receiver, amount, shares);
     }
 
     function mint(
@@ -120,7 +120,7 @@ contract xYieldVault is ERC4626, Ownable2Step, ReentrancyGuard, Pausable {
     }
 
     function withdraw(
-        uint256 assets,
+        uint256 amount,
         address receiver,
         address owner
     )
@@ -130,11 +130,11 @@ contract xYieldVault is ERC4626, Ownable2Step, ReentrancyGuard, Pausable {
         nonReentrant
         returns (uint256)
     {
-        if (assets == 0) revert ZeroAmount();
+        if (amount == 0) revert ZeroAmount();
         if (!isActiveChain) revert WithdrawOnInactiveChain();
 
-        uint256 shares = previewWithdraw(assets);
-        _withdraw(msg.sender, receiver, owner, assets, shares);
+        uint256 shares = previewWithdraw(amount);
+        _withdraw(msg.sender, receiver, owner, amount, shares);
 
         return shares;
     }
@@ -208,18 +208,18 @@ contract xYieldVault is ERC4626, Ownable2Step, ReentrancyGuard, Pausable {
 
     // NOTE - for remote deposits we update virtualTotalAssets after deposit to prevent share price inflation before
     // global shares is updated
-    function _depositFrom(address caller, address receiver, uint256 assets, uint256 shares) internal {
-        IERC20(asset()).transferFrom(caller, address(this), assets);
-        yieldProtocol.deposit(assets, address(this));
+    function _depositFrom(address caller, address receiver, uint256 amount, uint256 shares) internal {
+        IERC20(asset()).transferFrom(caller, address(this), amount);
+        yieldProtocol.deposit(amount, address(this));
 
-        emit DepositRemote(caller, receiver, assets, shares);
+        emit DepositRemote(caller, receiver, amount, shares);
     }
 
     function _withdraw(
         address caller,
         address receiver,
         address owner,
-        uint256 assets,
+        uint256 amount,
         uint256 shares
     )
         internal
@@ -233,13 +233,13 @@ contract xYieldVault is ERC4626, Ownable2Step, ReentrancyGuard, Pausable {
         // Should only be called on active chains where assets exist
         if (!isActiveChain) revert WithdrawOnInactiveChain();
 
-        yieldProtocol.withdraw(assets, address(this), address(this));
-        virtualTotalAssets -= assets;
+        yieldProtocol.withdraw(amount, address(this), address(this));
+        virtualTotalAssets -= amount;
         virtualTotalSupply -= shares;
         _burn(owner, shares);
-        IERC20(asset()).transfer(receiver, assets);
+        IERC20(asset()).transfer(receiver, amount);
 
-        emit Withdraw(caller, receiver, owner, assets, shares);
+        emit Withdraw(caller, receiver, owner, amount, shares);
     }
 
     function totalSupply() public view virtual override(ERC20, IERC20) returns (uint256) {
