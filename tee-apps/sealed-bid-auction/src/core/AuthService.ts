@@ -22,12 +22,13 @@ export class AuthService {
         }
 
         solverAddress = solverAddress.toLowerCase();
-        console.log(`WebSocket auth success for user "${authAttempt.username}" with address ${solverAddress}`);
 
         if (!this.consumeNonce(key, authAttempt.nonce)) {
             return null;
         }
         this.authenticatedSolvers.add(solverAddress);
+
+        console.log(`WebSocket auth success for user "${authAttempt.username}" with address ${solverAddress}`);
 
         return {solverAddress, username: authAttempt.username};
     }
