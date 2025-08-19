@@ -1,4 +1,6 @@
 export const USERNAME = "Bob";
+export const PRIVATE_KEY = "0x59c6995e998f97a5a0044972fae75ce4e226e1b648b7387c86b3cf41c163a5fc";
+export const SOLVER_ADDRESS = "0x293803aCe64D9B3f3DE141855d3D5810df478fcd";
 
 export const PRICE_LIST_WITH_TWO_ITEMS = [{
             "direction": "Base_USDC->Arbitrum_USDC",
@@ -23,7 +25,8 @@ export const PRICE_LIST_WITH_TWO_ITEMS = [{
                 }
             ],
             "srcTokenAddresses": ["0xf3C3351D6Bd0098EEb33ca8f830FAf2a141Ea2E1"],
-            "destTokenAddresses": ["0x036CbD53842c5426634e7929541eC2318f3dCF7e"]
+            "destTokenAddresses": ["0x036CbD53842c5426634e7929541eC2318f3dCF7e"],
+            "settlementReceiverAddress": SOLVER_ADDRESS
         },
         {
             "direction": "Arbitrum_WETH",
@@ -48,7 +51,8 @@ export const PRICE_LIST_WITH_TWO_ITEMS = [{
                 }
             ],
             "srcTokenAddresses": ["0x036CbD53842c5426634e7929541eC2318f3dCF7e"],
-            "destTokenAddresses": ["0xf3C3351D6Bd0098EEb33ca8f830FAf2a141Ea2E1"]
+            "destTokenAddresses": ["0xf3C3351D6Bd0098EEb33ca8f830FAf2a141Ea2E1"],
+            "settlementReceiverAddress": SOLVER_ADDRESS
         }];
 
 export const PRICE_LIST_WITH_GAP_IN_RANGES = [{
@@ -74,7 +78,8 @@ export const PRICE_LIST_WITH_GAP_IN_RANGES = [{
         }
     ],
     "srcTokenAddresses": ["0xf3C3351D6Bd0098EEb33ca8f830FAf2a141Ea2E1"],
-    "destTokenAddresses": ["0x036CbD53842c5426634e7929541eC2318f3dCF7e"]
+    "destTokenAddresses": ["0x036CbD53842c5426634e7929541eC2318f3dCF7e"],
+    "settlementReceiverAddress": SOLVER_ADDRESS
 },
     {
         "direction": "Arbitrum_WETH",
@@ -99,5 +104,6 @@ export const PRICE_LIST_WITH_GAP_IN_RANGES = [{
             }
         ],
         "srcTokenAddresses": ["0x036CbD53842c5426634e7929541eC2318f3dCF7e"],
-        "destTokenAddresses": ["0xf3C3351D6Bd0098EEb33ca8f830FAf2a141Ea2E1"]
+        "destTokenAddresses": ["0xf3C3351D6Bd0098EEb33ca8f830FAf2a141Ea2E1"],
+        "settlementReceiverAddress": SOLVER_ADDRESS
     }];

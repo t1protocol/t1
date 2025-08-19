@@ -22,12 +22,12 @@ export class SolverPriceBook {
         );
     }
 
-    public updatePrice(username: string, priceBlob: string): number {
+    public updatePrice(solverAddr: string, priceBlob: string): number {
         const priceList = this.validatePriceList(priceBlob);
 
-        this.prices.set(username, { priceList, timestamp: Date.now() });
+        this.prices.set(solverAddr.toLowerCase(), { priceList, timestamp: Date.now() });
 
-        return Object.keys(priceList).length;
+        return priceList.length;
     }
 
     private validatePriceList(priceBlob: string): PriceListItem[] {
