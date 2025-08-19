@@ -25,7 +25,6 @@ contract xYieldVault is ERC4626, Ownable2Step, ReentrancyGuard, Pausable {
     uint256 public minRebalanceGap;
     uint256 public lastRebalanceTime;
 
-    event DepositRemote(address indexed sender, address indexed owner, uint256 assets, uint256 shares);
 
     error NotGuardian();
     error ZeroAmount();
@@ -36,6 +35,7 @@ contract xYieldVault is ERC4626, Ownable2Step, ReentrancyGuard, Pausable {
     error NotImplemented();
     error LengthMismatch();
 
+    event DepositRemote(address indexed sender, address indexed owner, uint256 assets, uint256 shares);
     event TotalSupplyUpdated(uint256 newVirtualTotalSupply);
     event ChainStatusChanged(bool isActive);
     event SiblingVaultSet(uint256 chainId, address vault);
