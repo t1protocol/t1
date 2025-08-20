@@ -316,7 +316,11 @@ contract xYieldForkTest is Test {
         vm.stopPrank();
 
         // Verify initial state
-        assertEq(xYieldArbitrum.virtualTotalSupply(), totalSharesGlobal, "Initial virtual total supply should match global total");
+        assertEq(
+            xYieldArbitrum.virtualTotalSupply(),
+            totalSharesGlobal,
+            "Initial virtual total supply should match global total"
+        );
         assertEq(xYieldBase.balanceOf(bob), bobSharesRemote, "Bob should have shares on Base");
 
         uint256 withdrawAmount = 30e6; // Withdraw 30 USDC from Bob's remote shares
@@ -351,16 +355,10 @@ contract xYieldForkTest is Test {
             "Virtual total supply should be reduced by withdrawn shares"
         );
 
-        assertLt(
-            xYieldBase.balanceOf(bob),
-            bobInitialShares,
-            "Bob's shares on Base should be reduced after withdrawal"
-        );
+        assertLt(xYieldBase.balanceOf(bob), bobInitialShares, "Bob's shares on Base should be reduced after withdrawal");
 
         assertEq(
-            xYieldArbitrum.balanceOf(alice),
-            aliceInitialShares,
-            "Alice's shares on Arbitrum should remain unchanged"
+            xYieldArbitrum.balanceOf(alice), aliceInitialShares, "Alice's shares on Arbitrum should remain unchanged"
         );
 
         assertEq(

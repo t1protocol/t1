@@ -30,8 +30,6 @@ contract xYieldVault is ERC4626, Ownable2Step, ReentrancyGuard, Pausable {
 
     mapping(uint64 => address) public siblingVaults;
 
-
-
     error NotGuardian();
     error ZeroAmount();
     error InvalidChain();
