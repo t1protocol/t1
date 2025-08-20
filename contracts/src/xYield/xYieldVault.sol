@@ -215,8 +215,8 @@ contract xYieldVault is ERC4626, Ownable2Step, ReentrancyGuard, Pausable {
         virtual
         override
     {
-        if (caller != owner) {
-            _spendAllowance(owner, caller, shares);
+        if (_caller != _owner) {
+            _spendAllowance(_owner, _caller, _shares);
         }
 
         // Should only be called on active chains where assets exist
