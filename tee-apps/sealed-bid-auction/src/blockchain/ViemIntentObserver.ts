@@ -14,14 +14,12 @@ import {
 import type {AuctionApiServer} from "../api/AuctionApiServer.ts";
 import { serialize, WinstonLogger} from "../utils/WinstonLogger.ts";
 import type {BlockchainClient} from "./BlockchainClient.ts";
-import type {ViemAuctionCommiter} from "./ViemAuctionCommiter.ts";
 import type {AuctionResult} from "../api/types.ts";
 
 export class ViemIntentObserver {
     private logger: WinstonLogger;
 
     constructor(private readonly blockchainClient: BlockchainClient,
-                private readonly auctionCommiter: ViemAuctionCommiter,
                 private readonly t1Erc7683ContractAddress: `0x${string}`,
                 private readonly auctionService: AuctionService,
                 private readonly apiServer: AuctionApiServer,
@@ -96,9 +94,8 @@ export class ViemIntentObserver {
                 }
 
                 await this.apiServer.notifySolvers(result, this.blockchainClient.publicClient.chain.id);
-                const txHash = await this.auctionCommiter.commitWinnerBid(result);
 
-                this.logger.info(`I finished auction for orderId=[${orderId}] , notified solvers amd sent winningBid using tx=[${txHash}]`);
+                this.logger.info(`I finished auction for orderId=[${orderId}] and notified solvers`);
                 break;
             }
             
