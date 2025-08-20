@@ -302,7 +302,7 @@ contract xYieldForkTest is Test {
 
         vm.startPrank(bob);
         usdcArbitrum.approve(address(xYieldArbitrum), type(uint256).max);
-        uint256 bobSharesRemote = xYieldArbitrum.depositFrom(depositAmount, bob);
+        uint256 bobSharesRemote = xYieldArbitrum.depositFrom(depositAmount, bob, baseChainId);
         vm.stopPrank();
 
         // Update totals to reflect both deposits
@@ -330,8 +330,6 @@ contract xYieldForkTest is Test {
 
         // Simulate remote withdrawal by Bob (would happen on Base chain)
         uint256 sharesToBurn = xYieldArbitrum.previewWithdraw(withdrawAmount);
-
-        uint64 baseChainId = 8453;
 
         // Mock the remote withdrawal call that would happen on Base
         vm.startPrank(guardian);
