@@ -1,8 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.30;
 
-import { OwnableUpgradeable } from "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
-import { PausableUpgradeable } from "@openzeppelin/contracts-upgradeable/security/PausableUpgradeable.sol";
+import { AccessControlUpgradeable } from "@openzeppelin/contracts-upgradeable/access/AccessControlUpgradeable.sol";
 import { IERC20 } from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import { SafeERC20 } from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import { Address } from "@openzeppelin/contracts/utils/Address.sol";
@@ -25,9 +24,13 @@ import { IT1XChainReader } from "../libraries/xChain/IT1XChainReader.sol";
 
 /// @title T1ERC7683
 /// @author t1 Labs
-contract T1ERC7683 is IT1ERC7683, T1Permit2, OwnableUpgradeable, PausableUpgradeable, EIP712 {
+contract T1ERC7683 is IT1ERC7683, T1Permit2, AccessControlUpgradeable, EIP712 {
     using SafeERC20 for IERC20;
 
+    /// @notice Role for pausing/unpausing open operations
+    bytes32 public constant OPEN_PAUSER_ROLE = keccak256("OPEN_PAUSER_ROLE");
+    /// @notice Role for pausing/unpausing settlement operations
+    bytes32 public constant SETTLE_PAUSER_ROLE = keccak256("SETTLE_PAUSER_ROLE");
     /// @notice chain id
     uint32 public immutable localDomain;
     IT1XChainReader public immutable xChainRead;
@@ -43,8 +46,25 @@ contract T1ERC7683 is IT1ERC7683, T1Permit2, OwnableUpgradeable, PausableUpgrade
     mapping(bytes32 => bytes32) public refundReadRequestToOrderId;
     /// @notice Maps request IDs to order IDs for cross-chain read requests for settlements
     mapping(bytes32 => bytes32) public settlementReadRequestToOrderId;
-    address public immutable auctionWitness;
+    /// @notice Authorization signer for off chain auction results
+    address public auctionWitness;
+    /// @notice Separate pausable states
+    bool public openPaused;
+    bool public settlePaused;
+    /// @notice Sibling settler contract
     address public counterpart;
+
+    /// @notice Modifier to check if open operations are not paused
+    modifier whenOpenNotPaused() {
+        if (openPaused) revert OpenOperationsPaused();
+        _;
+    }
+
+    /// @notice Modifier to check if settlement operations are not paused
+    modifier whenSettleNotPaused() {
+        if (settlePaused) revert SettleOperationsPaused();
+        _;
+    }
 
     /// @notice EIP-712 typehash for fill authorization
     bytes32 public constant FILL_AUTHORIZATION_TYPEHASH =
@@ -54,35 +74,38 @@ contract T1ERC7683 is IT1ERC7683, T1Permit2, OwnableUpgradeable, PausableUpgrade
     /// @param _permit2 The address of the permit2 contract
     /// @param _xChainRead The address of the cross-chain read contract
     /// @param _localDomain The local domain (chain id)
-    /// @param _auctionWitness Address of the auction result signer
     constructor(
         address _permit2,
         address _xChainRead,
-        uint32 _localDomain,
-        address _auctionWitness
+        uint32 _localDomain
     )
         T1Permit2(_permit2)
         EIP712("T1ERC7683", "1")
     {
-        if (_xChainRead == address(0) || _auctionWitness == address(0)) revert ZeroAddress();
         xChainRead = IT1XChainReader(_xChainRead);
         localDomain = _localDomain;
-        auctionWitness = _auctionWitness;
     }
 
     /// @notice Initializes the contract
     /// @param _counterpart the counterpart contract on another chain
-    function initialize(address _counterpart) external initializer {
+    /// @param _auctionWitness Address of the auction result signer
+    function initialize(address _counterpart, address _auctionWitness) external initializer {
+        if (_counterpart == address(0) || _auctionWitness == address(0)) revert ZeroAddress();
         counterpart = _counterpart;
-        __Ownable_init();
-        __Pausable_init();
+        auctionWitness = _auctionWitness;
+        _setRoleAdmin(DEFAULT_ADMIN_ROLE, DEFAULT_ADMIN_ROLE);
+        _setRoleAdmin(OPEN_PAUSER_ROLE, DEFAULT_ADMIN_ROLE);
+        _setRoleAdmin(SETTLE_PAUSER_ROLE, DEFAULT_ADMIN_ROLE);
+        _grantRole(DEFAULT_ADMIN_ROLE, msg.sender);
+        _grantRole(OPEN_PAUSER_ROLE, msg.sender);
+        _grantRole(SETTLE_PAUSER_ROLE, msg.sender);
     }
 
     /// @notice Opens a cross-chain order
     /// @dev To be called by the user
     /// @dev This method must emit the Open event
     /// @param _order The OnchainCrossChainOrder definition
-    function open(OnchainCrossChainOrder calldata _order) external payable override whenNotPaused {
+    function open(OnchainCrossChainOrder calldata _order) external payable override whenOpenNotPaused {
         (ResolvedCrossChainOrder memory resolvedOrder, bytes32 orderId, uint256 nonce) = _resolveOrder(_order);
 
         openOrders[orderId] = abi.encode(_order.orderDataType, _order.orderData);
@@ -117,7 +140,7 @@ contract T1ERC7683 is IT1ERC7683, T1Permit2, OwnableUpgradeable, PausableUpgrade
     )
         external
         override
-        whenNotPaused
+        whenOpenNotPaused
     {
         if (block.timestamp > _order.openDeadline) revert OrderOpenExpired();
         if (_order.originSettler != address(this)) revert InvalidGaslessOrderSettler();
@@ -393,7 +416,7 @@ contract T1ERC7683 is IT1ERC7683, T1Permit2, OwnableUpgradeable, PausableUpgrade
     /// Also enforce auction winner bid if the orderId has closed auction.
     /// @param encodedProofOfRead The encoded proof of read which is formatted as following:
     /// abi.encode(uint256 batchIndex, bytes32 requestId, uint256 position, bytes result, bytes proof)
-    function handleReadResultWithProof(bytes calldata encodedProofOfRead) external {
+    function handleReadResultWithProof(bytes calldata encodedProofOfRead) external whenSettleNotPaused {
         (bytes32 requestId, bytes memory result) = xChainRead.verifyProofOfRead(encodedProofOfRead);
 
         bytes32 orderId = settlementReadRequestToOrderId[requestId];
@@ -494,7 +517,7 @@ contract T1ERC7683 is IT1ERC7683, T1Permit2, OwnableUpgradeable, PausableUpgrade
     /// This process needs a proof of read triggered by `verifyRefund` that proves the intent has not be filled.
     /// @param _orders An array of GaslessCrossChainOrders to refund.
     /// @param _proofs Array of encoded proofs of read to verify orders are not settled
-    function refund(GaslessCrossChainOrder[] memory _orders, bytes[] calldata _proofs) external {
+    function refund(GaslessCrossChainOrder[] memory _orders, bytes[] calldata _proofs) external whenSettleNotPaused {
         if (_orders.length != _proofs.length) revert LengthMismatch();
 
         bytes32[] memory orderIds = new bytes32[](_orders.length);
@@ -511,7 +534,7 @@ contract T1ERC7683 is IT1ERC7683, T1Permit2, OwnableUpgradeable, PausableUpgrade
     /// This process needs a proof of read triggered by `verifyRefund` that proves the intent has not be filled.
     /// @param _orders An array of OnchainCrossChainOrders to refund.
     /// @param _proofs Array of encoded proofs of read to verify orders are not settled
-    function refund(OnchainCrossChainOrder[] memory _orders, bytes[] calldata _proofs) external {
+    function refund(OnchainCrossChainOrder[] memory _orders, bytes[] calldata _proofs) external whenSettleNotPaused {
         if (_orders.length != _proofs.length) revert LengthMismatch();
 
         bytes32[] memory orderIds = new bytes32[](_orders.length);
@@ -558,7 +581,7 @@ contract T1ERC7683 is IT1ERC7683, T1Permit2, OwnableUpgradeable, PausableUpgrade
         bytes32 expectedOrderId = refundReadRequestToOrderId[requestId];
         if (expectedOrderId != orderId) revert InvalidRequest();
 
-        delete settlementReadRequestToOrderId[requestId];
+        delete refundReadRequestToOrderId[requestId];
 
         // Check if the order is settled based on result length (same logic as handleReadResultWithProof)
         if (result.length == 0) return;
@@ -595,12 +618,30 @@ contract T1ERC7683 is IT1ERC7683, T1Permit2, OwnableUpgradeable, PausableUpgrade
         }
     }
 
-    function pause() external onlyOwner {
-        _pause();
+    function updateAuctionWitness(address newAuctionWitness) external onlyRole(DEFAULT_ADMIN_ROLE) {
+        if (newAuctionWitness == address(0)) revert ZeroAddress();
+        emit AuctionWitnessUpdated(auctionWitness, newAuctionWitness);
+        auctionWitness = newAuctionWitness;
     }
 
-    function unpause() external onlyOwner {
-        _unpause();
+    function pauseOpen() external onlyRole(OPEN_PAUSER_ROLE) {
+        openPaused = true;
+        emit OpenPaused();
+    }
+
+    function unpauseOpen() external onlyRole(OPEN_PAUSER_ROLE) {
+        openPaused = false;
+        emit OpenUnpaused();
+    }
+
+    function pauseSettle() external onlyRole(SETTLE_PAUSER_ROLE) {
+        settlePaused = true;
+        emit SettlePaused();
+    }
+
+    function unpauseSettle() external onlyRole(SETTLE_PAUSER_ROLE) {
+        settlePaused = false;
+        emit SettleUnpaused();
     }
 
     /// @notice Retrieves the status of a filled order by its ID
