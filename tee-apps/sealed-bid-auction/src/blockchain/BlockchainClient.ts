@@ -5,7 +5,7 @@ export class BlockchainClient {
     private _publicClient;
     private _walletClient;
 
-    public constructor(rpcUrl: string, chain: Chain, pollingInterval: number, signerKey?: `0x${string}`) {
+    public constructor(rpcUrl: string, chain: Chain, pollingInterval: number, private readonly signerKey?: `0x${string}`) {
         this._publicClient = createPublicClient({
             chain,
             transport: http(rpcUrl),
@@ -33,5 +33,17 @@ export class BlockchainClient {
         }
 
         return this._walletClient;
+    }
+
+    public async signMessage(message: string): Promise<`0x${string}`> {
+        if (!this.signerKey) {
+            throw new Error("Signer key not initialised!");
+        }
+
+        const account = privateKeyToAccount(this.signerKey);
+
+        return await account.signMessage({
+            message
+        })
     }
 }

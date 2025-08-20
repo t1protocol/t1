@@ -1,5 +1,5 @@
 import {
-    decodeAbiParameters,
+    decodeAbiParameters, encodeAbiParameters, keccak256,
     parseEventLogs,
     trim,
     type WatchEventOnLogsParameter
@@ -20,27 +20,24 @@ import type {AuctionResult} from "../api/types.ts";
 export class ViemIntentObserver {
     private logger: WinstonLogger;
 
-    private readonly client;
-
-    constructor(blockchainClient: BlockchainClient,
+    constructor(private readonly blockchainClient: BlockchainClient,
                 private readonly auctionCommiter: ViemAuctionCommiter,
                 private readonly t1Erc7683ContractAddress: `0x${string}`,
                 private readonly auctionService: AuctionService,
                 private readonly apiServer: AuctionApiServer,
                 private readonly auctionPollingInterval: number = 500
     ) {
-        this.client = blockchainClient.publicClient;
-        this.logger = new WinstonLogger(`${ViemIntentObserver.name}[${this.client.chain.name}]`);
+        this.logger = new WinstonLogger(`${ViemIntentObserver.name}[${this.blockchainClient.publicClient.chain.name}]`);
     }
 
     public start() {
-        this.client.watchEvent({
+        this.blockchainClient.publicClient.watchEvent({
             address: this.t1Erc7683ContractAddress,
             event: OPEN_INTENT_ABI_EVENT,
             onLogs: logs => this.processIntentLogs(logs)
         });
 
-        this.logger.info(`Watching for Open Intent events on chain [${this.client.chain.name}] and contract [${this.t1Erc7683ContractAddress}]`);
+        this.logger.info(`Watching for Open Intent events on chain [${this.blockchainClient.publicClient.chain.name}] and contract [${this.t1Erc7683ContractAddress}]`);
     }
 
     private async processIntentLogs(logs: WatchEventOnLogsParameter) {
@@ -87,14 +84,18 @@ export class ViemIntentObserver {
             this.logger.debug(`Auction winner: ${serialize(winningPrice)}`);
 
             if (winningPrice !== null && winningPrice.amountOut >= orderData.minAmountOut) {
+
                 const result: AuctionResult = {
+                    type: "winning-bid",
                     settlementReceiverAddress: winningPrice.settlementReceiverAddress,
                     amountOut: winningPrice.amountOut,
                     orderId,
-                    orderData
+                    signature: await this.signAuctionResult(
+                        BigInt(orderId), winningPrice.settlementReceiverAddress as `0x${string}`, winningPrice.amountOut
+                    )
                 }
 
-                await this.apiServer.notifySolvers(result, this.client.chain.id);
+                await this.apiServer.notifySolvers(result, this.blockchainClient.publicClient.chain.id);
                 const txHash = await this.auctionCommiter.commitWinnerBid(result);
 
                 this.logger.info(`I finished auction for orderId=[${orderId}] , notified solvers amd sent winningBid using tx=[${txHash}]`);
@@ -103,5 +104,20 @@ export class ViemIntentObserver {
             
             await new Promise((resolve) => setTimeout(resolve, this.auctionPollingInterval));
         }
+    }
+
+    private async signAuctionResult(orderId: bigint, winningSolver: `0x${string}`, amountOut: bigint) : Promise<string> {
+        const encoded = encodeAbiParameters(
+            [
+                { type: 'uint256', name: 'orderId' },
+                { type: 'address', name: 'winningSolver' },
+                { type: 'uint256', name: 'bidAmountOut' },
+            ],
+            [orderId, winningSolver, amountOut],
+        )
+
+        const hash = keccak256(encoded);
+
+        return await this.blockchainClient.signMessage(hash);
     }
 }
