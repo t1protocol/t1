@@ -74,7 +74,6 @@ contract xYieldVault is ERC4626, Ownable2Step, ReentrancyGuard, Pausable {
         public
         virtual
         override
-        nonReentrant
         whenNotPaused
         returns (uint256)
     {
@@ -88,7 +87,7 @@ contract xYieldVault is ERC4626, Ownable2Step, ReentrancyGuard, Pausable {
     }
 
     // called on behalf of a user who has deposited from a remote chain
-    function depositFrom(uint256 _amount, address _receiver) public nonReentrant whenNotPaused returns (uint256 shares) {
+    function depositFrom(uint256 _amount, address _receiver) public whenNotPaused returns (uint256 shares) {
         if (_amount == 0) revert ZeroAmount();
         if (!isActiveChain) revert DepositOnInactiveChain();
         // deposit assets into underlying
