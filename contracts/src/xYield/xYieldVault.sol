@@ -25,7 +25,6 @@ contract xYieldVault is ERC4626, Ownable2Step, ReentrancyGuard, Pausable {
     uint256 public minRebalanceGap;
     uint256 public lastRebalanceTime;
 
-
     error NotGuardian();
     error ZeroAmount();
     error InvalidChain();
@@ -67,16 +66,7 @@ contract xYieldVault is ERC4626, Ownable2Step, ReentrancyGuard, Pausable {
         _transferOwnership(msg.sender);
     }
 
-    function deposit(
-        uint256 _amount,
-        address _receiver
-    )
-        public
-        virtual
-        override
-        whenNotPaused
-        returns (uint256)
-    {
+    function deposit(uint256 _amount, address _receiver) public virtual override whenNotPaused returns (uint256) {
         if (_amount == 0) revert ZeroAmount();
         if (!isActiveChain) revert DepositOnInactiveChain();
 
@@ -178,12 +168,12 @@ contract xYieldVault is ERC4626, Ownable2Step, ReentrancyGuard, Pausable {
         // TODO - update incrementally like virtualTotalAssets using proof of remote supply change
         virtualTotalSupply = totalSupply_;
         _updateBalances(_recipients, _amounts);
-        virtualTotalAssets = this.totalAssets();
+        virtualTotalAssets = totalAssets();
         emit TotalSupplyUpdated(totalSupply_);
     }
 
     function updateVirtualTotalAssets() external onlyGuardian {
-        virtualTotalAssets = this.totalAssets();
+        virtualTotalAssets = totalAssets();
     }
 
     // TODO - submit proofs for remote deposits
