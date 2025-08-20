@@ -138,7 +138,7 @@ export class ViemIntentObserver {
     amountOut: bigint
   ): Promise<string> {
     const domain = {
-      name: "T1AuctionResult",
+      name: "T1ERC7683",
       version: "1",
       chainId: BigInt(this.blockchainClient.publicClient.chain.id),
       verifyingContract: this.t1Erc7683ContractAddress,
