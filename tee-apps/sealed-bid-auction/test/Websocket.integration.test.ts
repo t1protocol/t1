@@ -1,9 +1,10 @@
 import {afterAll, beforeAll, beforeEach, describe, it, expect} from "@jest/globals";
 
 import {AuctionApiServer} from "../src/api/AuctionApiServer.ts";
-import {PRICE_LIST_WITH_GAP_IN_RANGES, USERNAME, PRICE_LIST_WITH_TWO_ITEMS} from "./constants.ts";
+import {PRICE_LIST_WITH_GAP_IN_RANGES, USERNAME, PRICE_LIST_WITH_TWO_ITEMS, PRIVATE_KEY, SOLVER_ADDRESS} from "./constants.ts";
 import {SolverPriceBook} from "../src/core/SolverPriceBook.ts";
 import {AuctionService} from "../src/core/AuctionService.ts";
+import {signMessage} from "viem/accounts";
 
 const wsPort = 3080;
 const solverPriceBook  = new SolverPriceBook();
@@ -15,9 +16,18 @@ let socketMessage: string | null;
 beforeAll(async () => {
     await httpServer.start(wsPort, false);
 
+    const nonceRes1 = await fetch(`http://localhost:${wsPort}/api/currentNonce?username=${USERNAME}`);
+    const { nonce } = await nonceRes1.json();
+    const nonceRes2 = await fetch(`http://localhost:${wsPort}/api/currentNonce?username=${USERNAME}`);
+    const { nonce: nonceAgain } = await nonceRes2.json();
+    expect(nonceAgain).toBe(nonce);
+    const blobString = JSON.stringify({ username: USERNAME, nonce });
+    const signature = await signMessage({ message: blobString, privateKey: PRIVATE_KEY as `0x${string}` });
+
     socket = new WebSocket(`ws://localhost:${wsPort}/`, {
         headers: {
-            Authorization: USERNAME
+            "X-Auth-Blob": blobString,
+            "X-Auth-Signature": signature
         }
     });
     socket.onopen = () => {
@@ -33,6 +43,10 @@ beforeAll(async () => {
     while (socketClosed) {
         await new Promise((resolve) => setTimeout(resolve, 100));
     }
+
+    const nonceRes3 = await fetch(`http://localhost:${wsPort}/api/currentNonce?username=${USERNAME}`);
+    const { nonce: rotated } = await nonceRes3.json();
+    expect(rotated).not.toBe(nonce);
 });
 
 afterAll(async () => {
@@ -58,7 +72,15 @@ describe("Websocket Integration Test", () => {
             await new Promise((resolve) => setTimeout(resolve, 100));
         }
 
-        expect(socketMessage).toBe(`I updated [2] prices for [${USERNAME}]!`);
+        expect(socketMessage).toBe(`Prices updated: 2 entries for solver ${SOLVER_ADDRESS.toLowerCase()}`);
+
+        const priceBook = (httpServer as any)["solverPriceBook"];
+        const prices = (priceBook as any)["prices"] as Map<string, any>;
+        const entry = prices.get(SOLVER_ADDRESS.toLowerCase());
+        expect(entry).toBeDefined();
+        entry.priceList.forEach((item: any) => {
+            expect(item.settlementReceiverAddress).toBe(SOLVER_ADDRESS.toLowerCase());
+        });
     });
 
     it("Should not add Price List with gap in ranges", async () => {
@@ -68,6 +90,30 @@ describe("Websocket Integration Test", () => {
             await new Promise((resolve) => setTimeout(resolve, 100));
         }
 
-        expect(socketMessage).toBe(`Error when updating price: Error: There is a gap between max of range [0] and min of range [1]`);
+        expect(socketMessage).toBe(`Error when updating price: There is a gap between max of range [0] and min of range [1]`);
+    });
+
+    it("Should reject parallel connections with the same nonce", async () => {
+        const nonceRes = await fetch(`http://localhost:${wsPort}/api/currentNonce?username=${USERNAME}`);
+        const { nonce } = await nonceRes.json();
+        const blobString = JSON.stringify({ username: USERNAME, nonce });
+        const signature = await signMessage({ message: blobString, privateKey: PRIVATE_KEY as `0x${string}` });
+
+        const headers = { "X-Auth-Blob": blobString, "X-Auth-Signature": signature };
+        const ws1 = new WebSocket(`ws://localhost:${wsPort}/`, { headers });
+        const ws2 = new WebSocket(`ws://localhost:${wsPort}/`, { headers });
+
+        const wait = (ws: WebSocket) =>
+            new Promise<boolean>((resolve) => {
+                ws.onopen = () => resolve(true);
+                ws.onerror = () => resolve(false);
+                ws.onclose = () => resolve(false);
+            });
+
+        const [r1, r2] = await Promise.all([wait(ws1), wait(ws2)]);
+        expect(Number(r1) + Number(r2)).toBe(1);
+
+        ws1.close();
+        ws2.close();
     });
 });

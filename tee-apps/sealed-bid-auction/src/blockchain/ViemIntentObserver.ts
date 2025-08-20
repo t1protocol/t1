@@ -100,7 +100,7 @@ export class ViemIntentObserver {
                 this.logger.info(`I finished auction for orderId=[${orderId}] , notified solvers amd sent winningBid using tx=[${txHash}]`);
                 break;
             }
-
+            
             await new Promise((resolve) => setTimeout(resolve, this.auctionPollingInterval));
         }
     }

@@ -10,13 +10,15 @@ export class SolverWebSocketClient {
         this.socket = null;
     }
 
-    public async start(username: string, socketResponseConsumer: (sockerResponse: string) => void) {
+    public async start(username: string, authBlob: string, authBlobSig: string, socketResponseConsumer: (sockerResponse: string) => void) {
         this.logger = new WinstonLogger(`SolverWebSocketClient[${username}]`);
 
         this.logger.info(`Connecting to server ${this.serverUrl}`);
         this.socket = new WebSocket(this.serverUrl, {
             headers: {
-                Authorization: username
+                Authorization: username,
+                "X-Auth-Blob": authBlob,
+                "X-Auth-Signature": authBlobSig
             }
         });
         this.socket.onmessage = (event) => {
