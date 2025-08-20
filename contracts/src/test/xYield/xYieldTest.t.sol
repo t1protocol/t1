@@ -7,7 +7,7 @@ import { IERC20 } from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import { ERC20 } from "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 import { ERC4626 } from "@openzeppelin/contracts/token/ERC20/extensions/ERC4626.sol";
 
-import { xYieldVault } from "./xYieldVault.sol";
+import { xYieldVault } from "../../xYield/xYieldVault.sol";
 import { MockYieldProtocol } from "./MockYieldProtocol.sol";
 
 contract MockUSDC is ERC20 {
@@ -167,5 +167,19 @@ contract xYieldTest is Test {
 
         vm.prank(user1);
         vault.deposit(100, user1);
+    }
+
+    function testSiblingVaultsRevert() public {
+        uint256 depositAmount = 100 * 10 ** 18;
+
+        vm.prank(user1);
+        vm.expectRevert(abi.encodeWithSelector(xYieldVault.InvalidChain.selector));
+        vault.depositFrom(depositAmount, user1, 1);
+
+        vm.prank(vault.owner());
+        vault.setSiblingVault(1, address(0x4));
+
+        vm.prank(user1);
+        vault.depositFrom(depositAmount, user1, 1);
     }
 }

@@ -1,7 +1,11 @@
 {
   "name": "sealed-bid-auction",
-  "module": "index.ts",
+  "module": "script/server.ts",
   "type": "module",
+  "scripts": {
+    "server": "bun run script/server.ts",
+    "bot": "bun run script/solverBot.ts"
+  },
   "private": true,
   "devDependencies": {
     "@types/bun": "latest"
@@ -10,7 +14,13 @@
     "typescript": "^5"
   },
   "dependencies": {
+    "@jest/globals": "^30.0.5",
     "bun": "^1.2.19",
+    "dotenv": "^17.2.1",
+    "immutable": "^5.1.3",
+    "jest": "^30.0.5",
+    "ts-jest": "^29.4.0",
+    "viem": "^2.33.1",
     "winston": "^3.17.0"
   }
 }

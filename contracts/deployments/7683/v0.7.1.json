@@ -1,0 +1,41 @@
+{
+  "metadata": {
+    "version": "v0.8.0",
+    "date": "2025-08-11",
+    "by": "Evan",
+    "from_machine": "localhost",
+    "from_branch": "fix/x-chain-read-eco-integration",
+    "from_commit": "c2e793992ee3a39f11a00400a509c8df159ce096"
+  },
+  "addresses": {
+    "arbitrum_sepolia": {
+      "signer": "0xBA3424Bd12c55Bf698A4cbab8dCA761e566F3077",
+      "usdt": "0xF6232a871BF3B33F5bc181f55d770F9FB062A457",
+      "weth": "0x2836ae2eA2c013acD38028fD0C77B92cccFa2EE4",
+      "t1ProxyAdmin": "0xbce0E4bcd0dd26d885E7F8a3749ABc04226387ff",
+      "t1XChainRead": {
+        "implementation": "0x27839E962D2F18A5C7d5183E5348B69f1b8d24D5",
+        "proxy": "0x5057bd83228F754330B3b6A4539fBFf1eF911A4B"
+      },
+      "t1ERC7683": {
+        "implementation": "0x55D8903AA045A140E839EfF27AFC4680C3b77AD8",
+        "proxy": "0x1Ce56319Cc8EA2fBb6A8F8A23957238905DeF8e6"
+      }
+    },
+    "base_sepolia": {
+      "signer": "0xBA3424Bd12c55Bf698A4cbab8dCA761e566F3077",
+      "usdt": "0x228eE6c1C297E2Eba0e95A71684B26f89385b4eC",
+      "weth": "0x4200000000000000000000000000000000000006",
+      "t1ProxyAdmin": "0x6d0FDBC77c2E7F7f2eDAa4d901e5b335C0A926E0",
+      "t1XChainRead": {
+        "implementation": "0xb32311f922fba18560C60279598A3fDf2D92194B",
+        "proxy": "0x54e51A733D02B41De2D5ea7777351150c5298f56"
+      },
+      "t1ERC7683": {
+        "implementation": "0x41589821267b6811B3211b8Ac2bFaf1D620b86A7",
+        "proxy": "0xb20a99A96A6a16979EB09205d61C32995EB40cD2"
+      }
+    },
+    "deployerAddress": "0xD99c1b45708a4E94c6230f6A77BD7fa729f5398B"
+  }
+}
