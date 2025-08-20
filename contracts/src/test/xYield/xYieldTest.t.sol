@@ -169,4 +169,18 @@ contract xYieldTest is Test {
         vm.prank(user1);
         vault.deposit(100, user1);
     }
+
+    function testSiblingVaultsRevert() public {
+        uint256 depositAmount = 100 * 10 ** 18;
+
+        vm.prank(user1);
+        vm.expectRevert(abi.encodeWithSelector(xYieldVault.InvalidChain.selector));
+        vault.depositFrom(depositAmount, user1, 1);
+
+        vm.prank(vault.owner());
+        vault.setSiblingVault(1, address(0x4));
+
+        vm.prank(user1);
+        vault.depositFrom(depositAmount, user1, 1);
+    }
 }

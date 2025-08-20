@@ -31,6 +31,8 @@ contract xYieldForkTest is Test {
 
     uint256 depositAmount = 100e6;
 
+    uint64 baseChainId = 8453;
+
     function setUp() public {
         string memory arbitrumRpcUrl = vm.envString("ARBITRUM_RPC");
         uint256 arbitrumBlock = vm.envUint("ARBITRUM_BLOCK");
@@ -49,6 +51,7 @@ contract xYieldForkTest is Test {
 
         vm.prank(guardian);
         xYieldArbitrum.setActiveChain(true);
+        xYieldArbitrum.setSiblingVault(baseChainId, address(xYieldBase));
 
         vm.startPrank(alice);
         usdcArbitrum.transfer(bob, 100e6);
@@ -170,7 +173,7 @@ contract xYieldForkTest is Test {
 
         vm.startPrank(alice); // acting as filler for her own intent
         usdcArbitrum.approve(address(xYieldArbitrum), type(uint256).max);
-        uint256 aliceShares = xYieldArbitrum.depositFrom(depositAmount, alice);
+        uint256 aliceShares = xYieldArbitrum.depositFrom(depositAmount, alice, baseChainId);
         vm.stopPrank();
 
         uint256 aliceXyusdBalanceAfter = xYieldArbitrum.balanceOf(alice);
@@ -228,7 +231,7 @@ contract xYieldForkTest is Test {
         // remote chain deposit
         vm.startPrank(bob); // acting as filler for his own intent
         usdcArbitrum.approve(address(xYieldArbitrum), type(uint256).max);
-        uint256 bobSharesRemote = xYieldArbitrum.depositFrom(depositAmount, bob);
+        uint256 bobSharesRemote = xYieldArbitrum.depositFrom(depositAmount, bob, baseChainId);
         vm.stopPrank();
 
         uint256 bobXyusdBalanceAfter = xYieldArbitrum.balanceOf(bob);
@@ -311,7 +314,7 @@ contract xYieldForkTest is Test {
         // Scenario 2: Add Bob's deposit to create the 1 wei scenario
         vm.startPrank(bob);
         usdcArbitrum.approve(address(xYieldArbitrum), type(uint256).max);
-        uint256 bobSharesRemote = xYieldArbitrum.depositFrom(depositAmount, bob);
+        uint256 bobSharesRemote = xYieldArbitrum.depositFrom(depositAmount, bob, baseChainId);
         vm.stopPrank();
 
         // Update totals to create the virtual supply scenario

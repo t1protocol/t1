@@ -20,7 +20,7 @@ contract xYieldVault is ERC4626, Ownable2Step, ReentrancyGuard, Pausable {
     uint256 public virtualTotalSupply;
     bool public isActiveChain;
 
-    mapping(uint256 => address) public siblingVaults;
+    mapping(uint64 => address) public siblingVaults;
 
     uint256 public minRebalanceGap;
     uint256 public lastRebalanceTime;
@@ -34,10 +34,10 @@ contract xYieldVault is ERC4626, Ownable2Step, ReentrancyGuard, Pausable {
     error NotImplemented();
     error LengthMismatch();
 
-    event DepositRemote(address indexed sender, address indexed owner, uint256 assets, uint256 shares);
+    event DepositRemote(address indexed sender, address indexed owner, uint256 assets, uint256 shares, uint64 chainId);
     event TotalSupplyUpdated(uint256 newVirtualTotalSupply);
     event ChainStatusChanged(bool isActive);
-    event SiblingVaultSet(uint256 chainId, address vault);
+    event SiblingVaultSet(uint64 chainId, address vault);
     event Rebalanced(uint256 targetChain, uint256 amount);
 
     modifier onlyGuardian() {
@@ -77,15 +77,16 @@ contract xYieldVault is ERC4626, Ownable2Step, ReentrancyGuard, Pausable {
     }
 
     // called on behalf of a user who has deposited from a remote chain
-    function depositFrom(uint256 _amount, address _receiver) public whenNotPaused returns (uint256 shares) {
+    function depositFrom(uint256 _amount, address _receiver, uint64 _chainId) public whenNotPaused returns (uint256 shares) {
         if (_amount == 0) revert ZeroAmount();
         if (!isActiveChain) revert DepositOnInactiveChain();
+        if (siblingVaults[_chainId] == address(0)) revert InvalidChain();
         // deposit assets into underlying
         // credit user with virtual deposit
         // render virtual deposits into real deposits when updateTotals is called
         // this means that we will always use virtual deposits to calculate share price
         shares = previewDeposit(_amount);
-        _depositFrom(msg.sender, _receiver, _amount, shares);
+        _depositFrom(msg.sender, _receiver, _amount, shares, _chainId);
     }
 
     function mint(
@@ -197,11 +198,11 @@ contract xYieldVault is ERC4626, Ownable2Step, ReentrancyGuard, Pausable {
 
     // NOTE - for remote deposits we update virtualTotalAssets after deposit to prevent share price inflation before
     // global shares is updated
-    function _depositFrom(address _caller, address _receiver, uint256 _amount, uint256 _shares) internal {
+    function _depositFrom(address _caller, address _receiver, uint256 _amount, uint256 _shares, uint64 _chainId) internal {
         IERC20(asset()).transferFrom(_caller, address(this), _amount);
         yieldProtocol.deposit(_amount, address(this));
 
-        emit DepositRemote(_caller, _receiver, _amount, _shares);
+        emit DepositRemote(_caller, _receiver, _amount, _shares, _chainId);
     }
 
     function _withdraw(
@@ -245,7 +246,7 @@ contract xYieldVault is ERC4626, Ownable2Step, ReentrancyGuard, Pausable {
         emit ChainStatusChanged(_isActive);
     }
 
-    function setSiblingVault(uint256 _chainId, address _vault) external onlyOwner {
+    function setSiblingVault(uint64 _chainId, address _vault) external onlyOwner {
         siblingVaults[_chainId] = _vault;
         emit SiblingVaultSet(_chainId, _vault);
     }
