@@ -12,9 +12,6 @@ import { OrderData, OrderEncoder } from "../../libraries/7683/OrderEncoder.sol";
 import { GaslessCrossChainOrder, OnchainCrossChainOrder, ResolvedCrossChainOrder } from "../../interfaces/IERC7683.sol";
 
 contract RefundTest is BaseTest {
-    event Refund(bytes32[] orderIds);
-    event Refunded(bytes32 indexed orderId, address receiver);
-
     T1ERC7683 internal settlerContract;
     T1XChainReader internal mockXChainReader;
 
@@ -34,10 +31,12 @@ contract RefundTest is BaseTest {
         address mockProver = makeAddr("mockProver");
         mockXChainReader = new T1XChainReader(mockProver);
 
-        T1ERC7683 implementation = new T1ERC7683(permit2, address(mockXChainReader), origin, auctionWitness);
+        T1ERC7683 implementation = new T1ERC7683(permit2, address(mockXChainReader), origin);
 
         TransparentUpgradeableProxy proxy = new TransparentUpgradeableProxy(
-            address(implementation), address(admin), abi.encodeWithSelector(T1ERC7683.initialize.selector, counterpart)
+            address(implementation),
+            address(admin),
+            abi.encodeWithSelector(T1ERC7683.initialize.selector, counterpart, auctionWitness)
         );
 
         settlerContract = T1ERC7683(address(proxy));
@@ -111,7 +110,7 @@ contract RefundTest is BaseTest {
         uint256 contractBalanceBefore = inputToken.balanceOf(address(settlerContract));
 
         vm.expectEmit();
-        emit Refunded(orderId, kakaroto);
+        emit IT1ERC7683.Refunded(orderId, kakaroto);
 
         settlerContract.refund(orders, proofs);
 
@@ -190,7 +189,7 @@ contract RefundTest is BaseTest {
         uint256 contractBalanceBefore = inputToken.balanceOf(address(settlerContract));
 
         vm.expectEmit();
-        emit Refunded(orderId, kakaroto);
+        emit IT1ERC7683.Refunded(orderId, kakaroto);
 
         settlerContract.refund(orders, proofs);
 
@@ -412,7 +411,7 @@ contract RefundTest is BaseTest {
         uint256 contractBalanceBefore = inputToken.balanceOf(address(settlerContract));
 
         vm.expectEmit();
-        emit Refunded(orderId, kakaroto);
+        emit IT1ERC7683.Refunded(orderId, kakaroto);
 
         settlerContract.refund(orders, proofs);
 

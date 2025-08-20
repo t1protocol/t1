@@ -78,6 +78,28 @@ interface IT1ERC7683 is IOriginSettler, IDestinationSettler {
      * @param receiver The address of the order's input token receiver.
      */
     event Refunded(bytes32 indexed orderId, address receiver);
+    /**
+     * @notice Emitted when open operations are paused
+     */
+    event OpenPaused();
+    /**
+     * @notice Emitted when open operations are unpaused
+     */
+    event OpenUnpaused();
+    /**
+     * @notice Emitted when settlement operations are paused
+     */
+    event SettlePaused();
+    /**
+     * @notice Emitted when settlement operations are unpaused
+     */
+    event SettleUnpaused();
+    /**
+     * @notice Emitted when the auction witness address is updated
+     * @param oldAuctionWitness The previous auction witness address
+     * @param newAuctionWitness The new auction witness address
+     */
+    event AuctionWitnessUpdated(address oldAuctionWitness, address newAuctionWitness);
 
     error ZeroAddress();
     error InvalidOrderId();
@@ -98,6 +120,8 @@ interface IT1ERC7683 is IOriginSettler, IDestinationSettler {
     error InvalidOrder();
     error OrderFillNotExpired();
     error NotEligible();
+    error OpenOperationsPaused();
+    error SettleOperationsPaused();
     error InvalidFillAuthorization();
 
     /// @notice Initiates a pull-based settlement verification for an order
