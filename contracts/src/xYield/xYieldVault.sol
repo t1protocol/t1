@@ -62,8 +62,6 @@ contract xYieldVault is ERC4626, Ownable2Step, ReentrancyGuard, Pausable {
         if (_yieldProtocol != address(0)) {
             _underlying.approve(_yieldProtocol, type(uint256).max);
         }
-
-        _transferOwnership(msg.sender);
     }
 
     function deposit(uint256 _amount, address _receiver) public virtual override whenNotPaused returns (uint256) {
