@@ -1,0 +1,55 @@
+import { readFileSync } from "node:fs";
+import { resolve } from "node:path";
+import { beforeAll, expect, test, vi } from "vitest";
+import { ViemIntentObserver } from "../src/blockchain/ViemIntentObserver";
+import { arbitrumSepolia } from "viem/chains";
+import {BlockchainClient} from "../src/blockchain/BlockchainClient.ts";
+import {PRIVATE_KEY} from "./constants.ts";
+
+/* ---------- 1. load logs from the Foundry broadcast file ---------- */
+const fixturePath = resolve(__dirname, "fixtures/arb-sepolia-run.json");
+const raw = JSON.parse(readFileSync(fixturePath, "utf-8"));
+
+// every transaction receipt → its logs
+const logs =
+  (raw.receipts ?? raw.transactions.map((t: any) => t.receipt)).flatMap(
+    (r: any) => r.logs,
+  );
+
+
+/* ---------- 2. cheap mocks so nothing really goes on‑chain ---------- */
+const auctionSvc = { auction: vi.fn().mockResolvedValue({ amountOut: 100n, settlementReceiverAddress: "0x0" }) };
+const apiServer = { notifySolvers: vi.fn() };
+const commiter = { commitWinnerBid: vi.fn().mockResolvedValue("0xdeadbeef") };
+
+/* ---------- 3. system‑under‑test ----------------------------------- */
+const intentContract = "0xc7b348fa0a01e292818df7226cfbaa86d0a391a9";
+const blockchainClient = new BlockchainClient(
+    process.env.ARBITRUM_SEPOLIA_RPC ?? "https://sepolia-rollup.arbitrum.io/rpc",
+    arbitrumSepolia,
+    /* poll */ 1_000,
+    PRIVATE_KEY
+);
+const observer = new ViemIntentObserver(
+    blockchainClient,
+    commiter as any,
+    intentContract,
+    auctionSvc as any,
+    apiServer  as any,
+);
+
+beforeAll(async () => {
+  vi.spyOn(Date, "now").mockReturnValue(1754447574000);
+  await observer.processIntentLogs(logs as any);
+});
+
+test("runs the sealed‑bid flow end‑to‑end", () => {
+  expect(auctionSvc.auction).toHaveBeenCalled();
+  expect(apiServer.notifySolvers).toHaveBeenCalledWith(
+    expect.any(Object),                                 // winning price
+    "0x2069f1cda7f58c735e85a9b24221cd59f7fa1e3c43020e23460e946e81d1f732",
+    expect.any(Object),                                 // decoded order data
+    421614,                                             // chainId
+  );
+});
+

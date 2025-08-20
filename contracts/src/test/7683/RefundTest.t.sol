@@ -4,6 +4,7 @@ pragma solidity ^0.8.25;
 import { TypeCasts } from "@hyperlane-xyz/libs/TypeCasts.sol";
 import { TransparentUpgradeableProxy } from "@openzeppelin/contracts/proxy/transparent/TransparentUpgradeableProxy.sol";
 
+import { IT1ERC7683 } from "../../../src/interfaces/IT1ERC7683.sol";
 import { BaseTest } from "./BaseTest.sol";
 import { T1ERC7683 } from "../../7683/T1ERC7683.sol";
 import { T1XChainReader } from "../../libraries/xChain/T1XChainReader.sol";
@@ -33,14 +34,14 @@ contract RefundTest is BaseTest {
         address mockProver = makeAddr("mockProver");
         mockXChainReader = new T1XChainReader(mockProver);
 
-        T1ERC7683 implementation = new T1ERC7683(permit2, address(mockXChainReader), origin);
+        T1ERC7683 implementation = new T1ERC7683(permit2, address(mockXChainReader), origin, auctionWitness);
 
         TransparentUpgradeableProxy proxy = new TransparentUpgradeableProxy(
             address(implementation), address(admin), abi.encodeWithSelector(T1ERC7683.initialize.selector, counterpart)
         );
 
         settlerContract = T1ERC7683(address(proxy));
-        _base7683 = settlerContract;
+        _t1ERC7683 = settlerContract;
 
         defaultOrderData = OrderData({
             sender: TypeCasts.addressToBytes32(kakaroto),
@@ -74,7 +75,7 @@ contract RefundTest is BaseTest {
         bytes32 orderId = OrderEncoder.id(defaultOrderData);
 
         // Verify order is opened
-        assertEq(settlerContract.orderStatus(orderId), "OPENED");
+        assertEq(uint8(settlerContract.orderStatus(orderId)), uint8(IT1ERC7683.Status.OPENED));
 
         // Mock the xChainReader requestRead to return a mock requestId
         bytes32 expectedRequestId = keccak256("mock_request_id");
@@ -89,7 +90,7 @@ contract RefundTest is BaseTest {
         settlerContract.verifyRefund(orderId);
 
         // Verify order status changed to REFUND_REQUESTED
-        assertEq(settlerContract.orderStatus(orderId), "REFUND_REQUESTED");
+        assertEq(uint8(settlerContract.orderStatus(orderId)), uint8(IT1ERC7683.Status.REFUND_REQUESTED));
 
         // Verify refundReadRequestToOrderId mapping is set
         assertEq(settlerContract.refundReadRequestToOrderId(expectedRequestId), orderId);
@@ -115,7 +116,7 @@ contract RefundTest is BaseTest {
         settlerContract.refund(orders, proofs);
 
         // Verify order status changed to REFUNDED
-        assertEq(settlerContract.orderStatus(orderId), "REFUNDED");
+        assertEq(uint8(settlerContract.orderStatus(orderId)), uint8(IT1ERC7683.Status.REFUNDED));
 
         assertEq(inputToken.balanceOf(kakaroto), balanceBefore + amount);
         assertEq(inputToken.balanceOf(address(settlerContract)), contractBalanceBefore - amount);
@@ -158,7 +159,7 @@ contract RefundTest is BaseTest {
 
         bytes32 orderId = OrderEncoder.id(defaultOrderData);
 
-        assertEq(settlerContract.orderStatus(orderId), "OPENED");
+        assertEq(uint8(settlerContract.orderStatus(orderId)), uint8(IT1ERC7683.Status.OPENED));
 
         bytes32 expectedRequestId = keccak256("mock_request_id");
         vm.mockCall(
@@ -170,7 +171,7 @@ contract RefundTest is BaseTest {
         vm.prank(kakaroto);
         settlerContract.verifyRefund(orderId);
 
-        assertEq(settlerContract.orderStatus(orderId), "REFUND_REQUESTED");
+        assertEq(uint8(settlerContract.orderStatus(orderId)), uint8(IT1ERC7683.Status.REFUND_REQUESTED));
 
         assertEq(settlerContract.refundReadRequestToOrderId(expectedRequestId), orderId);
 
@@ -193,7 +194,7 @@ contract RefundTest is BaseTest {
 
         settlerContract.refund(orders, proofs);
 
-        assertEq(settlerContract.orderStatus(orderId), "REFUNDED");
+        assertEq(uint8(settlerContract.orderStatus(orderId)), uint8(IT1ERC7683.Status.REFUNDED));
 
         assertEq(inputToken.balanceOf(kakaroto), balanceBefore + amount);
         assertEq(inputToken.balanceOf(address(settlerContract)), contractBalanceBefore - amount);
@@ -213,7 +214,7 @@ contract RefundTest is BaseTest {
 
         bytes32 orderId = OrderEncoder.id(notExpiredOrderData);
 
-        assertEq(settlerContract.orderStatus(orderId), "OPENED");
+        assertEq(uint8(settlerContract.orderStatus(orderId)), uint8(IT1ERC7683.Status.OPENED));
 
         vm.expectRevert(abi.encodeWithSignature("OrderFillNotExpired()"));
         settlerContract.verifyRefund(orderId);
@@ -239,7 +240,7 @@ contract RefundTest is BaseTest {
         bytes32 orderId = OrderEncoder.id(defaultOrderData);
 
         // Verify order is opened but refund is not requested
-        assertEq(settlerContract.orderStatus(orderId), "OPENED");
+        assertEq(uint8(settlerContract.orderStatus(orderId)), uint8(IT1ERC7683.Status.OPENED));
 
         // Mock the xChainReader to return empty result (order not filled)
         bytes32 expectedRequestId = keccak256("mock_request_id");
@@ -254,7 +255,7 @@ contract RefundTest is BaseTest {
         bytes[] memory proofs = new bytes[](1);
         proofs[0] = "mock_proof";
 
-        vm.expectRevert(T1ERC7683.InvalidRequest.selector);
+        vm.expectRevert(IT1ERC7683.InvalidRequest.selector);
         settlerContract.refund(orders, proofs);
     }
 
@@ -367,7 +368,7 @@ contract RefundTest is BaseTest {
         bytes[] memory proofs = new bytes[](1);
         proofs[0] = "mock_proof";
 
-        vm.expectRevert(T1ERC7683.OrderAlreadySettled.selector);
+        vm.expectRevert(IT1ERC7683.OrderAlreadySettled.selector);
         settlerContract.refund(orders, proofs);
     }
 
@@ -415,7 +416,7 @@ contract RefundTest is BaseTest {
 
         settlerContract.refund(orders, proofs);
 
-        assertEq(settlerContract.orderStatus(orderId), "REFUNDED");
+        assertEq(uint8(settlerContract.orderStatus(orderId)), uint8(IT1ERC7683.Status.REFUNDED));
 
         assertEq(inputToken.balanceOf(kakaroto), balanceBefore + amount);
         assertEq(inputToken.balanceOf(address(settlerContract)), contractBalanceBefore - amount);
@@ -456,7 +457,7 @@ contract RefundTest is BaseTest {
         bytes[] memory proofs = new bytes[](1);
         proofs[0] = "mock_proof";
 
-        vm.expectRevert(T1ERC7683.InvalidRequest.selector);
+        vm.expectRevert(IT1ERC7683.InvalidRequest.selector);
         settlerContract.refund(orders, proofs);
     }
 
@@ -480,7 +481,7 @@ contract RefundTest is BaseTest {
         );
 
         vm.warp(notExpiredOrderData.fillDeadline + 29);
-        vm.expectRevert(T1ERC7683.OrderFillNotExpired.selector);
+        vm.expectRevert(IT1ERC7683.OrderFillNotExpired.selector);
         vm.prank(kakaroto);
         settlerContract.verifyRefund(orderId);
     }

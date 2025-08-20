@@ -10,7 +10,12 @@ Save TLS key in `key.pem` and certificate in `cert.pem` . Consider using CloudFl
 
 ### To run:
 
+Start server:
 ```bash
-bun run index.ts
+bun run server
 ```
 
+Start a bot simulating two Solvers streaming prices:
+```bash
+bun run bot
+```

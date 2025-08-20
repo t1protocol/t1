@@ -1,6 +1,10 @@
 // SPDX-License-Identifier: UNLICENSED
-pragma solidity 0.8.25;
+pragma solidity ^0.8.25;
 
+// sender is redundant with user or msg.sender in higher Order struct
+// fillDeadline is redundant with fillDeadline in higher Order struct
+// originDomain is redundant with originChainId in higher Order struct
+// We should remove them after checking our offchain infra doesn't use them
 struct OrderData {
     bytes32 sender;
     bytes32 recipient;

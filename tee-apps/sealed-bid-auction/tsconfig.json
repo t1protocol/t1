@@ -5,6 +5,8 @@
     "target": "ESNext",
     "module": "Preserve",
     "moduleDetection": "force",
+    "resolveJsonModule": true,
+    "esModuleInterop": true,
     "jsx": "react-jsx",
     "allowJs": true,
 

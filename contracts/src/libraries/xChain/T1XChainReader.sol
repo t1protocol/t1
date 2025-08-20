@@ -188,13 +188,47 @@ contract T1XChainReader is IT1XChainReader, OwnableUpgradeable, ReentrancyGuardU
         (uint256 batchIndex, bytes32 requestId, uint256 position, bytes memory result, bytes memory proof) =
             abi.decode(encodedProofOfRead, (uint256, bytes32, uint256, bytes, bytes));
 
+        _verifyProofOfRead(batchIndex, requestId, position, result, proof);
+
+        return (requestId, result);
+    }
+
+    /**
+     * @notice Verifies a proof of read and returns the raw function result
+     * @param encodedProofOfRead The encoded proof of read which is formatted as following:
+     * abi.encode(uint256 batchIndex, bytes32 requestId, uint256 position, bytes proof)
+     * @param result The raw ABI-encoded return value from the target function
+     * @return requestId The ID of the read request
+     */
+    function verifyProofOfReadWithResult(
+        bytes calldata encodedProofOfRead,
+        bytes calldata result
+    )
+        external
+        view
+        returns (bytes32)
+    {
+        (uint256 batchIndex, bytes32 requestId, uint256 position, bytes memory proof) =
+            abi.decode(encodedProofOfRead, (uint256, bytes32, uint256, bytes));
+        _verifyProofOfRead(batchIndex, requestId, position, result, proof);
+        return requestId;
+    }
+
+    function _verifyProofOfRead(
+        uint256 batchIndex,
+        bytes32 requestId,
+        uint256 position,
+        bytes memory result,
+        bytes memory proof
+    )
+        internal
+        view
+    {
         bytes32 root = proofOfReadRoots[batchIndex];
         bytes32 xChainReadResultHash = keccak256(result);
         bytes32 leaf = keccak256(abi.encodePacked(xChainReadResultHash, requestId));
 
         if (!WithdrawTrieVerifier.verifyMerkleProof(root, leaf, position, proof)) revert InvalidProof();
-
-        return (requestId, result);
     }
 
     /**
