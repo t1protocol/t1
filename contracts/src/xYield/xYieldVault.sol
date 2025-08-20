@@ -77,7 +77,15 @@ contract xYieldVault is ERC4626, Ownable2Step, ReentrancyGuard, Pausable {
     }
 
     // called on behalf of a user who has deposited from a remote chain
-    function depositFrom(uint256 _amount, address _receiver, uint64 _chainId) public whenNotPaused returns (uint256 shares) {
+    function depositFrom(
+        uint256 _amount,
+        address _receiver,
+        uint64 _chainId
+    )
+        public
+        whenNotPaused
+        returns (uint256 shares)
+    {
         if (_amount == 0) revert ZeroAmount();
         if (!isActiveChain) revert DepositOnInactiveChain();
         if (siblingVaults[_chainId] == address(0)) revert InvalidChain();
@@ -198,7 +206,15 @@ contract xYieldVault is ERC4626, Ownable2Step, ReentrancyGuard, Pausable {
 
     // NOTE - for remote deposits we update virtualTotalAssets after deposit to prevent share price inflation before
     // global shares is updated
-    function _depositFrom(address _caller, address _receiver, uint256 _amount, uint256 _shares, uint64 _chainId) internal {
+    function _depositFrom(
+        address _caller,
+        address _receiver,
+        uint256 _amount,
+        uint256 _shares,
+        uint64 _chainId
+    )
+        internal
+    {
         IERC20(asset()).transferFrom(_caller, address(this), _amount);
         yieldProtocol.deposit(_amount, address(this));
 
