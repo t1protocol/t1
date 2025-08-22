@@ -125,8 +125,8 @@ contract xYieldTest is Test {
         uint256 newVirtualTotalSupply = 200 * 10 ** 18;
 
         xYieldVault.BalanceUpdate[] memory balanceUpdates = new xYieldVault.BalanceUpdate[](2);
-        balanceUpdates[0] = xYieldVault.BalanceUpdate({ recipient: user1, amount: 100 * 10 ** 18, isMint: true });
-        balanceUpdates[1] = xYieldVault.BalanceUpdate({ recipient: user2, amount: 100 * 10 ** 18, isMint: true });
+        balanceUpdates[0] = xYieldVault.BalanceUpdate({ recipient: user1, amount: 100 * 10 ** 18, txType: xYieldVault.TxType.Deposit });
+        balanceUpdates[1] = xYieldVault.BalanceUpdate({ recipient: user2, amount: 100 * 10 ** 18, txType: xYieldVault.TxType.Deposit });
 
         vm.prank(guardian);
         vault.updateTotals(newVirtualTotalSupply, balanceUpdates);

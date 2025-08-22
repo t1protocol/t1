@@ -22,10 +22,15 @@ contract xYieldVault is ERC4626, Ownable2Step, ReentrancyGuard, Pausable {
     uint256 public virtualTotalSupply;
     bool public isActiveChain;
 
+    enum TxType {
+        Deposit,
+        Withdraw
+    }
+
     struct BalanceUpdate {
         address recipient;
         uint256 amount;
-        bool isMint;
+        TxType txType;
     }
 
     mapping(uint64 => address) public siblingVaults;
@@ -192,7 +197,7 @@ contract xYieldVault is ERC4626, Ownable2Step, ReentrancyGuard, Pausable {
     // TODO - submit proofs for remote deposits
     function _updateBalances(BalanceUpdate[] calldata balanceUpdates) private {
         for (uint256 i = 0; i < balanceUpdates.length; i++) {
-            if (balanceUpdates[i].isMint) {
+            if (balanceUpdates[i].txType == TxType.Deposit) {
                 _mint(balanceUpdates[i].recipient, balanceUpdates[i].amount);
             } else {
                 _burn(balanceUpdates[i].recipient, balanceUpdates[i].amount);
