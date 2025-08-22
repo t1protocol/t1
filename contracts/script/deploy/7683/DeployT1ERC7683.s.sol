@@ -44,10 +44,11 @@ contract DeployT1ERC7683 is Script {
         uint256 deployerPk = vm.envUint("L1_DEPLOYER_PRIVATE_KEY");
         address L1_T1_7683_PROXY_ADDR = vm.envAddress("L1_T1_7683_PROXY_ADDR");
         address L2_T1_7683_PROXY_ADDR = vm.envAddress("L2_T1_7683_PROXY_ADDR");
+        address AUCTION_WITNESS = vm.envAddress("AUCTION_WITNESS");
 
         vm.startBroadcast(deployerPk);
 
-        T1ERC7683(L1_T1_7683_PROXY_ADDR).initialize(L2_T1_7683_PROXY_ADDR, auctionWitness);
+        T1ERC7683(L1_T1_7683_PROXY_ADDR).initialize(L2_T1_7683_PROXY_ADDR, AUCTION_WITNESS);
 
         vm.stopBroadcast();
     }
