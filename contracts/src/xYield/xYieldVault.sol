@@ -92,16 +92,7 @@ contract xYieldVault is ERC4626, Ownable2Step, ReentrancyGuard, Pausable {
         _depositFrom(msg.sender, _receiver, _amount, shares, _chainId);
     }
 
-    function mint(
-        uint256 _shares,
-        address _receiver
-    )
-        public
-        virtual
-        override
-        whenNotPaused
-        returns (uint256)
-    {
+    function mint(uint256 _shares, address _receiver) public virtual override whenNotPaused returns (uint256) {
         if (_shares == 0) revert ZeroAmount();
         if (!isActiveChain) revert DepositOnInactiveChain();
 
