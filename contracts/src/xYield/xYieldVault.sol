@@ -1,9 +1,10 @@
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.8.25;
+pragma solidity 0.8.30;
 
 import { ERC4626 } from "@openzeppelin/contracts/token/ERC20/extensions/ERC4626.sol";
 import { IERC4626 } from "@openzeppelin/contracts/interfaces/IERC4626.sol";
 import { IERC20 } from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
+import { SafeERC20 } from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import { ERC20 } from "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 import { Math } from "@openzeppelin/contracts/utils/math/Math.sol";
 import { Ownable2Step } from "@openzeppelin/contracts/access/Ownable2Step.sol";
@@ -11,6 +12,7 @@ import { ReentrancyGuard } from "@openzeppelin/contracts/security/ReentrancyGuar
 import { Pausable } from "@openzeppelin/contracts/security/Pausable.sol";
 
 contract xYieldVault is ERC4626, Ownable2Step, ReentrancyGuard, Pausable {
+    using SafeERC20 for IERC20;
     using Math for uint256;
 
     address public guardian;
@@ -38,7 +40,6 @@ contract xYieldVault is ERC4626, Ownable2Step, ReentrancyGuard, Pausable {
     error NotGuardian();
     error ZeroAmount();
     error InvalidChain();
-    error RebalanceTooFrequent();
     error WithdrawOnInactiveChain();
     error DepositOnInactiveChain();
     error NotImplemented();
@@ -68,7 +69,6 @@ contract xYieldVault is ERC4626, Ownable2Step, ReentrancyGuard, Pausable {
     {
         guardian = _guardian;
         yieldProtocol = IERC4626(_yieldProtocol);
-        minRebalanceGap = 1 hours;
 
         if (_yieldProtocol != address(0)) {
             _underlying.approve(_yieldProtocol, type(uint256).max);
@@ -91,7 +91,7 @@ contract xYieldVault is ERC4626, Ownable2Step, ReentrancyGuard, Pausable {
         address _receiver,
         uint64 _chainId
     )
-        public
+        external
         whenNotPaused
         returns (uint256 shares)
     {
@@ -106,17 +106,7 @@ contract xYieldVault is ERC4626, Ownable2Step, ReentrancyGuard, Pausable {
         _depositFrom(msg.sender, _receiver, _amount, shares, _chainId);
     }
 
-    function mint(
-        uint256 _shares,
-        address _receiver
-    )
-        public
-        virtual
-        override
-        nonReentrant
-        whenNotPaused
-        returns (uint256)
-    {
+    function mint(uint256 _shares, address _receiver) public virtual override whenNotPaused returns (uint256) {
         if (_shares == 0) revert ZeroAmount();
         if (!isActiveChain) revert DepositOnInactiveChain();
 
@@ -210,7 +200,7 @@ contract xYieldVault is ERC4626, Ownable2Step, ReentrancyGuard, Pausable {
         virtualTotalSupply += _shares;
         _mint(_receiver, _shares);
 
-        IERC20(asset()).transferFrom(_caller, address(this), _amount);
+        IERC20(asset()).safeTransferFrom(_caller, address(this), _amount);
         yieldProtocol.deposit(_amount, address(this));
 
         emit Deposit(_caller, _receiver, _amount, _shares);
@@ -227,7 +217,7 @@ contract xYieldVault is ERC4626, Ownable2Step, ReentrancyGuard, Pausable {
     )
         internal
     {
-        IERC20(asset()).transferFrom(_caller, address(this), _amount);
+        IERC20(asset()).safeTransferFrom(_caller, address(this), _amount);
         yieldProtocol.deposit(_amount, address(this));
 
         emit DepositRemote(_caller, _receiver, _amount, _shares, _chainId);
@@ -255,7 +245,7 @@ contract xYieldVault is ERC4626, Ownable2Step, ReentrancyGuard, Pausable {
         virtualTotalAssets -= _amount;
         virtualTotalSupply -= _shares;
         _burn(_owner, _shares);
-        IERC20(asset()).transfer(_receiver, _amount);
+        IERC20(asset()).safeTransfer(_receiver, _amount);
 
         emit Withdraw(_caller, _receiver, _owner, _amount, _shares);
     }
@@ -266,7 +256,7 @@ contract xYieldVault is ERC4626, Ownable2Step, ReentrancyGuard, Pausable {
 
     function totalAssets() public view virtual override returns (uint256) {
         // TODO - test edge cases where virtual total assets are pending
-        return yieldProtocol.convertToAssets(this.totalSupply());
+        return yieldProtocol.convertToAssets(yieldProtocol.balanceOf(address(this)));
     }
 
     function setActiveChain(bool _isActive) external onlyGuardian {
@@ -285,10 +275,6 @@ contract xYieldVault is ERC4626, Ownable2Step, ReentrancyGuard, Pausable {
 
     function setYieldProtocol(address _newYieldProtocol) external onlyOwner {
         yieldProtocol = IERC4626(_newYieldProtocol);
-    }
-
-    function setMinRebalanceGap(uint256 _newGap) external onlyOwner {
-        minRebalanceGap = _newGap;
     }
 
     function rebalance(uint256 _targetChain, uint256 _amount) external onlyGuardian {

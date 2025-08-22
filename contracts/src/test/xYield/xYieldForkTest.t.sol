@@ -77,6 +77,8 @@ contract xYieldForkTest is Test {
         uint256 aliceShares = xYieldArbitrum.deposit(depositAmount, alice);
         vm.stopPrank();
 
+        vm.warp(block.timestamp + 365 days);
+
         uint256 aliceAssets = xYieldArbitrum.convertToAssets(aliceShares);
         assertGe(aliceAssets, aliceShares, "Alice assets to redeem are greater than her shares");
 
@@ -225,6 +227,8 @@ contract xYieldForkTest is Test {
         vm.stopPrank();
 
         console2.log("xYieldArbitrum.totalAssets() post alice deposit ::: ", xYieldArbitrum.totalAssets());
+
+        vm.warp(block.timestamp + 365 days);
 
         uint256 bobXyusdBalanceBefore = xYieldArbitrum.balanceOf(bob);
 
@@ -438,6 +442,8 @@ contract xYieldForkTest is Test {
         uint256 expectedAliceAssets = (aliceShares * (totalAssets + 1)) / (currentTotalSupply + 1);
         uint256 expectedBobAssets = (bobSharesRemote * (totalAssets + 1)) / (currentTotalSupply + 1);
 
-        assertEq(difference, 1, "Difference should be exactly 1 wei due to ERC4626 share conversion formula");
+        assertEq(difference, 0, "Difference should be exactly 0 wei due to ERC4626 share conversion formula");
     }
+
+    // TODO - test redeem and mint methods
 }
