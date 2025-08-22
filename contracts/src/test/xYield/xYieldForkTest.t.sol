@@ -251,7 +251,8 @@ contract xYieldForkTest is Test {
         uint256 totalSharesArbitrum = xYieldArbitrum.totalSupply();
         uint256 totalSharesGlobal = totalSharesArbitrum + bobSharesRemote;
         xYieldVault.BalanceUpdate[] memory balanceUpdates = new xYieldVault.BalanceUpdate[](1);
-        balanceUpdates[0] = xYieldVault.BalanceUpdate({ recipient: bob, amount: bobSharesRemote, txType: xYieldVault.TxType.Deposit });
+        balanceUpdates[0] =
+            xYieldVault.BalanceUpdate({ recipient: bob, amount: bobSharesRemote, txType: xYieldVault.TxType.Deposit });
 
         vm.startPrank(guardian);
         xYieldArbitrum.updateTotals(totalSharesGlobal, balanceUpdates);
@@ -308,7 +309,8 @@ contract xYieldForkTest is Test {
         // Update totals to reflect both deposits
         uint256 totalSharesGlobal = aliceSharesNative + bobSharesRemote;
         xYieldVault.BalanceUpdate[] memory balanceUpdates = new xYieldVault.BalanceUpdate[](1);
-        balanceUpdates[0] = xYieldVault.BalanceUpdate({ recipient: bob, amount: bobSharesRemote, txType: xYieldVault.TxType.Deposit });
+        balanceUpdates[0] =
+            xYieldVault.BalanceUpdate({ recipient: bob, amount: bobSharesRemote, txType: xYieldVault.TxType.Deposit });
 
         vm.startPrank(guardian);
         xYieldArbitrum.updateTotals(totalSharesGlobal, balanceUpdates);
@@ -339,7 +341,8 @@ contract xYieldForkTest is Test {
         // Update totals to reflect the withdrawal
         uint256 newTotalSharesGlobal = totalSharesGlobal - sharesToBurn;
         xYieldVault.BalanceUpdate[] memory withdrawUpdates = new xYieldVault.BalanceUpdate[](1);
-        withdrawUpdates[0] = xYieldVault.BalanceUpdate({ recipient: bob, amount: sharesToBurn, txType: xYieldVault.TxType.Withdraw });
+        withdrawUpdates[0] =
+            xYieldVault.BalanceUpdate({ recipient: bob, amount: sharesToBurn, txType: xYieldVault.TxType.Withdraw });
 
         vm.startPrank(guardian);
         xYieldArbitrum.updateTotals(newTotalSharesGlobal, withdrawUpdates);
@@ -409,7 +412,8 @@ contract xYieldForkTest is Test {
         // Update totals to create the virtual supply scenario
         uint256 totalSharesGlobal = xYieldArbitrum.totalSupply() + bobSharesRemote;
         xYieldVault.BalanceUpdate[] memory balanceUpdates = new xYieldVault.BalanceUpdate[](1);
-        balanceUpdates[0] = xYieldVault.BalanceUpdate({ recipient: bob, amount: bobSharesRemote, txType: xYieldVault.TxType.Deposit });
+        balanceUpdates[0] =
+            xYieldVault.BalanceUpdate({ recipient: bob, amount: bobSharesRemote, txType: xYieldVault.TxType.Deposit });
 
         vm.startPrank(guardian);
         xYieldArbitrum.updateTotals(totalSharesGlobal, balanceUpdates);
