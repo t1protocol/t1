@@ -171,7 +171,7 @@ contract xYieldVault is ERC4626, Ownable2Step, ReentrancyGuard, Pausable {
     function _withdrawFrom(address owner, uint256 assets) internal {
         // TODO - deposit into escrow instead of transferring user's underlying to this contract
         uint256 shares = yieldProtocol.withdraw(assets, address(this), address(this));
-        emit WithdrawRemote(_msgSender(), owner, assets, shares);
+        emit WithdrawRemote(msg.sender, owner, assets, shares);
     }
 
     // used on remote chain to mint share tokens
