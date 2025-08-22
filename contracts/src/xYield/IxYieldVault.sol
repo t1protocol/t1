@@ -1,0 +1,81 @@
+// SPDX-License-Identifier: MIT
+pragma solidity 0.8.30;
+
+interface xYieldVault {
+    error DepositOnInactiveChain();
+    error InvalidChain();
+    error LengthMismatch();
+    error NotGuardian();
+    error NotImplemented();
+    error WithdrawOnInactiveChain();
+    error ZeroAmount();
+
+    event Approval(address indexed owner, address indexed spender, uint256 value);
+    event ChainStatusChanged(bool isActive);
+    event Deposit(address indexed sender, address indexed owner, uint256 assets, uint256 shares);
+    event DepositRemote(address indexed sender, address indexed owner, uint256 assets, uint256 shares, uint64 chainId);
+    event OwnershipTransferStarted(address indexed previousOwner, address indexed newOwner);
+    event OwnershipTransferred(address indexed previousOwner, address indexed newOwner);
+    event Paused(address account);
+    event Rebalanced(uint256 targetChain, uint256 amount);
+    event SiblingVaultSet(uint64 chainId, address vault);
+    event TotalSupplyUpdated(uint256 newVirtualTotalSupply);
+    event Transfer(address indexed from, address indexed to, uint256 value);
+    event Unpaused(address account);
+    event Withdraw(
+        address indexed sender, address indexed receiver, address indexed owner, uint256 assets, uint256 shares
+    );
+
+    function acceptOwnership() external;
+    function allowance(address owner, address spender) external view returns (uint256);
+    function approve(address spender, uint256 amount) external returns (bool);
+    function asset() external view returns (address);
+    function balanceOf(address account) external view returns (uint256);
+    function convertToAssets(uint256 shares) external view returns (uint256);
+    function convertToShares(uint256 assets) external view returns (uint256);
+    function decimals() external view returns (uint8);
+    function decreaseAllowance(address spender, uint256 subtractedValue) external returns (bool);
+    function deposit(uint256 _amount, address _receiver) external returns (uint256);
+    function depositFrom(uint256 _amount, address _receiver, uint64 _chainId) external returns (uint256 shares);
+    function guardian() external view returns (address);
+    function increaseAllowance(address spender, uint256 addedValue) external returns (bool);
+    function isActiveChain() external view returns (bool);
+    function lastRebalanceTime() external view returns (uint256);
+    function maxDeposit(address) external view returns (uint256);
+    function maxMint(address) external view returns (uint256);
+    function maxRedeem(address owner) external view returns (uint256);
+    function maxWithdraw(address owner) external view returns (uint256);
+    function minRebalanceGap() external view returns (uint256);
+    function mint(uint256 _shares, address _receiver) external returns (uint256);
+    function name() external view returns (string memory);
+    function owner() external view returns (address);
+    function pause() external;
+    function paused() external view returns (bool);
+    function pendingOwner() external view returns (address);
+    function previewDeposit(uint256 assets) external view returns (uint256);
+    function previewMint(uint256 shares) external view returns (uint256);
+    function previewRedeem(uint256 shares) external view returns (uint256);
+    function previewWithdraw(uint256 assets) external view returns (uint256);
+    function rebalance(uint256 _targetChain, uint256 _amount) external;
+    function redeem(uint256 _shares, address _receiver, address _owner) external returns (uint256);
+    function renounceOwnership() external;
+    function setActiveChain(bool _isActive) external;
+    function setGuardian(address _newGuardian) external;
+    function setMinRebalanceGap(uint256 _newGap) external;
+    function setSiblingVault(uint64 _chainId, address _vault) external;
+    function setYieldProtocol(address _newYieldProtocol) external;
+    function siblingVaults(uint64) external view returns (address);
+    function symbol() external view returns (string memory);
+    function totalAssets() external view returns (uint256);
+    function totalSupply() external view returns (uint256);
+    function transfer(address to, uint256 amount) external returns (bool);
+    function transferFrom(address from, address to, uint256 amount) external returns (bool);
+    function transferOwnership(address newOwner) external;
+    function unpause() external;
+    function updateTotals(uint256 totalSupply_, address[] memory _recipients, uint256[] memory _amounts) external;
+    function updateVirtualTotalAssets() external;
+    function virtualTotalAssets() external view returns (uint256);
+    function virtualTotalSupply() external view returns (uint256);
+    function withdraw(uint256 _amount, address _receiver, address _owner) external returns (uint256);
+    function yieldProtocol() external view returns (address);
+}
