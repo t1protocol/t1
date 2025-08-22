@@ -1,42 +1,41 @@
 {
-    "metadata": {
-      "version": "xYield01",
-      "date": "2025-08-21",
-      "by": "Ryan",
-      "from_machine": "localhost",
-      "from_branch": "xyield01",
-      "from_commit": "a777e43a1188406a34dc3f4a9e48e9d04ac8f5c9"
+  "metadata": {
+    "version": "xYield01",
+    "date": "2025-08-21",
+    "by": "Ryan",
+    "from_machine": "localhost",
+    "from_branch": "xyield01",
+    "from_commit": "a777e43a1188406a34dc3f4a9e48e9d04ac8f5c9"
+  },
+  "addresses": {
+    "arbitrum_sepolia": {
+      "signer": "0x9fE16Cb743bC01aE32091FC81117C643Af49eA7f",
+      "usdt": "0xF6232a871BF3B33F5bc181f55d770F9FB062A457",
+      "weth": "0x2836ae2eA2c013acD38028fD0C77B92cccFa2EE4",
+      "t1ProxyAdmin": "0x280f1a82b5e7CA46b6747F47Aa26bC71DaE107C4",
+      "t1XChainRead": {
+        "implementation": "0xC9EAb3d29A64Dd72094a99778d23CB43E66ea1f0",
+        "proxy": "0x7F220712E25391557C6E1B2b00d19Af0e9c791cB"
+      },
+      "t1ERC7683": {
+        "implementation": "0xa01517DA3A84CeA1A8E23Cc12631940eba433D76",
+        "proxy": "0x66417292212D8BEcA1973FEF1Ca57bbec15D9814"
+      }
     },
-    "addresses": {
-      "arbitrum_sepolia": {
-        "signer": "0x9fE16Cb743bC01aE32091FC81117C643Af49eA7f",
-        "usdt": "0xF6232a871BF3B33F5bc181f55d770F9FB062A457",
-        "weth": "0x2836ae2eA2c013acD38028fD0C77B92cccFa2EE4",
-        "t1ProxyAdmin": "0x280f1a82b5e7CA46b6747F47Aa26bC71DaE107C4",
-        "t1XChainRead": {
-          "implementation": "0xC9EAb3d29A64Dd72094a99778d23CB43E66ea1f0",
-          "proxy": "0x7F220712E25391557C6E1B2b00d19Af0e9c791cB"
-        },
-        "t1ERC7683": {
-          "implementation": "0xa01517DA3A84CeA1A8E23Cc12631940eba433D76",
-          "proxy": "0x66417292212D8BEcA1973FEF1Ca57bbec15D9814"
-        }
+    "base_sepolia": {
+      "signer": "0x9fE16Cb743bC01aE32091FC81117C643Af49eA7f",
+      "usdt": "0x228eE6c1C297E2Eba0e95A71684B26f89385b4eC",
+      "weth": "0x4200000000000000000000000000000000000006",
+      "t1ProxyAdmin": "0x058037881854ae33a169D589e3f7C70EBBF64753",
+      "t1XChainRead": {
+        "implementation": "0x171FeBC8e19797C1f76B2FDe2bfbc46FF6d7ab7F",
+        "proxy": "0xCF44A3D13EA7CC464dEcF5162F26178863BF5FDb"
       },
-      "base_sepolia": {
-        "signer": "0x9fE16Cb743bC01aE32091FC81117C643Af49eA7f",
-        "usdt": "0x228eE6c1C297E2Eba0e95A71684B26f89385b4eC",
-        "weth": "0x4200000000000000000000000000000000000006",
-        "t1ProxyAdmin": "0x058037881854ae33a169D589e3f7C70EBBF64753",
-        "t1XChainRead": {
-          "implementation": "0x171FeBC8e19797C1f76B2FDe2bfbc46FF6d7ab7F",
-          "proxy": "0xCF44A3D13EA7CC464dEcF5162F26178863BF5FDb"
-        },
-        "t1ERC7683": {
-          "implementation": "0x5f53149BA7C7703F4017F0c1533e37f223e20BF5",
-          "proxy": "0x4C69261C6E861cE5fFE8910979C30b60542caa33"
-        }
-      },
-      "deployerAddress": "0x2Ade71354645C57e7D099DbC04b27f8ad277395E"
-    }
+      "t1ERC7683": {
+        "implementation": "0x5f53149BA7C7703F4017F0c1533e37f223e20BF5",
+        "proxy": "0x4C69261C6E861cE5fFE8910979C30b60542caa33"
+      }
+    },
+    "deployerAddress": "0x2Ade71354645C57e7D099DbC04b27f8ad277395E"
   }
-  
+}
