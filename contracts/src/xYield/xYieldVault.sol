@@ -24,9 +24,6 @@ contract xYieldVault is ERC4626, Ownable2Step, ReentrancyGuard, Pausable {
 
     mapping(uint64 => address) public siblingVaults;
 
-    uint256 public minRebalanceGap;
-    uint256 public lastRebalanceTime;
-
     error NotGuardian();
     error ZeroAmount();
     error InvalidChain();
@@ -58,7 +55,6 @@ contract xYieldVault is ERC4626, Ownable2Step, ReentrancyGuard, Pausable {
     {
         guardian = _guardian;
         yieldProtocol = IERC4626(_yieldProtocol);
-        minRebalanceGap = 1 hours;
 
         if (_yieldProtocol != address(0)) {
             _underlying.approve(_yieldProtocol, type(uint256).max);
@@ -271,10 +267,6 @@ contract xYieldVault is ERC4626, Ownable2Step, ReentrancyGuard, Pausable {
 
     function setYieldProtocol(address _newYieldProtocol) external onlyOwner {
         yieldProtocol = IERC4626(_newYieldProtocol);
-    }
-
-    function setMinRebalanceGap(uint256 _newGap) external onlyOwner {
-        minRebalanceGap = _newGap;
     }
 
     function rebalance(uint256 _targetChain, uint256 _amount) external onlyGuardian {

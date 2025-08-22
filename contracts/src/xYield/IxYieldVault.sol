@@ -40,12 +40,10 @@ interface xYieldVault {
     function guardian() external view returns (address);
     function increaseAllowance(address spender, uint256 addedValue) external returns (bool);
     function isActiveChain() external view returns (bool);
-    function lastRebalanceTime() external view returns (uint256);
     function maxDeposit(address) external view returns (uint256);
     function maxMint(address) external view returns (uint256);
     function maxRedeem(address owner) external view returns (uint256);
     function maxWithdraw(address owner) external view returns (uint256);
-    function minRebalanceGap() external view returns (uint256);
     function mint(uint256 _shares, address _receiver) external returns (uint256);
     function name() external view returns (string memory);
     function owner() external view returns (address);
@@ -61,7 +59,6 @@ interface xYieldVault {
     function renounceOwnership() external;
     function setActiveChain(bool _isActive) external;
     function setGuardian(address _newGuardian) external;
-    function setMinRebalanceGap(uint256 _newGap) external;
     function setSiblingVault(uint64 _chainId, address _vault) external;
     function setYieldProtocol(address _newYieldProtocol) external;
     function siblingVaults(uint64) external view returns (address);
