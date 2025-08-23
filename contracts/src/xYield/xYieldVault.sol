@@ -19,8 +19,6 @@ contract xYieldVault is ERC4626, Ownable2Step, ReentrancyGuard, Pausable {
     IERC4626 public yieldProtocol;
 
     uint256 public virtualTotalAssets;
-    uint256 public minRebalanceGap;
-    uint256 public lastRebalanceTime;
     uint256 public virtualTotalSupply;
     bool public isActiveChain;
 

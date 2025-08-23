@@ -20,7 +20,6 @@ const logs =
 /* ---------- 2. cheap mocks so nothing really goes on‑chain ---------- */
 const auctionSvc = { auction: vi.fn().mockResolvedValue({ amountOut: 100n, settlementReceiverAddress: "0x0" }) };
 const apiServer = { notifySolvers: vi.fn() };
-const commiter = { commitWinnerBid: vi.fn().mockResolvedValue("0xdeadbeef") };
 
 /* ---------- 3. system‑under‑test ----------------------------------- */
 const intentContract = "0xc7b348fa0a01e292818df7226cfbaa86d0a391a9";
@@ -32,7 +31,6 @@ const blockchainClient = new BlockchainClient(
 );
 const observer = new ViemIntentObserver(
     blockchainClient,
-    commiter as any,
     intentContract,
     auctionSvc as any,
     apiServer  as any,

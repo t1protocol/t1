@@ -1,5 +1,3 @@
-import type {OrderData} from "../blockchain/types.ts";
-
 export interface AuthBlob {
     username: string;
     nonce: string;
@@ -34,10 +32,11 @@ export interface AuctionQuote {
 }
 
 export interface AuctionResult {
+    type: string;
+    orderId: string;
     settlementReceiverAddress: string;
     amountOut: bigint;
-    orderId: string;
-    orderData: OrderData;
+    signature: string;
 }
 
 export interface AuthAttempt {
