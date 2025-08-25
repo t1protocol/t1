@@ -58,6 +58,9 @@ jobs:
     name: test
     needs: ["lint", "build"]
     runs-on: "ubuntu-latest"
+    env:
+      ARBITRUM_RPC: ${{ secrets.ARBITRUM_RPC }}
+      ARBITRUM_BLOCK: ${{ secrets.ARBITRUM_BLOCK }}
     steps:
       - name: "Check out the repo"
         uses: "actions/checkout@v4"
