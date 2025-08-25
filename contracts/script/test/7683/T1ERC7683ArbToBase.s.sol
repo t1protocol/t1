@@ -12,6 +12,7 @@ import { T1Constants } from "../../../src/libraries/constants/T1Constants.sol";
 
 uint32 constant ORIGIN_CHAIN = uint32(T1Constants.ARBITRUM_SEPOLIA_CHAIN_ID);
 uint32 constant DESTINATION_CHAIN = uint32(T1Constants.BASE_SEPOLIA_CHAIN_ID);
+uint32 constant AMOUNT_IN = 100;
 
 // Step 1: Setup Alice's account, sign and relay intent
 contract AliceSetupScript is Script {
@@ -38,8 +39,8 @@ contract AliceSetupScript is Script {
             recipient: TypeCasts.addressToBytes32(alice),
             inputToken: TypeCasts.addressToBytes32(address(inputToken)),
             outputToken: TypeCasts.addressToBytes32(address(outputToken)),
-            amountIn: 100,
-            minAmountOut: 90,
+            amountIn: AMOUNT_IN,
+            minAmountOut: AMOUNT_IN * 0.9,
             senderNonce: uint32(
                 uint256(keccak256(abi.encodePacked(block.timestamp, block.prevrandao, msg.sender))) % 10_000
             ), // Random number between 0 and 9999
@@ -102,11 +103,16 @@ contract SolverFillScript is Script {
         // Approve output tokens
         ERC20(vm.envAddress("BASE_SEPOLIA_USDT_ADDR")).approve(
             address(l2_7683),
-            100 // match amount from order
+            AMOUNT_IN // match amount from order
         );
 
-        // Fill the order
-        bytes memory fillerData = abi.encode(TypeCasts.addressToBytes32(solver));
+        // NOTE - Use values from a won Sealed Bid Auction
+        uint256 bidAmountOut = 0;
+        address sourceChainSettlementReceiver = "0x";
+        bytes authorization = hex"";
+
+        bytes memory fillerData = abi.encode(bidAmountOut, sourceChainSettlementReceiver, authorization);
+
         l2_7683.fill(orderId, originData, fillerData);
 
         vm.stopBroadcast();
