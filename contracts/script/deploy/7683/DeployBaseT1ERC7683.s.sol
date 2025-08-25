@@ -12,7 +12,6 @@ import { T1Constants } from "../../../src/libraries/constants/T1Constants.sol";
 contract DeployBaseT1ERC7683 is DeploymentUtils {
     uint32 internal constant ARB = uint32(T1Constants.ARBITRUM_SEPOLIA_CHAIN_ID);
     uint32 internal constant BASE = uint32(T1Constants.BASE_SEPOLIA_CHAIN_ID);
-    address private auctionWitness;
     ProxyAdmin private proxyAdmin;
 
     function deploy() external {
@@ -21,7 +20,6 @@ contract DeployBaseT1ERC7683 is DeploymentUtils {
         uint256 deployerPk = vm.envUint("DEPLOYER_PRIVATE_KEY");
         address BASE_T1_X_CHAIN_READ_PROXY_ADDR = vm.envAddress("BASE_T1_X_CHAIN_READ_PROXY_ADDR");
         address BASE_T1_PROXY_ADMIN_ADDR = vm.envAddress("BASE_T1_PROXY_ADMIN_ADDR");
-        auctionWitness = vm.envAddress("AUCTION_WITNESS");
 
         vm.startBroadcast(deployerPk);
 
@@ -47,11 +45,11 @@ contract DeployBaseT1ERC7683 is DeploymentUtils {
         uint256 deployerPk = vm.envUint("DEPLOYER_PRIVATE_KEY");
         address ARB_T1_7683_PROXY_ADDR = vm.envAddress("ARB_T1_PULL_BASED_7683_PROXY_ADDR");
         address BASE_T1_7683_PROXY_ADDR = vm.envAddress("BASE_T1_PULL_BASED_7683_PROXY_ADDR");
-        address auctionWitness = vm.envAddress("AUCTION_WITNESS");
+        address AUCTION_WITNESS = vm.envAddress("AUCTION_WITNESS");
 
         vm.startBroadcast(deployerPk);
 
-        T1ERC7683(BASE_T1_7683_PROXY_ADDR).initialize(ARB_T1_7683_PROXY_ADDR, auctionWitness);
+        T1ERC7683(BASE_T1_7683_PROXY_ADDR).initialize(ARB_T1_7683_PROXY_ADDR, AUCTION_WITNESS);
 
         vm.stopBroadcast();
     }
