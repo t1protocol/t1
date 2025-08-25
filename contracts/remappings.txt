@@ -1,6 +1,8 @@
 @openzeppelin/=node_modules/@openzeppelin/
 @uniswap/=node_modules/@uniswap/
 @hyperlane-xyz/=node_modules/@hyperlane-xyz/core/contracts/
+@euler-xyz/=lib/euler-vault-kit/src/
+ethereum-vault-connector/=lib/euler-vault-kit/lib/ethereum-vault-connector/src/
 forge-std/=node_modules/forge-std/src/
 solmate/=node_modules/solmate/src/
 ds-test/=node_modules/ds-test/src/
