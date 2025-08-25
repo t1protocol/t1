@@ -109,7 +109,7 @@ contract SolverFillScript is Script {
         // NOTE - Use values from a won Sealed Bid Auction
         uint256 bidAmountOut = 0;
         address sourceChainSettlementReceiver = "0x";
-        bytes authorization = hex"";
+        bytes memory authorization = hex"";
 
         bytes memory fillerData = abi.encode(bidAmountOut, sourceChainSettlementReceiver, authorization);
 
