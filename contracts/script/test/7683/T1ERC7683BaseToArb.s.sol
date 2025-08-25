@@ -40,7 +40,7 @@ contract AliceSetupScript is Script {
             inputToken: TypeCasts.addressToBytes32(address(inputToken)),
             outputToken: TypeCasts.addressToBytes32(address(outputToken)),
             amountIn: AMOUNT_IN,
-            minAmountOut: AMOUNT_IN * 0.9,
+            minAmountOut: AMOUNT_IN * 9 / 10,
             senderNonce: uint32(
                 uint256(keccak256(abi.encodePacked(block.timestamp, block.prevrandao, msg.sender))) % 10_000
             ), // Random number between 0 and 9999
@@ -108,7 +108,7 @@ contract SolverFillScript is Script {
 
         // NOTE - Use values from a won Sealed Bid Auction
         uint256 bidAmountOut = 0;
-        address sourceChainSettlementReceiver = "0x";
+        address sourceChainSettlementReceiver = 0xf84B5c81c6BAB11b148D0caf4Cf4FB8fBC3e9dbC;
         bytes memory authorization = hex"";
 
         bytes memory fillerData = abi.encode(bidAmountOut, sourceChainSettlementReceiver, authorization);
