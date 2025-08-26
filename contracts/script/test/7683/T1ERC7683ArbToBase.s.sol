@@ -47,7 +47,7 @@ contract AliceSetupScript is Script {
             originDomain: ORIGIN_CHAIN,
             destinationDomain: DESTINATION_CHAIN,
             destinationSettler: TypeCasts.addressToBytes32(vm.envAddress("BASE_T1_PULL_BASED_7683_PROXY_ADDR")),
-            fillDeadline: uint32(block.timestamp + 1 minutes),
+            fillDeadline: uint32(block.timestamp + 5 minutes),
             closedAuction: false,
             data: new bytes(0)
         });
