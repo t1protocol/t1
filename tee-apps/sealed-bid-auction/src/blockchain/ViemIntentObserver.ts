@@ -145,17 +145,18 @@ export class ViemIntentObserver {
     };
 
     const types = {
-      AuctionResult: [
+      FillAuthorization: [
         { name: "orderId", type: "uint256" },
-        { name: "winningSolver", type: "address" },
-        { name: "bidAmountOut", type: "uint256" },
+        { name: "filler", type: "address" },
+        { name: "amountOut", type: "uint256" },
       ],
     };
+    this.logger.debug(`Types of signed properties: orderId=[${typeof orderId}] filler=[${typeof winningSolver}] amountOut=[${typeof amountOut}]`);
 
     const message = {
       orderId,
-      winningSolver,
-      bidAmountOut: amountOut,
+      filler: winningSolver,
+      amountOut,
     };
 
     return await this.blockchainClient.signTypedData(domain, types, message);
