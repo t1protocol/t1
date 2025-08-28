@@ -123,7 +123,7 @@ contract SolverFillScript is Script {
 contract SettlementScript is Script {
     function run() external {
         vm.createSelectFork(vm.rpcUrl("base_sepolia"));
-        uint256 settlerPk = vm.envUint("ALICE_PRIVATE_KEY");
+        uint256 settlerPk = vm.envUint("TEST_PRIVATE_KEY");
 
         vm.startBroadcast(settlerPk);
 
