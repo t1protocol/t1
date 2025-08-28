@@ -1,6 +1,6 @@
 import {
-  decodeAbiParameters, pad,
-  parseEventLogs, toHex,
+  decodeAbiParameters,
+  parseEventLogs,
   trim,
   type WatchEventOnLogsParameter,
 } from "viem";
@@ -109,7 +109,7 @@ export class ViemIntentObserver {
           amountOut: winningPrice.amountOut,
           orderId,
           signature: await this.signAuctionResult(
-            BigInt(orderId),
+            orderId,
             winningPrice.settlementReceiverAddress as `0x${string}`,
             winningPrice.amountOut
           ),
@@ -133,9 +133,9 @@ export class ViemIntentObserver {
   }
 
   private async signAuctionResult(
-    orderId: bigint,
-    winningSolver: `0x${string}`,
-    amountOut: bigint
+      orderId: `0x${string}`,
+      winningSolver: `0x${string}`,
+      amountOut: bigint
   ): Promise<string> {
     const domain = {
       name: "T1ERC7683",
@@ -154,15 +154,11 @@ export class ViemIntentObserver {
     this.logger.debug(`Types of signed properties: orderId=[${typeof orderId}] filler=[${typeof winningSolver}] amountOut=[${typeof amountOut}]`);
 
     const message = {
-      orderId: this.toBytes32OrderId(orderId),
+      orderId,
       filler: winningSolver,
       amountOut,
     };
 
     return await this.blockchainClient.signTypedData(domain, types, message);
-  }
-
-  private toBytes32OrderId(orderId: bigint | number): `0x${string}` {
-    return pad(toHex(orderId, { size: 32 }), { size: 32 });
   }
 }
