@@ -141,7 +141,7 @@ export class ViemIntentObserver {
     const domain = {
       name: "T1ERC7683",
       version: "1",
-      chainId: BigInt(this.destinationChainId),
+      chainId: this.destinationChainId,
       verifyingContract: this.t1Erc7683ContractAddress,
     };
 
