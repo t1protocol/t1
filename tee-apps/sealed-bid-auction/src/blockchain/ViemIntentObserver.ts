@@ -152,6 +152,7 @@ export class ViemIntentObserver {
       ],
     };
     this.logger.debug(`Types of signed properties: orderId=[${typeof orderId}] filler=[${typeof winningSolver}] amountOut=[${typeof amountOut}]`);
+    this.logger.debug(`Values of signed properties: orderId=[${orderId}] filler=[${winningSolver}] amountOut=[${amountOut}]`);
 
     const message = {
       orderId,
