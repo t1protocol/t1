@@ -33,13 +33,15 @@ const arbitrumSepoliaIntentObserver = new ViemIntentObserver(
     arbitrumClient,
     process.env.ARBITRUM_T1_ERC7683_CONTRACT_ADDRESS as `0x${string}`,
     auctionService,
-    httpServer
+    httpServer,
+    baseClient.publicClient.chain.id
 );
 const baseSepoliaIntentObserver = new ViemIntentObserver(
     baseClient,
     process.env.BASE_T1_ERC7683_CONTRACT_ADDRESS as `0x${string}`,
     auctionService,
-    httpServer
+    httpServer,
+    arbitrumClient.publicClient.chain.id
 );
 
 async function main() {

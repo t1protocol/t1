@@ -24,6 +24,7 @@ export class ViemIntentObserver {
     private readonly t1Erc7683ContractAddress: `0x${string}`,
     private readonly auctionService: AuctionService,
     private readonly apiServer: AuctionApiServer,
+    private readonly destinationChainId: number,
     private readonly auctionPollingInterval: number = 500
   ) {
     this.logger = new WinstonLogger(
@@ -140,7 +141,7 @@ export class ViemIntentObserver {
     const domain = {
       name: "T1ERC7683",
       version: "1",
-      chainId: BigInt(this.blockchainClient.publicClient.chain.id),
+      chainId: BigInt(this.destinationChainId),
       verifyingContract: this.t1Erc7683ContractAddress,
     };
 
