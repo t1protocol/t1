@@ -1,6 +1,6 @@
 import {
-  decodeAbiParameters,
-  parseEventLogs,
+  decodeAbiParameters, pad,
+  parseEventLogs, toHex,
   trim,
   type WatchEventOnLogsParameter,
 } from "viem";
@@ -146,7 +146,7 @@ export class ViemIntentObserver {
 
     const types = {
       FillAuthorization: [
-        { name: "orderId", type: "uint256" },
+        { name: "orderId", type: "bytes32" },
         { name: "filler", type: "address" },
         { name: "amountOut", type: "uint256" },
       ],
@@ -154,11 +154,15 @@ export class ViemIntentObserver {
     this.logger.debug(`Types of signed properties: orderId=[${typeof orderId}] filler=[${typeof winningSolver}] amountOut=[${typeof amountOut}]`);
 
     const message = {
-      orderId,
+      orderId: this.toBytes32OrderId(orderId),
       filler: winningSolver,
       amountOut,
     };
 
     return await this.blockchainClient.signTypedData(domain, types, message);
+  }
+
+  private toBytes32OrderId(orderId: bigint | number): `0x${string}` {
+    return pad(toHex(orderId, { size: 32 }), { size: 32 });
   }
 }
