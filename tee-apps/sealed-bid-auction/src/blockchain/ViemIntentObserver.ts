@@ -20,26 +20,28 @@ export class ViemIntentObserver {
   private logger: WinstonLogger;
 
   constructor(
-    private readonly blockchainClient: BlockchainClient,
-    private readonly t1Erc7683ContractAddress: `0x${string}`,
+    private readonly sourceChainClient: BlockchainClient,
+    private readonly sourceChainT1Erc7683ContractAddress: `0x${string}`,
     private readonly auctionService: AuctionService,
     private readonly apiServer: AuctionApiServer,
+    private readonly destinationChainId: number,
+    private readonly destinationChainT1Erc7683ContractAddress: `0x${string}`,
     private readonly auctionPollingInterval: number = 500
   ) {
     this.logger = new WinstonLogger(
-      `${ViemIntentObserver.name}[${this.blockchainClient.publicClient.chain.name}]`
+      `${ViemIntentObserver.name}[${this.sourceChainClient.publicClient.chain.name}]`
     );
   }
 
   public start() {
-    this.blockchainClient.publicClient.watchEvent({
-      address: this.t1Erc7683ContractAddress,
+    this.sourceChainClient.publicClient.watchEvent({
+      address: this.sourceChainT1Erc7683ContractAddress,
       event: OPEN_INTENT_ABI_EVENT,
       onLogs: (logs) => this.processIntentLogs(logs),
     });
 
     this.logger.info(
-      `Watching for Open Intent events on chain [${this.blockchainClient.publicClient.chain.name}] and contract [${this.t1Erc7683ContractAddress}]`
+      `Watching for Open Intent events on chain [${this.sourceChainClient.publicClient.chain.name}] and contract [${this.sourceChainT1Erc7683ContractAddress}]`
     );
   }
 
@@ -84,7 +86,7 @@ export class ViemIntentObserver {
 
   private async runAuctionAndNotifySolver(
     orderData: OrderData,
-    orderId: string
+    orderId: `0x${string}`
   ) {
     this.logger.info(`Running auction for order ${orderId}`);
 
@@ -109,7 +111,7 @@ export class ViemIntentObserver {
           amountOut: winningPrice.amountOut,
           orderId,
           signature: await this.signAuctionResult(
-            BigInt(orderId),
+            orderId,
             winningPrice.settlementReceiverAddress as `0x${string}`,
             winningPrice.amountOut
           ),
@@ -117,7 +119,7 @@ export class ViemIntentObserver {
 
         await this.apiServer.notifySolvers(
           result,
-          this.blockchainClient.publicClient.chain.id
+          this.sourceChainClient.publicClient.chain.id
         );
 
         this.logger.info(
@@ -133,31 +135,33 @@ export class ViemIntentObserver {
   }
 
   private async signAuctionResult(
-    orderId: bigint,
-    winningSolver: `0x${string}`,
-    amountOut: bigint
+      orderId: `0x${string}`,
+      winningSolver: `0x${string}`,
+      amountOut: bigint
   ): Promise<string> {
     const domain = {
       name: "T1ERC7683",
       version: "1",
-      chainId: BigInt(this.blockchainClient.publicClient.chain.id),
-      verifyingContract: this.t1Erc7683ContractAddress,
+      chainId: this.destinationChainId,
+      verifyingContract: this.destinationChainT1Erc7683ContractAddress,
     };
 
     const types = {
-      AuctionResult: [
-        { name: "orderId", type: "uint256" },
-        { name: "winningSolver", type: "address" },
-        { name: "bidAmountOut", type: "uint256" },
+      FillAuthorization: [
+        { name: "orderId", type: "bytes32" },
+        { name: "filler", type: "address" },
+        { name: "amountOut", type: "uint256" },
       ],
     };
+    this.logger.debug(`Types of signed properties: orderId=[${typeof orderId}] filler=[${typeof winningSolver}] amountOut=[${typeof amountOut}]`);
+    this.logger.debug(`Values of signed properties: orderId=[${orderId}] filler=[${winningSolver}] amountOut=[${amountOut}]`);
 
     const message = {
       orderId,
-      winningSolver,
-      bidAmountOut: amountOut,
+      filler: winningSolver,
+      amountOut,
     };
 
-    return await this.blockchainClient.signTypedData(domain, types, message);
+    return await this.sourceChainClient.signTypedData(domain, types, message);
   }
 }
