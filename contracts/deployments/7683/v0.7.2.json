@@ -1,0 +1,29 @@
+{
+  "metadata": {
+    "version": "v0.7.2",
+    "date": "2025-08-22",
+    "by": "KSS",
+    "from_machine": "v07",
+    "from_branch": "canary",
+    "from_commit": "a777e43a1188406a34dc3f4a9e48e9d04ac8f5c9"
+  },
+  "addresses": {
+    "arbitrum_sepolia": {
+      "signer": "0xBA3424Bd12c55Bf698A4cbab8dCA761e566F3077",
+      "t1ProxyAdmin": "0xbce0E4bcd0dd26d885E7F8a3749ABc04226387ff",
+      "t1ERC7683": {
+        "implementation": "0xa8D8df36A64D15c2E75f839964556f389423F300",
+        "proxy": "0x2Fa683F9aCd8f70747cb971D00fA92e821671BdC"
+      }
+    },
+    "base_sepolia": {
+      "signer": "0xBA3424Bd12c55Bf698A4cbab8dCA761e566F3077",
+      "t1ProxyAdmin": "0x6d0FDBC77c2E7F7f2eDAa4d901e5b335C0A926E0",
+      "t1ERC7683": {
+        "implementation": "0x9272dDC3057fC9b8407E015728CFEac9b90A1411",
+        "proxy": "0x8021f65657347A44aE95566687A3605Ae0e45B58"
+      }
+    },
+    "deployerAddress": "0x2Ade71354645C57e7D099DbC04b27f8ad277395E"
+  }
+}
