@@ -12,6 +12,8 @@ import {BlockchainClient} from "../src/blockchain/BlockchainClient.ts";
 const USE_TLS = process.env.USE_TLS as string === "true";
 const SOLVER_PRICE_TTL_SECONDS = process.env.SOLVER_PRICE_TTL_SECONDS
 const TEN_MINUTES_IN_SECONDS = 600;
+const BASE_T1_ERC_7683_CONTRACT_ADDRESS = process.env.BASE_T1_ERC7683_CONTRACT_ADDRESS as `0x${string}`;
+const ARBITRUM_T1_ERC_7683_CONTRACT_ADDRESS = process.env.ARBITRUM_T1_ERC7683_CONTRACT_ADDRESS as `0x${string}`;
 
 const solverPriceBook = new SolverPriceBook(SOLVER_PRICE_TTL_SECONDS ? Number(SOLVER_PRICE_TTL_SECONDS as string) : TEN_MINUTES_IN_SECONDS);
 const auctionService = new AuctionService(solverPriceBook);
@@ -31,17 +33,19 @@ const baseClient = new BlockchainClient(
 );
 const arbitrumSepoliaIntentObserver = new ViemIntentObserver(
     arbitrumClient,
-    process.env.ARBITRUM_T1_ERC7683_CONTRACT_ADDRESS as `0x${string}`,
+    ARBITRUM_T1_ERC_7683_CONTRACT_ADDRESS,
     auctionService,
     httpServer,
-    baseClient.publicClient.chain.id
+    baseClient.publicClient.chain.id,
+    BASE_T1_ERC_7683_CONTRACT_ADDRESS
 );
 const baseSepoliaIntentObserver = new ViemIntentObserver(
     baseClient,
-    process.env.BASE_T1_ERC7683_CONTRACT_ADDRESS as `0x${string}`,
+    BASE_T1_ERC_7683_CONTRACT_ADDRESS,
     auctionService,
     httpServer,
-    arbitrumClient.publicClient.chain.id
+    arbitrumClient.publicClient.chain.id,
+    ARBITRUM_T1_ERC_7683_CONTRACT_ADDRESS
 );
 
 async function main() {

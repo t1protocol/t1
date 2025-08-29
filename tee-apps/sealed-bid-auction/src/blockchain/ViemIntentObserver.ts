@@ -20,27 +20,28 @@ export class ViemIntentObserver {
   private logger: WinstonLogger;
 
   constructor(
-    private readonly blockchainClient: BlockchainClient,
-    private readonly t1Erc7683ContractAddress: `0x${string}`,
+    private readonly sourceChainClient: BlockchainClient,
+    private readonly sourceChainT1Erc7683ContractAddress: `0x${string}`,
     private readonly auctionService: AuctionService,
     private readonly apiServer: AuctionApiServer,
     private readonly destinationChainId: number,
+    private readonly destinationChainT1Erc7683ContractAddress: `0x${string}`,
     private readonly auctionPollingInterval: number = 500
   ) {
     this.logger = new WinstonLogger(
-      `${ViemIntentObserver.name}[${this.blockchainClient.publicClient.chain.name}]`
+      `${ViemIntentObserver.name}[${this.sourceChainClient.publicClient.chain.name}]`
     );
   }
 
   public start() {
-    this.blockchainClient.publicClient.watchEvent({
-      address: this.t1Erc7683ContractAddress,
+    this.sourceChainClient.publicClient.watchEvent({
+      address: this.sourceChainT1Erc7683ContractAddress,
       event: OPEN_INTENT_ABI_EVENT,
       onLogs: (logs) => this.processIntentLogs(logs),
     });
 
     this.logger.info(
-      `Watching for Open Intent events on chain [${this.blockchainClient.publicClient.chain.name}] and contract [${this.t1Erc7683ContractAddress}]`
+      `Watching for Open Intent events on chain [${this.sourceChainClient.publicClient.chain.name}] and contract [${this.sourceChainT1Erc7683ContractAddress}]`
     );
   }
 
@@ -85,7 +86,7 @@ export class ViemIntentObserver {
 
   private async runAuctionAndNotifySolver(
     orderData: OrderData,
-    orderId: string
+    orderId: `0x${string}`
   ) {
     this.logger.info(`Running auction for order ${orderId}`);
 
@@ -118,7 +119,7 @@ export class ViemIntentObserver {
 
         await this.apiServer.notifySolvers(
           result,
-          this.blockchainClient.publicClient.chain.id
+          this.sourceChainClient.publicClient.chain.id
         );
 
         this.logger.info(
@@ -142,7 +143,7 @@ export class ViemIntentObserver {
       name: "T1ERC7683",
       version: "1",
       chainId: this.destinationChainId,
-      verifyingContract: this.t1Erc7683ContractAddress,
+      verifyingContract: this.destinationChainT1Erc7683ContractAddress,
     };
 
     const types = {
@@ -161,6 +162,6 @@ export class ViemIntentObserver {
       amountOut,
     };
 
-    return await this.blockchainClient.signTypedData(domain, types, message);
+    return await this.sourceChainClient.signTypedData(domain, types, message);
   }
 }
