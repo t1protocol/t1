@@ -224,7 +224,7 @@ contract xYieldTest is Test {
         vm.recordLogs();
 
         OnchainCrossChainOrder memory order =
-            createOrder(dstChainId, depositAmount, depositAmount, uint32(block.timestamp + 10_000_000), 0, false);
+            _createOrder(dstChainId, depositAmount, depositAmount, uint32(block.timestamp + 10_000_000), 0, false);
 
         vm.prank(guardian);
         vault.rebalance(dstChainId, depositAmount, order);
@@ -253,7 +253,7 @@ contract xYieldTest is Test {
         vault.deposit(depositAmount, user1);
 
         OnchainCrossChainOrder memory order =
-            createOrder(dstChainId, 0, depositAmount, uint32(block.timestamp + 10_000_000), 0, false);
+            _createOrder(dstChainId, 0, depositAmount, uint32(block.timestamp + 10_000_000), 0, false);
 
         vm.expectRevert(xYieldVault.ZeroAmount.selector);
         vm.prank(guardian);
@@ -273,7 +273,7 @@ contract xYieldTest is Test {
         vault.setActiveChain(false);
 
         OnchainCrossChainOrder memory order =
-            createOrder(dstChainId, depositAmount, depositAmount, uint32(block.timestamp + 10_000_000), 0, false);
+            _createOrder(dstChainId, depositAmount, depositAmount, uint32(block.timestamp + 10_000_000), 0, false);
 
         vm.expectRevert(xYieldVault.WithdrawOnInactiveChain.selector);
         vm.prank(guardian);
@@ -288,14 +288,14 @@ contract xYieldTest is Test {
         vault.deposit(depositAmount, user1);
 
         OnchainCrossChainOrder memory order =
-            createOrder(dstChainId, depositAmount, depositAmount, uint32(block.timestamp + 10_000_000), 0, false);
+            _createOrder(dstChainId, depositAmount, depositAmount, uint32(block.timestamp + 10_000_000), 0, false);
 
         vm.expectRevert(xYieldVault.InvalidChain.selector);
         vm.prank(guardian);
         vault.rebalance(dstChainId, depositAmount, order);
     }
 
-    function testRebalanceInvalidOrderDataDestinationDomain() public {
+    function testRebalanceInvalidOrderDataDestinationDomainRevert() public {
         uint32 dstChainId = 1;
         uint32 wrongChainId = 2;
         uint256 depositAmount = 100 * 10 ** 18;
@@ -307,14 +307,14 @@ contract xYieldTest is Test {
 
         // Create order with wrong destination domain
         OnchainCrossChainOrder memory order =
-            createOrder(wrongChainId, depositAmount, depositAmount, uint32(block.timestamp + 10_000_000), 0, false);
+            _createOrder(wrongChainId, depositAmount, depositAmount, uint32(block.timestamp + 10_000_000), 0, false);
 
         vm.expectRevert(xYieldVault.InvalidOrderData.selector);
         vm.prank(guardian);
         vault.rebalance(dstChainId, depositAmount, order);
     }
 
-    function testRebalanceInvalidOrderDataAmountIn() public {
+    function testRebalanceInvalidOrderDataAmountInRevert() public {
         uint32 dstChainId = 1;
         uint256 depositAmount = 100 * 10 ** 18;
         uint256 wrongAmount = 50 * 10 ** 18;
@@ -326,14 +326,25 @@ contract xYieldTest is Test {
 
         // Create order with wrong amount
         OnchainCrossChainOrder memory order =
-            createOrder(dstChainId, wrongAmount, wrongAmount, uint32(block.timestamp + 10_000_000), 0, false);
+            _createOrder(dstChainId, wrongAmount, wrongAmount, uint32(block.timestamp + 10_000_000), 0, false);
 
         vm.expectRevert(xYieldVault.InvalidOrderData.selector);
         vm.prank(guardian);
         vault.rebalance(dstChainId, depositAmount, order);
     }
 
-    function testRebalanceRefund() public {
+    function testRebalanceNotGuardianRevert() public {
+        uint32 dstChainId = 1;
+        uint256 depositAmount = 100 * 10 ** 18;
+
+        OnchainCrossChainOrder memory order =
+            _createOrder(dstChainId, depositAmount, depositAmount, uint32(block.timestamp + 10_000_000), 0, false);
+
+        vm.expectRevert(xYieldVault.NotGuardian.selector);
+        vault.rebalance(dstChainId, depositAmount, order);
+    }
+
+    function testUndoRebalance() public {
         uint32 dstChainId = 1;
         uint256 depositAmount = 100 * 10 ** 18;
 
@@ -344,7 +355,7 @@ contract xYieldTest is Test {
 
         uint256 usdcBalance = usdc.balanceOf(address(yieldProtocol));
         OnchainCrossChainOrder memory order =
-            createOrder(dstChainId, usdcBalance, usdcBalance, uint32(block.timestamp), 0, false);
+            _createOrder(dstChainId, usdcBalance, usdcBalance, uint32(block.timestamp), 0, false);
 
         // Record logs to capture the orderId from Open event
         vm.recordLogs();
@@ -384,7 +395,55 @@ contract xYieldTest is Test {
         assertEq(usdc.balanceOf(address(yieldProtocol)), usdcBalance, "yieldProtocol should get the amount returned");
     }
 
-    function createOrder(
+    function testUndoRebalanceNotGuardianRevert() public {
+        uint32 dstChainId = 1;
+        uint256 depositAmount = 100 * 10 ** 18;
+
+        vault.setSiblingVault(dstChainId, address(12));
+
+        vm.prank(user1);
+        vault.deposit(depositAmount, user1);
+
+        uint256 usdcBalance = usdc.balanceOf(address(yieldProtocol));
+        OnchainCrossChainOrder memory order =
+            _createOrder(dstChainId, usdcBalance, usdcBalance, uint32(block.timestamp), 0, false);
+
+        // Record logs to capture the orderId from Open event
+        vm.recordLogs();
+        vm.prank(guardian);
+        vault.rebalance(dstChainId, usdcBalance, order);
+
+        // Extract orderId from Open event
+        Vm.Log[] memory logs = vm.getRecordedLogs();
+        bytes32 orderId;
+        for (uint256 i = 0; i < logs.length; i++) {
+            if (logs[i].emitter == address(settler) && logs[i].topics[0] == IOriginSettler.Open.selector) {
+                orderId = logs[i].topics[1]; // orderId is the first indexed parameter
+                break;
+            }
+        }
+
+        // Warp time to make intent deadline pass
+        vm.warp(block.timestamp + 1_000_000);
+
+        bytes32 expectedRequestId = keccak256("mock_request_id");
+        vm.mockCall(address(reader), abi.encodeWithSelector(reader.requestRead.selector), abi.encode(expectedRequestId));
+        settler.verifyRefund(orderId);
+
+        // Mock the cross-chain read to return empty result (order not filled)
+        vm.mockCall(
+            address(reader),
+            abi.encodeWithSelector(reader.verifyProofOfRead.selector),
+            abi.encode(expectedRequestId, bytes(""))
+        );
+
+        bytes memory proof = "mock_proof";
+
+        vm.expectRevert(xYieldVault.NotGuardian.selector);
+        vault.undoRebalance(order, proof);
+    }
+
+    function _createOrder(
         uint32 dstChainId,
         uint256 amount,
         uint256 minAmountOut,
