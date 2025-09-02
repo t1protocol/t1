@@ -1,0 +1,39 @@
+{
+  "metadata": {
+    "version": "v0.9.0",
+    "date": "2025-09-02",
+    "by": "Alex",
+    "from_machine": "v09",
+    "from_branch": "canary",
+    "from_commit": "966a6acd52cf7928c3bb37f32726cf2eca39d462"
+  },
+  "addresses": {
+    "arbitrum_sepolia": {
+      "prover": "0xdf77b4C45D65013DF9D8b7c3535FA23786eF735b",
+      "t1ProxyAdmin": "0xF37cb33cF35FF615e1d51DE8D386D647E29174bC",
+      "auctionWitness": "0x7BcDd857483DD39919D2Bc1a534909Ed9b4De8Af",
+      "t1XChainReader": {
+        "implementation": "0x98C8Dd484e40e07e06a88C8a6b89D8a1cDFED83f",
+        "proxy": "0x00c18A7EEDeEBD1975844dBED7335a08D28c4852"
+      },
+      "t1ERC7683": {
+        "implementation": "0xF342e8B2BA34714870066B10FD08f73Ff25072aa",
+        "proxy": "0x75Fc352F67fB05E6D60E147516055B9CefD75143"
+      }
+    },
+    "base_sepolia": {
+      "prover": "0xdf77b4C45D65013DF9D8b7c3535FA23786eF735b",
+      "t1ProxyAdmin": "0xF37cb33cF35FF615e1d51DE8D386D647E29174bC",
+      "auctionWitness": "0x7BcDd857483DD39919D2Bc1a534909Ed9b4De8Af",
+      "t1XChainReader": {
+        "implementation": "0xdeCCE08797b0aDE04E83943A71489b4b4fc4e843",
+        "proxy": "0x07FDE5fC6e01479E6EE4325547C85F88dC73614e"
+      },
+      "t1ERC7683": {
+        "implementation": "0x98C8Dd484e40e07e06a88C8a6b89D8a1cDFED83f",
+        "proxy": "0x00c18A7EEDeEBD1975844dBED7335a08D28c4852"
+      }
+    },
+    "deployerAddress": "0x535Ea2751927C0Ce9086b0a7ECAfA82698Bb3958"
+  }
+}
