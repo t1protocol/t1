@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.30;
 
-interface IxYieldVault {
+interface xYieldVault {
     error DepositOnInactiveChain();
     error InvalidChain();
     error LengthMismatch();

@@ -25,7 +25,6 @@ contract xYieldForkTest is Test {
     address internal bob = address(0xbbb);
     // address internal usdcMasterMinter = 0x8aFf09e2259cacbF4Fc4e3E53F3bf799EfEEab36;
     USDC internal usdcArbitrum = USDC(0xaf88d065e77c8cC2239327C5EDb3A432268e5831);
-    address mockSettler = address(0x98798);
 
     address[] emptyAddresses;
     uint256[] emptyAmounts;
@@ -44,20 +43,10 @@ contract xYieldForkTest is Test {
         eVaultArbitrumUsdc = EVault(eVaultArbitrumUsdcProxyAddress);
 
         xYieldArbitrum = new xYieldVault(
-            IERC20(address(usdcArbitrum)),
-            guardian,
-            "xYieldArbitrum USDC",
-            "xyUSDCArb",
-            eVaultArbitrumUsdcProxyAddress,
-            mockSettler
+            IERC20(address(usdcArbitrum)), guardian, "xYieldArbitrum USDC", "xyUSDCArb", eVaultArbitrumUsdcProxyAddress
         );
         xYieldBase = new xYieldVault(
-            IERC20(address(usdcArbitrum)),
-            guardian,
-            "xYieldBase USDC",
-            "xyUSDCBase",
-            eVaultArbitrumUsdcProxyAddress,
-            mockSettler
+            IERC20(address(usdcArbitrum)), guardian, "xYieldBase USDC", "xyUSDCBase", eVaultArbitrumUsdcProxyAddress
         );
 
         vm.prank(guardian);

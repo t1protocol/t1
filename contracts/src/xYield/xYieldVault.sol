@@ -10,10 +10,6 @@ import { Math } from "@openzeppelin/contracts/utils/math/Math.sol";
 import { Ownable2Step } from "@openzeppelin/contracts/access/Ownable2Step.sol";
 import { ReentrancyGuard } from "@openzeppelin/contracts/security/ReentrancyGuard.sol";
 import { Pausable } from "@openzeppelin/contracts/security/Pausable.sol";
-import { TypeCasts } from "@hyperlane-xyz/libs/TypeCasts.sol";
-import { OnchainCrossChainOrder } from "../interfaces/IERC7683.sol";
-import { OrderData, OrderEncoder } from "../libraries/7683/OrderEncoder.sol";
-import { T1ERC7683 } from "../7683/T1ERC7683.sol";
 
 contract xYieldVault is ERC4626, Ownable2Step, ReentrancyGuard, Pausable {
     using SafeERC20 for IERC20;
@@ -21,7 +17,6 @@ contract xYieldVault is ERC4626, Ownable2Step, ReentrancyGuard, Pausable {
 
     address public guardian;
     IERC4626 public yieldProtocol;
-    T1ERC7683 public settler; // ERC 7683 compliant settler contract
 
     uint256 public virtualTotalAssets;
     uint256 public virtualTotalSupply;
@@ -47,7 +42,6 @@ contract xYieldVault is ERC4626, Ownable2Step, ReentrancyGuard, Pausable {
     error DepositOnInactiveChain();
     error NotImplemented();
     error LengthMismatch();
-    error InvalidOrderData();
 
     event DepositRemote(address indexed sender, address indexed owner, uint256 assets, uint256 shares, uint64 chainId);
     event WithdrawRemote(address indexed sender, address indexed owner, uint256 assets, uint256 shares);
@@ -55,7 +49,6 @@ contract xYieldVault is ERC4626, Ownable2Step, ReentrancyGuard, Pausable {
     event ChainStatusChanged(bool isActive);
     event SiblingVaultSet(uint64 chainId, address vault);
     event Rebalanced(uint256 targetChain, uint256 amount);
-    event RebalanceUndone(uint256 targetChain, uint256 amount);
 
     modifier onlyGuardian() {
         if (msg.sender != guardian) revert NotGuardian();
@@ -67,21 +60,16 @@ contract xYieldVault is ERC4626, Ownable2Step, ReentrancyGuard, Pausable {
         address _guardian,
         string memory _name,
         string memory _symbol,
-        address _yieldProtocol,
-        address _settler
+        address _yieldProtocol
     )
         ERC4626(_underlying)
         ERC20(_name, _symbol)
     {
         guardian = _guardian;
         yieldProtocol = IERC4626(_yieldProtocol);
-        settler = T1ERC7683(_settler);
 
         if (_yieldProtocol != address(0)) {
             _underlying.approve(_yieldProtocol, type(uint256).max);
-        }
-        if (_settler != address(0)) {
-            _underlying.approve(_settler, type(uint256).max);
         }
     }
 
@@ -138,6 +126,7 @@ contract xYieldVault is ERC4626, Ownable2Step, ReentrancyGuard, Pausable {
         returns (uint256)
     {
         if (_amount == 0) revert ZeroAmount();
+        if (!isActiveChain) revert WithdrawOnInactiveChain();
 
         uint256 shares = previewWithdraw(_amount);
         _withdraw(msg.sender, _receiver, _owner, _amount, shares);
@@ -157,6 +146,7 @@ contract xYieldVault is ERC4626, Ownable2Step, ReentrancyGuard, Pausable {
         returns (uint256)
     {
         if (_shares == 0) revert ZeroAmount();
+        if (!isActiveChain) revert WithdrawOnInactiveChain();
 
         uint256 assets = previewRedeem(_shares);
         _withdraw(msg.sender, _receiver, _owner, assets, _shares);
@@ -285,49 +275,9 @@ contract xYieldVault is ERC4626, Ownable2Step, ReentrancyGuard, Pausable {
         yieldProtocol = IERC4626(_newYieldProtocol);
     }
 
-    function setBridgeSettler(address _newSettler) external onlyOwner {
-        settler = T1ERC7683(_newSettler);
-    }
-
-    function rebalance(
-        uint32 _targetChain,
-        uint256 _amount,
-        OnchainCrossChainOrder calldata order
-    )
-        external
-        onlyGuardian
-    {
-        if (_amount == 0) revert ZeroAmount();
-        if (!isActiveChain) revert WithdrawOnInactiveChain();
-
-        address siblingVault = siblingVaults[_targetChain];
-        if (siblingVault == address(0)) revert InvalidChain();
-
-        (OrderData memory orderData) = abi.decode(order.orderData, (OrderData));
-        if (_targetChain != orderData.destinationDomain) revert InvalidOrderData();
-        if (_amount != orderData.amountIn) revert InvalidOrderData();
-
-        yieldProtocol.withdraw(_amount, address(this), address(this));
-        settler.open(order);
-
-        emit Rebalanced(_targetChain, _amount);
-    }
-
-    /// @notice Wrapper around the settler contract `refund` function to be called after a PoR
-    /// has successfully been created with calling `verifyRefund` on settler contact
-    /// @dev You ALWAYS need to unse this function instead of regular `refund` on settler contract
-    /// as extra logic needs to be ran atomically.
-    function undoRebalance(OnchainCrossChainOrder calldata order, bytes calldata proof) external onlyGuardian {
-        OnchainCrossChainOrder[] memory orders = new OnchainCrossChainOrder[](1);
-        orders[0] = order;
-        bytes[] memory proofs = new bytes[](1);
-        proofs[0] = proof;
-        settler.refund(orders, proofs);
-
-        (OrderData memory orderData) = abi.decode(order.orderData, (OrderData));
-        yieldProtocol.deposit(orderData.amountIn, address(this));
-
-        emit RebalanceUndone(orderData.destinationDomain, orderData.amountIn);
+    function rebalance(uint256 _targetChain, uint256 _amount) external onlyGuardian {
+        // TODO: Implement rebalancing
+        revert NotImplemented();
     }
 
     function pause() external onlyOwner {
