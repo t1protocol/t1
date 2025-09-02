@@ -12,6 +12,8 @@
       "prover": "0xdf77b4C45D65013DF9D8b7c3535FA23786eF735b",
       "t1ProxyAdmin": "0xF37cb33cF35FF615e1d51DE8D386D647E29174bC",
       "auctionWitness": "0x7BcDd857483DD39919D2Bc1a534909Ed9b4De8Af",
+      "openPauser": "0xc40beb4e0c91c6f0725D2647Db0988680429d884",
+      "settlementPauser": "0x2D1b8b368c6C7779abecDC47A9a83b10bd3E2D30",
       "t1XChainReader": {
         "implementation": "0x98C8Dd484e40e07e06a88C8a6b89D8a1cDFED83f",
         "proxy": "0x00c18A7EEDeEBD1975844dBED7335a08D28c4852"
@@ -25,6 +27,8 @@
       "prover": "0xdf77b4C45D65013DF9D8b7c3535FA23786eF735b",
       "t1ProxyAdmin": "0xF37cb33cF35FF615e1d51DE8D386D647E29174bC",
       "auctionWitness": "0x7BcDd857483DD39919D2Bc1a534909Ed9b4De8Af",
+      "openPauser": "0xc40beb4e0c91c6f0725D2647Db0988680429d884",
+      "settlementPauser": "0x2D1b8b368c6C7779abecDC47A9a83b10bd3E2D30",
       "t1XChainReader": {
         "implementation": "0xdeCCE08797b0aDE04E83943A71489b4b4fc4e843",
         "proxy": "0x07FDE5fC6e01479E6EE4325547C85F88dC73614e"
