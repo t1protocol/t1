@@ -310,7 +310,7 @@ contract xYieldVault is ERC4626, Ownable2Step, ReentrancyGuard, Pausable {
         if (_amount != orderData.amountIn) revert InvalidOrderData();
 
         isActiveChain = false;
-        virtualTotalAssets = 0;
+        virtualTotalAssets -= _amount;
 
         yieldProtocol.withdraw(_amount, address(this), address(this));
         settler.open(order);
