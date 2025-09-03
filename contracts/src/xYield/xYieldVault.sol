@@ -190,7 +190,7 @@ contract xYieldVault is ERC4626, Ownable2Step, ReentrancyGuard, Pausable {
         emit TotalSupplyUpdated(totalSupply_);
     }
 
-    function updateVirtualTotalAssets() external onlyGuardian {
+    function updateVirtualTotalAssets() public onlyGuardian {
         virtualTotalAssets = totalAssets();
     }
 
@@ -310,9 +310,9 @@ contract xYieldVault is ERC4626, Ownable2Step, ReentrancyGuard, Pausable {
         if (_amount != orderData.amountIn) revert InvalidOrderData();
 
         isActiveChain = false;
-        virtualTotalAssets -= _amount;
 
         yieldProtocol.withdraw(_amount, address(this), address(this));
+        updateVirtualTotalAssets();
         settler.open(order);
 
         emit Rebalanced(_targetChain, _amount);
