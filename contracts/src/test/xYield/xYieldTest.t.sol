@@ -240,6 +240,8 @@ contract xYieldTest is Test {
         }
         assertTrue(openEventFound, "Open event should have been emitted");
 
+        assertFalse(vault.isActiveChain());
+        assertEq(vault.virtualTotalAssets(), 0);
         assertEq(usdc.balanceOf(address(settler)), depositAmount, "settler should have the rebalanced amount");
     }
 
@@ -391,6 +393,8 @@ contract xYieldTest is Test {
         vm.prank(guardian);
         vault.undoRebalance(order, proof);
 
+        assertTrue(vault.isActiveChain());
+        assertEq(vault.virtualTotalAssets(), usdcBalance);
         assertEq(uint8(settler.orderStatus(orderId)), uint8(5), "Order status should be REFUNDED");
         assertEq(usdc.balanceOf(address(yieldProtocol)), usdcBalance, "yieldProtocol should get the amount returned");
     }

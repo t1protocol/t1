@@ -307,6 +307,9 @@ contract xYieldVault is ERC4626, Ownable2Step, ReentrancyGuard, Pausable {
         if (_targetChain != orderData.destinationDomain) revert InvalidOrderData();
         if (_amount != orderData.amountIn) revert InvalidOrderData();
 
+        isActiveChain = false;
+        virtualTotalAssets = 0;
+
         yieldProtocol.withdraw(_amount, address(this), address(this));
         settler.open(order);
 
@@ -323,6 +326,9 @@ contract xYieldVault is ERC4626, Ownable2Step, ReentrancyGuard, Pausable {
         bytes[] memory proofs = new bytes[](1);
         proofs[0] = proof;
         settler.refund(orders, proofs);
+
+        isActiveChain = true;
+        virtualTotalAssets = ERC20(asset()).balanceOf(address(this));
 
         (OrderData memory orderData) = abi.decode(order.orderData, (OrderData));
         yieldProtocol.deposit(orderData.amountIn, address(this));
