@@ -48,7 +48,7 @@ contract AliceSetupScript is Script {
             destinationDomain: DESTINATION_CHAIN,
             destinationSettler: TypeCasts.addressToBytes32(vm.envAddress("ARB_T1_PULL_BASED_7683_PROXY_ADDR")),
             fillDeadline: uint32(block.timestamp + 5 minutes),
-            closedAuction: false,
+            closedAuction: true,
             data: new bytes(0)
         });
 
@@ -123,7 +123,7 @@ contract SolverFillScript is Script {
 contract SettlementScript is Script {
     function run() external {
         vm.createSelectFork(vm.rpcUrl("base_sepolia"));
-        uint256 settlerPk = vm.envUint("ALICE_PRIVATE_KEY");
+        uint256 settlerPk = vm.envUint("TEST_PRIVATE_KEY");
 
         vm.startBroadcast(settlerPk);
 
