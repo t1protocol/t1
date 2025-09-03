@@ -138,6 +138,7 @@ contract xYieldVault is ERC4626, Ownable2Step, ReentrancyGuard, Pausable {
         returns (uint256)
     {
         if (_amount == 0) revert ZeroAmount();
+        if (!isActiveChain) revert WithdrawOnInactiveChain();
 
         uint256 shares = previewWithdraw(_amount);
         _withdraw(msg.sender, _receiver, _owner, _amount, shares);
@@ -157,6 +158,7 @@ contract xYieldVault is ERC4626, Ownable2Step, ReentrancyGuard, Pausable {
         returns (uint256)
     {
         if (_shares == 0) revert ZeroAmount();
+        if (!isActiveChain) revert WithdrawOnInactiveChain();
 
         uint256 assets = previewRedeem(_shares);
         _withdraw(msg.sender, _receiver, _owner, assets, _shares);
