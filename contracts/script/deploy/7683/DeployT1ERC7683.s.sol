@@ -12,7 +12,6 @@ import { T1Constants } from "../../../src/libraries/constants/T1Constants.sol";
 contract DeployT1ERC7683 is Script {
     uint32 private constant ORIGIN_CHAIN = uint32(T1Constants.L1_CHAIN_ID); // Sepolia
     uint32 private constant DESTINATION_CHAIN = uint32(T1Constants.T1_DEVNET_CHAIN_ID); // t1 devnet
-    address private auctionWitness;
     ProxyAdmin private proxyAdmin;
 
     function deploy_l1_7683() external {
@@ -20,7 +19,6 @@ contract DeployT1ERC7683 is Script {
         uint256 deployerPk = vm.envUint("L1_DEPLOYER_PRIVATE_KEY");
         address l1Messenger = vm.envAddress("L1_T1_MESSENGER_PROXY_ADDR");
         address L1_PROXY_ADMIN_ADDR = vm.envAddress("L1_PROXY_ADMIN_ADDR");
-        auctionWitness = vm.envAddress("AUCTION_WITNESS");
 
         vm.startBroadcast(deployerPk);
 
@@ -46,10 +44,11 @@ contract DeployT1ERC7683 is Script {
         uint256 deployerPk = vm.envUint("L1_DEPLOYER_PRIVATE_KEY");
         address L1_T1_7683_PROXY_ADDR = vm.envAddress("L1_T1_7683_PROXY_ADDR");
         address L2_T1_7683_PROXY_ADDR = vm.envAddress("L2_T1_7683_PROXY_ADDR");
+        address AUCTION_WITNESS = vm.envAddress("AUCTION_WITNESS");
 
         vm.startBroadcast(deployerPk);
 
-        T1ERC7683(L1_T1_7683_PROXY_ADDR).initialize(L2_T1_7683_PROXY_ADDR, auctionWitness);
+        T1ERC7683(L1_T1_7683_PROXY_ADDR).initialize(L2_T1_7683_PROXY_ADDR, AUCTION_WITNESS);
 
         vm.stopBroadcast();
     }
@@ -85,10 +84,11 @@ contract DeployT1ERC7683 is Script {
         uint256 deployerPk = vm.envUint("L1_DEPLOYER_PRIVATE_KEY");
         address L1_T1_7683_PROXY_ADDR = vm.envAddress("L1_T1_7683_PROXY_ADDR");
         address L2_T1_7683_PROXY_ADDR = vm.envAddress("L2_T1_7683_PROXY_ADDR");
+        address AUCTION_WITNESS = vm.envAddress("AUCTION_WITNESS");
 
         vm.startBroadcast(deployerPk);
 
-        T1ERC7683(L2_T1_7683_PROXY_ADDR).initialize(L1_T1_7683_PROXY_ADDR, auctionWitness);
+        T1ERC7683(L2_T1_7683_PROXY_ADDR).initialize(L1_T1_7683_PROXY_ADDR, AUCTION_WITNESS);
 
         vm.stopBroadcast();
     }
