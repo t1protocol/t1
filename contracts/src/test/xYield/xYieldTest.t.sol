@@ -202,7 +202,7 @@ contract xYieldTest is Test {
         vault.depositFrom(depositAmount, user1, 1);
 
         vm.prank(vault.owner());
-        vault.setSiblingVault(1, address(0x4));
+        vault.setSiblingVault(1, address(0x4), address(usdc));
 
         vm.prank(user1);
         vault.depositFrom(depositAmount, user1, 1);
@@ -212,7 +212,7 @@ contract xYieldTest is Test {
         uint32 dstChainId = 1;
         uint256 depositAmount = 100 * 10 ** 18;
 
-        vault.setSiblingVault(dstChainId, address(12));
+        vault.setSiblingVault(dstChainId, address(12), address(usdc));
 
         vm.prank(user1);
         vault.deposit(depositAmount, user1);
@@ -227,7 +227,7 @@ contract xYieldTest is Test {
             _createOrder(dstChainId, depositAmount, depositAmount, uint32(block.timestamp + 10_000_000), 0, false);
 
         vm.prank(guardian);
-        vault.rebalance(dstChainId, depositAmount, order);
+        vault.rebalance(dstChainId, depositAmount, depositAmount, 0);
 
         // Check that Open event was emitted
         Vm.Log[] memory logs = vm.getRecordedLogs();
@@ -249,7 +249,7 @@ contract xYieldTest is Test {
         uint32 dstChainId = 1;
         uint256 depositAmount = 100 * 10 ** 18;
 
-        vault.setSiblingVault(dstChainId, address(12));
+        vault.setSiblingVault(dstChainId, address(12), address(usdc));
 
         vm.prank(user1);
         vault.deposit(depositAmount, user1);
@@ -259,14 +259,14 @@ contract xYieldTest is Test {
 
         vm.expectRevert(xYieldVault.ZeroAmount.selector);
         vm.prank(guardian);
-        vault.rebalance(dstChainId, 0, order);
+        vault.rebalance(dstChainId, 0, 0, 0);
     }
 
     function testRebalanceWithdrawOnInactiveChainRevert() public {
         uint32 dstChainId = 1;
         uint256 depositAmount = 100 * 10 ** 18;
 
-        vault.setSiblingVault(dstChainId, address(12));
+        vault.setSiblingVault(dstChainId, address(12), address(usdc));
 
         vm.prank(user1);
         vault.deposit(depositAmount, user1);
@@ -279,7 +279,7 @@ contract xYieldTest is Test {
 
         vm.expectRevert(xYieldVault.WithdrawOnInactiveChain.selector);
         vm.prank(guardian);
-        vault.rebalance(dstChainId, depositAmount, order);
+        vault.rebalance(dstChainId, depositAmount, depositAmount, 0);
     }
 
     function testRebalanceInvalidChainRevert() public {
@@ -294,7 +294,7 @@ contract xYieldTest is Test {
 
         vm.expectRevert(xYieldVault.InvalidChain.selector);
         vm.prank(guardian);
-        vault.rebalance(dstChainId, depositAmount, order);
+        vault.rebalance(dstChainId, depositAmount, depositAmount, 0);
     }
 
     function testRebalanceInvalidOrderDataDestinationDomainRevert() public {
@@ -302,7 +302,7 @@ contract xYieldTest is Test {
         uint32 wrongChainId = 2;
         uint256 depositAmount = 100 * 10 ** 18;
 
-        vault.setSiblingVault(dstChainId, address(12));
+        vault.setSiblingVault(dstChainId, address(12), address(usdc));
 
         vm.prank(user1);
         vault.deposit(depositAmount, user1);
@@ -313,7 +313,7 @@ contract xYieldTest is Test {
 
         vm.expectRevert(xYieldVault.InvalidOrderData.selector);
         vm.prank(guardian);
-        vault.rebalance(dstChainId, depositAmount, order);
+        vault.rebalance(dstChainId, depositAmount, depositAmount, 0);
     }
 
     function testRebalanceInvalidOrderDataAmountInRevert() public {
@@ -321,7 +321,7 @@ contract xYieldTest is Test {
         uint256 depositAmount = 100 * 10 ** 18;
         uint256 wrongAmount = 50 * 10 ** 18;
 
-        vault.setSiblingVault(dstChainId, address(12));
+        vault.setSiblingVault(dstChainId, address(12), address(usdc));
 
         vm.prank(user1);
         vault.deposit(depositAmount, user1);
@@ -332,7 +332,7 @@ contract xYieldTest is Test {
 
         vm.expectRevert(xYieldVault.InvalidOrderData.selector);
         vm.prank(guardian);
-        vault.rebalance(dstChainId, depositAmount, order);
+        vault.rebalance(dstChainId, depositAmount, depositAmount, 0);
     }
 
     function testRebalanceNotGuardianRevert() public {
@@ -343,14 +343,14 @@ contract xYieldTest is Test {
             _createOrder(dstChainId, depositAmount, depositAmount, uint32(block.timestamp + 10_000_000), 0, false);
 
         vm.expectRevert(xYieldVault.NotGuardian.selector);
-        vault.rebalance(dstChainId, depositAmount, order);
+        vault.rebalance(dstChainId, depositAmount, depositAmount, 0);
     }
 
     function testUndoRebalance() public {
         uint32 dstChainId = 1;
         uint256 depositAmount = 100 * 10 ** 18;
 
-        vault.setSiblingVault(dstChainId, address(12));
+        vault.setSiblingVault(dstChainId, address(12), address(usdc));
 
         vm.prank(user1);
         vault.deposit(depositAmount, user1);
@@ -362,7 +362,7 @@ contract xYieldTest is Test {
         // Record logs to capture the orderId from Open event
         vm.recordLogs();
         vm.prank(guardian);
-        vault.rebalance(dstChainId, usdcBalance, order);
+        vault.rebalance(dstChainId, usdcBalance, usdcBalance, 0);
 
         // Extract orderId from Open event
         Vm.Log[] memory logs = vm.getRecordedLogs();
@@ -403,7 +403,7 @@ contract xYieldTest is Test {
         uint32 dstChainId = 1;
         uint256 depositAmount = 100 * 10 ** 18;
 
-        vault.setSiblingVault(dstChainId, address(12));
+        vault.setSiblingVault(dstChainId, address(12), address(usdc));
 
         vm.prank(user1);
         vault.deposit(depositAmount, user1);
@@ -415,7 +415,7 @@ contract xYieldTest is Test {
         // Record logs to capture the orderId from Open event
         vm.recordLogs();
         vm.prank(guardian);
-        vault.rebalance(dstChainId, usdcBalance, order);
+        vault.rebalance(dstChainId, usdcBalance, usdcBalance, 0);
 
         // Extract orderId from Open event
         Vm.Log[] memory logs = vm.getRecordedLogs();
@@ -459,7 +459,7 @@ contract xYieldTest is Test {
         view
         returns (OnchainCrossChainOrder memory)
     {
-        address siblingVault = vault.siblingVaults(dstChainId);
+        (address siblingVault, ) = vault.siblingVaults(dstChainId);
 
         OrderData memory orderData = OrderData({
             sender: TypeCasts.addressToBytes32(address(vault)),

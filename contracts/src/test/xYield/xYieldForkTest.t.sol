@@ -62,7 +62,7 @@ contract xYieldForkTest is Test {
 
         vm.prank(guardian);
         xYieldArbitrum.setActiveChain(true);
-        xYieldArbitrum.setSiblingVault(baseChainId, address(xYieldBase));
+        xYieldArbitrum.setSiblingVault(baseChainId, address(xYieldBase), address(usdcArbitrum));
 
         vm.startPrank(alice);
         usdcArbitrum.transfer(bob, 100e6);
