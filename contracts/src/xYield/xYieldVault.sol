@@ -21,6 +21,7 @@ contract xYieldVault is ERC4626, Ownable2Step, ReentrancyGuard, Pausable {
     using Math for uint256;
 
     address public guardian;
+
     IERC4626 public yieldProtocol;
     V3SpokePoolInterface public acrossSpokePool;
 
@@ -39,7 +40,12 @@ contract xYieldVault is ERC4626, Ownable2Step, ReentrancyGuard, Pausable {
         TxType txType;
     }
 
-    mapping(uint64 => address) public siblingVaults;
+    struct SiblingVault {
+        address vault;
+        address underlyingErc20;
+    }
+
+    mapping(uint64 => SiblingVault) public siblingVaults;
 
     error NotGuardian();
     error ZeroAmount();
@@ -108,7 +114,7 @@ contract xYieldVault is ERC4626, Ownable2Step, ReentrancyGuard, Pausable {
     {
         if (_amount == 0) revert ZeroAmount();
         if (!isActiveChain) revert DepositOnInactiveChain();
-        if (siblingVaults[_chainId] == address(0)) revert InvalidChain();
+        if (siblingVaults[_chainId].vault == address(0)) revert InvalidChain();
         // deposit assets into underlying
         // credit user with virtual deposit
         // render virtual deposits into real deposits when updateTotals is called
@@ -284,8 +290,9 @@ contract xYieldVault is ERC4626, Ownable2Step, ReentrancyGuard, Pausable {
         emit ChainStatusChanged(_isActive);
     }
 
-    function setSiblingVault(uint64 _chainId, address _vault) external onlyOwner {
-        siblingVaults[_chainId] = _vault;
+    function setSiblingVault(uint64 _chainId, address _vault, address _underlyingErc20) external onlyOwner {
+        siblingVaults[_chainId].vault = _vault;
+        siblingVaults[_chainId].underlyingErc20 = _underlyingErc20;
         emit SiblingVaultSet(_chainId, _vault);
     }
 
@@ -299,29 +306,40 @@ contract xYieldVault is ERC4626, Ownable2Step, ReentrancyGuard, Pausable {
 
     function rebalance(
         uint32 _targetChain,
-        uint256 _amount,
-        OnchainCrossChainOrder calldata order
+        uint256 _amountIn,
+        uint256 _amountOut,
+        uint32 _acrossApiQuoteTimestamp
     )
         external
         onlyGuardian
     {
-        if (_amount == 0) revert ZeroAmount();
+        if (_amountIn == 0) revert ZeroAmount();
         if (!isActiveChain) revert WithdrawOnInactiveChain();
 
-        address siblingVault = siblingVaults[_targetChain];
-        if (siblingVault == address(0)) revert InvalidChain();
-
-        (OrderData memory orderData) = abi.decode(order.orderData, (OrderData));
-        if (_targetChain != orderData.destinationDomain) revert InvalidOrderData();
-        if (_amount != orderData.amountIn) revert InvalidOrderData();
+        SiblingVault memory siblingVault = siblingVaults[_targetChain];
+        if (siblingVault.vault == address(0)) revert InvalidChain();
 
         isActiveChain = false;
 
-        yieldProtocol.withdraw(_amount, address(this), address(this));
+        yieldProtocol.withdraw(_amountIn, address(this), address(this));
         updateVirtualTotalAssets();
-        // open across intent
 
-        emit Rebalanced(_targetChain, _amount);
+        acrossSpokePool.depositV3(
+            guardian,
+            siblingVault.vault,
+            asset(),
+            siblingVault.underlyingErc20,
+            _amountIn,
+            _amountOut,
+            _targetChain,
+            address(0),
+            _acrossApiQuoteTimestamp,
+            uint32(block.timestamp + 2 minutes),
+            0,
+            ""
+        );
+
+        emit Rebalanced(_targetChain, _amountIn);
     }
 
     /// @notice Wrapper around the settler contract `refund` function to be called after a PoR
