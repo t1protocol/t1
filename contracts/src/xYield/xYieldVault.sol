@@ -164,7 +164,16 @@ contract xYieldVault is ERC4626, Ownable2Step, ReentrancyGuard, Pausable {
         return assets;
     }
 
-    function withdrawFrom(uint256 assets, address owner, uint64 chainId) external nonReentrant returns (uint256) {
+    function withdrawFrom(
+        uint256 assets,
+        address owner,
+        uint64 chainId
+    )
+        external
+        nonReentrant
+        onlyGuardian
+        returns (uint256)
+    {
         _withdrawFrom(owner, assets);
     }
 
