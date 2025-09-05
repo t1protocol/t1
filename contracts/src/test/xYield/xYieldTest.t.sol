@@ -60,6 +60,7 @@ contract xYieldTest is Test {
     address public user1 = address(0x2);
     address public user2 = address(0x3);
     address public prover = address(0x4);
+    address public acrossSpokePool = address(0x5);
 
     uint256 public constant INITIAL_DEPOSIT = 1000 * 10 ** 18;
 
@@ -76,7 +77,13 @@ contract xYieldTest is Test {
         settler.initialize(address(0x1234), address(0x5678));
 
         vault = new xYieldVault(
-            IERC20(address(usdc)), guardian, "xYield USDC", "xyUSDC", address(yieldProtocol), address(settler)
+            IERC20(address(usdc)),
+            guardian,
+            "xYield USDC",
+            "xyUSDC",
+            address(yieldProtocol),
+            address(settler),
+            acrossSpokePool
         );
 
         vm.prank(guardian);

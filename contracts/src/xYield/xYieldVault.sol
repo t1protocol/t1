@@ -14,6 +14,7 @@ import { TypeCasts } from "@hyperlane-xyz/libs/TypeCasts.sol";
 import { OnchainCrossChainOrder } from "../interfaces/IERC7683.sol";
 import { OrderData, OrderEncoder } from "../libraries/7683/OrderEncoder.sol";
 import { T1ERC7683 } from "../7683/T1ERC7683.sol";
+import { ISpokePool } from "../interfaces/ISpokePool.sol";
 
 contract xYieldVault is ERC4626, Ownable2Step, ReentrancyGuard, Pausable {
     using SafeERC20 for IERC20;
@@ -21,7 +22,8 @@ contract xYieldVault is ERC4626, Ownable2Step, ReentrancyGuard, Pausable {
 
     address public guardian;
     IERC4626 public yieldProtocol;
-    T1ERC7683 public settler; // ERC 7683 compliant settler contract
+    T1ERC7683 public settler;
+    ISpokePool public acrossSpokePool;
 
     uint256 public virtualTotalAssets;
     uint256 public virtualTotalSupply;
@@ -68,7 +70,8 @@ contract xYieldVault is ERC4626, Ownable2Step, ReentrancyGuard, Pausable {
         string memory _name,
         string memory _symbol,
         address _yieldProtocol,
-        address _settler
+        address _settler,
+        address _acrossSpokePool
     )
         ERC4626(_underlying)
         ERC20(_name, _symbol)
@@ -76,12 +79,16 @@ contract xYieldVault is ERC4626, Ownable2Step, ReentrancyGuard, Pausable {
         guardian = _guardian;
         yieldProtocol = IERC4626(_yieldProtocol);
         settler = T1ERC7683(_settler);
+        acrossSpokePool = ISpokePool(_acrossSpokePool);
 
         if (_yieldProtocol != address(0)) {
             _underlying.approve(_yieldProtocol, type(uint256).max);
         }
         if (_settler != address(0)) {
             _underlying.approve(_settler, type(uint256).max);
+        }
+        if (_acrossSpokePool != address(0)) {
+            _underlying.approve(_acrossSpokePool, type(uint256).max);
         }
     }
 
@@ -167,22 +174,66 @@ contract xYieldVault is ERC4626, Ownable2Step, ReentrancyGuard, Pausable {
     function withdrawFrom(
         uint256 assets,
         address owner,
-        uint64 chainId
+        uint64 chainId,
+        address outputToken,
+        uint256 outputAmount,
+        address exclusiveRelayer,
+        uint32 quoteTimestamp,
+        uint32 fillDeadline,
+        uint32 exclusivityParameter
     )
         external
         nonReentrant
         onlyGuardian
         returns (uint256)
     {
-        _withdrawFrom(owner, assets);
+        return _withdrawFrom(
+            owner,
+            assets,
+            chainId,
+            outputToken,
+            outputAmount,
+            exclusiveRelayer,
+            quoteTimestamp,
+            fillDeadline,
+            exclusivityParameter
+        );
     }
 
     // NOTE - for remote withdrawals we update virtualTotalAssets after withdrawal to prevent share price inflation
     // before
     // global shares is updated
-    function _withdrawFrom(address owner, uint256 assets) internal {
-        // TODO - deposit into escrow instead of transferring user's underlying to this contract
-        uint256 shares = yieldProtocol.withdraw(assets, address(this), address(this));
+    function _withdrawFrom(
+        address owner,
+        uint256 assets,
+        uint64 chainId,
+        address outputToken,
+        uint256 outputAmount,
+        address exclusiveRelayer,
+        uint32 quoteTimestamp,
+        uint32 fillDeadline,
+        uint32 exclusivityParameter
+    )
+        internal
+        returns (uint256 shares)
+    {
+        shares = yieldProtocol.withdraw(assets, address(this), address(this));
+
+        acrossSpokePool.depositV3(
+            address(this),
+            owner,
+            asset(),
+            outputToken,
+            assets,
+            outputAmount,
+            uint256(chainId),
+            exclusiveRelayer,
+            quoteTimestamp,
+            fillDeadline,
+            exclusivityParameter,
+            ""
+        );
+
         emit WithdrawRemote(msg.sender, owner, assets, shares);
     }
 
@@ -291,11 +342,21 @@ contract xYieldVault is ERC4626, Ownable2Step, ReentrancyGuard, Pausable {
     }
 
     function setYieldProtocol(address _newYieldProtocol) external onlyOwner {
+        IERC20(asset()).approve(address(yieldProtocol), 0);
         yieldProtocol = IERC4626(_newYieldProtocol);
+        IERC20(asset()).approve(_newYieldProtocol, type(uint256).max);
     }
 
     function setBridgeSettler(address _newSettler) external onlyOwner {
+        IERC20(asset()).approve(address(settler), 0);
         settler = T1ERC7683(_newSettler);
+        IERC20(asset()).approve(_newSettler, type(uint256).max);
+    }
+
+    function setAcrossSpokePool(address _newAcrossSpokePool) external onlyOwner {
+        IERC20(asset()).approve(address(acrossSpokePool), 0);
+        acrossSpokePool = ISpokePool(_newAcrossSpokePool);
+        IERC20(asset()).approve(_newAcrossSpokePool, type(uint256).max);
     }
 
     function rebalance(

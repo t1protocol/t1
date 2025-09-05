@@ -19,10 +19,12 @@ contract DeployBasexYieldVault is DeploymentUtils {
         string memory name = vm.envString("BASE_XYIELD_VAULT_NAME");
         string memory symbol = vm.envString("BASE_XYIELD_VAULT_SYMBOL");
         address settler = vm.envAddress("BASE_SETTLER_ADDR");
+        address acrossSpokePool = vm.envAddress("BASE_ACROSS_SPOKE_POOL_ADDR");
 
         vm.startBroadcast(deployerPk);
 
-        xYieldVault vault = new xYieldVault(IERC20(underlyingToken), guardian, name, symbol, yieldProtocol, settler);
+        xYieldVault vault =
+            new xYieldVault(IERC20(underlyingToken), guardian, name, symbol, yieldProtocol, settler, acrossSpokePool);
 
         vm.stopBroadcast();
 
