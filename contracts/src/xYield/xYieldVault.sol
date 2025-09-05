@@ -1,19 +1,20 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.30;
 
-import { ERC4626 } from "@openzeppelin/contracts/token/ERC20/extensions/ERC4626.sol";
-import { IERC4626 } from "@openzeppelin/contracts/interfaces/IERC4626.sol";
-import { IERC20 } from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
-import { SafeERC20 } from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
+import { V3SpokePoolInterface } from "@across-protocol/contracts/contracts/interfaces/V3SpokePoolInterface.sol";
 import { ERC20 } from "@openzeppelin/contracts/token/ERC20/ERC20.sol";
+import { ERC4626 } from "@openzeppelin/contracts/token/ERC20/extensions/ERC4626.sol";
+import { IERC20 } from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
+import { IERC4626 } from "@openzeppelin/contracts/interfaces/IERC4626.sol";
 import { Math } from "@openzeppelin/contracts/utils/math/Math.sol";
-import { Ownable2Step } from "@openzeppelin/contracts/access/Ownable2Step.sol";
-import { ReentrancyGuard } from "@openzeppelin/contracts/security/ReentrancyGuard.sol";
-import { Pausable } from "@openzeppelin/contracts/security/Pausable.sol";
-import { TypeCasts } from "@hyperlane-xyz/libs/TypeCasts.sol";
 import { OnchainCrossChainOrder } from "../interfaces/IERC7683.sol";
 import { OrderData, OrderEncoder } from "../libraries/7683/OrderEncoder.sol";
+import { Ownable2Step } from "@openzeppelin/contracts/access/Ownable2Step.sol";
+import { Pausable } from "@openzeppelin/contracts/security/Pausable.sol";
+import { ReentrancyGuard } from "@openzeppelin/contracts/security/ReentrancyGuard.sol";
+import { SafeERC20 } from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import { T1ERC7683 } from "../7683/T1ERC7683.sol";
+import { TypeCasts } from "@hyperlane-xyz/libs/TypeCasts.sol";
 
 contract xYieldVault is ERC4626, Ownable2Step, ReentrancyGuard, Pausable {
     using SafeERC20 for IERC20;
@@ -21,7 +22,7 @@ contract xYieldVault is ERC4626, Ownable2Step, ReentrancyGuard, Pausable {
 
     address public guardian;
     IERC4626 public yieldProtocol;
-    T1ERC7683 public settler; // ERC 7683 compliant settler contract
+    V3SpokePoolInterface public acrossSpokePool;
 
     uint256 public virtualTotalAssets;
     uint256 public virtualTotalSupply;
@@ -68,20 +69,20 @@ contract xYieldVault is ERC4626, Ownable2Step, ReentrancyGuard, Pausable {
         string memory _name,
         string memory _symbol,
         address _yieldProtocol,
-        address _settler
+        address _acrossSpokePool
     )
         ERC4626(_underlying)
         ERC20(_name, _symbol)
     {
         guardian = _guardian;
         yieldProtocol = IERC4626(_yieldProtocol);
-        settler = T1ERC7683(_settler);
+        acrossSpokePool = V3SpokePoolInterface(_acrossSpokePool);
 
         if (_yieldProtocol != address(0)) {
             _underlying.approve(_yieldProtocol, type(uint256).max);
         }
-        if (_settler != address(0)) {
-            _underlying.approve(_settler, type(uint256).max);
+        if (_acrossSpokePool != address(0)) {
+            _underlying.approve(_acrossSpokePool, type(uint256).max);
         }
     }
 
@@ -296,10 +297,6 @@ contract xYieldVault is ERC4626, Ownable2Step, ReentrancyGuard, Pausable {
         yieldProtocol = IERC4626(_newYieldProtocol);
     }
 
-    function setBridgeSettler(address _newSettler) external onlyOwner {
-        settler = T1ERC7683(_newSettler);
-    }
-
     function rebalance(
         uint32 _targetChain,
         uint256 _amount,
@@ -322,7 +319,7 @@ contract xYieldVault is ERC4626, Ownable2Step, ReentrancyGuard, Pausable {
 
         yieldProtocol.withdraw(_amount, address(this), address(this));
         updateVirtualTotalAssets();
-        settler.open(order);
+        // open across intent
 
         emit Rebalanced(_targetChain, _amount);
     }
@@ -336,7 +333,7 @@ contract xYieldVault is ERC4626, Ownable2Step, ReentrancyGuard, Pausable {
         orders[0] = order;
         bytes[] memory proofs = new bytes[](1);
         proofs[0] = proof;
-        settler.refund(orders, proofs);
+        // cancel Across intent
 
         isActiveChain = true;
         virtualTotalAssets = ERC20(asset()).balanceOf(address(this));
