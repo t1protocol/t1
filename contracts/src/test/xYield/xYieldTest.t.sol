@@ -12,7 +12,6 @@ import { V3SpokePoolInterface } from "@across-protocol/contracts/contracts/inter
 import { xYieldVault } from "../../xYield/xYieldVault.sol";
 import { MockYieldProtocol } from "./MockYieldProtocol.sol";
 import { T1XChainReader } from "../../libraries/xChain/T1XChainReader.sol";
-import { T1ERC7683 } from "../../7683/T1ERC7683.sol";
 import {
     IOriginSettler,
     ResolvedCrossChainOrder,
@@ -20,7 +19,6 @@ import {
     FillInstruction,
     OnchainCrossChainOrder
 } from "../../interfaces/IERC7683.sol";
-import { IT1ERC7683 } from "../../interfaces/IT1ERC7683.sol";
 import { OrderData, OrderEncoder } from "../../libraries/7683/OrderEncoder.sol";
 import { TypeCasts } from "@hyperlane-xyz/libs/TypeCasts.sol";
 
@@ -93,12 +91,7 @@ contract xYieldTest is Test {
         usdc = new MockUSDC();
         yieldProtocol = new Mock4626(IERC20(address(usdc)), "Euler USDC", "eUSDC", true);
         reader = new T1XChainReader(prover);
-        // settler = new T1ERC7683(address(0), address(reader), uint32(block.chainid));
-        // settler = new T1ERC7683(address(0), address(reader), uint32(block.chainid));
         bridge = new MockSpokePool();
-
-        // Initialize the T1ERC7683 contract
-        // settler.initialize(address(0x1234), address(0x5678));
 
         vault = new xYieldVault(
             IERC20(address(usdc)), guardian, "xYield USDC", "xyUSDC", address(yieldProtocol), address(bridge)
@@ -254,20 +247,8 @@ contract xYieldTest is Test {
         vm.prank(guardian);
         vault.rebalance(REBALANCE_ID, dstChainId, depositAmount, depositAmount, 0);
 
-        // Check that Open event was emitted
-        // Vm.Log[] memory logs = vm.getRecordedLogs();
-        // bool openEventFound = false;
-        // for (uint256 i = 0; i < logs.length; i++) {
-        //     if (logs[i].emitter == address(settler) && logs[i].topics[0] == IOriginSettler.Open.selector) {
-        //         openEventFound = true;
-        //         break;
-        //     }
-        // }
-        // assertTrue(openEventFound, "Open event should have been emitted");
-
         assertFalse(vault.isActiveChain());
         assertEq(vault.virtualTotalAssets(), 0);
-        // assertEq(usdc.balanceOf(address(settler)), depositAmount, "settler should have the rebalanced amount");
     }
 
     function testRebalanceZeroAmountRevert() public {
@@ -351,22 +332,11 @@ contract xYieldTest is Test {
         vm.prank(guardian);
         vault.rebalance(REBALANCE_ID, dstChainId, usdcBalance, usdcBalance, 0);
 
-        // Extract orderId from Open event
-        // Vm.Log[] memory logs = vm.getRecordedLogs();
-        // bytes32 orderId;
-        // for (uint256 i = 0; i < logs.length; i++) {
-        //     if (logs[i].emitter == address(settler) && logs[i].topics[0] == IOriginSettler.Open.selector) {
-        //         orderId = logs[i].topics[1]; // orderId is the first indexed parameter
-        //         break;
-        //     }
-        // }
-
         // Warp time to make intent deadline pass
         vm.warp(block.timestamp + 1_000_000);
 
         bytes32 expectedRequestId = keccak256("mock_request_id");
         vm.mockCall(address(reader), abi.encodeWithSelector(reader.requestRead.selector), abi.encode(expectedRequestId));
-        // settler.verifyRefund(orderId);
 
         // Mock the cross-chain read to return empty result (order not filled)
         vm.mockCall(
@@ -382,7 +352,6 @@ contract xYieldTest is Test {
 
         assertTrue(vault.isActiveChain());
         assertEq(vault.virtualTotalAssets(), usdcBalance);
-        // assertEq(uint8(settler.orderStatus(orderId)), uint8(5), "Order status should be REFUNDED");
         assertEq(usdc.balanceOf(address(yieldProtocol)), usdcBalance, "yieldProtocol should get the amount returned");
     }
 
@@ -404,22 +373,11 @@ contract xYieldTest is Test {
         vm.prank(guardian);
         vault.rebalance(REBALANCE_ID, dstChainId, usdcBalance, usdcBalance, 0);
 
-        // Extract orderId from Open event
-        // Vm.Log[] memory logs = vm.getRecordedLogs();
-        // bytes32 orderId;
-        // for (uint256 i = 0; i < logs.length; i++) {
-        //     if (logs[i].emitter == address(settler) && logs[i].topics[0] == IOriginSettler.Open.selector) {
-        //         orderId = logs[i].topics[1]; // orderId is the first indexed parameter
-        //         break;
-        //     }
-        // }
-
         // Warp time to make intent deadline pass
         vm.warp(block.timestamp + 1_000_000);
 
         bytes32 expectedRequestId = keccak256("mock_request_id");
         vm.mockCall(address(reader), abi.encodeWithSelector(reader.requestRead.selector), abi.encode(expectedRequestId));
-        // settler.verifyRefund(orderId);
 
         // Mock the cross-chain read to return empty result (order not filled)
         vm.mockCall(
