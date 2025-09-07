@@ -61,7 +61,8 @@ contract xYieldVault is ERC4626, Ownable2Step, ReentrancyGuard, Pausable {
     event TotalSupplyUpdated(uint256 newVirtualTotalSupply);
     event ChainStatusChanged(bool isActive);
     event SiblingVaultSet(uint64 chainId, address vault);
-    event Rebalanced(uint256 targetChain, uint256 amount);
+    event RebalanceInitiated(uint256 indexed id, uint256 targetChain, uint256 amount);
+    event Rebalanced(uint256 indexed id, uint256 amount);
     event RebalanceUndone(uint256 targetChain, uint256 amount);
 
     modifier onlyGuardian() {
@@ -305,6 +306,7 @@ contract xYieldVault is ERC4626, Ownable2Step, ReentrancyGuard, Pausable {
     }
 
     function rebalance(
+        uint256 _id,
         uint32 _targetChain,
         uint256 _amountIn,
         uint256 _amountOut,
@@ -324,6 +326,8 @@ contract xYieldVault is ERC4626, Ownable2Step, ReentrancyGuard, Pausable {
         yieldProtocol.withdraw(_amountIn, address(this), address(this));
         updateVirtualTotalAssets();
 
+        bytes memory message = abi.encode(_id);
+
         acrossSpokePool.depositV3(
             guardian,
             siblingVault.vault,
@@ -336,10 +340,10 @@ contract xYieldVault is ERC4626, Ownable2Step, ReentrancyGuard, Pausable {
             _acrossApiQuoteTimestamp,
             uint32(block.timestamp + 2 minutes),
             0,
-            ""
+            message
         );
 
-        emit Rebalanced(_targetChain, _amountIn);
+        emit RebalanceInitiated(_id, _targetChain, _amountIn);
     }
 
     /// @notice Wrapper around the settler contract `refund` function to be called after a PoR
@@ -368,5 +372,10 @@ contract xYieldVault is ERC4626, Ownable2Step, ReentrancyGuard, Pausable {
 
     function unpause() external onlyOwner {
         _unpause();
+    }
+
+    function handleV3AcrossMessage(address tokenSent, uint256 amount, address relayer, bytes memory message) external {
+        uint256 id = abi.decode(message, (uint256));
+        emit Rebalanced(id, amount);
     }
 }

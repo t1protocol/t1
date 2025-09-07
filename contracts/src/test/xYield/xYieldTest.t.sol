@@ -7,11 +7,11 @@ import { Vm } from "forge-std/Vm.sol";
 import { IERC20 } from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import { ERC20 } from "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 import { ERC4626 } from "@openzeppelin/contracts/token/ERC20/extensions/ERC4626.sol";
+import { V3SpokePoolInterface } from "@across-protocol/contracts/contracts/interfaces/V3SpokePoolInterface.sol";
 
 import { xYieldVault } from "../../xYield/xYieldVault.sol";
 import { MockYieldProtocol } from "./MockYieldProtocol.sol";
 import { T1XChainReader } from "../../libraries/xChain/T1XChainReader.sol";
-import { T1ERC7683 } from "../../7683/T1ERC7683.sol";
 import {
     IOriginSettler,
     ResolvedCrossChainOrder,
@@ -19,7 +19,6 @@ import {
     FillInstruction,
     OnchainCrossChainOrder
 } from "../../interfaces/IERC7683.sol";
-import { IT1ERC7683 } from "../../interfaces/IT1ERC7683.sol";
 import { OrderData, OrderEncoder } from "../../libraries/7683/OrderEncoder.sol";
 import { TypeCasts } from "@hyperlane-xyz/libs/TypeCasts.sol";
 
@@ -49,12 +48,36 @@ contract Mock4626 is ERC4626 {
     }
 }
 
+contract MockSpokePool {
+    function depositV3(
+        address,
+        address,
+        address,
+        address,
+        uint256,
+        uint256,
+        uint256,
+        address,
+        uint32,
+        uint32,
+        uint32,
+        bytes calldata
+    )
+        external
+        payable
+    { }
+
+    function counterpart() external pure returns (address) {
+        return address(0x1234);
+    }
+}
+
 contract xYieldTest is Test {
     xYieldVault public vault;
     Mock4626 public yieldProtocol; // mocking a vault
     MockUSDC public usdc;
     T1XChainReader public reader;
-    T1ERC7683 public settler;
+    MockSpokePool public bridge;
 
     address public guardian = address(0x1);
     address public user1 = address(0x2);
@@ -62,6 +85,7 @@ contract xYieldTest is Test {
     address public prover = address(0x4);
 
     uint256 public constant INITIAL_DEPOSIT = 1000 * 10 ** 18;
+    uint256 public constant REBALANCE_ID = 1;
 
     address[] emptyAddresses;
     uint256[] emptyAmounts;
@@ -70,13 +94,10 @@ contract xYieldTest is Test {
         usdc = new MockUSDC();
         yieldProtocol = new Mock4626(IERC20(address(usdc)), "Euler USDC", "eUSDC", true);
         reader = new T1XChainReader(prover);
-        settler = new T1ERC7683(address(0), address(reader), uint32(block.chainid));
-
-        // Initialize the T1ERC7683 contract
-        settler.initialize(address(0x1234), address(0x5678));
+        bridge = new MockSpokePool();
 
         vault = new xYieldVault(
-            IERC20(address(usdc)), guardian, "xYield USDC", "xyUSDC", address(yieldProtocol), address(settler)
+            IERC20(address(usdc)), guardian, "xYield USDC", "xyUSDC", address(yieldProtocol), address(bridge)
         );
 
         vm.prank(guardian);
@@ -218,7 +239,7 @@ contract xYieldTest is Test {
         vault.deposit(depositAmount, user1);
 
         vm.expectEmit(true, true, true, true);
-        emit xYieldVault.Rebalanced(dstChainId, depositAmount);
+        emit xYieldVault.RebalanceInitiated(REBALANCE_ID, dstChainId, depositAmount);
 
         // Record logs to check if Open event was emitted
         vm.recordLogs();
@@ -227,22 +248,10 @@ contract xYieldTest is Test {
             _createOrder(dstChainId, depositAmount, depositAmount, uint32(block.timestamp + 10_000_000), 0, false);
 
         vm.prank(guardian);
-        vault.rebalance(dstChainId, depositAmount, depositAmount, 0);
-
-        // Check that Open event was emitted
-        Vm.Log[] memory logs = vm.getRecordedLogs();
-        bool openEventFound = false;
-        for (uint256 i = 0; i < logs.length; i++) {
-            if (logs[i].emitter == address(settler) && logs[i].topics[0] == IOriginSettler.Open.selector) {
-                openEventFound = true;
-                break;
-            }
-        }
-        assertTrue(openEventFound, "Open event should have been emitted");
+        vault.rebalance(REBALANCE_ID, dstChainId, depositAmount, depositAmount, 0);
 
         assertFalse(vault.isActiveChain());
         assertEq(vault.virtualTotalAssets(), 0);
-        assertEq(usdc.balanceOf(address(settler)), depositAmount, "settler should have the rebalanced amount");
     }
 
     function testRebalanceZeroAmountRevert() public {
@@ -259,7 +268,7 @@ contract xYieldTest is Test {
 
         vm.expectRevert(xYieldVault.ZeroAmount.selector);
         vm.prank(guardian);
-        vault.rebalance(dstChainId, 0, 0, 0);
+        vault.rebalance(REBALANCE_ID, dstChainId, 0, 0, 0);
     }
 
     function testRebalanceWithdrawOnInactiveChainRevert() public {
@@ -279,7 +288,7 @@ contract xYieldTest is Test {
 
         vm.expectRevert(xYieldVault.WithdrawOnInactiveChain.selector);
         vm.prank(guardian);
-        vault.rebalance(dstChainId, depositAmount, depositAmount, 0);
+        vault.rebalance(REBALANCE_ID, dstChainId, depositAmount, depositAmount, 0);
     }
 
     function testRebalanceInvalidChainRevert() public {
@@ -294,45 +303,7 @@ contract xYieldTest is Test {
 
         vm.expectRevert(xYieldVault.InvalidChain.selector);
         vm.prank(guardian);
-        vault.rebalance(dstChainId, depositAmount, depositAmount, 0);
-    }
-
-    function testRebalanceInvalidOrderDataDestinationDomainRevert() public {
-        uint32 dstChainId = 1;
-        uint32 wrongChainId = 2;
-        uint256 depositAmount = 100 * 10 ** 18;
-
-        vault.setSiblingVault(dstChainId, address(12), address(usdc));
-
-        vm.prank(user1);
-        vault.deposit(depositAmount, user1);
-
-        // Create order with wrong destination domain
-        OnchainCrossChainOrder memory order =
-            _createOrder(wrongChainId, depositAmount, depositAmount, uint32(block.timestamp + 10_000_000), 0, false);
-
-        vm.expectRevert(xYieldVault.InvalidOrderData.selector);
-        vm.prank(guardian);
-        vault.rebalance(dstChainId, depositAmount, depositAmount, 0);
-    }
-
-    function testRebalanceInvalidOrderDataAmountInRevert() public {
-        uint32 dstChainId = 1;
-        uint256 depositAmount = 100 * 10 ** 18;
-        uint256 wrongAmount = 50 * 10 ** 18;
-
-        vault.setSiblingVault(dstChainId, address(12), address(usdc));
-
-        vm.prank(user1);
-        vault.deposit(depositAmount, user1);
-
-        // Create order with wrong amount
-        OnchainCrossChainOrder memory order =
-            _createOrder(dstChainId, wrongAmount, wrongAmount, uint32(block.timestamp + 10_000_000), 0, false);
-
-        vm.expectRevert(xYieldVault.InvalidOrderData.selector);
-        vm.prank(guardian);
-        vault.rebalance(dstChainId, depositAmount, depositAmount, 0);
+        vault.rebalance(REBALANCE_ID, dstChainId, depositAmount, depositAmount, 0);
     }
 
     function testRebalanceNotGuardianRevert() public {
@@ -343,7 +314,7 @@ contract xYieldTest is Test {
             _createOrder(dstChainId, depositAmount, depositAmount, uint32(block.timestamp + 10_000_000), 0, false);
 
         vm.expectRevert(xYieldVault.NotGuardian.selector);
-        vault.rebalance(dstChainId, depositAmount, depositAmount, 0);
+        vault.rebalance(REBALANCE_ID, dstChainId, depositAmount, depositAmount, 0);
     }
 
     function testUndoRebalance() public {
@@ -362,24 +333,13 @@ contract xYieldTest is Test {
         // Record logs to capture the orderId from Open event
         vm.recordLogs();
         vm.prank(guardian);
-        vault.rebalance(dstChainId, usdcBalance, usdcBalance, 0);
-
-        // Extract orderId from Open event
-        Vm.Log[] memory logs = vm.getRecordedLogs();
-        bytes32 orderId;
-        for (uint256 i = 0; i < logs.length; i++) {
-            if (logs[i].emitter == address(settler) && logs[i].topics[0] == IOriginSettler.Open.selector) {
-                orderId = logs[i].topics[1]; // orderId is the first indexed parameter
-                break;
-            }
-        }
+        vault.rebalance(REBALANCE_ID, dstChainId, usdcBalance, usdcBalance, 0);
 
         // Warp time to make intent deadline pass
         vm.warp(block.timestamp + 1_000_000);
 
         bytes32 expectedRequestId = keccak256("mock_request_id");
         vm.mockCall(address(reader), abi.encodeWithSelector(reader.requestRead.selector), abi.encode(expectedRequestId));
-        settler.verifyRefund(orderId);
 
         // Mock the cross-chain read to return empty result (order not filled)
         vm.mockCall(
@@ -395,7 +355,6 @@ contract xYieldTest is Test {
 
         assertTrue(vault.isActiveChain());
         assertEq(vault.virtualTotalAssets(), usdcBalance);
-        assertEq(uint8(settler.orderStatus(orderId)), uint8(5), "Order status should be REFUNDED");
         assertEq(usdc.balanceOf(address(yieldProtocol)), usdcBalance, "yieldProtocol should get the amount returned");
     }
 
@@ -415,24 +374,13 @@ contract xYieldTest is Test {
         // Record logs to capture the orderId from Open event
         vm.recordLogs();
         vm.prank(guardian);
-        vault.rebalance(dstChainId, usdcBalance, usdcBalance, 0);
-
-        // Extract orderId from Open event
-        Vm.Log[] memory logs = vm.getRecordedLogs();
-        bytes32 orderId;
-        for (uint256 i = 0; i < logs.length; i++) {
-            if (logs[i].emitter == address(settler) && logs[i].topics[0] == IOriginSettler.Open.selector) {
-                orderId = logs[i].topics[1]; // orderId is the first indexed parameter
-                break;
-            }
-        }
+        vault.rebalance(REBALANCE_ID, dstChainId, usdcBalance, usdcBalance, 0);
 
         // Warp time to make intent deadline pass
         vm.warp(block.timestamp + 1_000_000);
 
         bytes32 expectedRequestId = keccak256("mock_request_id");
         vm.mockCall(address(reader), abi.encodeWithSelector(reader.requestRead.selector), abi.encode(expectedRequestId));
-        settler.verifyRefund(orderId);
 
         // Mock the cross-chain read to return empty result (order not filled)
         vm.mockCall(
@@ -459,23 +407,25 @@ contract xYieldTest is Test {
         view
         returns (OnchainCrossChainOrder memory)
     {
-        (address siblingVault, ) = vault.siblingVaults(dstChainId);
-
-        OrderData memory orderData = OrderData({
-            sender: TypeCasts.addressToBytes32(address(vault)),
-            recipient: TypeCasts.addressToBytes32(siblingVault),
-            inputToken: TypeCasts.addressToBytes32(address(usdc)),
-            outputToken: TypeCasts.addressToBytes32(address(usdc)),
-            amountIn: amount,
-            minAmountOut: minAmountOut,
-            senderNonce: nonce,
-            originDomain: uint32(block.chainid),
-            destinationDomain: dstChainId,
-            destinationSettler: TypeCasts.addressToBytes32(T1ERC7683(address(settler)).counterpart()),
-            fillDeadline: fillDeadline,
-            closedAuction: closedAuction,
-            data: new bytes(0)
-        });
+        OrderData memory orderData;
+        {
+            (address siblingVault,) = vault.siblingVaults(dstChainId);
+            orderData = OrderData({
+                sender: TypeCasts.addressToBytes32(address(vault)),
+                recipient: TypeCasts.addressToBytes32(siblingVault),
+                inputToken: TypeCasts.addressToBytes32(address(usdc)),
+                outputToken: TypeCasts.addressToBytes32(address(usdc)),
+                amountIn: amount,
+                minAmountOut: minAmountOut,
+                senderNonce: nonce,
+                originDomain: uint32(block.chainid),
+                destinationDomain: dstChainId,
+                destinationSettler: TypeCasts.addressToBytes32(MockSpokePool(address(bridge)).counterpart()),
+                fillDeadline: fillDeadline,
+                closedAuction: closedAuction,
+                data: new bytes(0)
+            });
+        }
 
         return OnchainCrossChainOrder({
             fillDeadline: fillDeadline,
