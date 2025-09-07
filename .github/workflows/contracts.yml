@@ -38,8 +38,6 @@ jobs:
   build:
     name: build
     runs-on: "ubuntu-latest"
-    env:
-      FOUNDRY_PROFILE: "via_ir"
     steps:
       - name: "Check out the repo"
         uses: "actions/checkout@v4"
@@ -61,7 +59,6 @@ jobs:
     needs: ["lint", "build"]
     runs-on: "ubuntu-latest"
     env:
-      FOUNDRY_PROFILE: "via_ir"
       ARBITRUM_RPC: ${{ secrets.ARBITRUM_RPC }}
       ARBITRUM_BLOCK: ${{ secrets.ARBITRUM_BLOCK }}
     steps:
