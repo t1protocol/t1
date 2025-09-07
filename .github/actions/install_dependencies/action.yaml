@@ -21,4 +21,4 @@ runs:
     - name: Install Node.js dependencies
       working-directory: contracts
       shell: bash
-      run: bun install --no-optional
+      run: bun install --ignore-scripts
