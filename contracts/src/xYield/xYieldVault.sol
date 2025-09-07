@@ -277,6 +277,11 @@ contract xYieldVault is ERC4626, Ownable2Step, ReentrancyGuard, Pausable {
         emit Withdraw(_caller, _receiver, _owner, _amount, _shares);
     }
 
+    function _setActiveChain(bool _isActive) internal {
+        isActiveChain = _isActive;
+        emit ChainStatusChanged(_isActive);
+    }
+
     function totalSupply() public view virtual override(ERC20, IERC20) returns (uint256) {
         return virtualTotalSupply;
     }
@@ -287,8 +292,7 @@ contract xYieldVault is ERC4626, Ownable2Step, ReentrancyGuard, Pausable {
     }
 
     function setActiveChain(bool _isActive) external onlyGuardian {
-        isActiveChain = _isActive;
-        emit ChainStatusChanged(_isActive);
+        _setActiveChain(_isActive);
     }
 
     function setSiblingVault(uint64 _chainId, address _vault, address _underlyingErc20) external onlyOwner {
@@ -321,7 +325,7 @@ contract xYieldVault is ERC4626, Ownable2Step, ReentrancyGuard, Pausable {
         SiblingVault memory siblingVault = siblingVaults[_targetChain];
         if (siblingVault.vault == address(0)) revert InvalidChain();
 
-        isActiveChain = false;
+        _setActiveChain(false);
 
         yieldProtocol.withdraw(_amountIn, address(this), address(this));
         updateVirtualTotalAssets();
@@ -357,7 +361,7 @@ contract xYieldVault is ERC4626, Ownable2Step, ReentrancyGuard, Pausable {
         proofs[0] = proof;
         // cancel Across intent
 
-        isActiveChain = true;
+        _setActiveChain(true);
         virtualTotalAssets = ERC20(asset()).balanceOf(address(this));
 
         (OrderData memory orderData) = abi.decode(order.orderData, (OrderData));
