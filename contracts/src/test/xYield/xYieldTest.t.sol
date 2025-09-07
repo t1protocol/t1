@@ -62,7 +62,10 @@ contract MockSpokePool {
         uint32,
         uint32,
         bytes calldata
-    ) external payable {}
+    )
+        external
+        payable
+    { }
 
     function counterpart() external pure returns (address) {
         return address(0x1234);
@@ -406,7 +409,7 @@ contract xYieldTest is Test {
     {
         OrderData memory orderData;
         {
-            (address siblingVault, ) = vault.siblingVaults(dstChainId);
+            (address siblingVault,) = vault.siblingVaults(dstChainId);
             orderData = OrderData({
                 sender: TypeCasts.addressToBytes32(address(vault)),
                 recipient: TypeCasts.addressToBytes32(siblingVault),

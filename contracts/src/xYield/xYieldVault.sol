@@ -374,12 +374,7 @@ contract xYieldVault is ERC4626, Ownable2Step, ReentrancyGuard, Pausable {
         _unpause();
     }
 
-    function handleV3AcrossMessage(
-        address tokenSent,
-        uint256 amount,
-        address relayer,
-        bytes memory message
-    ) external {
+    function handleV3AcrossMessage(address tokenSent, uint256 amount, address relayer, bytes memory message) external {
         uint256 id = abi.decode(message, (uint256));
         emit Rebalanced(id, amount);
     }
