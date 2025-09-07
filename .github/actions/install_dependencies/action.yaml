@@ -22,3 +22,5 @@ runs:
       working-directory: contracts
       shell: bash
       run: bun install --ignore-scripts
+
+
