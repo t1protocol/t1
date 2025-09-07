@@ -62,6 +62,7 @@ contract xYieldTest is Test {
     address public prover = address(0x4);
 
     uint256 public constant INITIAL_DEPOSIT = 1000 * 10 ** 18;
+    uint256 public constant REBALANCE_ID = 1;
 
     address[] emptyAddresses;
     uint256[] emptyAmounts;
@@ -227,7 +228,7 @@ contract xYieldTest is Test {
             _createOrder(dstChainId, depositAmount, depositAmount, uint32(block.timestamp + 10_000_000), 0, false);
 
         vm.prank(guardian);
-        vault.rebalance(dstChainId, depositAmount, depositAmount, 0);
+        vault.rebalance(REBALANCE_ID, dstChainId, depositAmount, depositAmount, 0);
 
         // Check that Open event was emitted
         Vm.Log[] memory logs = vm.getRecordedLogs();
@@ -259,7 +260,7 @@ contract xYieldTest is Test {
 
         vm.expectRevert(xYieldVault.ZeroAmount.selector);
         vm.prank(guardian);
-        vault.rebalance(dstChainId, 0, 0, 0);
+        vault.rebalance(REBALANCE_ID, dstChainId, 0, 0, 0);
     }
 
     function testRebalanceWithdrawOnInactiveChainRevert() public {
@@ -279,7 +280,7 @@ contract xYieldTest is Test {
 
         vm.expectRevert(xYieldVault.WithdrawOnInactiveChain.selector);
         vm.prank(guardian);
-        vault.rebalance(dstChainId, depositAmount, depositAmount, 0);
+        vault.rebalance(REBALANCE_ID, dstChainId, depositAmount, depositAmount, 0);
     }
 
     function testRebalanceInvalidChainRevert() public {
@@ -294,7 +295,7 @@ contract xYieldTest is Test {
 
         vm.expectRevert(xYieldVault.InvalidChain.selector);
         vm.prank(guardian);
-        vault.rebalance(dstChainId, depositAmount, depositAmount, 0);
+        vault.rebalance(REBALANCE_ID, dstChainId, depositAmount, depositAmount, 0);
     }
 
     function testRebalanceInvalidOrderDataDestinationDomainRevert() public {
@@ -313,7 +314,7 @@ contract xYieldTest is Test {
 
         vm.expectRevert(xYieldVault.InvalidOrderData.selector);
         vm.prank(guardian);
-        vault.rebalance(dstChainId, depositAmount, depositAmount, 0);
+        vault.rebalance(REBALANCE_ID, dstChainId, depositAmount, depositAmount, 0);
     }
 
     function testRebalanceInvalidOrderDataAmountInRevert() public {
@@ -332,7 +333,7 @@ contract xYieldTest is Test {
 
         vm.expectRevert(xYieldVault.InvalidOrderData.selector);
         vm.prank(guardian);
-        vault.rebalance(dstChainId, depositAmount, depositAmount, 0);
+        vault.rebalance(REBALANCE_ID, dstChainId, depositAmount, depositAmount, 0);
     }
 
     function testRebalanceNotGuardianRevert() public {
@@ -343,7 +344,7 @@ contract xYieldTest is Test {
             _createOrder(dstChainId, depositAmount, depositAmount, uint32(block.timestamp + 10_000_000), 0, false);
 
         vm.expectRevert(xYieldVault.NotGuardian.selector);
-        vault.rebalance(dstChainId, depositAmount, depositAmount, 0);
+        vault.rebalance(REBALANCE_ID, dstChainId, depositAmount, depositAmount, 0);
     }
 
     function testUndoRebalance() public {
@@ -362,7 +363,7 @@ contract xYieldTest is Test {
         // Record logs to capture the orderId from Open event
         vm.recordLogs();
         vm.prank(guardian);
-        vault.rebalance(dstChainId, usdcBalance, usdcBalance, 0);
+        vault.rebalance(REBALANCE_ID, dstChainId, usdcBalance, usdcBalance, 0);
 
         // Extract orderId from Open event
         Vm.Log[] memory logs = vm.getRecordedLogs();
@@ -415,7 +416,7 @@ contract xYieldTest is Test {
         // Record logs to capture the orderId from Open event
         vm.recordLogs();
         vm.prank(guardian);
-        vault.rebalance(dstChainId, usdcBalance, usdcBalance, 0);
+        vault.rebalance(REBALANCE_ID, dstChainId, usdcBalance, usdcBalance, 0);
 
         // Extract orderId from Open event
         Vm.Log[] memory logs = vm.getRecordedLogs();
