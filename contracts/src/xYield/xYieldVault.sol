@@ -350,26 +350,6 @@ contract xYieldVault is ERC4626, Ownable2Step, ReentrancyGuard, Pausable {
         emit RebalanceInitiated(_id, _targetChain, _amountIn);
     }
 
-    /// @notice Wrapper around the settler contract `refund` function to be called after a PoR
-    /// has successfully been created with calling `verifyRefund` on settler contact
-    /// @dev You ALWAYS need to unse this function instead of regular `refund` on settler contract
-    /// as extra logic needs to be ran atomically.
-    function undoRebalance(OnchainCrossChainOrder calldata order, bytes calldata proof) external onlyGuardian {
-        OnchainCrossChainOrder[] memory orders = new OnchainCrossChainOrder[](1);
-        orders[0] = order;
-        bytes[] memory proofs = new bytes[](1);
-        proofs[0] = proof;
-        // cancel Across intent
-
-        _setActiveChain(true);
-        virtualTotalAssets = ERC20(asset()).balanceOf(address(this));
-
-        (OrderData memory orderData) = abi.decode(order.orderData, (OrderData));
-        yieldProtocol.deposit(orderData.amountIn, address(this));
-
-        emit RebalanceUndone(orderData.destinationDomain, orderData.amountIn);
-    }
-
     function pause() external onlyOwner {
         _pause();
     }
