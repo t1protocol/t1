@@ -1,31 +1,34 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.30;
 
-import { ERC4626 } from "@openzeppelin/contracts/token/ERC20/extensions/ERC4626.sol";
-import { IERC4626 } from "@openzeppelin/contracts/interfaces/IERC4626.sol";
-import { IERC20 } from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
-import { SafeERC20 } from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
+import { V3SpokePoolInterface } from "@across-protocol/contracts/contracts/interfaces/V3SpokePoolInterface.sol";
 import { ERC20 } from "@openzeppelin/contracts/token/ERC20/ERC20.sol";
+import { ERC4626 } from "@openzeppelin/contracts/token/ERC20/extensions/ERC4626.sol";
+import { IERC20 } from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
+import { IERC4626 } from "@openzeppelin/contracts/interfaces/IERC4626.sol";
 import { Math } from "@openzeppelin/contracts/utils/math/Math.sol";
-import { Ownable2Step } from "@openzeppelin/contracts/access/Ownable2Step.sol";
-import { ReentrancyGuard } from "@openzeppelin/contracts/security/ReentrancyGuard.sol";
-import { Pausable } from "@openzeppelin/contracts/security/Pausable.sol";
-import { TypeCasts } from "@hyperlane-xyz/libs/TypeCasts.sol";
 import { OnchainCrossChainOrder } from "../interfaces/IERC7683.sol";
 import { OrderData, OrderEncoder } from "../libraries/7683/OrderEncoder.sol";
+import { Ownable2Step } from "@openzeppelin/contracts/access/Ownable2Step.sol";
+import { Pausable } from "@openzeppelin/contracts/security/Pausable.sol";
+import { ReentrancyGuard } from "@openzeppelin/contracts/security/ReentrancyGuard.sol";
+import { SafeERC20 } from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import { T1ERC7683 } from "../7683/T1ERC7683.sol";
+import { TypeCasts } from "@hyperlane-xyz/libs/TypeCasts.sol";
 
 contract xYieldVault is ERC4626, Ownable2Step, ReentrancyGuard, Pausable {
     using SafeERC20 for IERC20;
     using Math for uint256;
 
     address public guardian;
+
     IERC4626 public yieldProtocol;
-    T1ERC7683 public settler; // ERC 7683 compliant settler contract
+    V3SpokePoolInterface public acrossSpokePool;
 
     uint256 public virtualTotalAssets;
     uint256 public virtualTotalSupply;
     bool public isActiveChain;
+    uint256 public rebalanceFillTTL = 2 minutes;
 
     enum TxType {
         Deposit,
@@ -38,7 +41,12 @@ contract xYieldVault is ERC4626, Ownable2Step, ReentrancyGuard, Pausable {
         TxType txType;
     }
 
-    mapping(uint64 => address) public siblingVaults;
+    struct SiblingVault {
+        address vault;
+        address underlyingErc20;
+    }
+
+    mapping(uint64 => SiblingVault) public siblingVaults;
 
     error NotGuardian();
     error ZeroAmount();
@@ -48,13 +56,15 @@ contract xYieldVault is ERC4626, Ownable2Step, ReentrancyGuard, Pausable {
     error NotImplemented();
     error LengthMismatch();
     error InvalidOrderData();
+    error NoAddress();
 
     event DepositRemote(address indexed sender, address indexed owner, uint256 assets, uint256 shares, uint64 chainId);
     event WithdrawRemote(address indexed sender, address indexed owner, uint256 assets, uint256 shares);
     event TotalSupplyUpdated(uint256 newVirtualTotalSupply);
     event ChainStatusChanged(bool isActive);
     event SiblingVaultSet(uint64 chainId, address vault);
-    event Rebalanced(uint256 targetChain, uint256 amount);
+    event RebalanceInitiated(uint256 indexed id, uint256 targetChain, uint256 amount);
+    event Rebalanced(uint256 indexed id, uint256 amount);
     event RebalanceUndone(uint256 targetChain, uint256 amount);
 
     modifier onlyGuardian() {
@@ -68,20 +78,20 @@ contract xYieldVault is ERC4626, Ownable2Step, ReentrancyGuard, Pausable {
         string memory _name,
         string memory _symbol,
         address _yieldProtocol,
-        address _settler
+        address _acrossSpokePool
     )
         ERC4626(_underlying)
         ERC20(_name, _symbol)
     {
         guardian = _guardian;
         yieldProtocol = IERC4626(_yieldProtocol);
-        settler = T1ERC7683(_settler);
+        acrossSpokePool = V3SpokePoolInterface(_acrossSpokePool);
 
         if (_yieldProtocol != address(0)) {
             _underlying.approve(_yieldProtocol, type(uint256).max);
         }
-        if (_settler != address(0)) {
-            _underlying.approve(_settler, type(uint256).max);
+        if (_acrossSpokePool != address(0)) {
+            _underlying.approve(_acrossSpokePool, type(uint256).max);
         }
     }
 
@@ -107,7 +117,7 @@ contract xYieldVault is ERC4626, Ownable2Step, ReentrancyGuard, Pausable {
     {
         if (_amount == 0) revert ZeroAmount();
         if (!isActiveChain) revert DepositOnInactiveChain();
-        if (siblingVaults[_chainId] == address(0)) revert InvalidChain();
+        if (siblingVaults[_chainId].vault == address(0)) revert InvalidChain();
         // deposit assets into underlying
         // credit user with virtual deposit
         // render virtual deposits into real deposits when updateTotals is called
@@ -287,8 +297,11 @@ contract xYieldVault is ERC4626, Ownable2Step, ReentrancyGuard, Pausable {
         _setActiveChain(_isActive);
     }
 
-    function setSiblingVault(uint64 _chainId, address _vault) external onlyOwner {
-        siblingVaults[_chainId] = _vault;
+    function setSiblingVault(uint64 _chainId, address _vault, address _underlyingErc20) external onlyOwner {
+        if (_vault == address(0) || _underlyingErc20 == address(0)) revert NoAddress();
+
+        siblingVaults[_chainId].vault = _vault;
+        siblingVaults[_chainId].underlyingErc20 = _underlyingErc20;
         emit SiblingVaultSet(_chainId, _vault);
     }
 
@@ -300,55 +313,49 @@ contract xYieldVault is ERC4626, Ownable2Step, ReentrancyGuard, Pausable {
         yieldProtocol = IERC4626(_newYieldProtocol);
     }
 
-    function setBridgeSettler(address _newSettler) external onlyOwner {
-        settler = T1ERC7683(_newSettler);
+    function setRebalanceFillTTL(uint256 newTTL) external onlyOwner {
+        rebalanceFillTTL = newTTL;
     }
 
     function rebalance(
+        uint256 _id,
         uint32 _targetChain,
-        uint256 _amount,
-        OnchainCrossChainOrder calldata order
+        uint256 _amountIn,
+        uint256 _amountOut,
+        uint32 _acrossApiQuoteTimestamp
     )
         external
         onlyGuardian
     {
-        if (_amount == 0) revert ZeroAmount();
+        if (_amountIn == 0) revert ZeroAmount();
         if (!isActiveChain) revert WithdrawOnInactiveChain();
 
-        address siblingVault = siblingVaults[_targetChain];
-        if (siblingVault == address(0)) revert InvalidChain();
-
-        (OrderData memory orderData) = abi.decode(order.orderData, (OrderData));
-        if (_targetChain != orderData.destinationDomain) revert InvalidOrderData();
-        if (_amount != orderData.amountIn) revert InvalidOrderData();
+        SiblingVault memory siblingVault = siblingVaults[_targetChain];
+        if (siblingVault.vault == address(0)) revert InvalidChain();
 
         _setActiveChain(false);
 
-        yieldProtocol.withdraw(_amount, address(this), address(this));
+        yieldProtocol.withdraw(_amountIn, address(this), address(this));
         updateVirtualTotalAssets();
-        settler.open(order);
 
-        emit Rebalanced(_targetChain, _amount);
-    }
+        bytes memory message = abi.encode(_id);
 
-    /// @notice Wrapper around the settler contract `refund` function to be called after a PoR
-    /// has successfully been created with calling `verifyRefund` on settler contact
-    /// @dev You ALWAYS need to unse this function instead of regular `refund` on settler contract
-    /// as extra logic needs to be ran atomically.
-    function undoRebalance(OnchainCrossChainOrder calldata order, bytes calldata proof) external onlyGuardian {
-        OnchainCrossChainOrder[] memory orders = new OnchainCrossChainOrder[](1);
-        orders[0] = order;
-        bytes[] memory proofs = new bytes[](1);
-        proofs[0] = proof;
-        settler.refund(orders, proofs);
+        acrossSpokePool.depositV3(
+            address(this),
+            siblingVault.vault,
+            asset(),
+            siblingVault.underlyingErc20,
+            _amountIn,
+            _amountOut,
+            _targetChain,
+            address(0),
+            _acrossApiQuoteTimestamp,
+            uint32(block.timestamp + rebalanceFillTTL),
+            0,
+            message
+        );
 
-        _setActiveChain(true);
-        virtualTotalAssets = ERC20(asset()).balanceOf(address(this));
-
-        (OrderData memory orderData) = abi.decode(order.orderData, (OrderData));
-        yieldProtocol.deposit(orderData.amountIn, address(this));
-
-        emit RebalanceUndone(orderData.destinationDomain, orderData.amountIn);
+        emit RebalanceInitiated(_id, _targetChain, _amountIn);
     }
 
     function pause() external onlyOwner {
@@ -357,5 +364,10 @@ contract xYieldVault is ERC4626, Ownable2Step, ReentrancyGuard, Pausable {
 
     function unpause() external onlyOwner {
         _unpause();
+    }
+
+    function handleV3AcrossMessage(address tokenSent, uint256 amount, address relayer, bytes memory message) external {
+        uint256 id = abi.decode(message, (uint256));
+        emit Rebalanced(id, amount);
     }
 }

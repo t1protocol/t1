@@ -4,6 +4,12 @@ description: 'Install dependencies'
 runs:
   using: composite
   steps:
+    - name: Install system dependencies
+      shell: bash
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y libudev-dev libusb-1.0-0-dev
+
     - name: Install Foundry
       uses: foundry-rs/foundry-toolchain@v1
 
@@ -15,4 +21,6 @@ runs:
     - name: Install Node.js dependencies
       working-directory: contracts
       shell: bash
-      run: bun install
+      run: bun install --ignore-scripts
+
+

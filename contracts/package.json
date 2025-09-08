@@ -14,6 +14,7 @@
   },
   "homepage": "https://github.com/t1protocol/t1/blob/canary/contracts/README.md",
   "dependencies": {
+    "@across-protocol/contracts": "^4.1.5",
     "@hyperlane-xyz/core": "5.4.1",
     "@openzeppelin/contracts": "4.9.3",
     "@openzeppelin/contracts-upgradeable": "4.9.3",
@@ -43,12 +44,12 @@
     "format": "forge fmt",
     "clean": "rm -rf cache out artifacts coverage lcov.info",
     "commit": "cd ../ && bun run commit",
-    "build": "forge build",
+    "build": "forge build --via-ir",
     "lint": "bun run lint:sol && bun run prettier:check",
     "lint:sol": "forge fmt --check && bun solhint \"{script,src,test}/**/*.sol\"",
     "prettier:check": "prettier --check \"**/*.{json,md,yml}\" --ignore-path \".prettierignore\"",
     "prettier:write": "prettier --write \"**/*.{json,md,yml}\" --ignore-path \".prettierignore\"",
-    "test": "forge test",
+    "test": "forge test --via-ir",
     "test:coverage": "forge coverage --no-match-coverage '(script|test|mocks|ZkEvmVerifierV1|WrappedEther)'",
     "test:coverage:report": "forge coverage --no-match-coverage '(script|test|mocks|ZkEvmVerifierV1|WrappedEther)' --report lcov && genhtml lcov.info --branch-coverage --output-dir coverage --ignore-errors inconsistent",
     "prepare": "husky"

@@ -5,6 +5,7 @@ coverage
 node_modules
 out
 artifacts
+lib
 
 # files
 *.env
