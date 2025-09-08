@@ -28,6 +28,7 @@ contract xYieldVault is ERC4626, Ownable2Step, ReentrancyGuard, Pausable {
     uint256 public virtualTotalAssets;
     uint256 public virtualTotalSupply;
     bool public isActiveChain;
+    uint256 public rebalanceFillTTL = 2 minutes;
 
     enum TxType {
         Deposit,
@@ -309,6 +310,10 @@ contract xYieldVault is ERC4626, Ownable2Step, ReentrancyGuard, Pausable {
         yieldProtocol = IERC4626(_newYieldProtocol);
     }
 
+    function setRebalanceFillTTL(uint256 newTTL) external onlyOwner {
+        rebalanceFillTTL = newTTL;
+    }
+
     function rebalance(
         uint256 _id,
         uint32 _targetChain,
@@ -342,7 +347,7 @@ contract xYieldVault is ERC4626, Ownable2Step, ReentrancyGuard, Pausable {
             _targetChain,
             address(0),
             _acrossApiQuoteTimestamp,
-            uint32(block.timestamp + 2 minutes),
+            uint32(block.timestamp + rebalanceFillTTL),
             0,
             message
         );
