@@ -454,6 +454,22 @@ contract xYieldTest is Test {
         vault.undoRebalance(order, proof);
     }
 
+    function testReDepositIdleAssets() public {
+        uint256 idleAmount = 50 * 10 ** 18;
+        usdc.mint(address(vault), idleAmount);
+
+        vault.reDepositIdleAssets();
+
+        assertEq(usdc.balanceOf(address(vault)), 0);
+        assertEq(yieldProtocol.balanceOf(address(vault)), idleAmount);
+    }
+
+    function testReDepositIdleAssetsZeroAmountRevert() public {
+        // No USDC is available on vault
+        vm.expectRevert(xYieldVault.ZeroAmount.selector);
+        vault.reDepositIdleAssets();
+    }
+
     function _createOrder(
         uint32 dstChainId,
         uint256 amount,
