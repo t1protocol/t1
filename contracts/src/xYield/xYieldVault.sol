@@ -338,7 +338,7 @@ contract xYieldVault is ERC4626, Ownable2Step, ReentrancyGuard, Pausable {
         bytes memory message = abi.encode(_id);
 
         acrossSpokePool.depositV3(
-            guardian,
+            address(this),
             siblingVault.vault,
             asset(),
             siblingVault.underlyingErc20,
