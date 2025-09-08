@@ -56,7 +56,7 @@ contract xYieldVault is ERC4626, Ownable2Step, ReentrancyGuard, Pausable {
     error NotImplemented();
     error LengthMismatch();
     error InvalidOrderData();
-    error NoVaultAddress();
+    error NoAddress();
 
     event DepositRemote(address indexed sender, address indexed owner, uint256 assets, uint256 shares, uint64 chainId);
     event WithdrawRemote(address indexed sender, address indexed owner, uint256 assets, uint256 shares);
@@ -298,7 +298,7 @@ contract xYieldVault is ERC4626, Ownable2Step, ReentrancyGuard, Pausable {
     }
 
     function setSiblingVault(uint64 _chainId, address _vault, address _underlyingErc20) external onlyOwner {
-        if (_vault == address(0)) revert NoVaultAddress();
+        if (_vault == address(0) || _underlyingErc20 == address(0)) revert NoAddress();
 
         siblingVaults[_chainId].vault = _vault;
         siblingVaults[_chainId].underlyingErc20 = _underlyingErc20;
