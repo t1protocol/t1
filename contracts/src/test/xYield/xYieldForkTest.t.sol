@@ -26,7 +26,6 @@ contract xYieldForkTest is Test {
     // address internal usdcMasterMinter = 0x8aFf09e2259cacbF4Fc4e3E53F3bf799EfEEab36;
     USDC internal usdcArbitrum = USDC(0xaf88d065e77c8cC2239327C5EDb3A432268e5831);
     address internal usdcBase = 0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913;
-    address mockSettler = address(0x98798);
     address public acrossSpokePoolArbitrum = 0xe35e9842fceaCA96570B734083f4a58e8F7C5f2A;
 
     address[] emptyAddresses;
@@ -51,7 +50,6 @@ contract xYieldForkTest is Test {
             "xYieldArbitrum USDC",
             "xyUSDCArb",
             eVaultArbitrumUsdcProxyAddress,
-            mockSettler,
             acrossSpokePoolArbitrum
         );
         xYieldBase = new xYieldVault(
@@ -60,13 +58,12 @@ contract xYieldForkTest is Test {
             "xYieldBase USDC",
             "xyUSDCBase",
             eVaultArbitrumUsdcProxyAddress,
-            mockSettler,
             acrossSpokePoolArbitrum
         );
 
         vm.prank(guardian);
         xYieldArbitrum.setActiveChain(true);
-        xYieldArbitrum.setSiblingVault(baseChainId, address(xYieldBase));
+        xYieldArbitrum.setSiblingVault(baseChainId, address(xYieldBase), address(usdcArbitrum));
 
         vm.startPrank(alice);
         usdcArbitrum.transfer(bob, 100e6);

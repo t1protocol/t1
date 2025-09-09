@@ -8,23 +8,22 @@ import { xYieldVault } from "../../src/xYield/xYieldVault.sol";
 import { T1Constants } from "../../src/libraries/constants/T1Constants.sol";
 
 contract DeployBasexYieldVault is DeploymentUtils {
-    function deploy() external {
+    function run() external {
         vm.createSelectFork(vm.rpcUrl("base"));
         logStart("DeployxYieldVault to Base");
 
         uint256 deployerPk = vm.envUint("DEPLOYER_PRIVATE_KEY");
-        address underlyingToken = vm.envAddress("BASE_UNDERLYING_TOKEN_ADDR");
-        address guardian = vm.envAddress("BASE_XYIELD_GUARDIAN_ADDR");
+        address underlyingToken = vm.envAddress("BASE_USDC_ADDR");
+        address guardian = vm.envAddress("XYIELD_GUARDIAN_ADDR");
         address yieldProtocol = vm.envAddress("BASE_YIELD_PROTOCOL_ADDR");
         string memory name = vm.envString("BASE_XYIELD_VAULT_NAME");
         string memory symbol = vm.envString("BASE_XYIELD_VAULT_SYMBOL");
-        address settler = vm.envAddress("BASE_SETTLER_ADDR");
         address acrossSpokePool = vm.envAddress("BASE_ACROSS_SPOKE_POOL_ADDR");
 
         vm.startBroadcast(deployerPk);
 
         xYieldVault vault =
-            new xYieldVault(IERC20(underlyingToken), guardian, name, symbol, yieldProtocol, settler, acrossSpokePool);
+            new xYieldVault(IERC20(underlyingToken), guardian, name, symbol, yieldProtocol, acrossSpokePool);
 
         vm.stopBroadcast();
 

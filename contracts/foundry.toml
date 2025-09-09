@@ -32,6 +32,7 @@
 
 [profile.ci]
   fuzz_runs = 1000
+  via_ir = true
 
 [fmt]
   bracket_spacing = true
@@ -46,7 +47,7 @@
 [rpc_endpoints]
   arbitrum = "${ARBITRUM_RPC}"
   avalanche = "https://avalanche-mainnet.infura.io/v3/${API_KEY_INFURA}"
-  base = "https://mainnet.base.org"
+  base = "${BASE_RPC}"
   bnb_smart_chain = "https://bsc-dataseed.binance.org"
   gnosis_chain = "https://rpc.gnosischain.com"
   goerli = "https://goerli.infura.io/v3/${API_KEY_INFURA}"
