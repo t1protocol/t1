@@ -8,20 +8,20 @@ import { IERC20 } from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import { xYieldVault } from "../../../../src/xYield/xYieldVault.sol";
 
 contract DepositToXYield is Script {
-  uint256 deployerPk = vm.envUint("DEPLOYER_PRIVATE_KEY");
-  address underlyingToken = vm.envAddress("ARB_USDC_ADDR");
-  address xYieldVaultAddress = vm.envAddress("ARB_XYIELD_VAULT_ADDR");
+    uint256 deployerPk = vm.envUint("DEPLOYER_PRIVATE_KEY");
+    address underlyingToken = vm.envAddress("ARB_USDC_ADDR");
+    address xYieldVaultAddress = vm.envAddress("ARB_XYIELD_VAULT_ADDR");
 
-  function run() external {
-    vm.createSelectFork(vm.rpcUrl("arbitrum"));
-    vm.startBroadcast(deployerPk);
-    address deployer = vm.addr(deployerPk);
-    xYieldVault xYield = xYieldVault(xYieldVaultAddress);
+    function run() external {
+        vm.createSelectFork(vm.rpcUrl("arbitrum"));
+        vm.startBroadcast(deployerPk);
+        address deployer = vm.addr(deployerPk);
+        xYieldVault xYield = xYieldVault(xYieldVaultAddress);
 
-    uint256 depositAmount = 2e6; // 1 USDC
-    IERC20(underlyingToken).approve(address(xYield), depositAmount);
-    uint256 aliceShares = xYield.deposit(depositAmount, deployer);
+        uint256 depositAmount = 2e6; // 1 USDC
+        IERC20(underlyingToken).approve(address(xYield), depositAmount);
+        uint256 aliceShares = xYield.deposit(depositAmount, deployer);
 
-    vm.stopBroadcast();
-  }
+        vm.stopBroadcast();
+    }
 }
