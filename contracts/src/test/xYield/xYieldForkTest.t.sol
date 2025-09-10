@@ -25,7 +25,8 @@ contract xYieldForkTest is Test {
     address internal bob = address(0xbbb);
     // address internal usdcMasterMinter = 0x8aFf09e2259cacbF4Fc4e3E53F3bf799EfEEab36;
     USDC internal usdcArbitrum = USDC(0xaf88d065e77c8cC2239327C5EDb3A432268e5831);
-    address mockSettler = address(0x98798);
+    address internal usdcBase = 0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913;
+    address public acrossSpokePoolArbitrum = 0xe35e9842fceaCA96570B734083f4a58e8F7C5f2A;
 
     address[] emptyAddresses;
     uint256[] emptyAmounts;
@@ -49,7 +50,7 @@ contract xYieldForkTest is Test {
             "xYieldArbitrum USDC",
             "xyUSDCArb",
             eVaultArbitrumUsdcProxyAddress,
-            mockSettler
+            acrossSpokePoolArbitrum
         );
         xYieldBase = new xYieldVault(
             IERC20(address(usdcArbitrum)),
@@ -57,7 +58,7 @@ contract xYieldForkTest is Test {
             "xYieldBase USDC",
             "xyUSDCBase",
             eVaultArbitrumUsdcProxyAddress,
-            mockSettler
+            acrossSpokePoolArbitrum
         );
 
         vm.prank(guardian);
@@ -350,7 +351,17 @@ contract xYieldForkTest is Test {
 
         // Mock the remote withdrawal call that would happen on Base
         vm.startPrank(guardian);
-        xYieldArbitrum.withdrawFrom(withdrawAmount, bob, baseChainId);
+        xYieldArbitrum.withdrawFrom(
+            withdrawAmount,
+            bob,
+            baseChainId,
+            address(usdcBase),
+            withdrawAmount * 90 / 100,
+            address(0),
+            uint32(block.timestamp),
+            uint32(block.timestamp + 1800),
+            0
+        );
         vm.stopPrank();
 
         // Update totals to reflect the withdrawal

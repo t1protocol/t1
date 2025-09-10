@@ -18,11 +18,12 @@ contract DeployArbxYieldVault is DeploymentUtils {
         address yieldProtocol = vm.envAddress("ARB_YIELD_PROTOCOL_ADDR");
         string memory name = vm.envString("ARB_XYIELD_VAULT_NAME");
         string memory symbol = vm.envString("ARB_XYIELD_VAULT_SYMBOL");
-        address settler = vm.envAddress("ARB_SETTLER_ADDR");
+        address acrossSpokePool = vm.envAddress("ARB_ACROSS_SPOKE_POOL_ADDR");
 
         vm.startBroadcast(deployerPk);
 
-        xYieldVault vault = new xYieldVault(IERC20(underlyingToken), guardian, name, symbol, yieldProtocol, settler);
+        xYieldVault vault =
+            new xYieldVault(IERC20(underlyingToken), guardian, name, symbol, yieldProtocol, acrossSpokePool);
 
         vm.stopBroadcast();
 

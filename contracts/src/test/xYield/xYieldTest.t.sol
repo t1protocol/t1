@@ -83,6 +83,7 @@ contract xYieldTest is Test {
     address public user1 = address(0x2);
     address public user2 = address(0x3);
     address public prover = address(0x4);
+    address public acrossSpokePool = address(0x5);
 
     uint256 public constant INITIAL_DEPOSIT = 1000 * 10 ** 18;
     uint256 public constant REBALANCE_ID = 1;
@@ -315,6 +316,33 @@ contract xYieldTest is Test {
 
         vm.expectRevert(xYieldVault.NotGuardian.selector);
         vault.rebalance(REBALANCE_ID, dstChainId, depositAmount, depositAmount, 0);
+    }
+
+    function testReDepositIdleAssets() public {
+        uint256 idleAmount = 50 * 10 ** 18;
+        usdc.mint(address(vault), idleAmount);
+
+        vm.prank(guardian);
+        vault.reDepositIdleAssets();
+
+        assertEq(usdc.balanceOf(address(vault)), 0);
+        assertEq(yieldProtocol.balanceOf(address(vault)), idleAmount);
+    }
+
+    function testReDepositIdleAssetsZeroAmountRevert() public {
+        vm.prank(guardian);
+        // No USDC is available on vault
+        vm.expectRevert(xYieldVault.ZeroAmount.selector);
+        vault.reDepositIdleAssets();
+    }
+
+    function testReDepositIdleAssetsNotGuardianRevert() public {
+        uint256 idleAmount = 50 * 10 ** 18;
+        usdc.mint(address(vault), idleAmount);
+
+        vm.expectRevert(xYieldVault.NotGuardian.selector);
+        vm.prank(user1);
+        vault.reDepositIdleAssets();
     }
 
     function _createOrder(
