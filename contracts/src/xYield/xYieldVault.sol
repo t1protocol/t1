@@ -129,7 +129,7 @@ contract xYieldVault is ERC4626, Ownable2Step, ReentrancyGuard, Pausable {
         _depositFrom(msg.sender, _receiver, _amount, shares, _chainId);
     }
 
-    function reDepositIdleAssets() external {
+    function reDepositIdleAssets() external onlyGuardian {
         uint256 idleBalance = IERC20(asset()).balanceOf(address(this));
         if (idleBalance == 0) revert ZeroAmount();
         yieldProtocol.deposit(idleBalance, address(this));

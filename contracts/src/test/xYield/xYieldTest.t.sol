@@ -322,6 +322,7 @@ contract xYieldTest is Test {
         uint256 idleAmount = 50 * 10 ** 18;
         usdc.mint(address(vault), idleAmount);
 
+        vm.prank(guardian);
         vault.reDepositIdleAssets();
 
         assertEq(usdc.balanceOf(address(vault)), 0);
@@ -329,8 +330,18 @@ contract xYieldTest is Test {
     }
 
     function testReDepositIdleAssetsZeroAmountRevert() public {
+        vm.prank(guardian);
         // No USDC is available on vault
         vm.expectRevert(xYieldVault.ZeroAmount.selector);
+        vault.reDepositIdleAssets();
+    }
+
+    function testReDepositIdleAssetsNotGuardianRevert() public {
+        uint256 idleAmount = 50 * 10 ** 18;
+        usdc.mint(address(vault), idleAmount);
+
+        vm.expectRevert(xYieldVault.NotGuardian.selector);
+        vm.prank(user1);
         vault.reDepositIdleAssets();
     }
 
