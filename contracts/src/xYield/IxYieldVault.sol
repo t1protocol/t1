@@ -76,7 +76,8 @@ interface IxYieldVault {
         uint256 _amountIn,
         uint256 _amountOut,
         uint32 _acrossApiQuoteTimestamp
-    ) external;
+    )
+        external;
     function rebalanceFillTTL() external view returns (uint256);
     function redeem(uint256 _shares, address _receiver, address _owner) external returns (uint256);
     function renounceOwnership() external;
@@ -107,6 +108,8 @@ interface IxYieldVault {
         uint32 quoteTimestamp,
         uint32 fillDeadline,
         uint32 exclusivityParameter
-    ) external returns (uint256);
+    )
+        external
+        returns (uint256);
     function yieldProtocol() external view returns (address);
 }

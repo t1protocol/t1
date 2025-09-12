@@ -273,9 +273,7 @@ contract xYieldForkTest is Test {
         vm.stopPrank();
 
         assertEq(
-            xYieldArbitrum.totalSupply(),
-            totalSharesGlobal,
-            "Virtual total supply should match the global total shares"
+            xYieldArbitrum.totalSupply(), totalSharesGlobal, "Virtual total supply should match the global total shares"
         );
 
         uint256 bobRemoteShares = xYieldBase.balanceOf(bob);
@@ -331,9 +329,7 @@ contract xYieldForkTest is Test {
 
         // Verify initial state
         assertEq(
-            xYieldArbitrum.totalSupply(),
-            totalSharesGlobal,
-            "Initial virtual total supply should match global total"
+            xYieldArbitrum.totalSupply(), totalSharesGlobal, "Initial virtual total supply should match global total"
         );
         assertEq(xYieldBase.balanceOf(bob), bobSharesRemote, "Bob should have shares on Base");
 
