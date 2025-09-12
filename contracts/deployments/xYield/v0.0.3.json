@@ -1,0 +1,25 @@
+{
+  "metadata": {
+    "version": "v0.0.3",
+    "date": "2025-09-12",
+    "by": "KSS",
+    "from_machine": "xYield03",
+    "from_branch": "feat/xyield/finalize-rebalance",
+    "from_commit": "590091ab199c15fd7990b8da97b2bb73528cec91"
+  },
+  "addresses": {
+    "arbitrum": {
+      "xYieldVault": "0xc69687759A9726244A7c5Ff21A2183954729C026",
+      "guardian": "0xB458Ff684cCEDb45Be3a41584B7a25fD5FCcB10F",
+      "usdc": "0xaf88d065e77c8cC2239327C5EDb3A432268e5831",
+      "eulerUsdcVault": "0x0a1eCC5Fe8C9be3C809844fcBe615B46A869b899"
+    },
+    "base": {
+      "xYieldVault": "0x8f7609A3027288A8bFC30FbF30246F0Ed8E82ec2",
+      "guardian": "0xB458Ff684cCEDb45Be3a41584B7a25fD5FCcB10F",
+      "usdc": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
+      "eulerUsdcVault": "0x0A1a3b5f2041F33522C4efc754a7D096f880eE16"
+    },
+    "deployerAddress": "0x8764BD4c58cc71bEe12C36deA228fd22a1B2723C"
+  }
+}
