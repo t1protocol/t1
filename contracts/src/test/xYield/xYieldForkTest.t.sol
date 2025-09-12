@@ -195,9 +195,6 @@ contract xYieldForkTest is Test {
         assertEq(aliceXyusdBalanceBefore, aliceXyusdBalanceAfter, "Alice was not minted any share tokens on this chain");
         assertEq(0, aliceXyusdBalanceAfter, "Alice does not own any share tokens");
 
-        uint256 aliceAssets = xYieldArbitrum.convertToAssets(aliceShares);
-        assertGe(aliceAssets, aliceShares, "Alice assets to redeem are greater than her shares");
-
         uint256 eVaultUsdcBalanceAfter = usdcArbitrum.balanceOf(address(eVaultArbitrumUsdc));
         assertEq(
             eVaultUsdcBalanceAfter,
@@ -207,6 +204,11 @@ contract xYieldForkTest is Test {
 
         uint256 xYieldEvaultBalance = eVaultArbitrumUsdc.balanceOf(address(xYieldArbitrum));
         assertGt(xYieldEvaultBalance, 0, "xYieldArbitrum vault should have received EVault shares");
+
+        vm.warp(block.timestamp + 365 days);
+
+        uint256 aliceAssets = xYieldArbitrum.convertToAssets(aliceShares);
+        assertGe(aliceAssets, aliceShares, "Alice assets to redeem are greater than her shares");
     }
 
     function testSharePriceCalculation() public {
@@ -217,10 +219,6 @@ contract xYieldForkTest is Test {
 
         // Wait for yield to accrue
         vm.warp(block.timestamp + 365 days);
-
-        // Update virtual total assets to reflect accrued yield
-        vm.prank(guardian);
-        xYieldArbitrum.updateVirtualTotalAssets();
 
         vm.startPrank(bob);
         usdcArbitrum.approve(address(xYieldArbitrum), type(uint256).max);
@@ -265,18 +263,17 @@ contract xYieldForkTest is Test {
         assertGt(aliceSharesNative, bobSharesRemote, "Alice is minted more shares than Bob");
 
         uint256 totalSharesArbitrum = xYieldArbitrum.totalSupply();
-        uint256 totalSharesGlobal = totalSharesArbitrum + bobSharesRemote;
+        uint256 totalSharesGlobal = totalSharesArbitrum;
         xYieldVault.BalanceUpdate[] memory balanceUpdates = new xYieldVault.BalanceUpdate[](1);
         balanceUpdates[0] =
             xYieldVault.BalanceUpdate({ recipient: bob, amount: bobSharesRemote, txType: xYieldVault.TxType.Deposit });
 
         vm.startPrank(guardian);
-        xYieldArbitrum.updateTotals(totalSharesGlobal, balanceUpdates);
         xYieldBase.updateTotals(totalSharesGlobal, balanceUpdates);
         vm.stopPrank();
 
         assertEq(
-            xYieldArbitrum.virtualTotalSupply(),
+            xYieldArbitrum.totalSupply(),
             totalSharesGlobal,
             "Virtual total supply should match the global total shares"
         );
@@ -329,13 +326,12 @@ contract xYieldForkTest is Test {
             xYieldVault.BalanceUpdate({ recipient: bob, amount: bobSharesRemote, txType: xYieldVault.TxType.Deposit });
 
         vm.startPrank(guardian);
-        xYieldArbitrum.updateTotals(totalSharesGlobal, balanceUpdates);
         xYieldBase.updateTotals(totalSharesGlobal, balanceUpdates);
         vm.stopPrank();
 
         // Verify initial state
         assertEq(
-            xYieldArbitrum.virtualTotalSupply(),
+            xYieldArbitrum.totalSupply(),
             totalSharesGlobal,
             "Initial virtual total supply should match global total"
         );
@@ -344,14 +340,10 @@ contract xYieldForkTest is Test {
         uint256 withdrawAmount = 30e6; // Withdraw 30 USDC from Bob's remote shares
         uint256 bobInitialShares = xYieldBase.balanceOf(bob);
         uint256 aliceInitialShares = xYieldArbitrum.balanceOf(alice);
-        uint256 initialVirtualSupply = xYieldArbitrum.virtualTotalSupply();
+        uint256 initialVirtualSupply = xYieldArbitrum.totalSupply();
 
-        // Simulate remote withdrawal by Bob (would happen on Base chain)
-        uint256 sharesToBurn = xYieldArbitrum.previewWithdraw(withdrawAmount);
-
-        // Mock the remote withdrawal call that would happen on Base
         vm.startPrank(guardian);
-        xYieldArbitrum.withdrawFrom(
+        uint256 sharesToBurn = xYieldArbitrum.withdrawFrom(
             withdrawAmount,
             bob,
             baseChainId,
@@ -371,13 +363,12 @@ contract xYieldForkTest is Test {
             xYieldVault.BalanceUpdate({ recipient: bob, amount: sharesToBurn, txType: xYieldVault.TxType.Withdraw });
 
         vm.startPrank(guardian);
-        xYieldArbitrum.updateTotals(newTotalSharesGlobal, withdrawUpdates);
         xYieldBase.updateTotals(newTotalSharesGlobal, withdrawUpdates);
         vm.stopPrank();
 
         // Verify the withdrawal updated total shares correctly
         assertEq(
-            xYieldArbitrum.virtualTotalSupply(),
+            xYieldArbitrum.totalSupply(),
             newTotalSharesGlobal,
             "Virtual total supply should be reduced by withdrawn shares"
         );
@@ -395,7 +386,7 @@ contract xYieldForkTest is Test {
         );
 
         assertEq(
-            xYieldArbitrum.virtualTotalSupply(),
+            xYieldArbitrum.totalSupply(),
             aliceInitialShares + xYieldBase.balanceOf(bob),
             "Virtual total supply should equal sum of all remaining shares across chains"
         );
@@ -436,13 +427,12 @@ contract xYieldForkTest is Test {
         vm.stopPrank();
 
         // Update totals to create the virtual supply scenario
-        uint256 totalSharesGlobal = xYieldArbitrum.totalSupply() + bobSharesRemote;
+        uint256 totalSharesGlobal = xYieldArbitrum.totalSupply();
         xYieldVault.BalanceUpdate[] memory balanceUpdates = new xYieldVault.BalanceUpdate[](1);
         balanceUpdates[0] =
             xYieldVault.BalanceUpdate({ recipient: bob, amount: bobSharesRemote, txType: xYieldVault.TxType.Deposit });
 
         vm.startPrank(guardian);
-        xYieldArbitrum.updateTotals(totalSharesGlobal, balanceUpdates);
         xYieldBase.updateTotals(totalSharesGlobal, balanceUpdates);
         vm.stopPrank();
 
