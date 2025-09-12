@@ -25,7 +25,6 @@ contract xYieldVault is ERC4626, Ownable2Step, ReentrancyGuard, Pausable {
     IERC4626 public yieldProtocol;
     V3SpokePoolInterface public acrossSpokePool;
 
-    uint256 public virtualTotalAssets;
     uint256 public virtualTotalSupply;
     bool public isActiveChain;
     uint256 public rebalanceFillTTL = 2 minutes;
@@ -53,6 +52,7 @@ contract xYieldVault is ERC4626, Ownable2Step, ReentrancyGuard, Pausable {
     error InvalidChain();
     error WithdrawOnInactiveChain();
     error DepositOnInactiveChain();
+    error OnlyRemote();
     error NotImplemented();
     error LengthMismatch();
     error InvalidOrderData();
@@ -121,10 +121,6 @@ contract xYieldVault is ERC4626, Ownable2Step, ReentrancyGuard, Pausable {
         if (_amount == 0) revert ZeroAmount();
         if (!isActiveChain) revert DepositOnInactiveChain();
         if (siblingVaults[_chainId].vault == address(0)) revert InvalidChain();
-        // deposit assets into underlying
-        // credit user with virtual deposit
-        // render virtual deposits into real deposits when updateTotals is called
-        // this means that we will always use virtual deposits to calculate share price
         shares = previewDeposit(_amount);
         _depositFrom(msg.sender, _receiver, _amount, shares, _chainId);
     }
@@ -212,9 +208,6 @@ contract xYieldVault is ERC4626, Ownable2Step, ReentrancyGuard, Pausable {
         );
     }
 
-    // NOTE - for remote withdrawals we update virtualTotalAssets after withdrawal to prevent share price inflation
-    // before
-    // global shares is updated
     function _withdrawFrom(
         address owner,
         uint256 assets,
@@ -229,7 +222,9 @@ contract xYieldVault is ERC4626, Ownable2Step, ReentrancyGuard, Pausable {
         internal
         returns (uint256 shares)
     {
-        shares = yieldProtocol.withdraw(assets, address(this), address(this));
+        shares = previewWithdraw(assets);
+        virtualTotalSupply -= shares;
+        yieldProtocol.withdraw(assets, address(this), address(this));
 
         acrossSpokePool.depositV3(
             address(this),
@@ -253,15 +248,10 @@ contract xYieldVault is ERC4626, Ownable2Step, ReentrancyGuard, Pausable {
     // used on highest yield chain to update virtual totals
     // TODO - split out based on active chain
     function updateTotals(uint256 totalSupply_, BalanceUpdate[] calldata balanceUpdates) external onlyGuardian {
-        // TODO - update incrementally like virtualTotalAssets using proof of remote supply change
+        if (isActiveChain) revert OnlyRemote();
         virtualTotalSupply = totalSupply_;
         _updateBalances(balanceUpdates);
-        virtualTotalAssets = totalAssets();
         emit TotalSupplyUpdated(totalSupply_);
-    }
-
-    function updateVirtualTotalAssets() public onlyGuardian {
-        virtualTotalAssets = totalAssets();
     }
 
     // TODO - submit proofs for remote deposits
@@ -276,7 +266,6 @@ contract xYieldVault is ERC4626, Ownable2Step, ReentrancyGuard, Pausable {
     }
 
     function _deposit(address _caller, address _receiver, uint256 _amount, uint256 _shares) internal virtual override {
-        virtualTotalAssets += _amount;
         virtualTotalSupply += _shares;
         _mint(_receiver, _shares);
 
@@ -286,8 +275,6 @@ contract xYieldVault is ERC4626, Ownable2Step, ReentrancyGuard, Pausable {
         emit Deposit(_caller, _receiver, _amount, _shares);
     }
 
-    // NOTE - for remote deposits we update virtualTotalAssets after deposit to prevent share price inflation before
-    // global shares is updated
     function _depositFrom(
         address _caller,
         address _receiver,
@@ -297,6 +284,7 @@ contract xYieldVault is ERC4626, Ownable2Step, ReentrancyGuard, Pausable {
     )
         internal
     {
+        virtualTotalSupply += _shares;
         IERC20(asset()).safeTransferFrom(_caller, address(this), _amount);
         yieldProtocol.deposit(_amount, address(this));
 
@@ -321,10 +309,9 @@ contract xYieldVault is ERC4626, Ownable2Step, ReentrancyGuard, Pausable {
         // Should only be called on active chains where assets exist
         if (!isActiveChain) revert WithdrawOnInactiveChain();
 
-        yieldProtocol.withdraw(_amount, address(this), address(this));
-        virtualTotalAssets -= _amount;
         virtualTotalSupply -= _shares;
         _burn(_owner, _shares);
+        yieldProtocol.withdraw(_amount, address(this), address(this));
         IERC20(asset()).safeTransfer(_receiver, _amount);
 
         emit Withdraw(_caller, _receiver, _owner, _amount, _shares);
@@ -340,7 +327,6 @@ contract xYieldVault is ERC4626, Ownable2Step, ReentrancyGuard, Pausable {
     }
 
     function totalAssets() public view virtual override returns (uint256) {
-        // TODO - test edge cases where virtual total assets are pending
         return yieldProtocol.convertToAssets(yieldProtocol.balanceOf(address(this)));
     }
 
@@ -395,7 +381,6 @@ contract xYieldVault is ERC4626, Ownable2Step, ReentrancyGuard, Pausable {
         _setActiveChain(false);
 
         yieldProtocol.withdraw(_amountIn, address(this), address(this));
-        updateVirtualTotalAssets();
 
         bytes memory message = abi.encode(_id);
 
