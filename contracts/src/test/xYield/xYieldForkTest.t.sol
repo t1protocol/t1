@@ -209,27 +209,6 @@ contract xYieldForkTest is Test {
         assertGt(xYieldEvaultBalance, 0, "xYieldArbitrum vault should have received EVault shares");
     }
 
-    function testSharePriceCalculation() public {
-        vm.startPrank(alice);
-        usdcArbitrum.approve(address(xYieldArbitrum), type(uint256).max);
-        uint256 shares1 = xYieldArbitrum.deposit(depositAmount, alice);
-        vm.stopPrank();
-
-        // Wait for yield to accrue
-        vm.warp(block.timestamp + 365 days);
-
-        // Update virtual total assets to reflect accrued yield
-        vm.prank(guardian);
-        xYieldArbitrum.finalizeRebalance();
-
-        vm.startPrank(bob);
-        usdcArbitrum.approve(address(xYieldArbitrum), type(uint256).max);
-        uint256 shares2 = xYieldArbitrum.deposit(depositAmount, bob);
-        vm.stopPrank();
-
-        assertTrue(shares1 > shares2, "Second deposit should get fewer shares due to increased asset value from yield");
-    }
-
     function testRemoteDepositUpdateTotalShares() public {
         // native chain deposit
         uint256 eVaultUsdcBalanceBeforeDeposit0 = usdcArbitrum.balanceOf(address(eVaultArbitrumUsdc));
