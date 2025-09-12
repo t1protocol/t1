@@ -220,7 +220,7 @@ contract xYieldForkTest is Test {
 
         // Update virtual total assets to reflect accrued yield
         vm.prank(guardian);
-        xYieldArbitrum.updateVirtualTotalAssets();
+        xYieldArbitrum.finalizeRebalance();
 
         vm.startPrank(bob);
         usdcArbitrum.approve(address(xYieldArbitrum), type(uint256).max);

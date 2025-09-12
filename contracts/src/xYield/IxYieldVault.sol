@@ -55,6 +55,7 @@ interface IxYieldVault {
     function previewRedeem(uint256 shares) external view returns (uint256);
     function previewWithdraw(uint256 assets) external view returns (uint256);
     function rebalance(uint256 _targetChain, uint256 _amount) external;
+    function finalizeRebalance() external;
     function redeem(uint256 _shares, address _receiver, address _owner) external returns (uint256);
     function renounceOwnership() external;
     function setActiveChain(bool _isActive) external;
