@@ -2,9 +2,19 @@
 pragma solidity 0.8.30;
 
 interface IxYieldVault {
+    type TxType is uint8;
+
+    struct BalanceUpdate {
+        address recipient;
+        uint256 amount;
+        TxType txType;
+    }
+
     error DepositOnInactiveChain();
     error InvalidChain();
+    error InvalidOrderData();
     error LengthMismatch();
+    error NoAddress();
     error NotGuardian();
     error NotImplemented();
     error WithdrawOnInactiveChain();
@@ -17,7 +27,9 @@ interface IxYieldVault {
     event OwnershipTransferStarted(address indexed previousOwner, address indexed newOwner);
     event OwnershipTransferred(address indexed previousOwner, address indexed newOwner);
     event Paused(address account);
-    event Rebalanced(uint256 targetChain, uint256 amount);
+    event RebalanceInitiated(uint256 indexed id, uint256 targetChain, uint256 amount);
+    event RebalanceUndone(uint256 targetChain, uint256 amount);
+    event Rebalanced(uint256 indexed id, uint256 amount);
     event SiblingVaultSet(uint64 chainId, address vault);
     event TotalSupplyUpdated(uint256 newVirtualTotalSupply);
     event Transfer(address indexed from, address indexed to, uint256 value);
@@ -25,8 +37,10 @@ interface IxYieldVault {
     event Withdraw(
         address indexed sender, address indexed receiver, address indexed owner, uint256 assets, uint256 shares
     );
+    event WithdrawRemote(address indexed sender, address indexed owner, uint256 assets, uint256 shares);
 
     function acceptOwnership() external;
+    function acrossSpokePool() external view returns (address);
     function allowance(address owner, address spender) external view returns (uint256);
     function approve(address spender, uint256 amount) external returns (bool);
     function asset() external view returns (address);
@@ -38,6 +52,7 @@ interface IxYieldVault {
     function deposit(uint256 _amount, address _receiver) external returns (uint256);
     function depositFrom(uint256 _amount, address _receiver, uint64 _chainId) external returns (uint256 shares);
     function guardian() external view returns (address);
+    function handleV3AcrossMessage(address tokenSent, uint256 amount, address relayer, bytes memory message) external;
     function increaseAllowance(address spender, uint256 addedValue) external returns (bool);
     function isActiveChain() external view returns (bool);
     function maxDeposit(address) external view returns (uint256);
@@ -54,14 +69,24 @@ interface IxYieldVault {
     function previewMint(uint256 shares) external view returns (uint256);
     function previewRedeem(uint256 shares) external view returns (uint256);
     function previewWithdraw(uint256 assets) external view returns (uint256);
-    function rebalance(uint256 _targetChain, uint256 _amount) external;
+    function reDepositIdleAssets() external;
+    function rebalance(
+        uint256 _id,
+        uint32 _targetChain,
+        uint256 _amountIn,
+        uint256 _amountOut,
+        uint32 _acrossApiQuoteTimestamp
+    ) external;
+    function rebalanceFillTTL() external view returns (uint256);
     function redeem(uint256 _shares, address _receiver, address _owner) external returns (uint256);
     function renounceOwnership() external;
+    function setAcrossSpokePool(address _newAcrossSpokePool) external;
     function setActiveChain(bool _isActive) external;
     function setGuardian(address _newGuardian) external;
-    function setSiblingVault(uint64 _chainId, address _vault) external;
+    function setRebalanceFillTTL(uint256 newTTL) external;
+    function setSiblingVault(uint64 _chainId, address _vault, address _underlyingErc20) external;
     function setYieldProtocol(address _newYieldProtocol) external;
-    function siblingVaults(uint64) external view returns (address);
+    function siblingVaults(uint64) external view returns (address vault, address underlyingErc20);
     function symbol() external view returns (string memory);
     function totalAssets() external view returns (uint256);
     function totalSupply() external view returns (uint256);
@@ -69,10 +94,19 @@ interface IxYieldVault {
     function transferFrom(address from, address to, uint256 amount) external returns (bool);
     function transferOwnership(address newOwner) external;
     function unpause() external;
-    function updateTotals(uint256 totalSupply_, address[] memory _recipients, uint256[] memory _amounts) external;
-    function updateVirtualTotalAssets() external;
-    function virtualTotalAssets() external view returns (uint256);
+    function updateTotals(uint256 totalSupply_, BalanceUpdate[] memory balanceUpdates) external;
     function virtualTotalSupply() external view returns (uint256);
     function withdraw(uint256 _amount, address _receiver, address _owner) external returns (uint256);
+    function withdrawFrom(
+        uint256 assets,
+        address owner,
+        uint64 chainId,
+        address outputToken,
+        uint256 outputAmount,
+        address exclusiveRelayer,
+        uint32 quoteTimestamp,
+        uint32 fillDeadline,
+        uint32 exclusivityParameter
+    ) external returns (uint256);
     function yieldProtocol() external view returns (address);
 }
