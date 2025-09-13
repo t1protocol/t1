@@ -23,6 +23,7 @@ contract xYieldForkTest is Test {
     address internal usdcMinter = address(0x333);
     address internal alice = 0xB9B7402f36608D3D7c9Cb3d2b17075241b6ee43f;
     address internal bob = address(0xbbb);
+    address internal charlie = address(0xccc);
     // address internal usdcMasterMinter = 0x8aFf09e2259cacbF4Fc4e3E53F3bf799EfEEab36;
     USDC internal usdcArbitrum = USDC(0xaf88d065e77c8cC2239327C5EDb3A432268e5831);
     address internal usdcBase = 0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913;
@@ -67,6 +68,7 @@ contract xYieldForkTest is Test {
 
         vm.startPrank(alice);
         usdcArbitrum.transfer(bob, 100e6);
+        usdcArbitrum.transfer(charlie, 100e6);
         vm.stopPrank();
 
         setLabels();
@@ -75,6 +77,7 @@ contract xYieldForkTest is Test {
     function setLabels() internal {
         vm.label(bob, "Bob");
         vm.label(alice, "Alice");
+        vm.label(charlie, "Charlie");
         vm.label(guardian, "Guardian");
         vm.label(usdcMinter, "USDC Minter");
         vm.label(address(xYieldArbitrum), "xYieldArbitrum");
@@ -180,10 +183,7 @@ contract xYieldForkTest is Test {
         // mock bridge from A to B
         // assets land on B, but share price is not yet updated. If no distinction between total assets before
         // and after share price is updated, older shareholders could withdraw more than they are entitled to
-        // (since share price has not caught up with underlying assets). we want to instead always base the shares on a
-        // virtual total assets
-        // we need to ensure that local deposits use that virtual amount (amount pre remote deposit) until share price
-        // is updated
+        // (since share price has not caught up with underlying assets).
 
         vm.startPrank(alice); // acting as filler for her own intent
         usdcArbitrum.approve(address(xYieldArbitrum), type(uint256).max);
@@ -289,8 +289,6 @@ contract xYieldForkTest is Test {
             "Total supply on this chain should include Alice's native shares and Bob's remote shares"
         );
 
-        // This test proves that the 1 wei difference is expected ERC4626 behavior
-        // due to virtual assets (+1) in the OpenZeppelin implementation
         uint256 actualTotalAssets = xYieldArbitrum.totalAssets();
         uint256 aliceAssets = xYieldArbitrum.convertToAssets(aliceNativeShares);
         uint256 bobAssets = xYieldArbitrum.convertToAssets(bobRemoteShares);
@@ -299,7 +297,7 @@ contract xYieldForkTest is Test {
             ? actualTotalAssets - (aliceAssets + bobAssets)
             : (aliceAssets + bobAssets) - actualTotalAssets;
 
-        assertEq(difference, 1, "Expected exactly 1 wei difference due to ERC4626 virtual assets");
+        assertEq(difference, 1, "Expected exactly 1 wei difference due to ERC4626 initial deposit formula");
 
         assertTrue(actualTotalAssets > 0, "Total assets should be positive");
         assertTrue(aliceAssets + bobAssets > 0, "Sum of assets should be positive");
@@ -392,7 +390,7 @@ contract xYieldForkTest is Test {
         uint256 bobAssetsAfter = xYieldArbitrum.convertToAssets(xYieldBase.balanceOf(bob));
         uint256 totalAssetsAfter = xYieldArbitrum.totalAssets();
 
-        // Account for the expected 1 wei difference due to ERC4626 virtual assets
+        // Account for the expected 1 wei difference due to ERC4626 initial deposit formula
         uint256 difference = totalAssetsAfter > (aliceAssetsAfter + bobAssetsAfter)
             ? totalAssetsAfter - (aliceAssetsAfter + bobAssetsAfter)
             : (aliceAssetsAfter + bobAssetsAfter) - totalAssetsAfter;
@@ -400,8 +398,7 @@ contract xYieldForkTest is Test {
         assertTrue(difference <= 1, "Asset conversion difference should be at most 1 wei after withdrawal");
     }
 
-    /// @notice Proves that the 1 wei difference is expected ERC4626 behavior across all scenarios
-    function testProveERC4626VirtualAssetsAreExpected() public {
+    function testProveERC4626Assets() public {
         // Scenario 1: Test with Alice's deposit only
         vm.startPrank(alice);
         usdcArbitrum.approve(address(xYieldArbitrum), type(uint256).max);
@@ -414,9 +411,9 @@ contract xYieldForkTest is Test {
 
         uint256 singleUserDifference = totalAssets > aliceAssets ? totalAssets - aliceAssets : aliceAssets - totalAssets;
 
-        assertTrue(singleUserDifference <= 1, "Single user difference should be at most 1 wei");
+        assertEq(singleUserDifference, 0, "No diff between total and user assets");
 
-        // Scenario 2: Add Bob's deposit to create the 1 wei scenario
+        // Scenario 2: Add Bob's deposit
         vm.startPrank(bob);
         usdcArbitrum.approve(address(xYieldArbitrum), type(uint256).max);
         uint256 bobSharesRemote = xYieldArbitrum.depositFrom(depositAmount, bob, baseChainId);
@@ -432,7 +429,6 @@ contract xYieldForkTest is Test {
         xYieldBase.updateTotals(totalSharesGlobal, balanceUpdates);
         vm.stopPrank();
 
-        // Now test the 1 wei difference scenario
         totalAssets = xYieldArbitrum.totalAssets();
         uint256 newAliceAssets = xYieldArbitrum.convertToAssets(aliceShares);
         uint256 bobAssets = xYieldArbitrum.convertToAssets(bobSharesRemote);
@@ -443,14 +439,34 @@ contract xYieldForkTest is Test {
 
         // Scenario 3: Prove this matches the mathematical expectation from ERC4626 formula
         // Formula: convertToAssets(shares) = shares * (totalAssets + 1) / (totalSupply + offset)
-        // When summing multiple conversions, the +1 gets applied multiple times
         uint256 currentTotalSupply = xYieldArbitrum.totalSupply();
 
         // Manual calculation using ERC4626 formula (simplified, assuming no decimals offset)
         uint256 expectedAliceAssets = (aliceShares * (totalAssets + 1)) / (currentTotalSupply + 1);
         uint256 expectedBobAssets = (bobSharesRemote * (totalAssets + 1)) / (currentTotalSupply + 1);
 
-        assertEq(difference, 0, "Difference should be exactly 0 wei due to ERC4626 share conversion formula");
+        assertEq(difference, 0, "No difference in totalAssets vs all user assets");
+    }
+
+    function testProveERC4626SameSharesMinted() public {
+        // Bob's remote deposit
+        vm.startPrank(bob);
+        usdcArbitrum.approve(address(xYieldArbitrum), type(uint256).max);
+        uint256 bobSharesRemote = xYieldArbitrum.depositFrom(depositAmount, bob, baseChainId);
+        vm.stopPrank();
+
+        vm.startPrank(charlie);
+        usdcArbitrum.approve(address(xYieldArbitrum), type(uint256).max);
+        uint256 charlieSharesRemote = xYieldArbitrum.depositFrom(depositAmount, charlie, baseChainId);
+        vm.stopPrank();
+
+        // Alice same chain deposit
+        vm.startPrank(alice);
+        usdcArbitrum.approve(address(xYieldArbitrum), type(uint256).max);
+        uint256 aliceShares = xYieldArbitrum.deposit(depositAmount, alice);
+        vm.stopPrank();
+
+        assertEq(aliceShares, charlieSharesRemote, "Alice and Charlie receive the same amount shares");
     }
 
     // TODO - test redeem and mint methods
