@@ -250,18 +250,12 @@ contract xYieldVault is ERC4626, Ownable2Step, ReentrancyGuard, Pausable {
         // TODO - update incrementally like virtualTotalAssets using proof of remote supply change
         virtualTotalSupply = totalSupply_;
         _updateBalances(balanceUpdates);
-        _updateVirtualTotalAssets();
         emit TotalSupplyUpdated(totalSupply_);
     }
 
     function finalizeRebalance() external onlyGuardian {
         _reDepositIdleAssets();
-        _updateVirtualTotalAssets();
         _setActiveChain(true);
-    }
-
-    function _updateVirtualTotalAssets() internal {
-        virtualTotalAssets = totalAssets();
     }
 
     function _reDepositIdleAssets() internal {
@@ -401,7 +395,6 @@ contract xYieldVault is ERC4626, Ownable2Step, ReentrancyGuard, Pausable {
         _setActiveChain(false);
 
         yieldProtocol.withdraw(_amountIn, address(this), address(this));
-        _updateVirtualTotalAssets();
 
         bytes memory message = abi.encode(_id);
 
