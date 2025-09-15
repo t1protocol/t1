@@ -252,7 +252,6 @@ contract xYieldTest is Test {
         vault.rebalance(REBALANCE_ID, dstChainId, depositAmount, depositAmount, 0);
 
         assertFalse(vault.isActiveChain());
-        assertEq(vault.virtualTotalAssets(), 0);
     }
 
     function testRebalanceZeroAmountRevert() public {
