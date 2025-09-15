@@ -176,14 +176,18 @@ contract xYieldTest is Test {
             xYieldVault.BalanceUpdate({ recipient: user2, amount: 100 * 10 ** 18, txType: xYieldVault.TxType.Deposit });
 
         vm.prank(guardian);
+        vm.expectRevert(abi.encodeWithSelector(xYieldVault.OnlyRemote.selector));
         vault.updateTotals(newVirtualTotalSupply, balanceUpdates);
-
-        assertEq(vault.virtualTotalSupply(), newVirtualTotalSupply, "virtual total supply");
 
         vm.prank(guardian);
         vault.setActiveChain(false);
 
         assertFalse(vault.isActiveChain(), "is active chain");
+
+        vm.prank(guardian);
+        vault.updateTotals(newVirtualTotalSupply, balanceUpdates);
+
+        assertEq(vault.virtualTotalSupply(), newVirtualTotalSupply, "virtual total supply");
     }
 
     function testRevertOnUnauthorizedAccess() public {
