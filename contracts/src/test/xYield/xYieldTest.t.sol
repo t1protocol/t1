@@ -321,31 +321,32 @@ contract xYieldTest is Test {
         vault.rebalance(REBALANCE_ID, dstChainId, depositAmount, depositAmount, 0);
     }
 
-    function testReDepositIdleAssets() public {
+    function testFinalizeRebalance() public {
         uint256 idleAmount = 50 * 10 ** 18;
         usdc.mint(address(vault), idleAmount);
 
         vm.prank(guardian);
-        vault.reDepositIdleAssets();
+        vault.finalizeRebalance();
 
         assertEq(usdc.balanceOf(address(vault)), 0);
         assertEq(yieldProtocol.balanceOf(address(vault)), idleAmount);
+        assertTrue(vault.isActiveChain());
     }
 
-    function testReDepositIdleAssetsZeroAmountRevert() public {
+    function testFinalizeRebalanceZeroAmountRevert() public {
         vm.prank(guardian);
         // No USDC is available on vault
         vm.expectRevert(xYieldVault.ZeroAmount.selector);
-        vault.reDepositIdleAssets();
+        vault.finalizeRebalance();
     }
 
-    function testReDepositIdleAssetsNotGuardianRevert() public {
+    function testFinalizeRebalanceNotGuardianRevert() public {
         uint256 idleAmount = 50 * 10 ** 18;
         usdc.mint(address(vault), idleAmount);
 
         vm.expectRevert(xYieldVault.NotGuardian.selector);
         vm.prank(user1);
-        vault.reDepositIdleAssets();
+        vault.finalizeRebalance();
     }
 
     function _createOrder(
