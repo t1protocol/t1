@@ -69,7 +69,9 @@ contract xYieldVault is ERC4626, Ownable2Step, ReentrancyGuard, Pausable, EIP712
         keccak256("DepositIntent(uint64 sourceChainId,address receiver,uint256 amount,uint256 nonce)");
 
     event DepositRemoteInitiated(address indexed sender, address indexed owner, uint256 assets, uint64 targetChainId);
-    event DepositRemote(address indexed sender, address indexed owner, uint256 assets, uint256 shares, uint64 sourceChainId);
+    event DepositRemote(
+        address indexed sender, address indexed owner, uint256 assets, uint256 shares, uint64 sourceChainId
+    );
     event WithdrawRemote(address indexed sender, address indexed owner, uint256 assets, uint256 shares);
     event TotalSupplyUpdated(uint256 newVirtualTotalSupply);
     event ChainStatusChanged(bool isActive);
