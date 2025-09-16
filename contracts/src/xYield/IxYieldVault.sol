@@ -13,17 +13,20 @@ interface IxYieldVault {
     error DepositOnInactiveChain();
     error InvalidChain();
     error InvalidOrderData();
+    error InvalidSignature();
+    error InvalidTokenSent();
+    error InvalidTxType(uint8 txType);
     error LengthMismatch();
     error NoAddress();
     error NotGuardian();
     error NotImplemented();
+    error OnlyRemote();
     error WithdrawOnInactiveChain();
     error ZeroAmount();
 
     event Approval(address indexed owner, address indexed spender, uint256 value);
     event ChainStatusChanged(bool isActive);
     event Deposit(address indexed sender, address indexed owner, uint256 assets, uint256 shares);
-    event DepositRemote(address indexed sender, address indexed owner, uint256 assets, uint256 shares, uint64 chainId);
     event OwnershipTransferStarted(address indexed previousOwner, address indexed newOwner);
     event OwnershipTransferred(address indexed previousOwner, address indexed newOwner);
     event Paused(address account);
@@ -37,8 +40,29 @@ interface IxYieldVault {
     event Withdraw(
         address indexed sender, address indexed receiver, address indexed owner, uint256 assets, uint256 shares
     );
-    event WithdrawRemote(address indexed sender, address indexed owner, uint256 assets, uint256 shares);
+    event XYieldDeposit(
+        address indexed sender,
+        address indexed owner,
+        uint256 assets,
+        uint256 shares,
+        uint64 sourceChainId,
+        bool isRemote
+    );
+    event XYieldDepositRemoteInitiated(
+        address indexed sender, address indexed owner, uint256 outputAmount, uint64 targetChainId
+    );
+    event XYieldWithdraw(
+        address indexed sender,
+        address indexed owner,
+        address indexed receiver,
+        uint256 assets,
+        uint256 shares,
+        uint64 targetChainId,
+        bool isRemote
+    );
 
+    function DEPOSIT_TYPEHASH() external view returns (bytes32);
+    function DOMAIN_SEPARATOR() external view returns (bytes32);
     function acceptOwnership() external;
     function acrossSpokePool() external view returns (address);
     function allowance(address owner, address spender) external view returns (uint256);
@@ -50,7 +74,33 @@ interface IxYieldVault {
     function decimals() external view returns (uint8);
     function decreaseAllowance(address spender, uint256 subtractedValue) external returns (bool);
     function deposit(uint256 _amount, address _receiver) external returns (uint256);
-    function depositFrom(uint256 _amount, address _receiver, uint64 _chainId) external returns (uint256 shares);
+    function depositTo(
+        uint256 _amount,
+        address _receiver,
+        uint64 _targetChainId,
+        uint256 _id,
+        bytes memory _signature,
+        address _outputToken,
+        uint256 _outputAmount,
+        address _exclusiveRelayer,
+        uint32 _quoteTimestamp,
+        uint32 _fillDeadline,
+        uint32 _exclusivityParameter
+    )
+        external;
+    function eip712Domain()
+        external
+        view
+        returns (
+            bytes1 fields,
+            string memory name,
+            string memory version,
+            uint256 chainId,
+            address verifyingContract,
+            bytes32 salt,
+            uint256[] memory extensions
+        );
+    function finalizeRebalance() external;
     function guardian() external view returns (address);
     function handleV3AcrossMessage(address tokenSent, uint256 amount, address relayer, bytes memory message) external;
     function increaseAllowance(address spender, uint256 addedValue) external returns (bool);
@@ -69,7 +119,6 @@ interface IxYieldVault {
     function previewMint(uint256 shares) external view returns (uint256);
     function previewRedeem(uint256 shares) external view returns (uint256);
     function previewWithdraw(uint256 assets) external view returns (uint256);
-    function reDepositIdleAssets() external;
     function rebalance(
         uint256 _id,
         uint32 _targetChain,
@@ -79,7 +128,6 @@ interface IxYieldVault {
     )
         external;
     function rebalanceFillTTL() external view returns (uint256);
-    function finalizeRebalance() external;
     function redeem(uint256 _shares, address _receiver, address _owner) external returns (uint256);
     function renounceOwnership() external;
     function setAcrossSpokePool(address _newAcrossSpokePool) external;
