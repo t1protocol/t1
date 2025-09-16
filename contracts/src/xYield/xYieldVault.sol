@@ -59,7 +59,7 @@ contract xYieldVault is ERC4626, Ownable2Step, ReentrancyGuard, Pausable {
     error NoAddress();
 
     event DepositRemote(address indexed sender, address indexed owner, uint256 assets, uint256 shares, uint64 chainId);
-    event WithdrawRemote(address indexed sender, address indexed owner, uint256 assets, uint256 shares);
+    event WithdrawRemote(address indexed sender, address indexed owner, uint256 assets, uint256 shares, uint64 chainId);
     event TotalSupplyUpdated(uint256 newVirtualTotalSupply);
     event ChainStatusChanged(bool isActive);
     event SiblingVaultSet(uint64 chainId, address vault);
@@ -241,7 +241,7 @@ contract xYieldVault is ERC4626, Ownable2Step, ReentrancyGuard, Pausable {
             ""
         );
 
-        emit WithdrawRemote(msg.sender, owner, assets, shares);
+        emit WithdrawRemote(msg.sender, owner, assets, shares, chainId);
     }
 
     // used on remote chain to mint share tokens

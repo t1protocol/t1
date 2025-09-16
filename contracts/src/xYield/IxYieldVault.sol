@@ -17,6 +17,7 @@ interface IxYieldVault {
     error NoAddress();
     error NotGuardian();
     error NotImplemented();
+    error OnlyRemote();
     error WithdrawOnInactiveChain();
     error ZeroAmount();
 
@@ -37,7 +38,7 @@ interface IxYieldVault {
     event Withdraw(
         address indexed sender, address indexed receiver, address indexed owner, uint256 assets, uint256 shares
     );
-    event WithdrawRemote(address indexed sender, address indexed owner, uint256 assets, uint256 shares);
+    event WithdrawRemote(address indexed sender, address indexed owner, uint256 assets, uint256 shares, uint64 chainId);
 
     function acceptOwnership() external;
     function acrossSpokePool() external view returns (address);
