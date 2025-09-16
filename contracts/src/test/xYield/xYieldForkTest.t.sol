@@ -397,6 +397,63 @@ contract xYieldForkTest is Test {
         assertEq(aliceShares, charlieSharesRemote, "Alice and Charlie receive the same amount shares");
     }
 
+    function testFullRebalanceFlow() public {
+        vm.startPrank(guardian);
+        xYieldArbitrum.setActiveChain(true);
+        xYieldBase.setActiveChain(false);
+        vm.stopPrank();
+
+        vm.startPrank(address(this));
+        xYieldArbitrum.setSiblingVault(baseChainId, address(xYieldBase), address(usdcBase));
+        xYieldBase.setSiblingVault(uint64(block.chainid), address(xYieldArbitrum), address(usdcArbitrum));
+        vm.stopPrank();
+
+        vm.startPrank(alice);
+        usdcArbitrum.approve(address(xYieldArbitrum), type(uint256).max);
+        uint256 aliceShares = xYieldArbitrum.deposit(depositAmount, alice);
+        vm.stopPrank();
+
+        uint256 rebalanceAmount = xYieldArbitrum.totalAssets();
+        uint256 rebalanceId = 12345;
+        uint256 outputAmount = rebalanceAmount * 99 / 100;
+
+        vm.startPrank(guardian);
+        xYieldArbitrum.rebalance(
+            rebalanceId,
+            uint32(baseChainId),
+            rebalanceAmount,
+            outputAmount,
+            uint32(block.timestamp)
+        );
+        vm.stopPrank();
+
+        assertFalse(xYieldArbitrum.isActiveChain());
+
+        vm.startPrank(alice);
+        usdcBase.transfer(address(xYieldBase), rebalanceAmount);
+        vm.stopPrank();
+
+        bytes memory rebalanceMessage = abi.encode(uint8(1), rebalanceId, bytes(""));
+
+        vm.prank(address(0xdeadbeef));
+        xYieldBase.handleV3AcrossMessage(
+            address(usdcBase),
+            rebalanceAmount,
+            address(0xdeadbeef),
+            rebalanceMessage
+        );
+
+        vm.startPrank(guardian);
+        xYieldBase.finalizeRebalance();
+        vm.stopPrank();
+
+        assertTrue(xYieldBase.isActiveChain());
+        assertFalse(xYieldArbitrum.isActiveChain());
+        assertEq(xYieldArbitrum.totalAssets(), 0);
+        assertGt(xYieldBase.totalAssets(), 0);
+        assertEq(xYieldArbitrum.balanceOf(alice), aliceShares);
+    }
+
     function testDepositToWithSignature() public {
         // Setup: Make Base chain inactive and Arbitrum active
         vm.startPrank(guardian);
