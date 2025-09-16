@@ -1,3 +1,6 @@
 [submodule "contracts/lib/euler-vault-kit"]
 	path = contracts/lib/euler-vault-kit
 	url = https://github.com/euler-xyz/euler-vault-kit
+[submodule "contracts/lib/solady"]
+	path = contracts/lib/solady
+	url = https://github.com/vectorized/solady
