@@ -15,8 +15,10 @@ import { ReentrancyGuard } from "@openzeppelin/contracts/security/ReentrancyGuar
 import { SafeERC20 } from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import { T1ERC7683 } from "../7683/T1ERC7683.sol";
 import { TypeCasts } from "@hyperlane-xyz/libs/TypeCasts.sol";
+import { SignatureCheckerLib } from "solady/utils/SignatureCheckerLib.sol";
+import { EIP712 } from "solady/utils/EIP712.sol";
 
-contract xYieldVault is ERC4626, Ownable2Step, ReentrancyGuard, Pausable {
+contract xYieldVault is ERC4626, Ownable2Step, ReentrancyGuard, Pausable, EIP712 {
     using SafeERC20 for IERC20;
     using Math for uint256;
 
@@ -57,6 +59,14 @@ contract xYieldVault is ERC4626, Ownable2Step, ReentrancyGuard, Pausable {
     error LengthMismatch();
     error InvalidOrderData();
     error NoAddress();
+    error InvalidTxType(uint8 txType);
+    error InvalidTokenSent();
+    error InvalidSignature();
+
+    // EIP-712 TypeHash for the deposit intent
+    bytes32 public constant DEPOSIT_TYPEHASH = keccak256(
+        "DepositIntent(uint64 sourceChainId,address receiver,uint256 amount,uint256 nonce)"
+    );
 
     event DepositRemote(address indexed sender, address indexed owner, uint256 assets, uint256 shares, uint64 chainId);
     event WithdrawRemote(address indexed sender, address indexed owner, uint256 assets, uint256 shares);
@@ -82,6 +92,7 @@ contract xYieldVault is ERC4626, Ownable2Step, ReentrancyGuard, Pausable {
     )
         ERC4626(_underlying)
         ERC20(_name, _symbol)
+        EIP712()
     {
         guardian = _guardian;
         yieldProtocol = IERC4626(_yieldProtocol);
@@ -123,6 +134,52 @@ contract xYieldVault is ERC4626, Ownable2Step, ReentrancyGuard, Pausable {
         if (siblingVaults[_chainId].vault == address(0)) revert InvalidChain();
         shares = previewDeposit(_amount);
         _depositFrom(msg.sender, _receiver, _amount, shares, _chainId);
+    }
+
+    // Initiates a cross-chain deposit to the active vault from a remote chain
+    function depositTo(
+        uint256 _amount,
+        address _receiver,
+        uint64 _targetChainId,
+        uint256 _id,
+        bytes memory _signature,
+        address _outputToken,
+        uint256 _outputAmount,
+        address _exclusiveRelayer,
+        uint32 _quoteTimestamp,
+        uint32 _fillDeadline,
+        uint32 _exclusivityParameter
+    )
+        external
+        whenNotPaused
+        nonReentrant
+    {
+        if (_amount == 0) revert ZeroAmount();
+        if (isActiveChain) revert OnlyRemote();
+        if (siblingVaults[_targetChainId].vault == address(0)) revert InvalidChain();
+
+        IERC20(asset()).safeTransferFrom(msg.sender, address(this), _amount);
+
+        // Compose message with signature for verification on target chain
+        bytes memory data = abi.encode(uint64(block.chainid), _receiver, _signature);
+        bytes memory message = abi.encode(uint8(0), _id, data); // txType = 0 for deposit
+
+        acrossSpokePool.depositV3(
+            address(this),
+            siblingVaults[_targetChainId].vault,
+            asset(),
+            _outputToken,
+            _amount,
+            _outputAmount,
+            _targetChainId,
+            _exclusiveRelayer,
+            _quoteTimestamp,
+            _fillDeadline,
+            _exclusivityParameter,
+            message
+        );
+
+        emit DepositRemote(msg.sender, _receiver, _amount, 0, uint64(block.chainid));
     }
 
     function mint(uint256 _shares, address _receiver) public virtual override whenNotPaused returns (uint256) {
@@ -416,7 +473,51 @@ contract xYieldVault is ERC4626, Ownable2Step, ReentrancyGuard, Pausable {
     }
 
     function handleV3AcrossMessage(address tokenSent, uint256 amount, address relayer, bytes memory message) external {
-        uint256 id = abi.decode(message, (uint256));
-        emit Rebalanced(id, amount);
+        if (tokenSent != asset()) revert InvalidTokenSent();
+        if (amount == 0) revert ZeroAmount();
+        (uint8 txType, uint256 id, bytes memory data) = abi.decode(message, (uint8, uint256, bytes));
+        // 0 = Deposit, 1 = Rebalance
+        if (txType == 0) {
+            if (!isActiveChain) revert DepositOnInactiveChain();
+            // anyone must be able to call this method, so we must check that the recipient authored the intent
+            // else an attacker could claim idle funds as their own deposit
+            (uint64 chainId, address receiver, bytes memory signature) = abi.decode(data, (uint64, address, bytes));
+            if (siblingVaults[chainId].vault == address(0)) revert InvalidChain();
+
+            // Check that the receiver EIP-712 signed this deposit intent
+            bytes32 structHash = keccak256(abi.encode(
+                DEPOSIT_TYPEHASH,
+                chainId,
+                receiver,
+                amount,
+                id  // ID as nonce
+            ));
+
+            bytes32 digest = _hashTypedData(structHash);
+            if (!SignatureCheckerLib.isValidSignatureNow(receiver, digest, signature)) {
+                revert InvalidSignature();
+            }
+
+            uint256 shares = previewDeposit(amount);
+            virtualTotalSupply += shares;
+            yieldProtocol.deposit(amount, address(this));
+
+            emit DepositRemote(msg.sender, receiver, amount, shares, chainId);
+        } else if (txType == 1) {
+            // Rebalance messages don't need signature verification as they're guardian-initiated
+            emit Rebalanced(id, amount);
+        } else {
+            revert InvalidTxType(txType);
+        }
+    }
+
+    // Helper function to get the EIP-712 domain separator
+    function DOMAIN_SEPARATOR() external view returns (bytes32) {
+        return _domainSeparator();
+    }
+
+    // EIP-712 helper functions required by Solady's EIP712 contract
+    function _domainNameAndVersion() internal pure override returns (string memory name, string memory version) {
+        return ("xYieldVault", "1");
     }
 }
