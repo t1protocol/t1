@@ -37,23 +37,32 @@ contract xYieldForkTest is Test {
     uint64 baseChainId = 8453;
 
     // Helper function to easily simulate cross-chain deposits for testing
-    function _simulateRemoteDeposit(address user, uint256 amount, uint64 sourceChainId, uint64 targetChainId) internal returns (uint256 shares) {
+    function _simulateRemoteDeposit(
+        address user,
+        uint256 amount,
+        uint64 sourceChainId,
+        uint64 targetChainId
+    )
+        internal
+        returns (uint256 shares)
+    {
         // Generate unique private key for this test
         uint256 userPrivateKey = uint256(keccak256(abi.encodePacked("test_key", user, amount, block.timestamp)));
         address userSigner = vm.addr(userPrivateKey);
 
         // Create signature
-        bytes32 DEPOSIT_TYPEHASH = keccak256(
-            "DepositIntent(uint64 sourceChainId,address receiver,uint256 amount,uint256 nonce)"
-        );
+        bytes32 DEPOSIT_TYPEHASH =
+            keccak256("DepositIntent(uint64 sourceChainId,address receiver,uint256 amount,uint256 nonce)");
 
-        bytes32 structHash = keccak256(abi.encode(
-            DEPOSIT_TYPEHASH,
-            sourceChainId,
-            userSigner,
-            amount,
-            uint256(keccak256(abi.encodePacked(block.timestamp, user))) // unique nonce
-        ));
+        bytes32 structHash = keccak256(
+            abi.encode(
+                DEPOSIT_TYPEHASH,
+                sourceChainId,
+                userSigner,
+                amount,
+                uint256(keccak256(abi.encodePacked(block.timestamp, user))) // unique nonce
+            )
+        );
 
         xYieldVault activeVault = targetChainId == baseChainId ? xYieldBase : xYieldArbitrum;
         bytes32 domainSeparator = activeVault.DOMAIN_SEPARATOR();
@@ -74,12 +83,7 @@ contract xYieldForkTest is Test {
         bytes memory data = abi.encode(sourceChainId, userSigner, signature);
         bytes memory message = abi.encode(uint8(0), uint256(keccak256(abi.encodePacked(block.timestamp, user))), data);
 
-        activeVault.handleV3AcrossMessage(
-            address(targetAsset),
-            amount,
-            address(0xdeadbeef),
-            message
-        );
+        activeVault.handleV3AcrossMessage(address(targetAsset), amount, address(0xdeadbeef), message);
 
         return activeVault.previewDeposit(amount);
     }
@@ -224,7 +228,6 @@ contract xYieldForkTest is Test {
         assertGt(totalBorrowsAfter, totalBorrowsBefore, "Total borrows should increase due to interest accrual");
     }
 
-
     function testSharePriceCalculation() public {
         vm.startPrank(alice);
         usdcArbitrum.approve(address(xYieldArbitrum), type(uint256).max);
@@ -241,7 +244,6 @@ contract xYieldForkTest is Test {
 
         assertTrue(shares1 > shares2, "Second deposit should get fewer shares due to increased asset value from yield");
     }
-
 
     function testRemoteWithdrawUpdateTotalShares() public {
         // Setup: First do deposits to have assets to withdraw from
@@ -414,16 +416,12 @@ contract xYieldForkTest is Test {
         vm.stopPrank();
 
         uint256 rebalanceAmount = xYieldArbitrum.totalAssets();
-        uint256 rebalanceId = 12345;
+        uint256 rebalanceId = 12_345;
         uint256 outputAmount = rebalanceAmount * 99 / 100;
 
         vm.startPrank(guardian);
         xYieldArbitrum.rebalance(
-            rebalanceId,
-            uint32(baseChainId),
-            rebalanceAmount,
-            outputAmount,
-            uint32(block.timestamp)
+            rebalanceId, uint32(baseChainId), rebalanceAmount, outputAmount, uint32(block.timestamp)
         );
         vm.stopPrank();
 
@@ -436,12 +434,7 @@ contract xYieldForkTest is Test {
         bytes memory rebalanceMessage = abi.encode(uint8(xYieldVault.TxType.Rebalance), rebalanceId, bytes(""));
 
         vm.prank(address(0xdeadbeef));
-        xYieldBase.handleV3AcrossMessage(
-            address(usdcBase),
-            rebalanceAmount,
-            address(0xdeadbeef),
-            rebalanceMessage
-        );
+        xYieldBase.handleV3AcrossMessage(address(usdcBase), rebalanceAmount, address(0xdeadbeef), rebalanceMessage);
 
         vm.startPrank(guardian);
         xYieldBase.finalizeRebalance();
@@ -466,25 +459,26 @@ contract xYieldForkTest is Test {
         vm.stopPrank();
 
         // Alice wants to deposit from Base (inactive) to Arbitrum (active)
-        uint256 depositId = 12345; // Unique deposit ID for replay protection
+        uint256 depositId = 12_345; // Unique deposit ID for replay protection
 
         // Step 1: Alice creates and signs the deposit intent using EIP-712
         // This is what MetaMask and other wallets can sign!
-        bytes32 DEPOSIT_TYPEHASH = keccak256(
-            "DepositIntent(uint64 sourceChainId,address receiver,uint256 amount,uint256 nonce)"
-        );
+        bytes32 DEPOSIT_TYPEHASH =
+            keccak256("DepositIntent(uint64 sourceChainId,address receiver,uint256 amount,uint256 nonce)");
 
         // Generate random private key
         uint256 alicePrivateKey = uint256(keccak256("test_deposit_to_signature_unique_key"));
         address aliceSigner = vm.addr(alicePrivateKey);
 
-        bytes32 structHash = keccak256(abi.encode(
-            DEPOSIT_TYPEHASH,
-            uint64(block.chainid),  // Source chain ID (Arbitrum - where depositTo is called from)
-            aliceSigner,            // Receiver must match the signer
-            depositAmount,
-            depositId              // Using id as nonce
-        ));
+        bytes32 structHash = keccak256(
+            abi.encode(
+                DEPOSIT_TYPEHASH,
+                uint64(block.chainid), // Source chain ID (Arbitrum - where depositTo is called from)
+                aliceSigner, // Receiver must match the signer
+                depositAmount,
+                depositId // Using id as nonce
+            )
+        );
 
         // Get the domain separator from Base vault (destination chain)
         bytes32 domainSeparator = xYieldBase.DOMAIN_SEPARATOR();
@@ -508,8 +502,8 @@ contract xYieldForkTest is Test {
         uint256 outputAmount = depositAmount * 99 / 100; // 1% slippage
         xYieldArbitrum.depositTo(
             depositAmount,
-            aliceSigner,    // Receiver
-            baseChainId,    // Target chain
+            aliceSigner, // Receiver
+            baseChainId, // Target chain
             depositId,
             signature,
             address(usdcBase), // output token on target chain
@@ -571,20 +565,21 @@ contract xYieldForkTest is Test {
         xYieldBase.setSiblingVault(uint64(block.chainid), address(xYieldArbitrum), address(usdcArbitrum));
         vm.stopPrank();
 
-        uint256 depositId = 12345;
+        uint256 depositId = 12_345;
 
         // Create EIP-712 signature from wrong signer (Bob instead of Alice)
-        bytes32 DEPOSIT_TYPEHASH = keccak256(
-            "DepositIntent(uint64 sourceChainId,address receiver,uint256 amount,uint256 nonce)"
-        );
+        bytes32 DEPOSIT_TYPEHASH =
+            keccak256("DepositIntent(uint64 sourceChainId,address receiver,uint256 amount,uint256 nonce)");
 
-        bytes32 structHash = keccak256(abi.encode(
-            DEPOSIT_TYPEHASH,
-            baseChainId,
-            alice,  // Alice is the intended receiver
-            depositAmount,
-            depositId
-        ));
+        bytes32 structHash = keccak256(
+            abi.encode(
+                DEPOSIT_TYPEHASH,
+                baseChainId,
+                alice, // Alice is the intended receiver
+                depositAmount,
+                depositId
+            )
+        );
 
         bytes32 domainSeparator = xYieldArbitrum.DOMAIN_SEPARATOR();
         bytes32 digest = keccak256(abi.encodePacked("\x19\x01", domainSeparator, structHash));
@@ -608,12 +603,7 @@ contract xYieldForkTest is Test {
         // This should revert with InvalidSignature
         vm.expectRevert(xYieldVault.InvalidSignature.selector);
         vm.prank(address(0xdeadbeef));
-        xYieldArbitrum.handleV3AcrossMessage(
-            address(usdcArbitrum),
-            depositAmount,
-            address(0xdeadbeef),
-            message
-        );
+        xYieldArbitrum.handleV3AcrossMessage(address(usdcArbitrum), depositAmount, address(0xdeadbeef), message);
     }
 
     // TODO - test redeem and mint methods
