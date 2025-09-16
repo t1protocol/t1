@@ -2,6 +2,9 @@
   "lib/euler-vault-kit": {
     "rev": "5b98b42048ba11ae82fb62dfec06d1010c8e41e6"
   },
+  "contracts/lib/euler-vault-kit": {
+    "rev": "5b98b42048ba11ae82fb62dfec06d1010c8e41e6"
+  },
   "lib/solady": {
     "tag": {
       "name": "v0.1.26",
