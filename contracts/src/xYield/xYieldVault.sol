@@ -476,7 +476,7 @@ contract xYieldVault is ERC4626, Ownable2Step, ReentrancyGuard, Pausable {
 
         yieldProtocol.withdraw(_amountIn, address(this), address(this));
 
-        bytes memory message = abi.encode(uint8(TxType.Rebalance), _id, bytes(""));
+        bytes memory message = abi.encode(uint8(TxType.Rebalance), _id);
 
         acrossSpokePool.depositV3(
             address(this),
