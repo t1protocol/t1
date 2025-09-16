@@ -33,7 +33,8 @@ contract xYieldVault is ERC4626, Ownable2Step, ReentrancyGuard, Pausable, EIP712
 
     enum TxType {
         Deposit,
-        Withdraw
+        Withdraw,
+        Rebalance
     }
 
     struct BalanceUpdate {
@@ -304,8 +305,10 @@ contract xYieldVault is ERC4626, Ownable2Step, ReentrancyGuard, Pausable, EIP712
         for (uint256 i = 0; i < balanceUpdates.length; i++) {
             if (balanceUpdates[i].txType == TxType.Deposit) {
                 _mint(balanceUpdates[i].recipient, balanceUpdates[i].amount);
-            } else {
+            } else if (balanceUpdates[i].txType == TxType.Withdraw) {
                 _burn(balanceUpdates[i].recipient, balanceUpdates[i].amount);
+            } else {
+                revert InvalidTxType(uint8(balanceUpdates[i].txType));
             }
         }
     }
@@ -411,7 +414,7 @@ contract xYieldVault is ERC4626, Ownable2Step, ReentrancyGuard, Pausable, EIP712
 
         yieldProtocol.withdraw(_amountIn, address(this), address(this));
 
-        bytes memory message = abi.encode(uint8(1), _id, bytes("")); // txType = 1 for rebalance
+        bytes memory message = abi.encode(uint8(TxType.Rebalance), _id, bytes(""));
 
         acrossSpokePool.depositV3(
             address(this),
@@ -443,8 +446,7 @@ contract xYieldVault is ERC4626, Ownable2Step, ReentrancyGuard, Pausable, EIP712
         if (tokenSent != asset()) revert InvalidTokenSent();
         if (amount == 0) revert ZeroAmount();
         (uint8 txType, uint256 id, bytes memory data) = abi.decode(message, (uint8, uint256, bytes));
-        // 0 = Deposit, 1 = Rebalance
-        if (txType == 0) {
+        if (txType == uint8(TxType.Deposit)) {
             if (!isActiveChain) revert DepositOnInactiveChain();
             // anyone must be able to call this method, so we must check that the recipient authored the intent
             // else an attacker could claim idle funds as their own deposit
@@ -470,7 +472,7 @@ contract xYieldVault is ERC4626, Ownable2Step, ReentrancyGuard, Pausable, EIP712
             yieldProtocol.deposit(amount, address(this));
 
             emit DepositRemote(msg.sender, receiver, amount, shares, chainId);
-        } else if (txType == 1) {
+        } else if (txType == uint8(TxType.Rebalance)) {
             // Rebalance messages don't need signature verification as they're guardian-initiated
             emit Rebalanced(id, amount);
         } else {

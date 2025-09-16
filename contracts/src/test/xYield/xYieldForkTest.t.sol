@@ -433,7 +433,7 @@ contract xYieldForkTest is Test {
         usdcBase.transfer(address(xYieldBase), rebalanceAmount);
         vm.stopPrank();
 
-        bytes memory rebalanceMessage = abi.encode(uint8(1), rebalanceId, bytes(""));
+        bytes memory rebalanceMessage = abi.encode(uint8(xYieldVault.TxType.Rebalance), rebalanceId, bytes(""));
 
         vm.prank(address(0xdeadbeef));
         xYieldBase.handleV3AcrossMessage(
