@@ -445,7 +445,6 @@ contract xYieldForkTest is Test {
             depositAmount,
             alice,
             baseChainId,
-            address(usdcBase),
             outputAmount,
             address(0),
             uint32(block.timestamp),

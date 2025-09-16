@@ -61,7 +61,6 @@ interface IxYieldVault {
         uint256 _amount,
         address _receiver,
         uint64 _targetChainId,
-        address _outputToken,
         uint256 _outputAmount,
         address _exclusiveRelayer,
         uint32 _quoteTimestamp,

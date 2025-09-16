@@ -229,7 +229,6 @@ contract xYieldTest is Test {
             depositAmount,
             user1,
             1, // target chain
-            address(usdc), // output token
             depositAmount,
             address(0), // exclusive relayer
             uint32(block.timestamp),

@@ -149,7 +149,6 @@ contract xYieldVault is ERC4626, Ownable2Step, ReentrancyGuard, Pausable {
         uint256 _amount,
         address _receiver,
         uint64 _targetChainId,
-        address _outputToken,
         uint256 _outputAmount,
         address _exclusiveRelayer,
         uint32 _quoteTimestamp,
@@ -176,7 +175,7 @@ contract xYieldVault is ERC4626, Ownable2Step, ReentrancyGuard, Pausable {
             abi.encodeCall(this.depositFrom, (_outputAmount, _receiver, uint64(block.chainid)));
 
         Call[] memory calls = new Call[](2);
-        calls[0] = Call({ target: _outputToken, callData: approveCallData, value: 0 });
+        calls[0] = Call({ target: siblingVaults[_targetChainId].underlyingErc20, callData: approveCallData, value: 0 });
         calls[1] = Call({ target: siblingVaults[_targetChainId].vault, callData: depositCallData, value: 0 });
 
         Instructions memory instructions = Instructions({ calls: calls, fallbackRecipient: _receiver });
@@ -187,7 +186,7 @@ contract xYieldVault is ERC4626, Ownable2Step, ReentrancyGuard, Pausable {
             address(this),
             siblingVaults[_targetChainId].multicallHandler,
             asset(),
-            _outputToken,
+            siblingVaults[_targetChainId].underlyingErc20,
             _amount,
             _outputAmount,
             _targetChainId,
