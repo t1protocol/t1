@@ -127,6 +127,23 @@ contract xYieldVault is ERC4626, Ownable2Step, ReentrancyGuard, Pausable {
         return shares;
     }
 
+    // called on behalf of a user who has deposited from a remote chain
+    function depositFrom(
+        uint256 _amount,
+        address _receiver,
+        uint64 _chainId
+    )
+        external
+        whenNotPaused
+        returns (uint256 shares)
+    {
+        if (_amount == 0) revert ZeroAmount();
+        if (!isActiveChain) revert DepositOnInactiveChain();
+        if (siblingVaults[_chainId].vault == address(0)) revert InvalidChain();
+        shares = previewDeposit(_amount);
+        _depositFrom(msg.sender, _receiver, _amount, shares, _chainId);
+    }
+
     // Initiates a cross-chain deposit to the active vault from a remote chain
     function depositTo(
         uint256 _amount,
@@ -259,23 +276,6 @@ contract xYieldVault is ERC4626, Ownable2Step, ReentrancyGuard, Pausable {
             fillDeadline,
             exclusivityParameter
         );
-    }
-
-    // called on behalf of a user who has deposited from a remote chain
-    function depositFrom(
-        uint256 _amount,
-        address _receiver,
-        uint64 _chainId
-    )
-        external
-        whenNotPaused
-        returns (uint256 shares)
-    {
-        if (_amount == 0) revert ZeroAmount();
-        if (!isActiveChain) revert DepositOnInactiveChain();
-        if (siblingVaults[_chainId].vault == address(0)) revert InvalidChain();
-        shares = previewDeposit(_amount);
-        _depositFrom(msg.sender, _receiver, _amount, shares, _chainId);
     }
 
     function _withdrawFrom(
@@ -508,7 +508,7 @@ contract xYieldVault is ERC4626, Ownable2Step, ReentrancyGuard, Pausable {
         if (tokenSent != asset()) revert InvalidTokenSent();
         if (amount == 0) revert ZeroAmount();
 
-        (uint8 txType, uint256 id, bytes memory data) = abi.decode(message, (uint8, uint256, bytes));
+        (uint8 txType, uint256 id) = abi.decode(message, (uint8, uint256));
 
         if (txType == uint8(TxType.Rebalance)) {
             emit Rebalanced(id, amount);
