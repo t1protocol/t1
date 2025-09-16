@@ -146,7 +146,7 @@ contract xYieldVault is ERC4626, Ownable2Step, ReentrancyGuard, Pausable, EIP712
 
         // Compose message with signature for verification on target chain
         bytes memory data = abi.encode(uint64(block.chainid), _receiver, _signature);
-        bytes memory message = abi.encode(uint8(0), _id, data); // txType = 0 for deposit
+        bytes memory message = abi.encode(uint8(TxType.Deposit), _id, data);
 
         acrossSpokePool.depositV3(
             address(this),
