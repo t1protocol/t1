@@ -68,9 +68,9 @@ contract xYieldVault is ERC4626, Ownable2Step, ReentrancyGuard, Pausable, EIP712
     bytes32 public constant DEPOSIT_TYPEHASH =
         keccak256("DepositIntent(uint64 sourceChainId,address receiver,uint256 amount,uint256 nonce)");
 
-    event DepositRemoteInitiated(address indexed sender, address indexed owner, uint256 assets, uint64 targetChainId);
-    event DepositRemote(address indexed sender, address indexed owner, uint256 assets, uint256 shares, uint64 sourceChainId);
-    event WithdrawRemote(address indexed sender, address indexed owner, uint256 assets, uint256 shares);
+    event XYieldDepositRemoteInitiated(address indexed sender, address indexed owner, uint256 outputAmount, uint64 targetChainId);
+    event XYieldDeposit(address indexed sender, address indexed owner, uint256 assets, uint256 shares, uint64 sourceChainId, bool isRemote);
+    event XYieldWithdraw(address indexed sender, address indexed owner, address indexed receiver, uint256 assets, uint256 shares, uint64 targetChainId, bool isRemote);
     event TotalSupplyUpdated(uint256 newVirtualTotalSupply);
     event ChainStatusChanged(bool isActive);
     event SiblingVaultSet(uint64 chainId, address vault);
@@ -163,7 +163,7 @@ contract xYieldVault is ERC4626, Ownable2Step, ReentrancyGuard, Pausable, EIP712
             message
         );
 
-        emit DepositRemoteInitiated(msg.sender, _receiver, _outputAmount, _targetChainId);
+        emit XYieldDepositRemoteInitiated(msg.sender, _receiver, _outputAmount, _targetChainId);
     }
 
     function mint(uint256 _shares, address _receiver) public virtual override whenNotPaused returns (uint256) {
@@ -276,7 +276,7 @@ contract xYieldVault is ERC4626, Ownable2Step, ReentrancyGuard, Pausable, EIP712
             ""
         );
 
-        emit WithdrawRemote(msg.sender, owner, assets, shares);
+        emit XYieldWithdraw(msg.sender, owner, owner, outputAmount, shares, uint64(chainId), true);
     }
 
     // used on remote chain to mint share tokens
@@ -320,7 +320,7 @@ contract xYieldVault is ERC4626, Ownable2Step, ReentrancyGuard, Pausable, EIP712
         IERC20(asset()).safeTransferFrom(_caller, address(this), _amount);
         yieldProtocol.deposit(_amount, address(this));
 
-        emit Deposit(_caller, _receiver, _amount, _shares);
+        emit XYieldDeposit(_caller, _receiver, _amount, _shares, uint64(block.chainid), false);
     }
 
     function _withdraw(
@@ -346,7 +346,7 @@ contract xYieldVault is ERC4626, Ownable2Step, ReentrancyGuard, Pausable, EIP712
         yieldProtocol.withdraw(_amount, address(this), address(this));
         IERC20(asset()).safeTransfer(_receiver, _amount);
 
-        emit Withdraw(_caller, _receiver, _owner, _amount, _shares);
+        emit XYieldWithdraw(_caller, _receiver, _owner, _amount, _shares, uint64(block.chainid), false);
     }
 
     function _setActiveChain(bool _isActive) internal {
@@ -474,7 +474,7 @@ contract xYieldVault is ERC4626, Ownable2Step, ReentrancyGuard, Pausable, EIP712
         virtualTotalSupply += shares;
         yieldProtocol.deposit(amount, address(this));
 
-        emit DepositRemote(msg.sender, receiver, amount, shares, chainId);
+        emit XYieldDeposit(msg.sender, receiver, amount, shares, chainId, true);
     }
 
     // Helper function to get the EIP-712 domain separator
