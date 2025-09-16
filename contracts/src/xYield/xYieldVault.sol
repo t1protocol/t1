@@ -15,10 +15,8 @@ import { ReentrancyGuard } from "@openzeppelin/contracts/security/ReentrancyGuar
 import { SafeERC20 } from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import { T1ERC7683 } from "../7683/T1ERC7683.sol";
 import { TypeCasts } from "@hyperlane-xyz/libs/TypeCasts.sol";
-import { SignatureCheckerLib } from "solady/utils/SignatureCheckerLib.sol";
-import { EIP712 } from "solady/utils/EIP712.sol";
 
-contract xYieldVault is ERC4626, Ownable2Step, ReentrancyGuard, Pausable, EIP712 {
+contract xYieldVault is ERC4626, Ownable2Step, ReentrancyGuard, Pausable {
     using SafeERC20 for IERC20;
     using Math for uint256;
 
@@ -46,9 +44,22 @@ contract xYieldVault is ERC4626, Ownable2Step, ReentrancyGuard, Pausable, EIP712
     struct SiblingVault {
         address vault;
         address underlyingErc20;
+        // The address of the Across MulticallHandler which calls the depositFrom method
+        address multicallHandler;
     }
 
-    mapping(uint64 => SiblingVault) public siblingVaults;
+    struct Call {
+        address target;
+        bytes callData;
+        uint256 value;
+    }
+
+    struct Instructions {
+        Call[] calls;
+        address fallbackRecipient;
+    }
+
+    mapping(uint64 chainId => SiblingVault) public siblingVaults;
 
     error NotGuardian();
     error ZeroAmount();
@@ -62,11 +73,6 @@ contract xYieldVault is ERC4626, Ownable2Step, ReentrancyGuard, Pausable, EIP712
     error NoAddress();
     error InvalidTxType(uint8 txType);
     error InvalidTokenSent();
-    error InvalidSignature();
-
-    // EIP-712 TypeHash for the deposit intent
-    bytes32 public constant DEPOSIT_TYPEHASH =
-        keccak256("DepositIntent(uint64 sourceChainId,address receiver,uint256 amount,uint256 nonce)");
 
     event DepositRemoteInitiated(address indexed sender, address indexed owner, uint256 assets, uint64 targetChainId);
     event DepositRemote(
@@ -95,7 +101,6 @@ contract xYieldVault is ERC4626, Ownable2Step, ReentrancyGuard, Pausable, EIP712
     )
         ERC4626(_underlying)
         ERC20(_name, _symbol)
-        EIP712()
     {
         guardian = _guardian;
         yieldProtocol = IERC4626(_yieldProtocol);
@@ -127,8 +132,6 @@ contract xYieldVault is ERC4626, Ownable2Step, ReentrancyGuard, Pausable, EIP712
         uint256 _amount,
         address _receiver,
         uint64 _targetChainId,
-        uint256 _id,
-        bytes memory _signature,
         address _outputToken,
         uint256 _outputAmount,
         address _exclusiveRelayer,
@@ -146,13 +149,26 @@ contract xYieldVault is ERC4626, Ownable2Step, ReentrancyGuard, Pausable, EIP712
 
         IERC20(asset()).safeTransferFrom(msg.sender, address(this), _amount);
 
-        // Compose message with signature for verification on target chain
-        bytes memory data = abi.encode(uint64(block.chainid), _receiver, _signature);
-        bytes memory message = abi.encode(uint8(TxType.Deposit), _id, data);
+        // Create instructions for multicall handler to:
+        // 1. Approve the vault to spend tokens
+        // 2. Call depositFrom on target vault
+        bytes memory approveCallData =
+            abi.encodeCall(IERC20.approve, (siblingVaults[_targetChainId].vault, _outputAmount));
+
+        bytes memory depositCallData =
+            abi.encodeCall(this.depositFrom, (_outputAmount, _receiver, uint64(block.chainid)));
+
+        Call[] memory calls = new Call[](2);
+        calls[0] = Call({ target: _outputToken, callData: approveCallData, value: 0 });
+        calls[1] = Call({ target: siblingVaults[_targetChainId].vault, callData: depositCallData, value: 0 });
+
+        Instructions memory instructions = Instructions({ calls: calls, fallbackRecipient: _receiver });
+
+        bytes memory message = abi.encode(instructions);
 
         acrossSpokePool.depositV3(
             address(this),
-            siblingVaults[_targetChainId].vault,
+            siblingVaults[_targetChainId].multicallHandler,
             asset(),
             _outputToken,
             _amount,
@@ -245,6 +261,23 @@ contract xYieldVault is ERC4626, Ownable2Step, ReentrancyGuard, Pausable, EIP712
         );
     }
 
+    // called on behalf of a user who has deposited from a remote chain
+    function depositFrom(
+        uint256 _amount,
+        address _receiver,
+        uint64 _chainId
+    )
+        external
+        whenNotPaused
+        returns (uint256 shares)
+    {
+        if (_amount == 0) revert ZeroAmount();
+        if (!isActiveChain) revert DepositOnInactiveChain();
+        if (siblingVaults[_chainId].vault == address(0)) revert InvalidChain();
+        shares = previewDeposit(_amount);
+        _depositFrom(msg.sender, _receiver, _amount, shares, _chainId);
+    }
+
     function _withdrawFrom(
         address owner,
         uint256 assets,
@@ -325,6 +358,22 @@ contract xYieldVault is ERC4626, Ownable2Step, ReentrancyGuard, Pausable, EIP712
         emit Deposit(_caller, _receiver, _amount, _shares);
     }
 
+    function _depositFrom(
+        address _caller,
+        address _receiver,
+        uint256 _amount,
+        uint256 _shares,
+        uint64 _chainId
+    )
+        internal
+    {
+        virtualTotalSupply += _shares;
+        IERC20(asset()).safeTransferFrom(_caller, address(this), _amount);
+        yieldProtocol.deposit(_amount, address(this));
+
+        emit DepositRemote(_caller, _receiver, _amount, _shares, _chainId);
+    }
+
     function _withdraw(
         address _caller,
         address _receiver,
@@ -368,11 +417,22 @@ contract xYieldVault is ERC4626, Ownable2Step, ReentrancyGuard, Pausable, EIP712
         _setActiveChain(_isActive);
     }
 
-    function setSiblingVault(uint64 _chainId, address _vault, address _underlyingErc20) external onlyOwner {
-        if (_vault == address(0) || _underlyingErc20 == address(0)) revert NoAddress();
+    function setSiblingVault(
+        uint64 _chainId,
+        address _vault,
+        address _underlyingErc20,
+        address _multicallHandler
+    )
+        external
+        onlyOwner
+    {
+        if (_vault == address(0) || _underlyingErc20 == address(0) || _multicallHandler == address(0)) {
+            revert NoAddress();
+        }
 
         siblingVaults[_chainId].vault = _vault;
         siblingVaults[_chainId].underlyingErc20 = _underlyingErc20;
+        siblingVaults[_chainId].multicallHandler = _multicallHandler;
         emit SiblingVaultSet(_chainId, _vault);
     }
 
@@ -450,42 +510,10 @@ contract xYieldVault is ERC4626, Ownable2Step, ReentrancyGuard, Pausable, EIP712
 
         (uint8 txType, uint256 id, bytes memory data) = abi.decode(message, (uint8, uint256, bytes));
 
-        if (txType == uint8(TxType.Deposit)) {
-            _handleDepositMessage(amount, id, data);
-        } else if (txType == uint8(TxType.Rebalance)) {
+        if (txType == uint8(TxType.Rebalance)) {
             emit Rebalanced(id, amount);
         } else {
             revert InvalidTxType(txType);
         }
-    }
-
-    function _handleDepositMessage(uint256 amount, uint256 id, bytes memory data) private {
-        if (!isActiveChain) revert DepositOnInactiveChain();
-
-        (uint64 chainId, address receiver, bytes memory signature) = abi.decode(data, (uint64, address, bytes));
-        if (siblingVaults[chainId].vault == address(0)) revert InvalidChain();
-
-        bytes32 structHash = keccak256(abi.encode(DEPOSIT_TYPEHASH, chainId, receiver, amount, id));
-
-        bytes32 digest = _hashTypedData(structHash);
-        if (!SignatureCheckerLib.isValidSignatureNow(receiver, digest, signature)) {
-            revert InvalidSignature();
-        }
-
-        uint256 shares = previewDeposit(amount);
-        virtualTotalSupply += shares;
-        yieldProtocol.deposit(amount, address(this));
-
-        emit DepositRemote(msg.sender, receiver, amount, shares, chainId);
-    }
-
-    // Helper function to get the EIP-712 domain separator
-    function DOMAIN_SEPARATOR() external view returns (bytes32) {
-        return _domainSeparator();
-    }
-
-    // EIP-712 helper functions required by Solady's EIP712 contract
-    function _domainNameAndVersion() internal pure override returns (string memory name, string memory version) {
-        return ("xYieldVault", "1");
     }
 }
