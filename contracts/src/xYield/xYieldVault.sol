@@ -68,7 +68,8 @@ contract xYieldVault is ERC4626, Ownable2Step, ReentrancyGuard, Pausable, EIP712
     bytes32 public constant DEPOSIT_TYPEHASH =
         keccak256("DepositIntent(uint64 sourceChainId,address receiver,uint256 amount,uint256 nonce)");
 
-    event DepositRemote(address indexed sender, address indexed owner, uint256 assets, uint256 shares, uint64 chainId);
+    event DepositRemoteInitiated(address indexed sender, address indexed owner, uint256 assets, uint64 targetChainId);
+    event DepositRemote(address indexed sender, address indexed owner, uint256 assets, uint256 shares, uint64 sourceChainId);
     event WithdrawRemote(address indexed sender, address indexed owner, uint256 assets, uint256 shares);
     event TotalSupplyUpdated(uint256 newVirtualTotalSupply);
     event ChainStatusChanged(bool isActive);
@@ -162,7 +163,7 @@ contract xYieldVault is ERC4626, Ownable2Step, ReentrancyGuard, Pausable, EIP712
             message
         );
 
-        emit DepositRemote(msg.sender, _receiver, _amount, 0, uint64(block.chainid));
+        emit DepositRemoteInitiated(msg.sender, _receiver, _outputAmount, _targetChainId);
     }
 
     function mint(uint256 _shares, address _receiver) public virtual override whenNotPaused returns (uint256) {
