@@ -119,23 +119,6 @@ contract xYieldVault is ERC4626, Ownable2Step, ReentrancyGuard, Pausable, EIP712
         return shares;
     }
 
-    // called on behalf of a user who has deposited from a remote chain
-    function depositFrom(
-        uint256 _amount,
-        address _receiver,
-        uint64 _chainId
-    )
-        external
-        whenNotPaused
-        returns (uint256 shares)
-    {
-        if (_amount == 0) revert ZeroAmount();
-        if (!isActiveChain) revert DepositOnInactiveChain();
-        if (siblingVaults[_chainId].vault == address(0)) revert InvalidChain();
-        shares = previewDeposit(_amount);
-        _depositFrom(msg.sender, _receiver, _amount, shares, _chainId);
-    }
-
     // Initiates a cross-chain deposit to the active vault from a remote chain
     function depositTo(
         uint256 _amount,
@@ -337,22 +320,6 @@ contract xYieldVault is ERC4626, Ownable2Step, ReentrancyGuard, Pausable, EIP712
         emit Deposit(_caller, _receiver, _amount, _shares);
     }
 
-    function _depositFrom(
-        address _caller,
-        address _receiver,
-        uint256 _amount,
-        uint256 _shares,
-        uint64 _chainId
-    )
-        internal
-    {
-        virtualTotalSupply += _shares;
-        IERC20(asset()).safeTransferFrom(_caller, address(this), _amount);
-        yieldProtocol.deposit(_amount, address(this));
-
-        emit DepositRemote(_caller, _receiver, _amount, _shares, _chainId);
-    }
-
     function _withdraw(
         address _caller,
         address _receiver,
@@ -444,7 +411,7 @@ contract xYieldVault is ERC4626, Ownable2Step, ReentrancyGuard, Pausable, EIP712
 
         yieldProtocol.withdraw(_amountIn, address(this), address(this));
 
-        bytes memory message = abi.encode(_id);
+        bytes memory message = abi.encode(uint8(1), _id, bytes("")); // txType = 1 for rebalance
 
         acrossSpokePool.depositV3(
             address(this),
