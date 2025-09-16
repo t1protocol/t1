@@ -220,18 +220,24 @@ contract xYieldTest is Test {
         vault.deposit(100, user1);
     }
 
-    function testSiblingVaultsRevert() public {
+    function testDepositToRevert() public {
         uint256 depositAmount = 100 * 10 ** 18;
 
         vm.prank(user1);
-        vm.expectRevert(abi.encodeWithSelector(xYieldVault.InvalidChain.selector));
-        vault.depositFrom(depositAmount, user1, 1);
-
-        vm.prank(vault.owner());
-        vault.setSiblingVault(1, address(0x4), address(usdc));
-
-        vm.prank(user1);
-        vault.depositFrom(depositAmount, user1, 1);
+        vm.expectRevert(abi.encodeWithSelector(xYieldVault.OnlyRemote.selector));
+        vault.depositTo(
+            depositAmount,
+            user1,
+            1, // target chain
+            1, // id
+            hex"00", // dummy signature
+            address(usdc), // output token
+            depositAmount,
+            address(0), // exclusive relayer
+            uint32(block.timestamp),
+            uint32(block.timestamp + 1800),
+            0 // exclusivity parameter
+        );
     }
 
     function testRebalance() public {
