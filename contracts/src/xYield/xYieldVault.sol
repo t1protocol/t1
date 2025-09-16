@@ -125,12 +125,6 @@ contract xYieldVault is ERC4626, Ownable2Step, ReentrancyGuard, Pausable {
         _depositFrom(msg.sender, _receiver, _amount, shares, _chainId);
     }
 
-    function reDepositIdleAssets() external onlyGuardian {
-        uint256 idleBalance = IERC20(asset()).balanceOf(address(this));
-        if (idleBalance == 0) revert ZeroAmount();
-        yieldProtocol.deposit(idleBalance, address(this));
-    }
-
     function mint(uint256 _shares, address _receiver) public virtual override whenNotPaused returns (uint256) {
         if (_shares == 0) revert ZeroAmount();
         if (!isActiveChain) revert DepositOnInactiveChain();
@@ -252,6 +246,17 @@ contract xYieldVault is ERC4626, Ownable2Step, ReentrancyGuard, Pausable {
         virtualTotalSupply = totalSupply_;
         _updateBalances(balanceUpdates);
         emit TotalSupplyUpdated(totalSupply_);
+    }
+
+    function finalizeRebalance() external onlyGuardian {
+        _depositIdleAssets();
+        _setActiveChain(true);
+    }
+
+    function _depositIdleAssets() internal {
+        uint256 idleBalance = IERC20(asset()).balanceOf(address(this));
+        if (idleBalance == 0) revert ZeroAmount();
+        yieldProtocol.deposit(idleBalance, address(this));
     }
 
     // TODO - submit proofs for remote deposits

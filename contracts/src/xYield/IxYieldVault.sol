@@ -80,6 +80,7 @@ interface IxYieldVault {
     )
         external;
     function rebalanceFillTTL() external view returns (uint256);
+    function finalizeRebalance() external;
     function redeem(uint256 _shares, address _receiver, address _owner) external returns (uint256);
     function renounceOwnership() external;
     function setAcrossSpokePool(address _newAcrossSpokePool) external;
