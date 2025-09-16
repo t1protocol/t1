@@ -65,9 +65,8 @@ contract xYieldVault is ERC4626, Ownable2Step, ReentrancyGuard, Pausable, EIP712
     error InvalidSignature();
 
     // EIP-712 TypeHash for the deposit intent
-    bytes32 public constant DEPOSIT_TYPEHASH = keccak256(
-        "DepositIntent(uint64 sourceChainId,address receiver,uint256 amount,uint256 nonce)"
-    );
+    bytes32 public constant DEPOSIT_TYPEHASH =
+        keccak256("DepositIntent(uint64 sourceChainId,address receiver,uint256 amount,uint256 nonce)");
 
     event DepositRemote(address indexed sender, address indexed owner, uint256 assets, uint256 shares, uint64 chainId);
     event WithdrawRemote(address indexed sender, address indexed owner, uint256 assets, uint256 shares);
@@ -445,39 +444,36 @@ contract xYieldVault is ERC4626, Ownable2Step, ReentrancyGuard, Pausable, EIP712
     function handleV3AcrossMessage(address tokenSent, uint256 amount, address relayer, bytes memory message) external {
         if (tokenSent != asset()) revert InvalidTokenSent();
         if (amount == 0) revert ZeroAmount();
+
         (uint8 txType, uint256 id, bytes memory data) = abi.decode(message, (uint8, uint256, bytes));
+
         if (txType == uint8(TxType.Deposit)) {
-            if (!isActiveChain) revert DepositOnInactiveChain();
-            // anyone must be able to call this method, so we must check that the recipient authored the intent
-            // else an attacker could claim idle funds as their own deposit
-            (uint64 chainId, address receiver, bytes memory signature) = abi.decode(data, (uint64, address, bytes));
-            if (siblingVaults[chainId].vault == address(0)) revert InvalidChain();
-
-            // Check that the receiver EIP-712 signed this deposit intent
-            bytes32 structHash = keccak256(abi.encode(
-                DEPOSIT_TYPEHASH,
-                chainId,
-                receiver,
-                amount,
-                id  // ID as nonce
-            ));
-
-            bytes32 digest = _hashTypedData(structHash);
-            if (!SignatureCheckerLib.isValidSignatureNow(receiver, digest, signature)) {
-                revert InvalidSignature();
-            }
-
-            uint256 shares = previewDeposit(amount);
-            virtualTotalSupply += shares;
-            yieldProtocol.deposit(amount, address(this));
-
-            emit DepositRemote(msg.sender, receiver, amount, shares, chainId);
+            _handleDepositMessage(amount, id, data);
         } else if (txType == uint8(TxType.Rebalance)) {
-            // Rebalance messages don't need signature verification as they're guardian-initiated
             emit Rebalanced(id, amount);
         } else {
             revert InvalidTxType(txType);
         }
+    }
+
+    function _handleDepositMessage(uint256 amount, uint256 id, bytes memory data) private {
+        if (!isActiveChain) revert DepositOnInactiveChain();
+
+        (uint64 chainId, address receiver, bytes memory signature) = abi.decode(data, (uint64, address, bytes));
+        if (siblingVaults[chainId].vault == address(0)) revert InvalidChain();
+
+        bytes32 structHash = keccak256(abi.encode(DEPOSIT_TYPEHASH, chainId, receiver, amount, id));
+
+        bytes32 digest = _hashTypedData(structHash);
+        if (!SignatureCheckerLib.isValidSignatureNow(receiver, digest, signature)) {
+            revert InvalidSignature();
+        }
+
+        uint256 shares = previewDeposit(amount);
+        virtualTotalSupply += shares;
+        yieldProtocol.deposit(amount, address(this));
+
+        emit DepositRemote(msg.sender, receiver, amount, shares, chainId);
     }
 
     // Helper function to get the EIP-712 domain separator
