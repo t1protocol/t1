@@ -13,7 +13,6 @@ interface IxYieldVault {
     error DepositOnInactiveChain();
     error InvalidChain();
     error InvalidOrderData();
-    error InvalidSignature();
     error InvalidTokenSent();
     error InvalidTxType(uint8 txType);
     error LengthMismatch();
@@ -78,13 +77,11 @@ interface IxYieldVault {
     function decimals() external view returns (uint8);
     function decreaseAllowance(address spender, uint256 subtractedValue) external returns (bool);
     function deposit(uint256 _amount, address _receiver) external returns (uint256);
+    function depositFrom(uint256 _amount, address _receiver, uint64 _chainId) external returns (uint256 shares);
     function depositTo(
         uint256 _amount,
         address _receiver,
         uint64 _targetChainId,
-        uint256 _id,
-        bytes memory _signature,
-        address _outputToken,
         uint256 _outputAmount,
         address _exclusiveRelayer,
         uint32 _quoteTimestamp,
@@ -92,18 +89,6 @@ interface IxYieldVault {
         uint32 _exclusivityParameter
     )
         external;
-    function eip712Domain()
-        external
-        view
-        returns (
-            bytes1 fields,
-            string memory name,
-            string memory version,
-            uint256 chainId,
-            address verifyingContract,
-            bytes32 salt,
-            uint256[] memory extensions
-        );
     function finalizeRebalance() external;
     function guardian() external view returns (address);
     function handleV3AcrossMessage(address tokenSent, uint256 amount, address relayer, bytes memory message) external;
@@ -138,9 +123,18 @@ interface IxYieldVault {
     function setActiveChain(bool _isActive) external;
     function setGuardian(address _newGuardian) external;
     function setRebalanceFillTTL(uint256 newTTL) external;
-    function setSiblingVault(uint64 _chainId, address _vault, address _underlyingErc20) external;
+    function setSiblingVault(
+        uint64 _chainId,
+        address _vault,
+        address _underlyingErc20,
+        address _multicallHandler
+    )
+        external;
     function setYieldProtocol(address _newYieldProtocol) external;
-    function siblingVaults(uint64) external view returns (address vault, address underlyingErc20);
+    function siblingVaults(uint64 chainId)
+        external
+        view
+        returns (address vault, address underlyingErc20, address multicallHandler);
     function symbol() external view returns (string memory);
     function totalAssets() external view returns (uint256);
     function totalSupply() external view returns (uint256);

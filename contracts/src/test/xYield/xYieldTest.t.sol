@@ -229,9 +229,6 @@ contract xYieldTest is Test {
             depositAmount,
             user1,
             1, // target chain
-            1, // id
-            hex"00", // dummy signature
-            address(usdc), // output token
             depositAmount,
             address(0), // exclusive relayer
             uint32(block.timestamp),
@@ -244,7 +241,7 @@ contract xYieldTest is Test {
         uint32 dstChainId = 1;
         uint256 depositAmount = 100 * 10 ** 18;
 
-        vault.setSiblingVault(dstChainId, address(12), address(usdc));
+        vault.setSiblingVault(dstChainId, address(12), address(usdc), address(0x1234));
 
         vm.prank(user1);
         vault.deposit(depositAmount, user1);
@@ -268,7 +265,7 @@ contract xYieldTest is Test {
         uint32 dstChainId = 1;
         uint256 depositAmount = 100 * 10 ** 18;
 
-        vault.setSiblingVault(dstChainId, address(12), address(usdc));
+        vault.setSiblingVault(dstChainId, address(12), address(usdc), address(0x1234));
 
         vm.prank(user1);
         vault.deposit(depositAmount, user1);
@@ -285,7 +282,7 @@ contract xYieldTest is Test {
         uint32 dstChainId = 1;
         uint256 depositAmount = 100 * 10 ** 18;
 
-        vault.setSiblingVault(dstChainId, address(12), address(usdc));
+        vault.setSiblingVault(dstChainId, address(12), address(usdc), address(0x1234));
 
         vm.prank(user1);
         vault.deposit(depositAmount, user1);
@@ -369,7 +366,7 @@ contract xYieldTest is Test {
     {
         OrderData memory orderData;
         {
-            (address siblingVault,) = vault.siblingVaults(dstChainId);
+            (address siblingVault,,) = vault.siblingVaults(dstChainId);
             orderData = OrderData({
                 sender: TypeCasts.addressToBytes32(address(vault)),
                 recipient: TypeCasts.addressToBytes32(siblingVault),
