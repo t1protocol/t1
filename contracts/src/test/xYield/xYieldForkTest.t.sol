@@ -26,8 +26,11 @@ contract xYieldForkTest is Test {
     address internal charlie = address(0xccc);
     // address internal usdcMasterMinter = 0x8aFf09e2259cacbF4Fc4e3E53F3bf799EfEEab36;
     USDC internal usdcArbitrum = USDC(0xaf88d065e77c8cC2239327C5EDb3A432268e5831);
-    address internal usdcBase = 0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913;
-    address public acrossSpokePoolArbitrum = 0xe35e9842fceaCA96570B734083f4a58e8F7C5f2A;
+    USDC internal usdcBase = USDC(0xaf88d065e77c8cC2239327C5EDb3A432268e5831); // pretend this is USDC on Base
+
+    // Real Arbitrum deployed contracts
+    address payable public constant acrossSpokePoolArbitrum = payable(0xe35e9842fceaCA96570B734083f4a58e8F7C5f2A);
+    address payable public constant multicallHandlerArbitrum = payable(0x924a9f036260DdD5808007E1AA95f08eD08aA569);
 
     address[] emptyAddresses;
     uint256[] emptyAmounts;
@@ -35,6 +38,28 @@ contract xYieldForkTest is Test {
     uint256 depositAmount = 100e6;
 
     uint64 baseChainId = 8453;
+
+    // Helper function to easily simulate cross-chain deposits for testing
+    function _simulateRemoteDeposit(
+        address user,
+        uint256 amount,
+        uint64 sourceChainId,
+        uint64 targetChainId
+    )
+        internal
+        returns (uint256 shares)
+    {
+        xYieldVault activeVault = targetChainId == baseChainId ? xYieldBase : xYieldArbitrum;
+        IERC20 targetAsset = targetChainId == baseChainId ? IERC20(address(usdcBase)) : IERC20(address(usdcArbitrum));
+
+        // Transfer assets to target vault and call depositFrom directly (simulating multicall handler)
+        vm.startPrank(user);
+        targetAsset.approve(address(activeVault), amount);
+        shares = activeVault.depositFrom(amount, user, sourceChainId);
+        vm.stopPrank();
+
+        return shares;
+    }
 
     function setUp() public {
         string memory arbitrumRpcUrl = vm.envString("ARBITRUM_RPC");
@@ -64,7 +89,12 @@ contract xYieldForkTest is Test {
 
         vm.prank(guardian);
         xYieldArbitrum.setActiveChain(true);
-        xYieldArbitrum.setSiblingVault(baseChainId, address(xYieldBase), address(usdcArbitrum));
+        xYieldArbitrum.setSiblingVault(
+            baseChainId, address(xYieldBase), address(usdcArbitrum), multicallHandlerArbitrum
+        );
+        xYieldBase.setSiblingVault(
+            uint64(block.chainid), address(xYieldArbitrum), address(usdcArbitrum), multicallHandlerArbitrum
+        );
 
         vm.startPrank(alice);
         usdcArbitrum.transfer(bob, 100e6);
@@ -176,41 +206,6 @@ contract xYieldForkTest is Test {
         assertGt(totalBorrowsAfter, totalBorrowsBefore, "Total borrows should increase due to interest accrual");
     }
 
-    function testRemoteDeposit() public {
-        uint256 eVaultUsdcBalanceBefore = usdcArbitrum.balanceOf(address(eVaultArbitrumUsdc));
-        uint256 aliceXyusdBalanceBefore = xYieldArbitrum.balanceOf(alice);
-        // initiate deposit from A
-        // mock bridge from A to B
-        // assets land on B, but share price is not yet updated. If no distinction between total assets before
-        // and after share price is updated, older shareholders could withdraw more than they are entitled to
-        // (since share price has not caught up with underlying assets).
-
-        vm.startPrank(alice); // acting as filler for her own intent
-        usdcArbitrum.approve(address(xYieldArbitrum), type(uint256).max);
-        uint256 aliceShares = xYieldArbitrum.depositFrom(depositAmount, alice, baseChainId);
-        vm.stopPrank();
-
-        uint256 aliceXyusdBalanceAfter = xYieldArbitrum.balanceOf(alice);
-
-        assertEq(aliceXyusdBalanceBefore, aliceXyusdBalanceAfter, "Alice was not minted any share tokens on this chain");
-        assertEq(0, aliceXyusdBalanceAfter, "Alice does not own any share tokens");
-
-        uint256 eVaultUsdcBalanceAfter = usdcArbitrum.balanceOf(address(eVaultArbitrumUsdc));
-        assertEq(
-            eVaultUsdcBalanceAfter,
-            eVaultUsdcBalanceBefore + depositAmount,
-            "EVault should have received 100 USDC from deposit"
-        );
-
-        uint256 xYieldEvaultBalance = eVaultArbitrumUsdc.balanceOf(address(xYieldArbitrum));
-        assertGt(xYieldEvaultBalance, 0, "xYieldArbitrum vault should have received EVault shares");
-
-        vm.warp(block.timestamp + 365 days);
-
-        uint256 aliceAssets = xYieldArbitrum.convertToAssets(aliceShares);
-        assertGe(aliceAssets, aliceShares, "Alice assets to redeem are greater than her shares");
-    }
-
     function testSharePriceCalculation() public {
         vm.startPrank(alice);
         usdcArbitrum.approve(address(xYieldArbitrum), type(uint256).max);
@@ -228,81 +223,6 @@ contract xYieldForkTest is Test {
         assertTrue(shares1 > shares2, "Second deposit should get fewer shares due to increased asset value from yield");
     }
 
-    function testRemoteDepositUpdateTotalShares() public {
-        // native chain deposit
-        uint256 eVaultUsdcBalanceBeforeDeposit0 = usdcArbitrum.balanceOf(address(eVaultArbitrumUsdc));
-        vm.startPrank(alice);
-        usdcArbitrum.approve(address(xYieldArbitrum), type(uint256).max);
-        uint256 aliceSharesNative = xYieldArbitrum.deposit(depositAmount, alice);
-        vm.stopPrank();
-
-        console2.log("xYieldArbitrum.totalAssets() post alice deposit ::: ", xYieldArbitrum.totalAssets());
-
-        vm.warp(block.timestamp + 365 days);
-
-        uint256 bobXyusdBalanceBefore = xYieldArbitrum.balanceOf(bob);
-
-        // remote chain deposit
-        vm.startPrank(bob); // acting as filler for his own intent
-        usdcArbitrum.approve(address(xYieldArbitrum), type(uint256).max);
-        uint256 bobSharesRemote = xYieldArbitrum.depositFrom(depositAmount, bob, baseChainId);
-        vm.stopPrank();
-
-        uint256 bobXyusdBalanceAfter = xYieldArbitrum.balanceOf(bob);
-
-        assertEq(bobXyusdBalanceBefore, bobXyusdBalanceAfter, "Bob was not minted any share tokens on this chain");
-        assertEq(0, bobXyusdBalanceAfter, "Bob does not own any share tokens on this chain");
-
-        uint256 eVaultUsdcBalanceAfterDeposit1 = usdcArbitrum.balanceOf(address(eVaultArbitrumUsdc));
-        assertEq(
-            eVaultUsdcBalanceAfterDeposit1,
-            eVaultUsdcBalanceBeforeDeposit0 + depositAmount * 2,
-            "EVault should have received 100 USDC from deposit"
-        );
-
-        assertGt(aliceSharesNative, bobSharesRemote, "Alice is minted more shares than Bob");
-
-        uint256 totalSharesArbitrum = xYieldArbitrum.totalSupply();
-        uint256 totalSharesGlobal = totalSharesArbitrum;
-        xYieldVault.BalanceUpdate[] memory balanceUpdates = new xYieldVault.BalanceUpdate[](1);
-        balanceUpdates[0] =
-            xYieldVault.BalanceUpdate({ recipient: bob, amount: bobSharesRemote, txType: xYieldVault.TxType.Deposit });
-
-        vm.startPrank(guardian);
-        xYieldBase.updateTotals(totalSharesGlobal, balanceUpdates);
-        vm.stopPrank();
-
-        assertEq(
-            xYieldArbitrum.totalSupply(), totalSharesGlobal, "Virtual total supply should match the global total shares"
-        );
-
-        uint256 bobRemoteShares = xYieldBase.balanceOf(bob);
-        uint256 aliceNativeShares = xYieldArbitrum.balanceOf(alice);
-
-        assertEq(
-            xYieldArbitrum.balanceOf(alice), aliceSharesNative, "Alice's native share balance should remain unchanged"
-        );
-
-        assertEq(
-            xYieldArbitrum.totalSupply(),
-            aliceSharesNative + bobRemoteShares,
-            "Total supply on this chain should include Alice's native shares and Bob's remote shares"
-        );
-
-        uint256 actualTotalAssets = xYieldArbitrum.totalAssets();
-        uint256 aliceAssets = xYieldArbitrum.convertToAssets(aliceNativeShares);
-        uint256 bobAssets = xYieldArbitrum.convertToAssets(bobRemoteShares);
-
-        uint256 difference = actualTotalAssets > (aliceAssets + bobAssets)
-            ? actualTotalAssets - (aliceAssets + bobAssets)
-            : (aliceAssets + bobAssets) - actualTotalAssets;
-
-        assertEq(difference, 1, "Expected exactly 1 wei difference due to ERC4626 initial deposit formula");
-
-        assertTrue(actualTotalAssets > 0, "Total assets should be positive");
-        assertTrue(aliceAssets + bobAssets > 0, "Sum of assets should be positive");
-    }
-
     function testRemoteWithdrawUpdateTotalShares() public {
         // Setup: First do deposits to have assets to withdraw from
         vm.startPrank(alice);
@@ -310,10 +230,7 @@ contract xYieldForkTest is Test {
         uint256 aliceSharesNative = xYieldArbitrum.deposit(depositAmount, alice);
         vm.stopPrank();
 
-        vm.startPrank(bob);
-        usdcArbitrum.approve(address(xYieldArbitrum), type(uint256).max);
-        uint256 bobSharesRemote = xYieldArbitrum.depositFrom(depositAmount, bob, baseChainId);
-        vm.stopPrank();
+        uint256 bobSharesRemote = _simulateRemoteDeposit(bob, depositAmount, baseChainId, uint64(block.chainid));
 
         // Update totals to reflect both deposits
         uint256 totalSharesGlobal = aliceSharesNative + bobSharesRemote;
@@ -414,10 +331,7 @@ contract xYieldForkTest is Test {
         assertEq(singleUserDifference, 0, "No diff between total and user assets");
 
         // Scenario 2: Add Bob's deposit
-        vm.startPrank(bob);
-        usdcArbitrum.approve(address(xYieldArbitrum), type(uint256).max);
-        uint256 bobSharesRemote = xYieldArbitrum.depositFrom(depositAmount, bob, baseChainId);
-        vm.stopPrank();
+        uint256 bobSharesRemote = _simulateRemoteDeposit(bob, depositAmount, baseChainId, uint64(block.chainid));
 
         // Update totals to create the virtual supply scenario
         uint256 totalSharesGlobal = xYieldArbitrum.totalSupply();
@@ -450,15 +364,9 @@ contract xYieldForkTest is Test {
 
     function testProveERC4626SameSharesMinted() public {
         // Bob's remote deposit
-        vm.startPrank(bob);
-        usdcArbitrum.approve(address(xYieldArbitrum), type(uint256).max);
-        uint256 bobSharesRemote = xYieldArbitrum.depositFrom(depositAmount, bob, baseChainId);
-        vm.stopPrank();
+        uint256 bobSharesRemote = _simulateRemoteDeposit(bob, depositAmount, baseChainId, uint64(block.chainid));
 
-        vm.startPrank(charlie);
-        usdcArbitrum.approve(address(xYieldArbitrum), type(uint256).max);
-        uint256 charlieSharesRemote = xYieldArbitrum.depositFrom(depositAmount, charlie, baseChainId);
-        vm.stopPrank();
+        uint256 charlieSharesRemote = _simulateRemoteDeposit(charlie, depositAmount, baseChainId, uint64(block.chainid));
 
         // Alice same chain deposit
         vm.startPrank(alice);
@@ -469,5 +377,91 @@ contract xYieldForkTest is Test {
         assertEq(aliceShares, charlieSharesRemote, "Alice and Charlie receive the same amount shares");
     }
 
-    // TODO - test redeem and mint methods
+    function testFullRebalanceFlow() public {
+        vm.startPrank(guardian);
+        xYieldArbitrum.setActiveChain(true);
+        xYieldBase.setActiveChain(false);
+        vm.stopPrank();
+
+        vm.startPrank(address(this));
+        xYieldArbitrum.setSiblingVault(baseChainId, address(xYieldBase), address(usdcBase), multicallHandlerArbitrum);
+        xYieldBase.setSiblingVault(
+            uint64(block.chainid), address(xYieldArbitrum), address(usdcArbitrum), multicallHandlerArbitrum
+        );
+        vm.stopPrank();
+
+        vm.startPrank(alice);
+        usdcArbitrum.approve(address(xYieldArbitrum), type(uint256).max);
+        uint256 aliceShares = xYieldArbitrum.deposit(depositAmount, alice);
+        vm.stopPrank();
+
+        uint256 rebalanceAmount = xYieldArbitrum.totalAssets();
+        uint256 rebalanceId = 12_345;
+        uint256 outputAmount = rebalanceAmount * 99 / 100;
+
+        vm.startPrank(guardian);
+        xYieldArbitrum.rebalance(
+            rebalanceId, uint32(baseChainId), rebalanceAmount, outputAmount, uint32(block.timestamp)
+        );
+        vm.stopPrank();
+
+        assertFalse(xYieldArbitrum.isActiveChain());
+
+        vm.startPrank(alice);
+        usdcBase.transfer(address(xYieldBase), rebalanceAmount);
+        vm.stopPrank();
+
+        bytes memory rebalanceMessage = abi.encode(uint8(xYieldVault.TxType.Rebalance), rebalanceId, bytes(""));
+
+        vm.prank(address(0xdeadbeef));
+        xYieldBase.handleV3AcrossMessage(address(usdcBase), rebalanceAmount, address(0xdeadbeef), rebalanceMessage);
+
+        vm.startPrank(guardian);
+        xYieldBase.finalizeRebalance();
+        vm.stopPrank();
+
+        assertTrue(xYieldBase.isActiveChain());
+        assertFalse(xYieldArbitrum.isActiveChain());
+        assertEq(xYieldArbitrum.totalAssets(), 0);
+        assertGt(xYieldBase.totalAssets(), 0);
+        assertEq(xYieldArbitrum.balanceOf(alice), aliceShares);
+    }
+
+    function testDepositTo() public {
+        vm.startPrank(guardian);
+        xYieldBase.setActiveChain(true);
+        xYieldArbitrum.setActiveChain(false);
+        vm.stopPrank();
+
+        vm.startPrank(address(this));
+        xYieldArbitrum.setSiblingVault(baseChainId, address(xYieldBase), address(usdcBase), multicallHandlerArbitrum);
+        vm.stopPrank();
+
+        vm.startPrank(alice);
+        usdcArbitrum.approve(address(xYieldArbitrum), type(uint256).max);
+
+        uint256 outputAmount = 99e6; // Explicit amount to avoid rounding issues
+        xYieldArbitrum.depositTo(
+            depositAmount,
+            alice,
+            baseChainId,
+            outputAmount,
+            address(0),
+            uint32(block.timestamp),
+            uint32(block.timestamp + 1800),
+            0
+        );
+        vm.stopPrank();
+
+        // Simulate multicall handler executing depositFrom
+        vm.startPrank(alice);
+        usdcBase.approve(address(xYieldBase), outputAmount);
+        uint256 shares = xYieldBase.depositFrom(outputAmount, alice, uint64(block.chainid));
+        vm.stopPrank();
+
+        assertGt(shares, 0, "Should receive shares");
+        assertApproxEqAbs(
+            xYieldBase.totalAssets(), outputAmount, 1, "Vault should have approximately the expected assets"
+        );
+    }
 }

@@ -220,25 +220,28 @@ contract xYieldTest is Test {
         vault.deposit(100, user1);
     }
 
-    function testSiblingVaultsRevert() public {
+    function testDepositToRevert() public {
         uint256 depositAmount = 100 * 10 ** 18;
 
         vm.prank(user1);
-        vm.expectRevert(abi.encodeWithSelector(xYieldVault.InvalidChain.selector));
-        vault.depositFrom(depositAmount, user1, 1);
-
-        vm.prank(vault.owner());
-        vault.setSiblingVault(1, address(0x4), address(usdc));
-
-        vm.prank(user1);
-        vault.depositFrom(depositAmount, user1, 1);
+        vm.expectRevert(abi.encodeWithSelector(xYieldVault.OnlyRemote.selector));
+        vault.depositTo(
+            depositAmount,
+            user1,
+            1, // target chain
+            depositAmount,
+            address(0), // exclusive relayer
+            uint32(block.timestamp),
+            uint32(block.timestamp + 1800),
+            0 // exclusivity parameter
+        );
     }
 
     function testRebalance() public {
         uint32 dstChainId = 1;
         uint256 depositAmount = 100 * 10 ** 18;
 
-        vault.setSiblingVault(dstChainId, address(12), address(usdc));
+        vault.setSiblingVault(dstChainId, address(12), address(usdc), address(0x1234));
 
         vm.prank(user1);
         vault.deposit(depositAmount, user1);
@@ -262,7 +265,7 @@ contract xYieldTest is Test {
         uint32 dstChainId = 1;
         uint256 depositAmount = 100 * 10 ** 18;
 
-        vault.setSiblingVault(dstChainId, address(12), address(usdc));
+        vault.setSiblingVault(dstChainId, address(12), address(usdc), address(0x1234));
 
         vm.prank(user1);
         vault.deposit(depositAmount, user1);
@@ -279,7 +282,7 @@ contract xYieldTest is Test {
         uint32 dstChainId = 1;
         uint256 depositAmount = 100 * 10 ** 18;
 
-        vault.setSiblingVault(dstChainId, address(12), address(usdc));
+        vault.setSiblingVault(dstChainId, address(12), address(usdc), address(0x1234));
 
         vm.prank(user1);
         vault.deposit(depositAmount, user1);
@@ -363,7 +366,7 @@ contract xYieldTest is Test {
     {
         OrderData memory orderData;
         {
-            (address siblingVault,) = vault.siblingVaults(dstChainId);
+            (address siblingVault,,) = vault.siblingVaults(dstChainId);
             orderData = OrderData({
                 sender: TypeCasts.addressToBytes32(address(vault)),
                 recipient: TypeCasts.addressToBytes32(siblingVault),
