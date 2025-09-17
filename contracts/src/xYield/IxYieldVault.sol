@@ -26,10 +26,6 @@ interface IxYieldVault {
     event Approval(address indexed owner, address indexed spender, uint256 value);
     event ChainStatusChanged(bool isActive);
     event Deposit(address indexed sender, address indexed owner, uint256 assets, uint256 shares);
-    event DepositRemote(
-        address indexed sender, address indexed owner, uint256 assets, uint256 shares, uint64 sourceChainId
-    );
-    event DepositRemoteInitiated(address indexed sender, address indexed owner, uint256 assets, uint64 targetChainId);
     event OwnershipTransferStarted(address indexed previousOwner, address indexed newOwner);
     event OwnershipTransferred(address indexed previousOwner, address indexed newOwner);
     event Paused(address account);
@@ -64,8 +60,6 @@ interface IxYieldVault {
         bool isRemote
     );
 
-    function DEPOSIT_TYPEHASH() external view returns (bytes32);
-    function DOMAIN_SEPARATOR() external view returns (bytes32);
     function acceptOwnership() external;
     function acrossSpokePool() external view returns (address);
     function allowance(address owner, address spender) external view returns (uint256);

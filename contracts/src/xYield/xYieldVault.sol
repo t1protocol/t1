@@ -15,10 +15,8 @@ import { ReentrancyGuard } from "@openzeppelin/contracts/security/ReentrancyGuar
 import { SafeERC20 } from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import { T1ERC7683 } from "../7683/T1ERC7683.sol";
 import { TypeCasts } from "@hyperlane-xyz/libs/TypeCasts.sol";
-import { SignatureCheckerLib } from "solady/utils/SignatureCheckerLib.sol";
-import { EIP712 } from "solady/utils/EIP712.sol";
 
-contract xYieldVault is ERC4626, Ownable2Step, ReentrancyGuard, Pausable, EIP712 {
+contract xYieldVault is ERC4626, Ownable2Step, ReentrancyGuard, Pausable {
     using SafeERC20 for IERC20;
     using Math for uint256;
 
@@ -118,7 +116,6 @@ contract xYieldVault is ERC4626, Ownable2Step, ReentrancyGuard, Pausable, EIP712
     )
         ERC4626(_underlying)
         ERC20(_name, _symbol)
-        EIP712()
     {
         guardian = _guardian;
         yieldProtocol = IERC4626(_yieldProtocol);
@@ -145,50 +142,21 @@ contract xYieldVault is ERC4626, Ownable2Step, ReentrancyGuard, Pausable, EIP712
         return shares;
     }
 
-    // Initiates a cross-chain deposit to the active vault from a remote chain
-    function depositTo(
+    // called on behalf of a user who has deposited from a remote chain
+    function depositFrom(
         uint256 _amount,
         address _receiver,
-        uint64 _targetChainId,
-        uint256 _id,
-        bytes memory _signature,
-        address _outputToken,
-        uint256 _outputAmount,
-        address _exclusiveRelayer,
-        uint32 _quoteTimestamp,
-        uint32 _fillDeadline,
-        uint32 _exclusivityParameter
+        uint64 _chainId
     )
         external
         whenNotPaused
-        nonReentrant
+        returns (uint256 shares)
     {
         if (_amount == 0) revert ZeroAmount();
-        if (isActiveChain) revert OnlyRemote();
-        if (siblingVaults[_targetChainId].vault == address(0)) revert InvalidChain();
-
-        IERC20(asset()).safeTransferFrom(msg.sender, address(this), _amount);
-
-        // Compose message with signature for verification on target chain
-        bytes memory data = abi.encode(uint64(block.chainid), _receiver, _signature);
-        bytes memory message = abi.encode(uint8(TxType.Deposit), _id, data);
-
-        acrossSpokePool.depositV3(
-            address(this),
-            siblingVaults[_targetChainId].vault,
-            asset(),
-            _outputToken,
-            _amount,
-            _outputAmount,
-            _targetChainId,
-            _exclusiveRelayer,
-            _quoteTimestamp,
-            _fillDeadline,
-            _exclusivityParameter,
-            message
-        );
-
-        emit XYieldDepositRemoteInitiated(msg.sender, _receiver, _outputAmount, _targetChainId);
+        if (!isActiveChain) revert DepositOnInactiveChain();
+        if (siblingVaults[_chainId].vault == address(0)) revert InvalidChain();
+        shares = previewDeposit(_amount);
+        _depositFrom(msg.sender, _receiver, _amount, shares, _chainId);
     }
 
     // Initiates a cross-chain deposit to the active vault from a remote chain
@@ -244,7 +212,7 @@ contract xYieldVault is ERC4626, Ownable2Step, ReentrancyGuard, Pausable, EIP712
             message
         );
 
-        emit DepositRemoteInitiated(msg.sender, _receiver, _outputAmount, _targetChainId);
+        emit XYieldDepositRemoteInitiated(msg.sender, _receiver, _outputAmount, _targetChainId);
     }
 
     function mint(uint256 _shares, address _receiver) public virtual override whenNotPaused returns (uint256) {
@@ -402,6 +370,22 @@ contract xYieldVault is ERC4626, Ownable2Step, ReentrancyGuard, Pausable, EIP712
         yieldProtocol.deposit(_amount, address(this));
 
         emit XYieldDeposit(_caller, _receiver, _amount, _shares, uint64(block.chainid), false);
+    }
+
+    function _depositFrom(
+        address _caller,
+        address _receiver,
+        uint256 _amount,
+        uint256 _shares,
+        uint64 _chainId
+    )
+        internal
+    {
+        virtualTotalSupply += _shares;
+        IERC20(asset()).safeTransferFrom(_caller, address(this), _amount);
+        yieldProtocol.deposit(_amount, address(this));
+
+        emit XYieldDeposit(_caller, _receiver, _amount, _shares, _chainId, true);
     }
 
     function _withdraw(
