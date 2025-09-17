@@ -74,11 +74,26 @@ contract xYieldVault is ERC4626, Ownable2Step, ReentrancyGuard, Pausable {
     error InvalidTxType(uint8 txType);
     error InvalidTokenSent();
 
-    event DepositRemoteInitiated(address indexed sender, address indexed owner, uint256 assets, uint64 targetChainId);
-    event DepositRemote(
-        address indexed sender, address indexed owner, uint256 assets, uint256 shares, uint64 sourceChainId
+    event XYieldDepositRemoteInitiated(
+        address indexed sender, address indexed owner, uint256 outputAmount, uint64 targetChainId
     );
-    event WithdrawRemote(address indexed sender, address indexed owner, uint256 assets, uint256 shares);
+    event XYieldDeposit(
+        address indexed sender,
+        address indexed owner,
+        uint256 assets,
+        uint256 shares,
+        uint64 sourceChainId,
+        bool isRemote
+    );
+    event XYieldWithdraw(
+        address indexed sender,
+        address indexed owner,
+        address indexed receiver,
+        uint256 assets,
+        uint256 shares,
+        uint64 targetChainId,
+        bool isRemote
+    );
     event TotalSupplyUpdated(uint256 newVirtualTotalSupply);
     event ChainStatusChanged(bool isActive);
     event SiblingVaultSet(uint64 chainId, address vault);
@@ -197,7 +212,7 @@ contract xYieldVault is ERC4626, Ownable2Step, ReentrancyGuard, Pausable {
             message
         );
 
-        emit DepositRemoteInitiated(msg.sender, _receiver, _outputAmount, _targetChainId);
+        emit XYieldDepositRemoteInitiated(msg.sender, _receiver, _outputAmount, _targetChainId);
     }
 
     function mint(uint256 _shares, address _receiver) public virtual override whenNotPaused returns (uint256) {
@@ -310,7 +325,7 @@ contract xYieldVault is ERC4626, Ownable2Step, ReentrancyGuard, Pausable {
             ""
         );
 
-        emit WithdrawRemote(msg.sender, owner, assets, shares);
+        emit XYieldWithdraw(msg.sender, owner, owner, outputAmount, shares, uint64(chainId), true);
     }
 
     // used on remote chain to mint share tokens
@@ -354,7 +369,7 @@ contract xYieldVault is ERC4626, Ownable2Step, ReentrancyGuard, Pausable {
         IERC20(asset()).safeTransferFrom(_caller, address(this), _amount);
         yieldProtocol.deposit(_amount, address(this));
 
-        emit Deposit(_caller, _receiver, _amount, _shares);
+        emit XYieldDeposit(_caller, _receiver, _amount, _shares, uint64(block.chainid), false);
     }
 
     function _depositFrom(
@@ -370,7 +385,7 @@ contract xYieldVault is ERC4626, Ownable2Step, ReentrancyGuard, Pausable {
         IERC20(asset()).safeTransferFrom(_caller, address(this), _amount);
         yieldProtocol.deposit(_amount, address(this));
 
-        emit DepositRemote(_caller, _receiver, _amount, _shares, _chainId);
+        emit XYieldDeposit(_caller, _receiver, _amount, _shares, _chainId, true);
     }
 
     function _withdraw(
@@ -396,7 +411,7 @@ contract xYieldVault is ERC4626, Ownable2Step, ReentrancyGuard, Pausable {
         yieldProtocol.withdraw(_amount, address(this), address(this));
         IERC20(asset()).safeTransfer(_receiver, _amount);
 
-        emit Withdraw(_caller, _receiver, _owner, _amount, _shares);
+        emit XYieldWithdraw(_caller, _receiver, _owner, _amount, _shares, uint64(block.chainid), false);
     }
 
     function _setActiveChain(bool _isActive) internal {

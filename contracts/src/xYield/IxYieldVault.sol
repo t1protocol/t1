@@ -26,10 +26,6 @@ interface IxYieldVault {
     event Approval(address indexed owner, address indexed spender, uint256 value);
     event ChainStatusChanged(bool isActive);
     event Deposit(address indexed sender, address indexed owner, uint256 assets, uint256 shares);
-    event DepositRemote(
-        address indexed sender, address indexed owner, uint256 assets, uint256 shares, uint64 sourceChainId
-    );
-    event DepositRemoteInitiated(address indexed sender, address indexed owner, uint256 assets, uint64 targetChainId);
     event OwnershipTransferStarted(address indexed previousOwner, address indexed newOwner);
     event OwnershipTransferred(address indexed previousOwner, address indexed newOwner);
     event Paused(address account);
@@ -43,7 +39,26 @@ interface IxYieldVault {
     event Withdraw(
         address indexed sender, address indexed receiver, address indexed owner, uint256 assets, uint256 shares
     );
-    event WithdrawRemote(address indexed sender, address indexed owner, uint256 assets, uint256 shares);
+    event XYieldDeposit(
+        address indexed sender,
+        address indexed owner,
+        uint256 assets,
+        uint256 shares,
+        uint64 sourceChainId,
+        bool isRemote
+    );
+    event XYieldDepositRemoteInitiated(
+        address indexed sender, address indexed owner, uint256 outputAmount, uint64 targetChainId
+    );
+    event XYieldWithdraw(
+        address indexed sender,
+        address indexed owner,
+        address indexed receiver,
+        uint256 assets,
+        uint256 shares,
+        uint64 targetChainId,
+        bool isRemote
+    );
 
     function acceptOwnership() external;
     function acrossSpokePool() external view returns (address);
