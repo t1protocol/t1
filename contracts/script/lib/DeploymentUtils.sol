@@ -43,7 +43,7 @@ abstract contract DeploymentUtils is Script {
 
     function selectMainnetOrSepoliaFork(string memory fork) internal {
         if (IS_MAINNET) {
-            console.log("⚠️  You are about to interact with MAINNET. Be paranoid!");
+            console.log("!!! You are about to interact with MAINNET. Be paranoid !!!");
 
             string memory answer = vm.prompt("Type 'yes' to confirm mainnet deployment: ");
             require(
