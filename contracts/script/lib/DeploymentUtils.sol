@@ -41,6 +41,6 @@ abstract contract DeploymentUtils is Script {
     }
 
     function selectMainnetOrSepoliaFork(string memory fork, bool isMainnet) internal {
-        vm.createSelectFork(isMainnet ? vm.rpcUrl(fork) : vm.rpcUrl(fork + "_sepolia"));
+        vm.createSelectFork(isMainnet ? vm.rpcUrl(fork) : vm.rpcUrl(string.concat(fork, "_sepolia")));
     }
 }

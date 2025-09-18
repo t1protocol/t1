@@ -10,7 +10,7 @@ import { DeploymentUtils } from "../lib/DeploymentUtils.sol";
 import { T1XChainReader } from "../../src/libraries/xChain/T1XChainReader.sol";
 
 contract DeployArbT1XChainReader is DeploymentUtils {
-    bool internal constant IS_MAINNET = vm.envBool("IS_MAINNET");
+    bool internal immutable IS_MAINNET = vm.envBool("IS_MAINNET");
 
     function run() external {
         selectMainnetOrSepoliaFork("arbitrum", IS_MAINNET);
