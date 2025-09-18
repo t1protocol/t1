@@ -23,7 +23,7 @@ library T1Constants {
     uint64 internal constant ARBITRUM_SEPOLIA_CHAIN_ID = 421_614;
 
     /// @notice Chain ID of the Base Mainnet network
-    uint64 internal constant BASE_MAINNET_CHAIN_ID = 8_453;
+    uint64 internal constant BASE_MAINNET_CHAIN_ID = 8453;
 
     /// @notice Chain ID of the Arbitrum Mainnet network
     uint64 internal constant ARBITRUM_MAINNET_CHAIN_ID = 42_161;

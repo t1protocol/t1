@@ -11,8 +11,10 @@ import { T1Constants } from "../../../src/libraries/constants/T1Constants.sol";
 
 contract DeployBaseT1ERC7683 is DeploymentUtils {
     bool internal immutable IS_MAINNET = vm.envBool("IS_MAINNET");
-    uint32 internal immutable ARB = uint32(IS_MAINNET ? T1Constants.ARBITRUM_MAINNET_CHAIN_ID :  T1Constants.ARBITRUM_SEPOLIA_CHAIN_ID);
-    uint32 internal immutable BASE = uint32(IS_MAINNET ? T1Constants.BASE_MAINNET_CHAIN_ID :  T1Constants.BASE_SEPOLIA_CHAIN_ID);
+    uint32 internal immutable ARB =
+        uint32(IS_MAINNET ? T1Constants.ARBITRUM_MAINNET_CHAIN_ID : T1Constants.ARBITRUM_SEPOLIA_CHAIN_ID);
+    uint32 internal immutable BASE =
+        uint32(IS_MAINNET ? T1Constants.BASE_MAINNET_CHAIN_ID : T1Constants.BASE_SEPOLIA_CHAIN_ID);
     ProxyAdmin private proxyAdmin;
 
     function deploy() external {
