@@ -15,7 +15,7 @@ contract DeployArbT1ProxyAdmin is Script, DeploymentUtils {
     TransparentUpgradeableProxy private proxy;
 
     function run() external {
-        vm.createSelectFork(vm.rpcUrl("arbitrum_sepolia"));
+        selectMainnetOrSepoliaFork("arbitrum");
         vm.startBroadcast(deployerPrivateKey);
         deployProxyAdmin();
     }

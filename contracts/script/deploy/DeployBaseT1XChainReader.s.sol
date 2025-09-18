@@ -10,10 +10,8 @@ import { DeploymentUtils } from "../lib/DeploymentUtils.sol";
 import { T1XChainReader } from "../../src/libraries/xChain/T1XChainReader.sol";
 
 contract DeployBaseT1XChainReader is DeploymentUtils {
-    bool internal immutable IS_MAINNET = vm.envBool("IS_MAINNET");
-
     function run() external {
-        selectMainnetOrSepoliaFork("base", IS_MAINNET);
+        selectMainnetOrSepoliaFork("base");
         logStart("DeployXChainRead to BASE");
 
         uint256 DEPLOYER_PRIVATE_KEY = vm.envUint("DEPLOYER_PRIVATE_KEY");

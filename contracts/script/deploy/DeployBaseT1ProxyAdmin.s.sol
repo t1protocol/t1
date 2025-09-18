@@ -14,7 +14,7 @@ contract DeployBaseT1ProxyAdmin is Script, DeploymentUtils {
     ProxyAdmin private proxyAdmin;
 
     function run() external {
-        vm.createSelectFork(vm.rpcUrl("base_sepolia"));
+        selectMainnetOrSepoliaFork("base");
         vm.startBroadcast(deployerPrivateKey);
         deployProxyAdmin();
     }

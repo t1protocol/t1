@@ -10,7 +10,6 @@ import { T1ERC7683 } from "../../../src/7683/T1ERC7683.sol";
 import { T1Constants } from "../../../src/libraries/constants/T1Constants.sol";
 
 contract DeployArbT1ERC7683 is DeploymentUtils {
-    bool internal immutable IS_MAINNET = vm.envBool("IS_MAINNET");
     uint32 internal immutable ARB =
         uint32(IS_MAINNET ? T1Constants.ARBITRUM_MAINNET_CHAIN_ID : T1Constants.ARBITRUM_SEPOLIA_CHAIN_ID);
     uint32 internal immutable BASE =
@@ -19,7 +18,7 @@ contract DeployArbT1ERC7683 is DeploymentUtils {
 
     function deploy() external {
         logStart("DeployT1ERC7683 to Arbitrum");
-        selectMainnetOrSepoliaFork("arbitrum", IS_MAINNET);
+        selectMainnetOrSepoliaFork("arbitrum");
         uint256 deployerPk = vm.envUint("DEPLOYER_PRIVATE_KEY");
         address ARB_T1_X_CHAIN_READ_PROXY_ADDR = vm.envAddress("ARB_T1_X_CHAIN_READ_PROXY_ADDR");
         address ARB_T1_PROXY_ADMIN_ADDR = vm.envAddress("ARB_T1_PROXY_ADMIN_ADDR");
@@ -46,7 +45,7 @@ contract DeployArbT1ERC7683 is DeploymentUtils {
     }
 
     function init() external {
-        selectMainnetOrSepoliaFork("arbitrum", IS_MAINNET);
+        selectMainnetOrSepoliaFork("arbitrum");
         uint256 deployerPk = vm.envUint("DEPLOYER_PRIVATE_KEY");
         address ARB_T1_7683_PROXY_ADDR = vm.envAddress("ARB_T1_PULL_BASED_7683_PROXY_ADDR");
         address BASE_T1_7683_PROXY_ADDR = vm.envAddress("BASE_T1_PULL_BASED_7683_PROXY_ADDR");

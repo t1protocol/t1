@@ -10,6 +10,7 @@ import { console } from "forge-std/console.sol";
  *      - Provides helper functions to write commented headers/footers to .env
  */
 abstract contract DeploymentUtils is Script {
+    bool internal immutable IS_MAINNET = vm.envOr("IS_MAINNET", false);
     /**
      * @dev Logs a header in .env to indicate the start of lines produced by {scriptName}.
      *      e.g.: # BEGIN output from ...
@@ -40,7 +41,19 @@ abstract contract DeploymentUtils is Script {
         vm.writeLine(".env", line);
     }
 
-    function selectMainnetOrSepoliaFork(string memory fork, bool isMainnet) internal {
-        vm.createSelectFork(isMainnet ? vm.rpcUrl(fork) : vm.rpcUrl(string.concat(fork, "_sepolia")));
+    function selectMainnetOrSepoliaFork(string memory fork) internal {
+        if (IS_MAINNET) {
+            console.log("⚠️  You are about to interact with MAINNET. Be paranoid!");
+
+            string memory answer = vm.prompt("Type 'yes' to confirm mainnet deployment: ");
+            require(
+                keccak256(bytes(answer)) == keccak256(bytes("yes")),
+                "Mainnet deployment aborted by user"
+            );
+        } else {
+            console.log("This is a TESTNET script! Don't be paranoid, you weakling!");
+        }
+
+        vm.createSelectFork(IS_MAINNET ? vm.rpcUrl(fork) : vm.rpcUrl(string.concat(fork, "_sepolia")));
     }
 }
