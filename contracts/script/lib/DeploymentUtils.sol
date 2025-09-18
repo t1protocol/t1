@@ -45,12 +45,8 @@ abstract contract DeploymentUtils is Script {
 
     function selectMainnetOrSepoliaFork(string memory fork) internal {
         if (IS_MAINNET) {
-            console.log("!!! You are about to interact with MAINNET. Be paranoid !!!");
-
-            string memory answer = vm.prompt("Type 'yes' to confirm mainnet interaction: ");
+            string memory answer = vm.prompt("!!! You are about to interact with MAINNET. Be paranoid !!! Type 'yes' to confirm mainnet interaction: ");
             require(keccak256(bytes(answer)) == keccak256(bytes("yes")), "Mainnet interaction aborted by user");
-        } else {
-            console.log("This is a TESTNET script! Don't be paranoid, you weakling!");
         }
 
         vm.createSelectFork(IS_MAINNET ? vm.rpcUrl(fork) : vm.rpcUrl(string.concat(fork, "_sepolia")));
