@@ -9,14 +9,14 @@ import { TransparentUpgradeableProxy } from "@openzeppelin/contracts/proxy/trans
 import { DeploymentUtils } from "../lib/DeploymentUtils.sol";
 
 contract DeployArbT1ProxyAdmin is Script, DeploymentUtils {
-    uint256 private deployerPrivateKey = vm.envOr("DEPLOYER_PRIVATE_KEY", false);
+    uint256 private deployerPrivateKey = vm.envOr("DEPLOYER_PRIVATE_KEY", uint256(0));
 
     ProxyAdmin private proxyAdmin;
     TransparentUpgradeableProxy private proxy;
 
     function run() external {
         selectMainnetOrSepoliaFork("arbitrum");
-        if (!deployerPrivateKey) {
+        if (deployerPrivateKey == 0) {
             vm.startBroadcast();
         } else {
             vm.startBroadcast(deployerPrivateKey);
