@@ -7,12 +7,13 @@ import { ProxyAdmin } from "@openzeppelin/contracts/proxy/transparent/ProxyAdmin
 import { TransparentUpgradeableProxy } from "@openzeppelin/contracts/proxy/transparent/TransparentUpgradeableProxy.sol";
 
 import { DeploymentUtils } from "../lib/DeploymentUtils.sol";
-
 import { T1XChainReader } from "../../src/libraries/xChain/T1XChainReader.sol";
 
 contract DeployArbT1XChainReader is DeploymentUtils {
+    bool internal constant IS_MAINNET = vm.envBool("IS_MAINNET");
+
     function run() external {
-        vm.createSelectFork(vm.rpcUrl("arbitrum_sepolia"));
+        selectMainnetOrSepoliaFork("arbitrum", IS_MAINNET);
         logStart("DeployXChainRead to ARB");
 
         uint256 DEPLOYER_PRIVATE_KEY = vm.envUint("DEPLOYER_PRIVATE_KEY");

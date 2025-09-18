@@ -17,7 +17,7 @@ contract DeployArbT1ERC7683 is DeploymentUtils {
 
     function deploy() external {
         logStart("DeployT1ERC7683 to Arbitrum");
-        vm.createSelectFork(IS_MAINNET ? vm.rpcUrl("arbitrum") : vm.rpcUrl("arbitrum_sepolia"));
+        selectMainnetOrSepoliaFork("arbitrum", IS_MAINNET);
         uint256 deployerPk = vm.envUint("DEPLOYER_PRIVATE_KEY");
         address ARB_T1_X_CHAIN_READ_PROXY_ADDR = vm.envAddress("ARB_T1_X_CHAIN_READ_PROXY_ADDR");
         address ARB_T1_PROXY_ADMIN_ADDR = vm.envAddress("ARB_T1_PROXY_ADMIN_ADDR");
@@ -44,7 +44,7 @@ contract DeployArbT1ERC7683 is DeploymentUtils {
     }
 
     function init() external {
-        vm.createSelectFork(IS_MAINNET ? vm.rpcUrl("arbitrum") : vm.rpcUrl("arbitrum_sepolia"));
+        selectMainnetOrSepoliaFork("arbitrum", IS_MAINNET);
         uint256 deployerPk = vm.envUint("DEPLOYER_PRIVATE_KEY");
         address ARB_T1_7683_PROXY_ADDR = vm.envAddress("ARB_T1_PULL_BASED_7683_PROXY_ADDR");
         address BASE_T1_7683_PROXY_ADDR = vm.envAddress("BASE_T1_PULL_BASED_7683_PROXY_ADDR");
