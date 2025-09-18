@@ -15,6 +15,7 @@ abstract contract DeploymentUtils is Script {
      * @dev Logs a header in .env to indicate the start of lines produced by {scriptName}.
      *      e.g.: # BEGIN output from ...
      */
+
     function logStart(string memory scriptName) internal {
         vm.writeLine(".env", "# ---------------------------------------------------------");
         vm.writeLine(".env", string(abi.encodePacked("# BEGIN output from ", scriptName)));
@@ -46,10 +47,7 @@ abstract contract DeploymentUtils is Script {
             console.log("!!! You are about to interact with MAINNET. Be paranoid !!!");
 
             string memory answer = vm.prompt("Type 'yes' to confirm mainnet interaction: ");
-            require(
-                keccak256(bytes(answer)) == keccak256(bytes("yes")),
-                "Mainnet interaction aborted by user"
-            );
+            require(keccak256(bytes(answer)) == keccak256(bytes("yes")), "Mainnet interaction aborted by user");
         } else {
             console.log("This is a TESTNET script! Don't be paranoid, you weakling!");
         }
