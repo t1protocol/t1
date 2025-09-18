@@ -11,6 +11,7 @@ import { console } from "forge-std/console.sol";
  */
 abstract contract DeploymentUtils is Script {
     bool internal immutable IS_MAINNET = vm.envOr("IS_MAINNET", false);
+    uint256 private deployerPrivateKey = vm.envOr("DEPLOYER_PRIVATE_KEY", uint256(0));
     /**
      * @dev Logs a header in .env to indicate the start of lines produced by {scriptName}.
      *      e.g.: # BEGIN output from ...
@@ -53,5 +54,13 @@ abstract contract DeploymentUtils is Script {
         }
 
         vm.createSelectFork(IS_MAINNET ? vm.rpcUrl(fork) : vm.rpcUrl(string.concat(fork, "_sepolia")));
+    }
+
+    function startBroadcastWithDeployerKeyIfItExists() internal {
+        if (deployerPrivateKey == 0) {
+            vm.startBroadcast();
+        } else {
+            vm.startBroadcast(deployerPrivateKey);
+        }
     }
 }
