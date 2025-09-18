@@ -10,13 +10,14 @@ import { T1ERC7683 } from "../../../src/7683/T1ERC7683.sol";
 import { T1Constants } from "../../../src/libraries/constants/T1Constants.sol";
 
 contract DeployBaseT1ERC7683 is DeploymentUtils {
-    uint32 internal constant ARB = uint32(T1Constants.ARBITRUM_SEPOLIA_CHAIN_ID);
-    uint32 internal constant BASE = uint32(T1Constants.BASE_SEPOLIA_CHAIN_ID);
+    bool internal constant IS_MAINNET = vm.envBool("IS_MAINNET");
+    uint32 internal constant ARB = uint32(IS_MAINNET ? T1Constants.ARBITRUM_MAINNET_CHAIN_ID :  T1Constants.ARBITRUM_SEPOLIA_CHAIN_ID);
+    uint32 internal constant BASE = uint32(IS_MAINNET ? T1Constants.BASE_MAINNET_CHAIN_ID :  T1Constants.BASE_SEPOLIA_CHAIN_ID);
     ProxyAdmin private proxyAdmin;
 
     function deploy() external {
         logStart("DeployT1ERC7683 to Base");
-        vm.createSelectFork(vm.rpcUrl("base_sepolia"));
+        vm.createSelectFork(IS_MAINNET ? vm.rpcUrl("base") : vm.rpcUrl("base_sepolia"));
         uint256 deployerPk = vm.envUint("DEPLOYER_PRIVATE_KEY");
         address BASE_T1_X_CHAIN_READ_PROXY_ADDR = vm.envAddress("BASE_T1_X_CHAIN_READ_PROXY_ADDR");
         address BASE_T1_PROXY_ADMIN_ADDR = vm.envAddress("BASE_T1_PROXY_ADMIN_ADDR");
@@ -35,13 +36,15 @@ contract DeployBaseT1ERC7683 is DeploymentUtils {
             new TransparentUpgradeableProxy(address(impl), address(proxyAdmin), new bytes(0));
 
         vm.stopBroadcast();
+
         logAddress("BASE_T1_PULL_BASED_7683_IMPLEMENTATION_ADDR", address(impl));
         logAddress("BASE_T1_PULL_BASED_7683_PROXY_ADDR", address(proxy));
+
         logEnd("DeployT1ERC7683 to Base");
     }
 
     function init() external {
-        vm.createSelectFork(vm.rpcUrl("base_sepolia"));
+        vm.createSelectFork(IS_MAINNET ? vm.rpcUrl("base") : vm.rpcUrl("base_sepolia"));
         uint256 deployerPk = vm.envUint("DEPLOYER_PRIVATE_KEY");
         address ARB_T1_7683_PROXY_ADDR = vm.envAddress("ARB_T1_PULL_BASED_7683_PROXY_ADDR");
         address BASE_T1_7683_PROXY_ADDR = vm.envAddress("BASE_T1_PULL_BASED_7683_PROXY_ADDR");

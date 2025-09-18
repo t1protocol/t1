@@ -10,19 +10,21 @@ import { T1ERC7683 } from "../../../src/7683/T1ERC7683.sol";
 import { T1Constants } from "../../../src/libraries/constants/T1Constants.sol";
 
 contract DeployArbT1ERC7683 is DeploymentUtils {
-    uint32 internal constant ARB = uint32(T1Constants.ARBITRUM_SEPOLIA_CHAIN_ID);
-    uint32 internal constant BASE = uint32(T1Constants.BASE_SEPOLIA_CHAIN_ID);
+    bool internal constant IS_MAINNET = vm.envBool("IS_MAINNET");
+    uint32 internal constant ARB = uint32(IS_MAINNET ? T1Constants.ARBITRUM_MAINNET_CHAIN_ID :  T1Constants.ARBITRUM_SEPOLIA_CHAIN_ID);
+    uint32 internal constant BASE = uint32(IS_MAINNET ? T1Constants.BASE_MAINNET_CHAIN_ID :  T1Constants.BASE_SEPOLIA_CHAIN_ID);
     ProxyAdmin private proxyAdmin;
 
     function deploy() external {
-        vm.createSelectFork(vm.rpcUrl("arbitrum_sepolia"));
         logStart("DeployT1ERC7683 to Arbitrum");
+        vm.createSelectFork(IS_MAINNET ? vm.rpcUrl("arbitrum") : vm.rpcUrl("arbitrum_sepolia"));
         uint256 deployerPk = vm.envUint("DEPLOYER_PRIVATE_KEY");
         address ARB_T1_X_CHAIN_READ_PROXY_ADDR = vm.envAddress("ARB_T1_X_CHAIN_READ_PROXY_ADDR");
         address ARB_T1_PROXY_ADMIN_ADDR = vm.envAddress("ARB_T1_PROXY_ADMIN_ADDR");
-        proxyAdmin = ProxyAdmin(ARB_T1_PROXY_ADMIN_ADDR);
 
         vm.startBroadcast(deployerPk);
+
+        proxyAdmin = ProxyAdmin(ARB_T1_PROXY_ADMIN_ADDR);
 
         T1ERC7683 impl = new T1ERC7683(
             address(0), // No Permit2 for now
@@ -42,7 +44,7 @@ contract DeployArbT1ERC7683 is DeploymentUtils {
     }
 
     function init() external {
-        vm.createSelectFork(vm.rpcUrl("arbitrum_sepolia"));
+        vm.createSelectFork(IS_MAINNET ? vm.rpcUrl("arbitrum") : vm.rpcUrl("arbitrum_sepolia"));
         uint256 deployerPk = vm.envUint("DEPLOYER_PRIVATE_KEY");
         address ARB_T1_7683_PROXY_ADDR = vm.envAddress("ARB_T1_PULL_BASED_7683_PROXY_ADDR");
         address BASE_T1_7683_PROXY_ADDR = vm.envAddress("BASE_T1_PULL_BASED_7683_PROXY_ADDR");
