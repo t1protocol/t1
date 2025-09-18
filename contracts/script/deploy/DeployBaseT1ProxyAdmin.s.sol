@@ -21,6 +21,8 @@ contract DeployBaseT1ProxyAdmin is Script, DeploymentUtils {
             vm.startBroadcast(deployerPrivateKey);
         }
         deployProxyAdmin();
+
+        vm.stopBroadcast();
     }
 
     function deployProxyAdmin() internal {
