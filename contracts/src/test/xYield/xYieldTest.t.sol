@@ -176,14 +176,18 @@ contract xYieldTest is Test {
             xYieldVault.BalanceUpdate({ recipient: user2, amount: 100 * 10 ** 18, txType: xYieldVault.TxType.Deposit });
 
         vm.prank(guardian);
+        vm.expectRevert(abi.encodeWithSelector(xYieldVault.OnlyRemote.selector));
         vault.updateTotals(newVirtualTotalSupply, balanceUpdates);
-
-        assertEq(vault.virtualTotalSupply(), newVirtualTotalSupply, "virtual total supply");
 
         vm.prank(guardian);
         vault.setActiveChain(false);
 
         assertFalse(vault.isActiveChain(), "is active chain");
+
+        vm.prank(guardian);
+        vault.updateTotals(newVirtualTotalSupply, balanceUpdates);
+
+        assertEq(vault.virtualTotalSupply(), newVirtualTotalSupply, "virtual total supply");
     }
 
     function testRevertOnUnauthorizedAccess() public {
@@ -216,25 +220,28 @@ contract xYieldTest is Test {
         vault.deposit(100, user1);
     }
 
-    function testSiblingVaultsRevert() public {
+    function testDepositToRevert() public {
         uint256 depositAmount = 100 * 10 ** 18;
 
         vm.prank(user1);
-        vm.expectRevert(abi.encodeWithSelector(xYieldVault.InvalidChain.selector));
-        vault.depositFrom(depositAmount, user1, 1);
-
-        vm.prank(vault.owner());
-        vault.setSiblingVault(1, address(0x4), address(usdc));
-
-        vm.prank(user1);
-        vault.depositFrom(depositAmount, user1, 1);
+        vm.expectRevert(abi.encodeWithSelector(xYieldVault.OnlyRemote.selector));
+        vault.depositTo(
+            depositAmount,
+            user1,
+            1, // target chain
+            depositAmount,
+            address(0), // exclusive relayer
+            uint32(block.timestamp),
+            uint32(block.timestamp + 1800),
+            0 // exclusivity parameter
+        );
     }
 
     function testRebalance() public {
         uint32 dstChainId = 1;
         uint256 depositAmount = 100 * 10 ** 18;
 
-        vault.setSiblingVault(dstChainId, address(12), address(usdc));
+        vault.setSiblingVault(dstChainId, address(12), address(usdc), address(0x1234));
 
         vm.prank(user1);
         vault.deposit(depositAmount, user1);
@@ -252,14 +259,13 @@ contract xYieldTest is Test {
         vault.rebalance(REBALANCE_ID, dstChainId, depositAmount, depositAmount, 0);
 
         assertFalse(vault.isActiveChain());
-        assertEq(vault.virtualTotalAssets(), 0);
     }
 
     function testRebalanceZeroAmountRevert() public {
         uint32 dstChainId = 1;
         uint256 depositAmount = 100 * 10 ** 18;
 
-        vault.setSiblingVault(dstChainId, address(12), address(usdc));
+        vault.setSiblingVault(dstChainId, address(12), address(usdc), address(0x1234));
 
         vm.prank(user1);
         vault.deposit(depositAmount, user1);
@@ -276,7 +282,7 @@ contract xYieldTest is Test {
         uint32 dstChainId = 1;
         uint256 depositAmount = 100 * 10 ** 18;
 
-        vault.setSiblingVault(dstChainId, address(12), address(usdc));
+        vault.setSiblingVault(dstChainId, address(12), address(usdc), address(0x1234));
 
         vm.prank(user1);
         vault.deposit(depositAmount, user1);
@@ -318,31 +324,32 @@ contract xYieldTest is Test {
         vault.rebalance(REBALANCE_ID, dstChainId, depositAmount, depositAmount, 0);
     }
 
-    function testReDepositIdleAssets() public {
+    function testFinalizeRebalance() public {
         uint256 idleAmount = 50 * 10 ** 18;
         usdc.mint(address(vault), idleAmount);
 
         vm.prank(guardian);
-        vault.reDepositIdleAssets();
+        vault.finalizeRebalance();
 
         assertEq(usdc.balanceOf(address(vault)), 0);
         assertEq(yieldProtocol.balanceOf(address(vault)), idleAmount);
+        assertTrue(vault.isActiveChain());
     }
 
-    function testReDepositIdleAssetsZeroAmountRevert() public {
+    function testFinalizeRebalanceZeroAmountRevert() public {
         vm.prank(guardian);
         // No USDC is available on vault
         vm.expectRevert(xYieldVault.ZeroAmount.selector);
-        vault.reDepositIdleAssets();
+        vault.finalizeRebalance();
     }
 
-    function testReDepositIdleAssetsNotGuardianRevert() public {
+    function testFinalizeRebalanceNotGuardianRevert() public {
         uint256 idleAmount = 50 * 10 ** 18;
         usdc.mint(address(vault), idleAmount);
 
         vm.expectRevert(xYieldVault.NotGuardian.selector);
         vm.prank(user1);
-        vault.reDepositIdleAssets();
+        vault.finalizeRebalance();
     }
 
     function _createOrder(
@@ -359,7 +366,7 @@ contract xYieldTest is Test {
     {
         OrderData memory orderData;
         {
-            (address siblingVault,) = vault.siblingVaults(dstChainId);
+            (address siblingVault,,) = vault.siblingVaults(dstChainId);
             orderData = OrderData({
                 sender: TypeCasts.addressToBytes32(address(vault)),
                 recipient: TypeCasts.addressToBytes32(siblingVault),

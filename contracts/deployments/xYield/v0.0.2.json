@@ -1,0 +1,25 @@
+{
+  "metadata": {
+    "version": "v0.0.2",
+    "date": "2025-09-08",
+    "by": "KSS",
+    "from_machine": "xYield02",
+    "from_branch": "feat/xyield/deployment-script-with-across-bridging",
+    "from_commit": "f1994b4dce485cccf7eadffb7e7e8b2be70b4af5"
+  },
+  "addresses": {
+    "arbitrum": {
+      "xYieldVault": "0xF23dFE3337b03a970877d4120bf18001c97d0820",
+      "guardian": "0xB458Ff684cCEDb45Be3a41584B7a25fD5FCcB10F",
+      "usdc": "0xaf88d065e77c8cC2239327C5EDb3A432268e5831",
+      "eulerUsdcVault": "0x0a1eCC5Fe8C9be3C809844fcBe615B46A869b899"
+    },
+    "base": {
+      "xYieldVault": "0x6c539C8C53f81A479F8Aa92A5647A0eB53E985eC",
+      "guardian": "0xB458Ff684cCEDb45Be3a41584B7a25fD5FCcB10F",
+      "usdc": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
+      "eulerUsdcVault": "0x0A1a3b5f2041F33522C4efc754a7D096f880eE16"
+    },
+    "deployerAddress": "0x8764BD4c58cc71bEe12C36deA228fd22a1B2723C"
+  }
+}

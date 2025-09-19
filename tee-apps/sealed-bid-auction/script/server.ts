@@ -6,28 +6,33 @@ import {AuctionApiServer} from "../src/api/AuctionApiServer.ts";
 import {ViemIntentObserver} from "../src/blockchain/ViemIntentObserver.ts";
 import {SolverPriceBook} from "../src/core/SolverPriceBook.ts";
 import {AuctionService} from "../src/core/AuctionService.ts";
-import {arbitrumSepolia, baseSepolia} from "viem/chains";
+import {arbitrum, arbitrumSepolia, base, baseSepolia} from "viem/chains";
 import {BlockchainClient} from "../src/blockchain/BlockchainClient.ts";
 
 const USE_TLS = process.env.USE_TLS as string === "true";
+const IS_MAINNET = process.env.IS_MAINNET as string === "true";
 const SOLVER_PRICE_TTL_SECONDS = process.env.SOLVER_PRICE_TTL_SECONDS
 const TEN_MINUTES_IN_SECONDS = 600;
+
 const BASE_T1_ERC_7683_CONTRACT_ADDRESS = process.env.BASE_T1_ERC7683_CONTRACT_ADDRESS as `0x${string}`;
 const ARBITRUM_T1_ERC_7683_CONTRACT_ADDRESS = process.env.ARBITRUM_T1_ERC7683_CONTRACT_ADDRESS as `0x${string}`;
+
+const ARBITRUM_RPC = (IS_MAINNET ? process.env.ARBITRUM_MAINNET_RPC : process.env.ARBITRUM_SEPOLIA_RPC) as string;
+const BASE_RPC = (IS_MAINNET ? process.env.BASE_MAINNET_RPC : process.env.BASE_SEPOLIA_RPC) as string;
 
 const solverPriceBook = new SolverPriceBook(SOLVER_PRICE_TTL_SECONDS ? Number(SOLVER_PRICE_TTL_SECONDS as string) : TEN_MINUTES_IN_SECONDS);
 const auctionService = new AuctionService(solverPriceBook);
 
 const httpServer = new AuctionApiServer(solverPriceBook, auctionService);
 const arbitrumClient = new BlockchainClient(
-    process.env.ARBITRUM_SEPOLIA_RPC as string,
-    arbitrumSepolia,
+    ARBITRUM_RPC,
+    IS_MAINNET ? arbitrum : arbitrumSepolia,
     Number(process.env.ARBITRUM_SEPOLIA_POLLING_INTERVAL_MS as string),
     process.env.ARBITRUM_SIGNER_PRIVATE_KEY as `0x${string}`
 );
 const baseClient = new BlockchainClient(
-    process.env.BASE_SEPOLIA_RPC as string,
-    baseSepolia,
+    BASE_RPC,
+    IS_MAINNET ? base : baseSepolia,
     Number(process.env.BASE_SEPOLIA_POLLING_INTERVAL_MS as string),
     process.env.BASE_SIGNER_PRIVATE_KEY as `0x${string}`
 );
@@ -49,6 +54,7 @@ const baseSepoliaIntentObserver = new ViemIntentObserver(
 );
 
 async function main() {
+    console.log(`Starting ${IS_MAINNET ? 'mainnet' : 'testnet'} Sealed Bid API server...`);
     await httpServer.start(Number(process.env.SERVER_PORT as string), USE_TLS);
     arbitrumSepoliaIntentObserver.start();
     baseSepoliaIntentObserver.start();
