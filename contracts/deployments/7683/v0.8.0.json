@@ -1,0 +1,39 @@
+{
+  "metadata": {
+    "version": "v0.8.0",
+    "date": "2025-09-18",
+    "by": "KSS",
+    "from_machine": "localhost",
+    "from_branch": "origin/feat/mainnet-deployment-scripts",
+    "from_commit": "ef0551e8f1b43dd2eba208469cc8075280d1c2d1"
+  },
+  "addresses": {
+    "arbitrum": {
+      "signer": "0xc698482dc6Fa453038e2C21c36e1C419bfFe3cde",
+      "t1ProxyAdmin": "0xd54F43bB43Bc2ba7099B5494581E421A0b4Aa85a",
+      "t1XChainRead": {
+        "implementation": "0x631a41B61B1D1F44d4D8650f72757E65030ed45d",
+        "proxy": "0xbe78c078aC06640b3ae6487A86906062409fb693"
+      },
+      "t1ERC7683": {
+        "implementation": "0xE5C5800F8A866aE468D9D4076d426652F9a6bf5e",
+        "proxy": "0xe26148720369cFa4fb4Afde0A0B0a5F876CFCa78"
+      },
+      "auctionWitness": "0x5bA9d8193Ac43bE825743576b396473C6Ad73119"
+    },
+    "base": {
+      "signer": "0xc698482dc6Fa453038e2C21c36e1C419bfFe3cde",
+      "t1ProxyAdmin": "0xd54F43bB43Bc2ba7099B5494581E421A0b4Aa85a",
+      "t1XChainRead": {
+        "implementation": "0x631a41B61B1D1F44d4D8650f72757E65030ed45d",
+        "proxy": "0xbe78c078aC06640b3ae6487A86906062409fb693"
+      },
+      "t1ERC7683": {
+        "implementation": "0xE5C5800F8A866aE468D9D4076d426652F9a6bf5e",
+        "proxy": "0xe26148720369cFa4fb4Afde0A0B0a5F876CFCa78"
+      },
+      "auctionWitness": "0x5bA9d8193Ac43bE825743576b396473C6Ad73119"
+    },
+    "deployerAddress": "0x3a3Ebe3daacAdd81A69831D58B9eb24E14A8b04A"
+  }
+}
