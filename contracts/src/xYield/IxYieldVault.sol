@@ -143,7 +143,6 @@ interface IxYieldVault {
         uint256 assets,
         address owner,
         uint64 chainId,
-        address outputToken,
         uint256 outputAmount,
         address exclusiveRelayer,
         uint32 quoteTimestamp,

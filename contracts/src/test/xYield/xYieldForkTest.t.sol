@@ -258,7 +258,6 @@ contract xYieldForkTest is Test {
             withdrawAmount,
             bob,
             baseChainId,
-            address(usdcBase),
             withdrawAmount * 90 / 100,
             address(0),
             uint32(block.timestamp),
