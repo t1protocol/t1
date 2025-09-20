@@ -279,14 +279,7 @@ contract xYieldVault is ERC4626, Ownable2Step, ReentrancyGuard, Pausable {
         returns (uint256)
     {
         return _withdrawFrom(
-            owner,
-            assets,
-            chainId,
-            outputAmount,
-            exclusiveRelayer,
-            quoteTimestamp,
-            fillDeadline,
-            exclusivityParameter
+            owner, assets, chainId, outputAmount, exclusiveRelayer, quoteTimestamp, fillDeadline, exclusivityParameter
         );
     }
 
