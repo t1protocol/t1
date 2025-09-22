@@ -24,7 +24,7 @@ export class ThresholdMonitor {
             );
             return this.client.unpauseOpen();
         } else {
-            console.log(`Contract balance = [${total} USD]. Paused = [${paused}] . No action taken.`);
+            console.log(`[${this.client.publicClient.chain.name}] Contract balance = [${total} USD]. Paused = [${paused}] . No action taken.`);
             return null;
         }
     }

@@ -3,6 +3,7 @@ import {arbitrum, base} from "viem/chains";
 import contractAbi from "../../contracts/artifacts/src/T1ERC7683.sol/T1ERC7683.json";
 import {T1ERC7683Client} from "./src/T1ERC7683Client";
 import {ThresholdMonitor} from "./src/TresholdMonitor.ts";
+import {getAddress} from "viem";
 
 dotenv.config();
 
@@ -64,16 +65,16 @@ async function main() {
         {
             chain: base,
             rpcUrl: process.env.BASE_RPC_URL as string,
-            contractAddress: process.env.BASE_T1ERC7683_CONTRACT_ADDRESS as `0x${string}`,
-            weth: process.env.BASE_WETH_ADDRESS as `0x${string}`,
-            usdc: process.env.BASE_USDC_ADDRESS as `0x${string}`,
+            contractAddress: getAddress(process.env.BASE_T1ERC7683_CONTRACT_ADDRESS!),
+            weth: getAddress(process.env.BASE_WETH_ADDRESS!),
+            usdc: getAddress(process.env.BASE_USDC_ADDRESS!),
         },
         {
             chain: arbitrum,
             rpcUrl: process.env.ARB_RPC_URL as string,
-            contractAddress: process.env.ARB_T1ERC7683_CONTRACT_ADDRESS as `0x${string}`,
-            weth: process.env.ARB_WETH_ADDRESS as `0x${string}`,
-            usdc: process.env.ARB_USDC_ADDRESS as `0x${string}`,
+            contractAddress: getAddress(process.env.ARB_T1ERC7683_CONTRACT_ADDRESS!),
+            weth: getAddress(process.env.ARB_WETH_ADDRESS!),
+            usdc: getAddress(process.env.ARB_USDC_ADDRESS!),
         },
     ];
 
