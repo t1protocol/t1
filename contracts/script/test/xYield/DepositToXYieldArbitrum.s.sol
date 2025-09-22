@@ -7,7 +7,7 @@ import { IERC20 } from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 
 import { xYieldVault } from "../../../../src/xYield/xYieldVault.sol";
 
-contract DepositToXYield is Script {
+contract DepositToXYieldArbitrum is Script {
     uint256 deployerPk = vm.envUint("DEPLOYER_PRIVATE_KEY");
     address underlyingToken = vm.envAddress("ARB_USDC_ADDR");
     address xYieldVaultAddress = vm.envAddress("ARB_XYIELD_VAULT_ADDR");
