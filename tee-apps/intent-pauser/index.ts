@@ -14,12 +14,19 @@ interface NetworkConfig {
     usdc: `0x${string}`;
 }
 
-async function startMonitor(config: NetworkConfig, privateKey: `0x${string}`, thresholdUsd: number, unpauseThresholdUsd: number, pollIntervalMs: number) {
+async function startMonitor(
+    config: NetworkConfig,
+    pauserPrivateKey: `0x${string}`,
+    thresholdUsd: number,
+    unpauseThresholdUsd: number,
+    pollIntervalMs: number,
+    ethpriceFallback : number
+) {
     const client = new T1ERC7683Client(
         config.rpcUrl,
         config.contractAddress,
         contractAbi.abi as any,
-        privateKey,
+        pauserPrivateKey,
         config.chain
     );
 
@@ -28,7 +35,7 @@ async function startMonitor(config: NetworkConfig, privateKey: `0x${string}`, th
         {token: config.usdc, decimals: 6, symbol: "USDC"},
     ];
 
-    const monitor = new ThresholdMonitor(client, monitoredTokens, thresholdUsd, unpauseThresholdUsd);
+    const monitor = new ThresholdMonitor(client, monitoredTokens, thresholdUsd, unpauseThresholdUsd, ethpriceFallback);
 
     console.log(`[${config.chain.name}] Starting ThresholdMonitor with threshold=${thresholdUsd} USD, interval=${pollIntervalMs}ms`);
 
@@ -51,6 +58,7 @@ async function main() {
     const pauseThresholdUsd = Number(process.env.PAUSE_USD_THRESHOLD);
     const unpauseThresholdUsd = Number(process.env.UNPAUSE_USD_THRESHOLD);
     const pollIntervalMs = Number(process.env.POLL_INTERVAL_MS);
+    const ethpriceFallback = Number(process.env.ETH_PRICE_FALLBACK);
 
     const networks: NetworkConfig[] = [
         {
@@ -70,7 +78,7 @@ async function main() {
     ];
 
     networks.forEach((network) => {
-        startMonitor(network, pauserPrivateKey, pauseThresholdUsd, unpauseThresholdUsd, pollIntervalMs);
+        startMonitor(network, pauserPrivateKey, pauseThresholdUsd, unpauseThresholdUsd, pollIntervalMs, ethpriceFallback);
     });
 }
 
