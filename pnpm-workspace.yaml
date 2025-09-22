@@ -1,0 +1,3 @@
+# Do not pull packages newer than one day
+## this ensures packages have 24 hours for a hack to be noticed and fixed before we would decide to pull it
+minimumReleaseAge: 1440
