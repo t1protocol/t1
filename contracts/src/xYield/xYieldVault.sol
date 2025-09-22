@@ -263,6 +263,27 @@ contract xYieldVault is ERC4626, Ownable2Step, ReentrancyGuard, Pausable {
         return assets;
     }
 
+    function redeemFrom(
+        uint256 shares,
+        address owner,
+        uint64 chainId,
+        uint256 outputAmount,
+        address exclusiveRelayer,
+        uint32 quoteTimestamp,
+        uint32 fillDeadline,
+        uint32 exclusivityParameter
+    )
+        external
+        nonReentrant
+        onlyGuardian
+        returns (uint256 assets)
+    {
+        assets = previewRedeem(shares);
+        _withdrawFrom(
+            owner, shares, assets, chainId, outputAmount, exclusiveRelayer, quoteTimestamp, fillDeadline, exclusivityParameter
+        );
+    }
+
     function withdrawFrom(
         uint256 assets,
         address owner,
@@ -276,15 +297,17 @@ contract xYieldVault is ERC4626, Ownable2Step, ReentrancyGuard, Pausable {
         external
         nonReentrant
         onlyGuardian
-        returns (uint256)
+        returns (uint256 shares)
     {
-        return _withdrawFrom(
-            owner, assets, chainId, outputAmount, exclusiveRelayer, quoteTimestamp, fillDeadline, exclusivityParameter
+        shares = previewWithdraw(assets);
+        _withdrawFrom(
+            owner, shares, assets, chainId, outputAmount, exclusiveRelayer, quoteTimestamp, fillDeadline, exclusivityParameter
         );
     }
 
     function _withdrawFrom(
         address owner,
+        uint256 shares,
         uint256 assets,
         uint64 chainId,
         uint256 outputAmount,
@@ -294,9 +317,7 @@ contract xYieldVault is ERC4626, Ownable2Step, ReentrancyGuard, Pausable {
         uint32 exclusivityParameter
     )
         internal
-        returns (uint256 shares)
     {
-        shares = previewWithdraw(assets);
         virtualTotalSupply -= shares;
         yieldProtocol.withdraw(assets, address(this), address(this));
 
