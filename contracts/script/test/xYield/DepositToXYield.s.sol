@@ -18,7 +18,7 @@ contract DepositToXYield is Script {
         address deployer = vm.addr(deployerPk);
         xYieldVault xYield = xYieldVault(xYieldVaultAddress);
 
-        uint256 depositAmount = 2e6; // 1 USDC
+        uint256 depositAmount = 2e6; // 2 USDC
         IERC20(underlyingToken).approve(address(xYield), depositAmount);
         uint256 aliceShares = xYield.deposit(depositAmount, deployer);
 
