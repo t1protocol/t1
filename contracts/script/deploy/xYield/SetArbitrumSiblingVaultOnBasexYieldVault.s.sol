@@ -16,7 +16,7 @@ contract SetArbitrumSiblingVaultOnBasexYieldVault is DeploymentUtils {
         address xYieldBaseAddr = vm.envAddress("BASE_XYIELD_VAULT_ADDR");
         address xYieldArbitrum = vm.envAddress("ARB_XYIELD_VAULT_ADDR");
         address multicallHandlerArbitrum = vm.envAddress("ARB_ACROSS_MULTICALL_HANDLER_ADDR");
-        uint64 arbitrumChainId = 42161;
+        uint64 arbitrumChainId = 42_161;
 
         vm.startBroadcast(deployerPk);
 

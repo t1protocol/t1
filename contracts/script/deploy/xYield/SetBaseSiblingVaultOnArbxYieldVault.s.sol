@@ -22,9 +22,7 @@ contract SetBaseSiblingVaultOnArbxYieldVault is DeploymentUtils {
 
         xYieldVault xYieldArbitrum = xYieldVault(xYieldArbitrumAddr);
 
-        xYieldArbitrum.setSiblingVault(
-            baseChainId, address(xYieldBase), address(usdcBase), multicallHandlerBase
-        );
+        xYieldArbitrum.setSiblingVault(baseChainId, address(xYieldBase), address(usdcBase), multicallHandlerBase);
 
         vm.stopBroadcast();
 

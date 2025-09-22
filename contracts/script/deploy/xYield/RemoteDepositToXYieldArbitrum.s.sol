@@ -19,7 +19,7 @@ contract RemoteDepositToXYieldArbitrum is Script {
         address deployer = vm.addr(deployerPk);
         xYieldVault xYield = xYieldVault(baseXYieldVaultAddress);
 
-        uint32 targetChain = 42161; // Arbitrum CHAIN ID
+        uint32 targetChain = 42_161; // Arbitrum CHAIN ID
         uint256 amountIn = 1e5;
         uint256 amountOut = 8e4;
         uint32 acrossApiQuoteTimestamp = uint32(block.timestamp - 300);
@@ -29,7 +29,16 @@ contract RemoteDepositToXYieldArbitrum is Script {
 
         uint256 depositAmount = 1e6; // 1 USDC
         IERC20(underlyingToken).approve(address(xYield), amountIn);
-        xYield.depositTo(amountIn, deployer, targetChain, amountOut, exclusiveRelayer, acrossApiQuoteTimestamp, fillDeadline, exclusivityParameter);
+        xYield.depositTo(
+            amountIn,
+            deployer,
+            targetChain,
+            amountOut,
+            exclusiveRelayer,
+            acrossApiQuoteTimestamp,
+            fillDeadline,
+            exclusivityParameter
+        );
 
         vm.stopBroadcast();
     }
