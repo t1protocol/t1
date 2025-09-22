@@ -258,7 +258,6 @@ contract xYieldForkTest is Test {
             withdrawAmount,
             bob,
             baseChainId,
-            address(usdcBase),
             withdrawAmount * 90 / 100,
             address(0),
             uint32(block.timestamp),
@@ -375,6 +374,156 @@ contract xYieldForkTest is Test {
         vm.stopPrank();
 
         assertEq(aliceShares, charlieSharesRemote, "Alice and Charlie receive the same amount shares");
+    }
+
+    function testRedeemFromBehaviorMatchesWithdrawFrom() public {
+        // Setup: First do deposits to have assets to withdraw/redeem from
+        vm.startPrank(alice);
+        usdcArbitrum.approve(address(xYieldArbitrum), type(uint256).max);
+        uint256 aliceSharesNative = xYieldArbitrum.deposit(depositAmount, alice);
+        vm.stopPrank();
+
+        uint256 bobSharesRemote = _simulateRemoteDeposit(bob, depositAmount, baseChainId, uint64(block.chainid));
+        uint256 charlieSharesRemote = _simulateRemoteDeposit(charlie, depositAmount, baseChainId, uint64(block.chainid));
+
+        // Update totals to reflect all deposits
+        uint256 totalSharesGlobal = aliceSharesNative + bobSharesRemote + charlieSharesRemote;
+        xYieldVault.BalanceUpdate[] memory balanceUpdates = new xYieldVault.BalanceUpdate[](2);
+        balanceUpdates[0] =
+            xYieldVault.BalanceUpdate({ recipient: bob, amount: bobSharesRemote, txType: xYieldVault.TxType.Deposit });
+        balanceUpdates[1] = xYieldVault.BalanceUpdate({
+            recipient: charlie,
+            amount: charlieSharesRemote,
+            txType: xYieldVault.TxType.Deposit
+        });
+
+        vm.startPrank(guardian);
+        xYieldBase.updateTotals(totalSharesGlobal, balanceUpdates);
+        vm.stopPrank();
+
+        // Test 1: withdrawFrom with Bob's shares
+        uint256 withdrawAmount = 30e6;
+        uint256 bobInitialShares = xYieldBase.balanceOf(bob);
+        uint256 initialVirtualSupply = xYieldArbitrum.totalSupply();
+        uint256 initialTotalAssets = xYieldArbitrum.totalAssets();
+
+        // Calculate expected shares to burn for withdrawFrom
+        uint256 expectedSharesForWithdraw = xYieldArbitrum.previewWithdraw(withdrawAmount);
+
+        vm.startPrank(guardian);
+        uint256 sharesBurnedByWithdraw = xYieldArbitrum.withdrawFrom(
+            withdrawAmount,
+            bob,
+            baseChainId,
+            withdrawAmount * 90 / 100,
+            address(0),
+            uint32(block.timestamp),
+            uint32(block.timestamp + 1800),
+            0
+        );
+        vm.stopPrank();
+
+        assertEq(sharesBurnedByWithdraw, expectedSharesForWithdraw, "withdrawFrom should burn expected shares");
+        assertEq(
+            xYieldArbitrum.totalSupply(),
+            initialVirtualSupply - sharesBurnedByWithdraw,
+            "Virtual supply should decrease by burned shares after withdrawFrom"
+        );
+
+        // Test 2: redeemFrom with Charlie's shares (redeem same amount of shares)
+        uint256 sharesToRedeem = sharesBurnedByWithdraw; // Use same amount of shares for comparison
+        uint256 charlieInitialShares = xYieldBase.balanceOf(charlie);
+        uint256 supplyBeforeRedeem = xYieldArbitrum.totalSupply();
+        uint256 assetsBeforeRedeem = xYieldArbitrum.totalAssets();
+
+        // Calculate expected assets for redeemFrom
+        uint256 expectedAssetsForRedeem = xYieldArbitrum.previewRedeem(sharesToRedeem);
+
+        vm.startPrank(guardian);
+        uint256 assetsWithdrawnByRedeem = xYieldArbitrum.redeemFrom(
+            sharesToRedeem,
+            charlie,
+            baseChainId,
+            expectedAssetsForRedeem * 90 / 100,
+            address(0),
+            uint32(block.timestamp),
+            uint32(block.timestamp + 1800),
+            0
+        );
+        vm.stopPrank();
+
+        assertEq(assetsWithdrawnByRedeem, expectedAssetsForRedeem, "redeemFrom should withdraw expected assets");
+        assertEq(
+            xYieldArbitrum.totalSupply(),
+            supplyBeforeRedeem - sharesToRedeem,
+            "Virtual supply should decrease by redeemed shares after redeemFrom"
+        );
+
+        // Test 3: Verify conversion consistency
+        // When we withdraw X assets, we burn Y shares
+        // When we redeem Y shares, we should get approximately X assets
+        assertApproxEqAbs(
+            assetsWithdrawnByRedeem,
+            withdrawAmount,
+            2,
+            "Redeeming same shares should withdraw approximately same assets"
+        );
+
+        // Test 4: Verify that both methods maintain share price consistency
+        uint256 sharePriceAfterWithdraw = xYieldArbitrum.convertToAssets(1e6);
+        uint256 sharePriceAfterRedeem = xYieldArbitrum.convertToAssets(1e6);
+
+        assertApproxEqAbs(
+            sharePriceAfterWithdraw,
+            sharePriceAfterRedeem,
+            1,
+            "Share price should remain consistent between withdrawFrom and redeemFrom"
+        );
+
+        // Update totals to reflect both operations
+        xYieldVault.BalanceUpdate[] memory withdrawUpdates = new xYieldVault.BalanceUpdate[](2);
+        withdrawUpdates[0] = xYieldVault.BalanceUpdate({
+            recipient: bob,
+            amount: sharesBurnedByWithdraw,
+            txType: xYieldVault.TxType.Withdraw
+        });
+        withdrawUpdates[1] = xYieldVault.BalanceUpdate({
+            recipient: charlie,
+            amount: sharesToRedeem,
+            txType: xYieldVault.TxType.Withdraw
+        });
+
+        uint256 newTotalSharesGlobal = totalSharesGlobal - sharesBurnedByWithdraw - sharesToRedeem;
+        vm.startPrank(guardian);
+        xYieldBase.updateTotals(newTotalSharesGlobal, withdrawUpdates);
+        vm.stopPrank();
+
+        // Verify final state
+        assertEq(
+            xYieldBase.balanceOf(bob),
+            bobInitialShares - sharesBurnedByWithdraw,
+            "Bob's shares should be reduced by withdrawn amount"
+        );
+        assertEq(
+            xYieldBase.balanceOf(charlie),
+            charlieInitialShares - sharesToRedeem,
+            "Charlie's shares should be reduced by redeemed amount"
+        );
+
+        // Test 5: Verify inverse relationship
+        // If we know the shares burned for a withdrawal, converting those shares to assets should give the withdrawn
+        // amount
+        uint256 assetsFromShares = xYieldArbitrum.convertToAssets(sharesBurnedByWithdraw);
+        assertApproxEqAbs(
+            assetsFromShares, withdrawAmount, 1, "Converting burned shares to assets should equal withdrawn amount"
+        );
+
+        // If we know the assets withdrawn for a redemption, converting those assets to shares should give the redeemed
+        // shares
+        uint256 sharesFromAssets = xYieldArbitrum.convertToShares(assetsWithdrawnByRedeem);
+        assertApproxEqAbs(
+            sharesFromAssets, sharesToRedeem, 1, "Converting withdrawn assets to shares should equal redeemed shares"
+        );
     }
 
     function testFullRebalanceFlow() public {
