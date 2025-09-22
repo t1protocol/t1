@@ -280,7 +280,15 @@ contract xYieldVault is ERC4626, Ownable2Step, ReentrancyGuard, Pausable {
     {
         assets = previewRedeem(shares);
         _withdrawFrom(
-            owner, shares, assets, chainId, outputAmount, exclusiveRelayer, quoteTimestamp, fillDeadline, exclusivityParameter
+            owner,
+            shares,
+            assets,
+            chainId,
+            outputAmount,
+            exclusiveRelayer,
+            quoteTimestamp,
+            fillDeadline,
+            exclusivityParameter
         );
     }
 
@@ -301,7 +309,15 @@ contract xYieldVault is ERC4626, Ownable2Step, ReentrancyGuard, Pausable {
     {
         shares = previewWithdraw(assets);
         _withdrawFrom(
-            owner, shares, assets, chainId, outputAmount, exclusiveRelayer, quoteTimestamp, fillDeadline, exclusivityParameter
+            owner,
+            shares,
+            assets,
+            chainId,
+            outputAmount,
+            exclusiveRelayer,
+            quoteTimestamp,
+            fillDeadline,
+            exclusivityParameter
         );
     }
 

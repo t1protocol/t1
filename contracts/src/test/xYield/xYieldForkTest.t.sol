@@ -391,8 +391,11 @@ contract xYieldForkTest is Test {
         xYieldVault.BalanceUpdate[] memory balanceUpdates = new xYieldVault.BalanceUpdate[](2);
         balanceUpdates[0] =
             xYieldVault.BalanceUpdate({ recipient: bob, amount: bobSharesRemote, txType: xYieldVault.TxType.Deposit });
-        balanceUpdates[1] =
-            xYieldVault.BalanceUpdate({ recipient: charlie, amount: charlieSharesRemote, txType: xYieldVault.TxType.Deposit });
+        balanceUpdates[1] = xYieldVault.BalanceUpdate({
+            recipient: charlie,
+            amount: charlieSharesRemote,
+            txType: xYieldVault.TxType.Deposit
+        });
 
         vm.startPrank(guardian);
         xYieldBase.updateTotals(totalSharesGlobal, balanceUpdates);
@@ -479,10 +482,16 @@ contract xYieldForkTest is Test {
 
         // Update totals to reflect both operations
         xYieldVault.BalanceUpdate[] memory withdrawUpdates = new xYieldVault.BalanceUpdate[](2);
-        withdrawUpdates[0] =
-            xYieldVault.BalanceUpdate({ recipient: bob, amount: sharesBurnedByWithdraw, txType: xYieldVault.TxType.Withdraw });
-        withdrawUpdates[1] =
-            xYieldVault.BalanceUpdate({ recipient: charlie, amount: sharesToRedeem, txType: xYieldVault.TxType.Withdraw });
+        withdrawUpdates[0] = xYieldVault.BalanceUpdate({
+            recipient: bob,
+            amount: sharesBurnedByWithdraw,
+            txType: xYieldVault.TxType.Withdraw
+        });
+        withdrawUpdates[1] = xYieldVault.BalanceUpdate({
+            recipient: charlie,
+            amount: sharesToRedeem,
+            txType: xYieldVault.TxType.Withdraw
+        });
 
         uint256 newTotalSharesGlobal = totalSharesGlobal - sharesBurnedByWithdraw - sharesToRedeem;
         vm.startPrank(guardian);
@@ -502,22 +511,18 @@ contract xYieldForkTest is Test {
         );
 
         // Test 5: Verify inverse relationship
-        // If we know the shares burned for a withdrawal, converting those shares to assets should give the withdrawn amount
+        // If we know the shares burned for a withdrawal, converting those shares to assets should give the withdrawn
+        // amount
         uint256 assetsFromShares = xYieldArbitrum.convertToAssets(sharesBurnedByWithdraw);
         assertApproxEqAbs(
-            assetsFromShares,
-            withdrawAmount,
-            1,
-            "Converting burned shares to assets should equal withdrawn amount"
+            assetsFromShares, withdrawAmount, 1, "Converting burned shares to assets should equal withdrawn amount"
         );
 
-        // If we know the assets withdrawn for a redemption, converting those assets to shares should give the redeemed shares
+        // If we know the assets withdrawn for a redemption, converting those assets to shares should give the redeemed
+        // shares
         uint256 sharesFromAssets = xYieldArbitrum.convertToShares(assetsWithdrawnByRedeem);
         assertApproxEqAbs(
-            sharesFromAssets,
-            sharesToRedeem,
-            1,
-            "Converting withdrawn assets to shares should equal redeemed shares"
+            sharesFromAssets, sharesToRedeem, 1, "Converting withdrawn assets to shares should equal redeemed shares"
         );
     }
 
