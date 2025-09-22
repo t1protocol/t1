@@ -5,18 +5,26 @@ export class ThresholdMonitor {
     constructor(
         private readonly client: T1ERC7683Client,
         private readonly monitoredErc20Tokens: { token: `0x${string}`; decimals: number; symbol: string }[],
-        private usdThreshold: number,
+        private readonly pauseUsdThreshold: number,
+        private readonly unpauseUsdThreshold: number,
     ) { }
 
-    public async pauseIfAboveThreshold(): Promise<`0x${string}` | null> {
+    public async pauseOrUnpauseIfNeeded(): Promise<`0x${string}` | null> {
         const total = await this.getTotalBalanceUsd();
-        if (total > this.usdThreshold) {
+        const paused = await this.client.isOpenPaused();
+
+        if (!paused && total > this.pauseUsdThreshold) {
             console.log(
-                `Threshold exceeded: ${total} > ${this.usdThreshold}, calling pauseOpen()`
+                `Threshold exceeded: ${total} > ${this.pauseUsdThreshold}, calling pauseOpen()...`
             );
             return this.client.pauseOpen();
+        } else if (paused && total < this.unpauseUsdThreshold) {
+            console.log(
+                `Returned under threshold: ${total} < ${this.unpauseUsdThreshold}, calling unpauseOpen()...`
+            );
+            return this.client.unpauseOpen();
         } else {
-            console.log(`Contract balance = ${total} USD (below threshold)`);
+            console.log(`Contract balance = [${total} USD]. Paused = [${paused}] . No action taken.`);
             return null;
         }
     }

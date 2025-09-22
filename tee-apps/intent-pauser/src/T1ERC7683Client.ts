@@ -47,6 +47,13 @@ export class T1ERC7683Client {
         }) as Promise<bigint>;
     }
 
+    public async isOpenPaused(): Promise<boolean> {
+        return this.publicClient.readContract({
+            ...this.t1Erc7683Contract,
+            functionName: "openPaused",
+        }) as Promise<boolean>;
+    }
+
     public async pauseOpen() {
         return this.walletClient.writeContract({
             ...this.t1Erc7683Contract,
@@ -54,4 +61,13 @@ export class T1ERC7683Client {
             args: [],
         });
     }
+
+    public async unpauseOpen() {
+        return this.walletClient.writeContract({
+            ...this.t1Erc7683Contract,
+            functionName: "unpauseOpen",
+            args: [],
+        });
+    }
+
 }

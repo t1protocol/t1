@@ -14,7 +14,7 @@ interface NetworkConfig {
     usdc: `0x${string}`;
 }
 
-async function startMonitor(config: NetworkConfig, privateKey: `0x${string}`, thresholdUsd: number, pollIntervalMs: number) {
+async function startMonitor(config: NetworkConfig, privateKey: `0x${string}`, thresholdUsd: number, unpauseThresholdUsd: number, pollIntervalMs: number) {
     const client = new T1ERC7683Client(
         config.rpcUrl,
         config.contractAddress,
@@ -28,13 +28,17 @@ async function startMonitor(config: NetworkConfig, privateKey: `0x${string}`, th
         {token: config.usdc, decimals: 6, symbol: "USDC"},
     ];
 
-    const monitor = new ThresholdMonitor(client, monitoredTokens, thresholdUsd);
+    const monitor = new ThresholdMonitor(client, monitoredTokens, thresholdUsd, unpauseThresholdUsd);
 
     console.log(`[${config.chain.name}] Starting ThresholdMonitor with threshold=${thresholdUsd} USD, interval=${pollIntervalMs}ms`);
 
     while (true) {
         try {
-            await monitor.pauseIfAboveThreshold();
+            const txHash = await monitor.pauseOrUnpauseIfNeeded();
+
+            if (txHash) {
+                console.log(`[${config.chain.name}] Paused or unpaused in tx=[${txHash}]`);
+            }
         } catch (err) {
             console.error(`[${config.chain.name}] Error during monitor check:`, err);
         }
@@ -44,7 +48,8 @@ async function startMonitor(config: NetworkConfig, privateKey: `0x${string}`, th
 
 async function main() {
     const pauserPrivateKey = process.env.PAUSER_PRIVATE_KEY as `0x${string}`;
-    const thresholdUsd = Number(process.env.USD_THRESHOLD);
+    const pauseThresholdUsd = Number(process.env.PAUSE_USD_THRESHOLD);
+    const unpauseThresholdUsd = Number(process.env.UNPAUSE_USD_THRESHOLD);
     const pollIntervalMs = Number(process.env.POLL_INTERVAL_MS);
 
     const networks: NetworkConfig[] = [
@@ -65,7 +70,7 @@ async function main() {
     ];
 
     networks.forEach((network) => {
-        startMonitor(network, pauserPrivateKey, thresholdUsd, pollIntervalMs);
+        startMonitor(network, pauserPrivateKey, pauseThresholdUsd, unpauseThresholdUsd, pollIntervalMs);
     });
 }
 
