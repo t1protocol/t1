@@ -1,10 +1,19 @@
 # intent-pauser
 
+Pauses opening new 7683 intents when value at risk exceeds threshold.
+
 To install dependencies:
 
 ```bash
 bun install
 ```
+
+To configure:
+
+```bash
+cp .env.example .env
+```
+... and fill in the values in `.env`.
 
 To run:
 
@@ -12,4 +21,3 @@ To run:
 bun run index.ts
 ```
 
-This project was created using `bun init` in bun v1.2.21. [Bun](https://bun.com) is a fast all-in-one JavaScript runtime.
