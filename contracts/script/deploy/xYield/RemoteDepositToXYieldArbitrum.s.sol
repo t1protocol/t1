@@ -19,7 +19,6 @@ contract RemoteDepositToXYieldArbitrum is Script {
         address deployer = vm.addr(deployerPk);
         xYieldVault xYield = xYieldVault(baseXYieldVaultAddress);
 
-        uint256 rebalanceId = 1;
         uint32 targetChain = 42161; // Arbitrum CHAIN ID
         uint256 amountIn = 1e5;
         uint256 amountOut = 8e4;
