@@ -18,6 +18,6 @@ cp .env.example .env
 To run:
 
 ```bash
-bun run index.ts
+bun pauser
 ```
 
