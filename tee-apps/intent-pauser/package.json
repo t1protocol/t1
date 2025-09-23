@@ -1,0 +1,19 @@
+{
+  "name": "intent-pauser",
+  "module": "index.ts",
+  "type": "module",
+  "scripts": {
+    "pauser": "bun run index.ts"
+  },
+  "private": true,
+  "devDependencies": {
+    "@types/bun": "latest"
+  },
+  "peerDependencies": {
+    "typescript": "^5"
+  },
+  "dependencies": {
+    "dotenv": "17.2.2",
+    "viem": "2.37.7"
+  }
+}
