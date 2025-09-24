@@ -27,6 +27,10 @@ import { IT1XChainReader } from "../libraries/xChain/IT1XChainReader.sol";
 contract T1ERC7683 is IT1ERC7683, T1Permit2, AccessControlUpgradeable, EIP712 {
     using SafeERC20 for IERC20;
 
+    /// Custom Errors
+    error InvalidSender(bytes32 provided, address expected);
+    error InvalidFillDeadline(uint32 provided, uint32 expected);
+
     /// @notice Role for pausing/unpausing open operations
     bytes32 public constant OPEN_PAUSER_ROLE = keccak256("OPEN_PAUSER_ROLE");
     /// @notice Role for pausing/unpausing settlement operations
@@ -108,7 +112,12 @@ contract T1ERC7683 is IT1ERC7683, T1Permit2, AccessControlUpgradeable, EIP712 {
     function open(OnchainCrossChainOrder calldata _order) external payable override whenOpenNotPaused {
         (ResolvedCrossChainOrder memory resolvedOrder, bytes32 orderId, uint256 nonce) = _resolveOrder(_order);
 
-        openOrders[orderId] = abi.encode(_order.orderDataType, _order.orderData);
+        // Encode a modified OrderData instead of _order.orderData to keep context clean across instances
+        OrderData memory orderData = OrderEncoder.decode(_order.orderData);
+        orderData.fillDeadline = _order.fillDeadline; // Use the resolved fillDeadline
+        orderData.sender = TypeCasts.addressToBytes32(msg.sender); // Use the resolved sender
+
+        openOrders[orderId] = abi.encode(_order.orderDataType, orderData); // must not use _orderData for consistency
         orderStatus[orderId] = Status.OPENED;
         _useNonce(msg.sender, nonce);
 
@@ -137,11 +146,7 @@ contract T1ERC7683 is IT1ERC7683, T1Permit2, AccessControlUpgradeable, EIP712 {
         GaslessCrossChainOrder calldata _order,
         bytes calldata _signature,
         bytes calldata _originFillerData
-    )
-        external
-        override
-        whenOpenNotPaused
-    {
+    ) external override whenOpenNotPaused {
         if (block.timestamp > _order.openDeadline) revert OrderOpenExpired();
         if (_order.originSettler != address(this)) revert InvalidGaslessOrderSettler();
         if (_order.originChainId != localDomain) revert InvalidGaslessOrderOrigin();
@@ -149,7 +154,11 @@ contract T1ERC7683 is IT1ERC7683, T1Permit2, AccessControlUpgradeable, EIP712 {
         (ResolvedCrossChainOrder memory resolvedOrder, bytes32 orderId, uint256 nonce) =
             _resolveOrder(_order, _originFillerData);
 
-        openOrders[orderId] = abi.encode(_order.orderDataType, _order.orderData);
+        // Encode the modified OrderData (orderDataResolved) instead of orderDataOriginal
+        OrderData memory orderData = OrderEncoder.decode(_order.orderData);
+        orderData.fillDeadline = resolvedOrder.fillDeadline; // Use the resolved fillDeadline
+        orderData.sender = TypeCasts.addressToBytes32(_order.user); // Use the resolved sender
+        openOrders[orderId] = abi.encode(_order.orderDataType, OrderEncoder.encode(orderData));
         orderStatus[orderId] = Status.OPENED;
         _useNonce(_order.user, nonce);
 
@@ -197,14 +206,15 @@ contract T1ERC7683 is IT1ERC7683, T1Permit2, AccessControlUpgradeable, EIP712 {
     function _resolveOrder(
         GaslessCrossChainOrder memory _order,
         bytes calldata
-    )
-        internal
-        view
-        returns (ResolvedCrossChainOrder memory, bytes32, uint256)
-    {
-        return _resolvedOrder(
-            _order.orderDataType, _order.user, _order.openDeadline, _order.fillDeadline, _order.orderData
-        );
+    ) internal view returns (ResolvedCrossChainOrder memory, bytes32, uint256) {
+        OrderData memory orderData = OrderEncoder.decode(_order.orderData);
+        if (orderData.sender != TypeCasts.addressToBytes32(_order.user)) {
+            revert InvalidSender(orderData.sender, _order.user);
+        }
+        if (orderData.fillDeadline != _order.fillDeadline) {
+            revert InvalidFillDeadline(orderData.fillDeadline, _order.fillDeadline);
+        }
+        return _resolvedOrder(_order.orderDataType, _order.user, _order.openDeadline, _order.fillDeadline, _order.orderData);
     }
 
     /// @notice Resolves a OnchainCrossChainOrder.
@@ -217,6 +227,13 @@ contract T1ERC7683 is IT1ERC7683, T1Permit2, AccessControlUpgradeable, EIP712 {
         view
         returns (ResolvedCrossChainOrder memory, bytes32, uint256)
     {
+        OrderData memory orderData = OrderEncoder.decode(_order.orderData);
+        if (orderData.sender != TypeCasts.addressToBytes32(msg.sender)) {
+            revert InvalidSender(orderData.sender, msg.sender);
+        }
+        if (orderData.fillDeadline != _order.fillDeadline) {
+            revert InvalidFillDeadline(orderData.fillDeadline, _order.fillDeadline);
+        }
         return _resolvedOrder(_order.orderDataType, msg.sender, type(uint32).max, _order.fillDeadline, _order.orderData);
     }
 
