@@ -248,7 +248,6 @@ contract T1ERC7683 is IT1ERC7683, T1Permit2, AccessControlUpgradeable, EIP712 {
 
         if (orderData.originDomain != localDomain) revert InvalidOriginDomain(orderData.originDomain);
 
-        // Ensure destinationSettler matches counterpart
         bytes32 expectedSettler = TypeCasts.addressToBytes32(counterpart);
         if (orderData.destinationSettler != expectedSettler) {
             revert InvalidDestinationSettler(orderData.destinationSettler, expectedSettler);
