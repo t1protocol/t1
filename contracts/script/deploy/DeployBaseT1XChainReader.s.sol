@@ -12,6 +12,7 @@ import { T1XChainReader } from "../../src/libraries/xChain/T1XChainReader.sol";
 contract DeployBaseT1XChainReader is DeploymentUtils {
     address internal BASE_T1_PROXY_ADMIN_ADDR = vm.envAddress("BASE_T1_PROXY_ADMIN_ADDR");
     address internal PROVER = vm.envAddress("BASE_SIGNER");
+    address internal MANAGER_MULTISIG = vm.envAddress("MANAGER_MULTISIG_ADDR");
 
     function run() external {
         selectMainnetOrSepoliaFork("base");
@@ -22,6 +23,8 @@ contract DeployBaseT1XChainReader is DeploymentUtils {
 
         T1XChainReader impl = new T1XChainReader(PROVER);
         logAddress("BASE_T1_X_CHAIN_READ_IMPLEMENTATION_ADDR", address(impl));
+
+        impl.initialize(MANAGER_MULTISIG);
 
         TransparentUpgradeableProxy proxy =
             new TransparentUpgradeableProxy(address(impl), address(proxyAdmin), new bytes(0));
