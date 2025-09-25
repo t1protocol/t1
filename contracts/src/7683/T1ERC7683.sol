@@ -269,10 +269,6 @@ contract T1ERC7683 is IT1ERC7683, T1Permit2, AccessControlUpgradeable, EIP712 {
             revert InvalidSender(orderData.sender, expectedSender);
         }
 
-        // No need to overwrite fields since they are validated to be correct
-        // orderData.fillDeadline = _fillDeadline; // Removed
-        // orderData.sender = TypeCasts.addressToBytes32(_sender); // Removed
-
         // this can be used by the filler to approve the tokens to be spent on destination
         Output[] memory maxSpent = new Output[](1);
         maxSpent[0] = Output({
