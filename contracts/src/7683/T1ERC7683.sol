@@ -27,7 +27,14 @@ import { IT1XChainReader } from "../libraries/xChain/IT1XChainReader.sol";
 contract T1ERC7683 is IT1ERC7683, T1Permit2, AccessControlUpgradeable, EIP712 {
     using SafeERC20 for IERC20;
 
+    /// @dev Thrown when the destinationSettler does not match the counterpart
     error InvalidDestinationSettler(bytes32 provided, bytes32 expected);
+
+    /// @dev Thrown when the input fill deadline does not match the stored fill deadline
+    error InvalidFillDeadline(uint32 provided, uint32 expected);
+
+    /// @dev Thrown when the sender is unexpected
+    error InvalidSender(bytes32 provided, bytes32 expected);
 
     /// @notice Role for pausing/unpausing open operations
     bytes32 public constant OPEN_PAUSER_ROLE = keccak256("OPEN_PAUSER_ROLE");
@@ -253,10 +260,18 @@ contract T1ERC7683 is IT1ERC7683, T1Permit2, AccessControlUpgradeable, EIP712 {
             revert InvalidDestinationSettler(orderData.destinationSettler, expectedSettler);
         }
 
-        // enforce fillDeadline into orderData
-        orderData.fillDeadline = _fillDeadline;
-        // enforce sender into orderData
-        orderData.sender = TypeCasts.addressToBytes32(_sender);
+        if (orderData.fillDeadline != _fillDeadline) {
+            revert InvalidFillDeadline(orderData.fillDeadline, _fillDeadline);
+        }
+
+        bytes32 expectedSender = TypeCasts.addressToBytes32(_sender);
+        if (orderData.sender != expectedSender) {
+            revert InvalidSender(orderData.sender, expectedSender);
+        }
+
+        // No need to overwrite fields since they are validated to be correct
+        // orderData.fillDeadline = _fillDeadline; // Removed
+        // orderData.sender = TypeCasts.addressToBytes32(_sender); // Removed
 
         // this can be used by the filler to approve the tokens to be spent on destination
         Output[] memory maxSpent = new Output[](1);
@@ -267,7 +282,7 @@ contract T1ERC7683 is IT1ERC7683, T1Permit2, AccessControlUpgradeable, EIP712 {
             chainId: orderData.destinationDomain
         });
 
-        // this can be used by the filler know how much it can expect to receive
+        // this can be used by the filler to know how much it can expect to receive
         Output[] memory minReceived = new Output[](1);
         minReceived[0] = Output({
             token: orderData.inputToken,
@@ -276,7 +291,7 @@ contract T1ERC7683 is IT1ERC7683, T1Permit2, AccessControlUpgradeable, EIP712 {
             chainId: orderData.originDomain
         });
 
-        // this can be user by the filler to know how to fill the order
+        // this can be used by the filler to know how to fill the order
         FillInstruction[] memory fillInstructions = new FillInstruction[](1);
         fillInstructions[0] = FillInstruction({
             destinationChainId: orderData.destinationDomain,
