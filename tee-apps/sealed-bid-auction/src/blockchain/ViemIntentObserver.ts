@@ -38,6 +38,7 @@ export class ViemIntentObserver {
       address: this.sourceChainT1Erc7683ContractAddress,
       event: OPEN_INTENT_ABI_EVENT,
       onLogs: (logs) => this.processIntentLogs(logs),
+      onError: (error) => this.logger.error(`Error from publicClient.watchEvent: ${error}`),
     });
 
     this.logger.info(
