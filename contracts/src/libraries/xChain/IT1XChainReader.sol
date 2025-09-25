@@ -14,6 +14,7 @@ interface IT1XChainReader {
     function requestRead(ReadRequest calldata request) external payable returns (bytes32 requestId);
     function commitProofOfReadRoot(uint256 batchIndex, bytes32 newRoot) external;
     function verifyProofOfRead(bytes calldata encodedProofOfRead) external view returns (bytes32, bytes memory);
+    function verifyProofsOfRead(bytes[] calldata encodedProofOfRead) external view returns (mapping(bytes32 => bytes));
     function verifyProofOfReadWithResult(
         bytes calldata encodedProofOfRead,
         bytes calldata result
