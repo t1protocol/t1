@@ -431,11 +431,11 @@ contract T1ERC7683 is IT1ERC7683, T1Permit2, AccessControlUpgradeable, EIP712 {
     function handleBatchOfReadResultsWithProofs(bytes[] calldata encodedProofsOfRead) external whenSettleNotPaused {
         (bytes32[] memory requestIds, bytes[] memory results) = xChainRead.verifyProofsOfRead(encodedProofsOfRead);
 
-        bytes32[] orderIds = new bytes32[](encodedProofsOfRead.length);
-        bytes[] areSettled = new bytes[](encodedProofsOfRead.length);
+        bytes32[] memory orderIds = new bytes32[](encodedProofsOfRead.length);
+        bool[] memory areSettled = new bool[](encodedProofsOfRead.length);
 
         for (uint256 i = 0; i < encodedProofsOfRead.length; i++) {
-            (bytes32 orderId, bool isSettled) = _handleReadResultWithProof(requestIds[i], areSettled[i]);
+            (bytes32 orderId, bool isSettled) = _handleReadResultWithProof(requestIds[i], results[i]);
 
             orderIds[i] = orderId;
             areSettled[i] = isSettled;
