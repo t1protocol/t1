@@ -1,13 +1,12 @@
 import * as dotenv from "dotenv";
-
-dotenv.config();
-
 import {AuctionApiServer} from "../src/api/AuctionApiServer.ts";
 import {ViemIntentObserver} from "../src/blockchain/ViemIntentObserver.ts";
 import {SolverPriceBook} from "../src/core/SolverPriceBook.ts";
 import {AuctionService} from "../src/core/AuctionService.ts";
 import {arbitrum, arbitrumSepolia, base, baseSepolia} from "viem/chains";
 import {BlockchainClient} from "../src/blockchain/BlockchainClient.ts";
+
+dotenv.config();
 
 const USE_TLS = process.env.USE_TLS as string === "true";
 const IS_MAINNET = process.env.IS_MAINNET as string === "true";
@@ -17,23 +16,21 @@ const TEN_MINUTES_IN_SECONDS = 600;
 const BASE_T1_ERC_7683_CONTRACT_ADDRESS = process.env.BASE_T1_ERC7683_CONTRACT_ADDRESS as `0x${string}`;
 const ARBITRUM_T1_ERC_7683_CONTRACT_ADDRESS = process.env.ARBITRUM_T1_ERC7683_CONTRACT_ADDRESS as `0x${string}`;
 
-const ARBITRUM_RPC = (IS_MAINNET ? process.env.ARBITRUM_MAINNET_RPC : process.env.ARBITRUM_SEPOLIA_RPC) as string;
-const BASE_RPC = (IS_MAINNET ? process.env.BASE_MAINNET_RPC : process.env.BASE_SEPOLIA_RPC) as string;
+const ARBITRUM_WS = (process.env.ARBITRUM_WS) as string;
+const BASE_WS = (process.env.BASE_WS) as string;
 
 const solverPriceBook = new SolverPriceBook(SOLVER_PRICE_TTL_SECONDS ? Number(SOLVER_PRICE_TTL_SECONDS as string) : TEN_MINUTES_IN_SECONDS);
 const auctionService = new AuctionService(solverPriceBook);
 
 const httpServer = new AuctionApiServer(solverPriceBook, auctionService);
 const arbitrumClient = new BlockchainClient(
-    ARBITRUM_RPC,
+    ARBITRUM_WS,
     IS_MAINNET ? arbitrum : arbitrumSepolia,
-    Number(process.env.ARBITRUM_SEPOLIA_POLLING_INTERVAL_MS as string),
     process.env.ARBITRUM_SIGNER_PRIVATE_KEY as `0x${string}`
 );
 const baseClient = new BlockchainClient(
-    BASE_RPC,
+    BASE_WS,
     IS_MAINNET ? base : baseSepolia,
-    Number(process.env.BASE_SEPOLIA_POLLING_INTERVAL_MS as string),
     process.env.BASE_SIGNER_PRIVATE_KEY as `0x${string}`
 );
 const arbitrumSepoliaIntentObserver = new ViemIntentObserver(
