@@ -217,16 +217,17 @@ contract T1XChainReader is IT1XChainReader, OwnableUpgradeable, ReentrancyGuardU
     /**
      * @notice Verifies a batch of many proofs of read and returns the raw function results for all of them
      * @param encodedProofsOfRead Array of encoded proofs of read
-     * @return requestId The ID of the read request
-     * @return result The raw ABI-encoded return value from the target function
+     * @return requestIds The IDs of all read requests, in the same order
+     * @return results The raw ABI-encoded return values from the target function for all read requests, in the same order
      */
     function verifyProofsOfRead(bytes[] calldata encodedProofsOfRead)
     external
     view
     override
-    returns (mapping(bytes32 => bytes))
+    returns (bytes32[] memory requestIds, bytes[] memory results)
     {
-        mapping(bytes32 => bytes) requestIdToResult;
+        requestIds = new bytes32[](encodedProofsOfRead.length);
+        results = new bytes[](encodedProofsOfRead.length);
 
         for (uint256 i = 0; i < encodedProofsOfRead.length; i++) {
 
@@ -235,10 +236,9 @@ contract T1XChainReader is IT1XChainReader, OwnableUpgradeable, ReentrancyGuardU
 
             _verifyProofOfRead(batchIndex, requestId, position, result, proof);
 
-            requestIdToResult[requestId] = result;
+            requestIds[i] = requestId;
+            results[i] = result;
         }
-
-        return requestIdToResult;
     }
 
     function _verifyProofOfRead(
