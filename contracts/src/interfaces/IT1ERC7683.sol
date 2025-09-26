@@ -61,6 +61,12 @@ interface IT1ERC7683 is IOriginSettler, IDestinationSettler {
      */
     event SettlementVerified(bytes32 indexed orderId, bool isSettled);
     /**
+     * @notice Emitted when a batch of order settlements is verified
+     * @param orderIds The IDs of all verified orders
+     * @param areSettled Whether given orders are settled
+     */
+    event SettlementBatchVerified(bytes32[] indexed orderIds, bool[] areSettled);
+    /**
      * @notice Emitted when an order is settled.
      * @param orderId The ID of the settled order.
      * @param receiver The address of the order's input token receiver.

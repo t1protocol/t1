@@ -419,7 +419,33 @@ contract T1ERC7683 is IT1ERC7683, T1Permit2, AccessControlUpgradeable, EIP712 {
     function handleReadResultWithProof(bytes calldata encodedProofOfRead) external whenSettleNotPaused {
         (bytes32 requestId, bytes memory result) = xChainRead.verifyProofOfRead(encodedProofOfRead);
 
-        bytes32 orderId = settlementReadRequestToOrderId[requestId];
+        (bytes32 orderId, bool isSettled) = _handleReadResultWithProof(requestId, result);
+
+        emit SettlementVerified(orderId, isSettled);
+    }
+
+    /// @notice Use result of proof of read to handle batch of orders depending on the result
+    /// Also enforce auction winner bid if the orderId has closed auction.
+    /// @param encodedProofsOfRead The encoded proofs of read which are formatted as following:
+    /// abi.encode(uint256 batchIndex, bytes32 requestId, uint256 position, bytes result, bytes proof)
+    function handleReadResultsWithProofs(bytes[] calldata encodedProofsOfRead) external whenSettleNotPaused {
+        (bytes32[] memory requestIds, bytes[] memory results) = xChainRead.verifyProofsOfRead(encodedProofsOfRead);
+
+        bytes32[] orderIds = new bytes32[](encodedProofsOfRead.length);
+        bytes[] areSettled = new bytes[](encodedProofsOfRead.length);
+
+        for (uint256 i = 0; i < encodedProofsOfRead.length; i++) {
+            (bytes32 orderId, bool isSettled) = _handleReadResultWithProof(requestIds[i], areSettled[i]);
+
+            orderIds[i] = orderId;
+            areSettled[i] = isSettled;
+        }
+
+        emit SettlementBatchVerified(orderIds, areSettled);
+    }
+
+    function _handleReadResultWithProof(bytes32 requestId, bytes memory result) internal returns (bytes32 orderId, bool isSettled) {
+        orderId = settlementReadRequestToOrderId[requestId];
 
         // Ensure we have a valid order
         if (orderId == bytes32(0)) revert InvalidOrder();
@@ -427,7 +453,7 @@ contract T1ERC7683 is IT1ERC7683, T1Permit2, AccessControlUpgradeable, EIP712 {
         delete settlementReadRequestToOrderId[requestId];
 
         // Check if the order is FILLED based on result length
-        bool isSettled = (result.length != 0);
+        isSettled = (result.length != 0);
 
         // process the settlement if verified
         Status status = orderStatus[orderId];
@@ -439,7 +465,7 @@ contract T1ERC7683 is IT1ERC7683, T1Permit2, AccessControlUpgradeable, EIP712 {
             // Remove the first 32 bytes prefix of the message
             bytes memory _innerMessage = abi.decode(result, (bytes));
             (bool _settled, bytes32[] memory _orderIds, bytes[] memory _ordersFillerData) =
-                abi.decode(_innerMessage, (bool, bytes32[], bytes[]));
+                                abi.decode(_innerMessage, (bool, bytes32[], bytes[]));
 
             for (uint256 i = 0; i < _orderIds.length; i++) {
                 if (_settled) {
@@ -450,8 +476,6 @@ contract T1ERC7683 is IT1ERC7683, T1Permit2, AccessControlUpgradeable, EIP712 {
                 }
             }
         }
-
-        emit SettlementVerified(orderId, isSettled);
     }
 
     /// @dev Handles settling an individual order, should be called by the inheriting contract when receiving a setting
