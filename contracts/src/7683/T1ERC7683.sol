@@ -428,7 +428,7 @@ contract T1ERC7683 is IT1ERC7683, T1Permit2, AccessControlUpgradeable, EIP712 {
     /// Also enforce auction winner bid if the orderId has closed auction.
     /// @param encodedProofsOfRead The encoded proofs of read which are formatted as following:
     /// abi.encode(uint256 batchIndex, bytes32 requestId, uint256 position, bytes result, bytes proof)
-    function handleReadResultsWithProofs(bytes[] calldata encodedProofsOfRead) external whenSettleNotPaused {
+    function handleBatchOfReadResultsWithProofs(bytes[] calldata encodedProofsOfRead) external whenSettleNotPaused {
         (bytes32[] memory requestIds, bytes[] memory results) = xChainRead.verifyProofsOfRead(encodedProofsOfRead);
 
         bytes32[] orderIds = new bytes32[](encodedProofsOfRead.length);
