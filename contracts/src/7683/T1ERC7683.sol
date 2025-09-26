@@ -444,7 +444,13 @@ contract T1ERC7683 is IT1ERC7683, T1Permit2, AccessControlUpgradeable, EIP712 {
         emit SettlementBatchVerified(orderIds, areSettled);
     }
 
-    function _handleReadResultWithProof(bytes32 requestId, bytes memory result) internal returns (bytes32 orderId, bool isSettled) {
+    function _handleReadResultWithProof(
+        bytes32 requestId,
+        bytes memory result
+    )
+        internal
+        returns (bytes32 orderId, bool isSettled)
+    {
         orderId = settlementReadRequestToOrderId[requestId];
 
         // Ensure we have a valid order
@@ -465,7 +471,7 @@ contract T1ERC7683 is IT1ERC7683, T1Permit2, AccessControlUpgradeable, EIP712 {
             // Remove the first 32 bytes prefix of the message
             bytes memory _innerMessage = abi.decode(result, (bytes));
             (bool _settled, bytes32[] memory _orderIds, bytes[] memory _ordersFillerData) =
-                                abi.decode(_innerMessage, (bool, bytes32[], bytes[]));
+                abi.decode(_innerMessage, (bool, bytes32[], bytes[]));
 
             for (uint256 i = 0; i < _orderIds.length; i++) {
                 if (_settled) {
