@@ -424,7 +424,8 @@ contract T1ERC7683 is IT1ERC7683, T1Permit2, AccessControlUpgradeable, EIP712 {
     function handleReadResultWithProof(bytes calldata encodedProofOfRead) external whenSettleNotPaused {
         (bytes32 requestId, bytes memory result) = xChainRead.verifyProofOfRead(encodedProofOfRead);
 
-        (bytes32 orderId, bool isSettled, address inputToken, address settlementReceiver, uint256 amount) = _decodeOrdersToSettle(requestId, result);
+        (bytes32 orderId, bool isSettled, address inputToken, address settlementReceiver, uint256 amount) =
+            _decodeOrdersToSettle(requestId, result);
 
         _transferTokenOut(inputToken, settlementReceiver, amount);
 
@@ -445,7 +446,8 @@ contract T1ERC7683 is IT1ERC7683, T1Permit2, AccessControlUpgradeable, EIP712 {
         uint256 uniqueUserTokenCount = 0;
 
         for (uint256 i = 0; i < encodedProofsOfRead.length; i++) {
-            (bytes32 orderId, bool isSettled, address inputToken, address settlementReceiver, uint256 amount) = _decodeOrdersToSettle(requestIds[i], results[i]);
+            (bytes32 orderId, bool isSettled, address inputToken, address settlementReceiver, uint256 amount) =
+                _decodeOrdersToSettle(requestIds[i], results[i]);
 
             orderIds[i] = orderId;
             areSettled[i] = isSettled;
@@ -460,7 +462,7 @@ contract T1ERC7683 is IT1ERC7683, T1Permit2, AccessControlUpgradeable, EIP712 {
             }
 
             if (!foundExistingUserTokenKey) {
-                userTokenKeys[uniqueUserTokenCount] = UserTokens({receiver: settlementReceiver, token: inputToken});
+                userTokenKeys[uniqueUserTokenCount] = UserTokens({ receiver: settlementReceiver, token: inputToken });
                 amounts[uniqueUserTokenCount] = amount;
                 uniqueUserTokenCount++;
             }
@@ -541,7 +543,7 @@ contract T1ERC7683 is IT1ERC7683, T1Permit2, AccessControlUpgradeable, EIP712 {
         inputToken = TypeCasts.bytes32ToAddress(orderData.inputToken);
         amount = orderData.amountIn;
 
-//        _transferTokenOut(inputToken, settlementReceiver, orderData.amountIn);
+        //        _transferTokenOut(inputToken, settlementReceiver, orderData.amountIn);
 
         emit Settled(_orderId, settlementReceiver);
     }
