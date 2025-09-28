@@ -443,6 +443,7 @@ contract T1ERC7683 is IT1ERC7683, T1Permit2, AccessControlUpgradeable, EIP712 {
 
         bytes32[] memory orderIds = new bytes32[](encodedProofsOfRead.length);
         bool[] memory areSettled = new bool[](encodedProofsOfRead.length);
+
         UserTokens[] memory userTokenKeys = new UserTokens[](encodedProofsOfRead.length);
         uint256[] memory amounts = new uint256[](encodedProofsOfRead.length);
         uint256 uniqueUserTokenCount = 0;
@@ -455,24 +456,9 @@ contract T1ERC7683 is IT1ERC7683, T1Permit2, AccessControlUpgradeable, EIP712 {
             areSettled[i] = isSettled;
 
             if (isSettled) {
-                bool foundExistingUserTokenKey = false;
-
-                // try to find existing (receiver,token) pair and increment amount
-                for (uint256 j = 0; j < uniqueUserTokenCount; j++) {
-                    if (userTokenKeys[j].receiver == settlementReceiver && userTokenKeys[j].token == inputToken) {
-                        amounts[j] += amount;
-                        foundExistingUserTokenKey = true;
-                        break;
-                    }
-                }
-
-                // create a new (receiver,token) pair otherwise
-                if (!foundExistingUserTokenKey) {
-                    userTokenKeys[uniqueUserTokenCount] =
-                        UserTokens({ receiver: settlementReceiver, token: inputToken });
-                    amounts[uniqueUserTokenCount] = amount;
-                    uniqueUserTokenCount++;
-                }
+                _updateOrInsertUserToken(
+                    userTokenKeys, amounts, uniqueUserTokenCount, settlementReceiver, inputToken, amount
+                );
             }
         }
 
@@ -521,6 +507,39 @@ contract T1ERC7683 is IT1ERC7683, T1Permit2, AccessControlUpgradeable, EIP712 {
                 }
             }
         }
+    }
+
+    /// @dev Tries to increment amount to be sent if given (settlementReceiver,token) pair exists. Creates a new pair
+    /// otherwise
+    /// @param userTokenKeys Existing (settlementReceiver,token) pairs
+    /// @param amountsToBeSent Existing amounts to be sent for these (settlementReceiver,token) pairs
+    /// @param uniqueUserTokenCount Number of existing (settlementReceiver,token) pairs so far
+    /// @param settlementReceiver The currently processed receiver address
+    /// @param inputToken The currently processed token address (could be 0, which is native token)
+    /// @param amount The currently processed token amount
+    function _updateOrInsertUserToken(
+        UserTokens[] memory userTokenKeys,
+        uint256[] memory amountsToBeSent,
+        uint256 uniqueUserTokenCount,
+        address settlementReceiver,
+        address inputToken,
+        uint256 amount
+    )
+        internal
+        pure
+    {
+        // try to find existing (receiver,token) pair and increment amount
+        for (uint256 j = 0; j < uniqueUserTokenCount; j++) {
+            if (userTokenKeys[j].receiver == settlementReceiver && userTokenKeys[j].token == inputToken) {
+                amountsToBeSent[j] += amount;
+                return;
+            }
+        }
+
+        // create a new (receiver,token) pair otherwise
+        userTokenKeys[uniqueUserTokenCount] = UserTokens({ receiver: settlementReceiver, token: inputToken });
+        amountsToBeSent[uniqueUserTokenCount] = amount;
+        uniqueUserTokenCount++;
     }
 
     /// @dev Handles settling an individual order, should be called by the inheriting contract when receiving a setting
