@@ -543,8 +543,6 @@ contract T1ERC7683 is IT1ERC7683, T1Permit2, AccessControlUpgradeable, EIP712 {
         inputToken = TypeCasts.bytes32ToAddress(orderData.inputToken);
         amount = orderData.amountIn;
 
-        //        _transferTokenOut(inputToken, settlementReceiver, orderData.amountIn);
-
         emit Settled(_orderId, settlementReceiver);
     }
 
