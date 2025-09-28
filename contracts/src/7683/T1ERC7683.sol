@@ -427,7 +427,9 @@ contract T1ERC7683 is IT1ERC7683, T1Permit2, AccessControlUpgradeable, EIP712 {
         (bytes32 orderId, bool isSettled, address inputToken, address settlementReceiver, uint256 amount) =
             _decodeOrdersToSettle(requestId, result);
 
-        _transferTokenOut(inputToken, settlementReceiver, amount);
+        if (isSettled) {
+            _transferTokenOut(inputToken, settlementReceiver, amount);
+        }
 
         emit SettlementVerified(orderId, isSettled);
     }
@@ -452,19 +454,21 @@ contract T1ERC7683 is IT1ERC7683, T1Permit2, AccessControlUpgradeable, EIP712 {
             orderIds[i] = orderId;
             areSettled[i] = isSettled;
 
-            bool foundExistingUserTokenKey = false;
-            for (uint256 j = 0; j < uniqueUserTokenCount; j++) {
-                if (userTokenKeys[j].receiver == settlementReceiver && userTokenKeys[j].token == inputToken) {
-                    amounts[j] += amount;
-                    foundExistingUserTokenKey = true;
-                    break;
+            if (isSettled) {
+                bool foundExistingUserTokenKey = false;
+                for (uint256 j = 0; j < uniqueUserTokenCount; j++) {
+                    if (userTokenKeys[j].receiver == settlementReceiver && userTokenKeys[j].token == inputToken) {
+                        amounts[j] += amount;
+                        foundExistingUserTokenKey = true;
+                        break;
+                    }
                 }
-            }
 
-            if (!foundExistingUserTokenKey) {
-                userTokenKeys[uniqueUserTokenCount] = UserTokens({ receiver: settlementReceiver, token: inputToken });
-                amounts[uniqueUserTokenCount] = amount;
-                uniqueUserTokenCount++;
+                if (!foundExistingUserTokenKey) {
+                    userTokenKeys[uniqueUserTokenCount] = UserTokens({ receiver: settlementReceiver, token: inputToken });
+                    amounts[uniqueUserTokenCount] = amount;
+                    uniqueUserTokenCount++;
+                }
             }
         }
 
