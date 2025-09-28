@@ -456,6 +456,8 @@ contract T1ERC7683 is IT1ERC7683, T1Permit2, AccessControlUpgradeable, EIP712 {
 
             if (isSettled) {
                 bool foundExistingUserTokenKey = false;
+
+                // try to find existing (receiver,token) pair and increment amount
                 for (uint256 j = 0; j < uniqueUserTokenCount; j++) {
                     if (userTokenKeys[j].receiver == settlementReceiver && userTokenKeys[j].token == inputToken) {
                         amounts[j] += amount;
@@ -464,8 +466,10 @@ contract T1ERC7683 is IT1ERC7683, T1Permit2, AccessControlUpgradeable, EIP712 {
                     }
                 }
 
+                // create a new (receiver,token) pair otherwise
                 if (!foundExistingUserTokenKey) {
-                    userTokenKeys[uniqueUserTokenCount] = UserTokens({ receiver: settlementReceiver, token: inputToken });
+                    userTokenKeys[uniqueUserTokenCount] =
+                        UserTokens({ receiver: settlementReceiver, token: inputToken });
                     amounts[uniqueUserTokenCount] = amount;
                     uniqueUserTokenCount++;
                 }
@@ -495,9 +499,6 @@ contract T1ERC7683 is IT1ERC7683, T1Permit2, AccessControlUpgradeable, EIP712 {
 
         // Check if the order is FILLED based on result length
         isSettled = (result.length != 0);
-        inputToken = address(0);
-        settlementReceiver = address(0);
-        amount = 0;
 
         // process the settlement if verified
         Status status = orderStatus[orderId];
