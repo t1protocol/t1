@@ -15,9 +15,9 @@
 [license]: https://opensource.org/licenses/MIT
 [license-badge]: https://img.shields.io/badge/License-MIT-blue.svg
 
-# 🛠️ 𝚝𝟷 — Real-time proofs to unify Ethereum
+# 🛠️ t1 Monorepo
 
-𝚝𝟷 is a rollup that introduces real-time proofs to unify Ethereum and the rollup ecosystem.
+t1 introduces real-time proofs to unify Ethereum and the rollup ecosystem.
 
 ## 📂 Directory Structure
 
@@ -63,8 +63,8 @@ If you find a bug or have a feature request, please open an [issue](https://gith
 - 🌐 [Website](https://t1protocol.com/)
 - 🐦 [Twitter](https://twitter.com/t1protocol)
 - 📚 [Documentation](https://docs.t1protocol.com/)
-- 💬 [Discord](https://discord.gg/C6kDaJS5)
+- 💬 [Discord](https://discord.com/invite/qVEUA6jmGZ)
 
 ## License
 
-𝚝𝟷 Monorepo is licensed under the [MIT LICENSE](./LICENSE).
+t1 Monorepo is licensed under the [MIT LICENSE](./LICENSE).
