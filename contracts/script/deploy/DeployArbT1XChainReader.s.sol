@@ -12,6 +12,7 @@ import { T1XChainReader } from "../../src/libraries/xChain/T1XChainReader.sol";
 contract DeployArbT1XChainReader is DeploymentUtils {
     address internal ARB_T1_PROXY_ADMIN_ADDR = vm.envAddress("ARB_T1_PROXY_ADMIN_ADDR");
     address internal PROVER = vm.envAddress("ARB_SIGNER");
+    address internal MANAGER_MULTISIG = vm.envAddress("MANAGER_MULTISIG_ADDR");
 
     function run() external {
         selectMainnetOrSepoliaFork("arbitrum");
@@ -23,6 +24,8 @@ contract DeployArbT1XChainReader is DeploymentUtils {
 
         T1XChainReader impl = new T1XChainReader(PROVER);
         logAddress("ARB_T1_X_CHAIN_READ_IMPLEMENTATION_ADDR", address(impl));
+
+        impl.initialize(MANAGER_MULTISIG);
 
         TransparentUpgradeableProxy proxy =
             new TransparentUpgradeableProxy(address(impl), address(proxyAdmin), new bytes(0));
