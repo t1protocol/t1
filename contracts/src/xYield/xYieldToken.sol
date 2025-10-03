@@ -1,28 +1,32 @@
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.8.18;
+pragma solidity ^0.8.30;
 
-import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
+import { ERC20 } from "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 
-contract xYieldToken is ERC20 {
+contract XyieldToken is ERC20 {
     address public minter;
 
     event MinterChanged(address indexed oldMinter, address indexed newMinter);
 
+    error ZeroAddress();
+    error InvalidMinter();
+    error NotAuthorized();
+
     constructor(address _minter, string memory name, string memory symbol) ERC20(name, symbol) {
-        require(_minter != address(0), "Minter address cannot be zero");
+        if (_minter == address(0)) revert ZeroAddress();
         minter = _minter;
     }
 
     modifier onlyMinter() {
-        require(msg.sender == minter, "Caller is not the minter");
+        if (msg.sender != minter) revert NotAuthorized();
         _;
     }
 
     /// @notice Updates the minter address
     /// @param newMinter The new minter address
     function updateMinter(address newMinter) external onlyMinter {
-        require(newMinter != address(0), "New minter address cannot be zero");
-        require(newMinter != minter, "New minter address must be different");
+        if (newMinter == address(0)) revert ZeroAddress();
+        if (newMinter == minter) revert InvalidMinter();
         address oldMinter = minter;
         minter = newMinter;
         emit MinterChanged(oldMinter, newMinter);
