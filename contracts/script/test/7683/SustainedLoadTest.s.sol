@@ -128,6 +128,13 @@ contract SustainedLoadTest is Script {
         inputToken.approve(address(l1_7683), type(uint256).max);
         vm.stopBroadcast();
 
+        // Debug nonce state before starting
+        console2.log("Checking used nonces for %s on Arbitrum", alice);
+        for (uint32 i = 0; i < 10; i++) {
+            console2.log("Nonce %d used: %s", i, l1_7683.usedNonces(alice, i));
+            console2.log("Nonce %d valid: %s", i, l1_7683.isValidNonce(alice, i));
+        }
+
         console2.log("Starting sustained Arbitrum -> Base load test with initial nonce: %d", nonceCounter);
 
         uint256 batchNumber = 0;
@@ -154,6 +161,13 @@ contract SustainedLoadTest is Script {
         ERC20 inputToken = ERC20(vm.envAddress("BASE_SEPOLIA_USDT_ADDR"));
         inputToken.approve(address(l1_7683), type(uint256).max);
         vm.stopBroadcast();
+
+        // Debug nonce state before starting
+        console2.log("Checking used nonces for %s on Base", alice);
+        for (uint32 i = 0; i < 10; i++) {
+            console2.log("Nonce %d used: %s", i, l1_7683.usedNonces(alice, i));
+            console2.log("Nonce %d valid: %s", i, l1_7683.isValidNonce(alice, i));
+        }
 
         console2.log("Starting sustained Base -> Arbitrum load test with initial nonce: %d", nonceCounter);
 
@@ -185,7 +199,7 @@ contract SustainedLoadTest is Script {
             // Find a valid (unused) nonce
             uint256 maxAttempts = 1000; // Safety limit to prevent infinite loop
             uint256 attempts = 0;
-            while (!l1_7683.isValidNonce(alice, nonceCounter) && attempts < maxAttempts) {
+            while (l1_7683.usedNonces(alice, nonceCounter) || !l1_7683.isValidNonce(alice, nonceCounter) && attempts < maxAttempts) {
                 nonceCounter++;
                 attempts++;
             }
@@ -235,17 +249,17 @@ contract SustainedLoadTest is Script {
                 orderIds[i] = id;
                 batchSuccesses++;
                 totalSuccesses++;
-                console2.log("Transaction %d succeeded, Order ID: %s", i, vm.toString(id));
+                console2.log("Transaction %d succeeded with nonce %d, Order ID: %s", i, nonceCounter, vm.toString(id));
                 emit TransactionSent(id, batchNumber, true);
                 nonceCounter++; // Increment nonce only on success
             } catch Error(string memory reason) {
-                console2.log("Transaction %d failed: %s", i, reason);
+                console2.log("Transaction %d failed with nonce %d: %s", i, nonceCounter, reason);
                 batchFailures++;
                 totalFailures++;
                 orderIds[i] = bytes32(0);
                 emit TransactionSent(bytes32(0), batchNumber, false);
             } catch {
-                console2.log("Transaction %d failed with unknown error", i);
+                console2.log("Transaction %d failed with nonce %d with unknown error", i, nonceCounter);
                 batchFailures++;
                 totalFailures++;
                 orderIds[i] = bytes32(0);
@@ -286,7 +300,7 @@ contract SustainedLoadTest is Script {
             // Find a valid (unused) nonce
             uint256 maxAttempts = 1000; // Safety limit to prevent infinite loop
             uint256 attempts = 0;
-            while (!l1_7683.isValidNonce(alice, nonceCounter) && attempts < maxAttempts) {
+            while (l1_7683.usedNonces(alice, nonceCounter) || !l1_7683.isValidNonce(alice, nonceCounter) && attempts < maxAttempts) {
                 nonceCounter++;
                 attempts++;
             }
@@ -336,17 +350,17 @@ contract SustainedLoadTest is Script {
                 orderIds[i] = id;
                 batchSuccesses++;
                 totalSuccesses++;
-                console2.log("Transaction %d succeeded, Order ID: %s", i, vm.toString(id));
+                console2.log("Transaction %d succeeded with nonce %d, Order ID: %s", i, nonceCounter, vm.toString(id));
                 emit TransactionSent(id, batchNumber, true);
                 nonceCounter++; // Increment nonce only on success
             } catch Error(string memory reason) {
-                console2.log("Transaction %d failed: %s", i, reason);
+                console2.log("Transaction %d failed with nonce %d: %s", i, nonceCounter, reason);
                 batchFailures++;
                 totalFailures++;
                 orderIds[i] = bytes32(0);
                 emit TransactionSent(bytes32(0), batchNumber, false);
             } catch {
-                console2.log("Transaction %d failed with unknown error", i);
+                console2.log("Transaction %d failed with nonce %d with unknown error", i, nonceCounter);
                 batchFailures++;
                 totalFailures++;
                 orderIds[i] = bytes32(0);
@@ -420,9 +434,4 @@ contract SustainedLoadTest is Script {
         currentSession.isActive = false;
         console2.log("Emergency stop triggered - session ended");
     }
-}
-
-interface T1ERC7683 {
-    function open(OnchainCrossChainOrder memory order) external payable;
-    function isValidNonce(address _from, uint256 _nonce) external view returns (bool);
 }
