@@ -6,6 +6,9 @@ import {ERC20} from "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 contract XyieldToken is ERC20 {
     address public minter;
 
+    /// @notice Emitted when the address authorized to mint is updated.
+    /// @param oldMinter The formerly authrorized minter
+    /// @param newMinter The address now authorized to mint
     event MinterChanged(address indexed oldMinter, address indexed newMinter);
 
     /// @dev Thrown if the minter would be set to the zero address
