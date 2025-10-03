@@ -167,7 +167,7 @@ contract PausableTest is T1XChainReaderBaseTestSetup {
     }
 
     function test_canSettleWhenNotPaused() public {
-        (, bytes32 orderId, bytes32 requestId) = _openAndFillOrder();
+        (, bytes32 orderId, bytes32 requestId) = _openAndFillOrder(kakaroto, vegeta, amount);
         bytes memory result = abi.encode(l2T1ERC7683.getFilledOrderStatus(orderId));
         (bytes32 root, bytes memory proof) = _generateMerkleTree(requestId, result, position);
         originReader.commitProofOfReadRoot(batchIndex, root);
@@ -217,7 +217,7 @@ contract PausableTest is T1XChainReaderBaseTestSetup {
     }
 
     function test_cannotSettleWhenPaused() public {
-        (, bytes32 orderId, bytes32 requestId) = _openAndFillOrder();
+        (, bytes32 orderId, bytes32 requestId) = _openAndFillOrder(kakaroto, vegeta, amount);
         bytes memory result = abi.encode(l2T1ERC7683.getFilledOrderStatus(orderId));
         (bytes32 root, bytes memory proof) = _generateMerkleTree(requestId, result, position);
         originReader.commitProofOfReadRoot(batchIndex, root);
