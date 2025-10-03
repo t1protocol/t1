@@ -6,7 +6,6 @@ import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 contract xYieldToken is ERC20 {
     address public minter;
 
-    // Event to log minter address changes
     event MinterChanged(address indexed oldMinter, address indexed newMinter);
 
     constructor(address _minter, string memory name, string memory symbol) ERC20(name, symbol) {
