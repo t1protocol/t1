@@ -1,15 +1,18 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.30;
 
-import { ERC20 } from "@openzeppelin/contracts/token/ERC20/ERC20.sol";
+import {ERC20} from "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 
 contract XyieldToken is ERC20 {
     address public minter;
 
     event MinterChanged(address indexed oldMinter, address indexed newMinter);
 
+    /// @dev Thrown if the minter would be set to the zero address
     error ZeroAddress();
+    /// @dev Thrown if the minter cannot be set due to an invalid input
     error InvalidMinter();
+    /// @dev Thrown if the caller is not authorized to change the minter
     error NotAuthorized();
 
     constructor(address _minter, string memory name, string memory symbol) ERC20(name, symbol) {
