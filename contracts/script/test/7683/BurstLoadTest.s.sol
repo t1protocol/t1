@@ -119,14 +119,20 @@ contract BurstLoadTest is Script {
         T1ERC7683 l1_7683,
         uint256 alicePk,
         address alice,
-        uint256 nonce
+        uint256 transactionIndex // Renamed for clarity
     ) internal {
         vm.startBroadcast(alicePk);
 
         ERC20 inputToken = ERC20(vm.envAddress("ARBITRUM_SEPOLIA_USDT_ADDR"));
         ERC20 outputToken = ERC20(vm.envAddress("BASE_SEPOLIA_USDT_ADDR"));
 
-        // Prepare order data with unique nonce
+        // Find the next valid nonce
+        uint32 nextNonce = 0;
+        while (l1_7683.usedNonces(alice, nextNonce) || !l1_7683.isValidNonce(alice, nextNonce)) {
+            nextNonce++;
+            require(nextNonce < type(uint32).max, "No valid nonce available");
+        }
+
         OrderData memory orderData = OrderData({
             sender: TypeCasts.addressToBytes32(alice),
             recipient: TypeCasts.addressToBytes32(alice),
@@ -134,34 +140,41 @@ contract BurstLoadTest is Script {
             outputToken: TypeCasts.addressToBytes32(address(outputToken)),
             amountIn: AMOUNT_IN,
             minAmountOut: AMOUNT_IN * 9 / 10,
-            senderNonce: uint32(nonce),
+            senderNonce: nextNonce,
             originDomain: uint32(T1Constants.ARBITRUM_SEPOLIA_CHAIN_ID),
             destinationDomain: uint32(T1Constants.BASE_SEPOLIA_CHAIN_ID),
             destinationSettler: TypeCasts.addressToBytes32(vm.envAddress("BASE_T1_PULL_BASED_7683_PROXY_ADDR")),
-            fillDeadline: uint32(1800), // 30 minutes from now
+            fillDeadline: uint32(1800),
             closedAuction: true,
             data: new bytes(0)
         });
 
         bytes memory encodedOrder = OrderEncoder.encode(orderData);
+        OnchainCrossChainOrder memory order = _prepareOnchainOrder(encodedOrder, uint32(1800), OrderEncoder.orderDataType());
 
-        OnchainCrossChainOrder memory order =
-            _prepareOnchainOrder(encodedOrder, uint32(1800), OrderEncoder.orderDataType());
-
-        l1_7683.open(order);
-
-        bytes32 id = OrderEncoder.id(orderData);
-        
-        results.push(TestResult({
-            orderId: id,
-            txHash: uint256(keccak256(abi.encodePacked(nonce, "burst_test"))),
-            timestamp: 0, // Not used in load test
-            success: true
-        }));
-
-        emit TransactionSent(id, results[results.length - 1].txHash, true);
-        successCount++;
-        console2.log("Transaction", nonce + 1, "successful");
+        // Call open with try-catch to handle reverts
+        try l1_7683.open(order) {
+            bytes32 id = OrderEncoder.id(orderData);
+            results.push(TestResult({
+                orderId: id,
+                txHash: uint256(keccak256(abi.encodePacked(nextNonce, "burst_test"))),
+                timestamp: 0,
+                success: true
+            }));
+            emit TransactionSent(id, results[results.length - 1].txHash, true);
+            successCount++;
+            console2.log("Transaction", transactionIndex + 1, "successful with nonce", nextNonce);
+        } catch Error(string memory reason) {
+            results.push(TestResult({
+                orderId: OrderEncoder.id(orderData),
+                txHash: 0,
+                timestamp: 0,
+                success: false
+            }));
+            // console2.log("Transaction", transactionIndex + 1, "failed with nonce", nextNonce, "reason:", reason);
+            failureCount++;
+            emit TransactionSent(OrderEncoder.id(orderData), 0, false);
+        }
 
         vm.stopBroadcast();
     }
@@ -170,14 +183,20 @@ contract BurstLoadTest is Script {
         T1ERC7683 l1_7683,
         uint256 alicePk,
         address alice,
-        uint256 nonce
+        uint256 transactionIndex
     ) internal {
         vm.startBroadcast(alicePk);
 
         ERC20 inputToken = ERC20(vm.envAddress("BASE_SEPOLIA_USDT_ADDR"));
         ERC20 outputToken = ERC20(vm.envAddress("ARBITRUM_SEPOLIA_USDT_ADDR"));
 
-        // Prepare order data with unique nonce
+        // Find the next valid nonce
+        uint32 nextNonce = 0;
+        while (l1_7683.usedNonces(alice, nextNonce) || !l1_7683.isValidNonce(alice, nextNonce)) {
+            nextNonce++;
+            require(nextNonce < type(uint32).max, "No valid nonce available");
+        }
+
         OrderData memory orderData = OrderData({
             sender: TypeCasts.addressToBytes32(alice),
             recipient: TypeCasts.addressToBytes32(alice),
@@ -185,34 +204,40 @@ contract BurstLoadTest is Script {
             outputToken: TypeCasts.addressToBytes32(address(outputToken)),
             amountIn: AMOUNT_IN,
             minAmountOut: AMOUNT_IN * 9 / 10,
-            senderNonce: uint32(nonce),
+            senderNonce: nextNonce,
             originDomain: uint32(T1Constants.BASE_SEPOLIA_CHAIN_ID),
             destinationDomain: uint32(T1Constants.ARBITRUM_SEPOLIA_CHAIN_ID),
             destinationSettler: TypeCasts.addressToBytes32(vm.envAddress("ARB_T1_PULL_BASED_7683_PROXY_ADDR")),
-            fillDeadline: uint32(1800), // 30 minutes from now
+            fillDeadline: uint32(1800),
             closedAuction: true,
             data: new bytes(0)
         });
 
         bytes memory encodedOrder = OrderEncoder.encode(orderData);
+        OnchainCrossChainOrder memory order = _prepareOnchainOrder(encodedOrder, uint32(1800), OrderEncoder.orderDataType());
 
-        OnchainCrossChainOrder memory order =
-            _prepareOnchainOrder(encodedOrder, uint32(1800), OrderEncoder.orderDataType());
-
-        l1_7683.open(order);
-
-        bytes32 id = OrderEncoder.id(orderData);
-        
-        results.push(TestResult({
-            orderId: id,
-            txHash: uint256(keccak256(abi.encodePacked(nonce, "burst_test"))),
-            timestamp: 0, // Not used in load test
-            success: true
-        }));
-
-        emit TransactionSent(id, results[results.length - 1].txHash, true);
-        successCount++;
-        console2.log("Transaction", nonce + 1, "successful");
+        try l1_7683.open(order) {
+            bytes32 id = OrderEncoder.id(orderData);
+            results.push(TestResult({
+                orderId: id,
+                txHash: uint256(keccak256(abi.encodePacked(nextNonce, "burst_test"))),
+                timestamp: 0,
+                success: true
+            }));
+            emit TransactionSent(id, results[results.length - 1].txHash, true);
+            successCount++;
+            console2.log("Transaction", transactionIndex + 1, "successful with nonce", nextNonce);
+        } catch Error(string memory reason) {
+            results.push(TestResult({
+                orderId: OrderEncoder.id(orderData),
+                txHash: 0,
+                timestamp: 0,
+                success: false
+            }));
+            failureCount++;
+            // console2.log("Transaction", transactionIndex + 1, "failed with nonce", nextNonce, "reason:", reason);
+            emit TransactionSent(OrderEncoder.id(orderData), 0, false);
+        }
 
         vm.stopBroadcast();
     }
