@@ -81,8 +81,7 @@ interface IxYieldVault {
         uint32 _quoteTimestamp,
         uint32 _fillDeadline,
         uint32 _exclusivityParameter
-    )
-        external;
+    ) external;
     function finalizeRebalance() external;
     function guardian() external view returns (address);
     function handleV3AcrossMessage(address tokenSent, uint256 amount, address relayer, bytes memory message) external;
@@ -108,8 +107,7 @@ interface IxYieldVault {
         uint256 _amountIn,
         uint256 _amountOut,
         uint32 _acrossApiQuoteTimestamp
-    )
-        external;
+    ) external;
     function rebalanceFillTTL() external view returns (uint256);
     function redeem(uint256 _shares, address _receiver, address _owner) external returns (uint256);
     function renounceOwnership() external;
@@ -117,12 +115,7 @@ interface IxYieldVault {
     function setActiveChain(bool _isActive) external;
     function setGuardian(address _newGuardian) external;
     function setRebalanceFillTTL(uint256 newTTL) external;
-    function setSiblingVault(
-        uint64 _chainId,
-        address _vault,
-        address _underlyingErc20,
-        address _multicallHandler
-    )
+    function setSiblingVault(uint64 _chainId, address _vault, address _underlyingErc20, address _multicallHandler)
         external;
     function setYieldProtocol(address _newYieldProtocol) external;
     function siblingVaults(uint64 chainId)
@@ -148,8 +141,6 @@ interface IxYieldVault {
         uint32 quoteTimestamp,
         uint32 fillDeadline,
         uint32 exclusivityParameter
-    )
-        external
-        returns (uint256);
+    ) external returns (uint256);
     function yieldProtocol() external view returns (address);
 }

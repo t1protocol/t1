@@ -1,20 +1,20 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.30;
 
-import { V3SpokePoolInterface } from "@across-protocol/contracts/contracts/interfaces/V3SpokePoolInterface.sol";
-import { ERC20 } from "@openzeppelin/contracts/token/ERC20/ERC20.sol";
-import { ERC4626 } from "@openzeppelin/contracts/token/ERC20/extensions/ERC4626.sol";
-import { IERC20 } from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
-import { IERC4626 } from "@openzeppelin/contracts/interfaces/IERC4626.sol";
-import { Math } from "@openzeppelin/contracts/utils/math/Math.sol";
-import { OnchainCrossChainOrder } from "../interfaces/IERC7683.sol";
-import { OrderData, OrderEncoder } from "../libraries/7683/OrderEncoder.sol";
-import { Ownable2Step } from "@openzeppelin/contracts/access/Ownable2Step.sol";
-import { Pausable } from "@openzeppelin/contracts/security/Pausable.sol";
-import { ReentrancyGuard } from "@openzeppelin/contracts/security/ReentrancyGuard.sol";
-import { SafeERC20 } from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
-import { T1ERC7683 } from "../7683/T1ERC7683.sol";
-import { TypeCasts } from "@hyperlane-xyz/libs/TypeCasts.sol";
+import {V3SpokePoolInterface} from "@across-protocol/contracts/contracts/interfaces/V3SpokePoolInterface.sol";
+import {ERC20} from "@openzeppelin/contracts/token/ERC20/ERC20.sol";
+import {ERC4626} from "@openzeppelin/contracts/token/ERC20/extensions/ERC4626.sol";
+import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
+import {IERC4626} from "@openzeppelin/contracts/interfaces/IERC4626.sol";
+import {Math} from "@openzeppelin/contracts/utils/math/Math.sol";
+import {OnchainCrossChainOrder} from "../interfaces/IERC7683.sol";
+import {OrderData, OrderEncoder} from "../libraries/7683/OrderEncoder.sol";
+import {Ownable2Step} from "@openzeppelin/contracts/access/Ownable2Step.sol";
+import {Pausable} from "@openzeppelin/contracts/security/Pausable.sol";
+import {ReentrancyGuard} from "@openzeppelin/contracts/security/ReentrancyGuard.sol";
+import {SafeERC20} from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
+import {T1ERC7683} from "../7683/T1ERC7683.sol";
+import {TypeCasts} from "@hyperlane-xyz/libs/TypeCasts.sol";
 
 contract xYieldVault is ERC4626, Ownable2Step, ReentrancyGuard, Pausable {
     using SafeERC20 for IERC20;
@@ -113,10 +113,7 @@ contract xYieldVault is ERC4626, Ownable2Step, ReentrancyGuard, Pausable {
         string memory _symbol,
         address _yieldProtocol,
         address _acrossSpokePool
-    )
-        ERC4626(_underlying)
-        ERC20(_name, _symbol)
-    {
+    ) ERC4626(_underlying) ERC20(_name, _symbol) {
         guardian = _guardian;
         yieldProtocol = IERC4626(_yieldProtocol);
         acrossSpokePool = V3SpokePoolInterface(_acrossSpokePool);
@@ -143,11 +140,7 @@ contract xYieldVault is ERC4626, Ownable2Step, ReentrancyGuard, Pausable {
     }
 
     // called on behalf of a user who has deposited from a remote chain
-    function depositFrom(
-        uint256 _amount,
-        address _receiver,
-        uint64 _chainId
-    )
+    function depositFrom(uint256 _amount, address _receiver, uint64 _chainId)
         external
         whenNotPaused
         returns (uint256 shares)
@@ -169,11 +162,7 @@ contract xYieldVault is ERC4626, Ownable2Step, ReentrancyGuard, Pausable {
         uint32 _quoteTimestamp,
         uint32 _fillDeadline,
         uint32 _exclusivityParameter
-    )
-        external
-        whenNotPaused
-        nonReentrant
-    {
+    ) external whenNotPaused nonReentrant {
         if (_amount == 0) revert ZeroAmount();
         if (isActiveChain) revert OnlyRemote();
         if (siblingVaults[_targetChainId].vault == address(0)) revert InvalidChain();
@@ -190,10 +179,10 @@ contract xYieldVault is ERC4626, Ownable2Step, ReentrancyGuard, Pausable {
             abi.encodeCall(this.depositFrom, (_outputAmount, _receiver, uint64(block.chainid)));
 
         Call[] memory calls = new Call[](2);
-        calls[0] = Call({ target: siblingVaults[_targetChainId].underlyingErc20, callData: approveCallData, value: 0 });
-        calls[1] = Call({ target: siblingVaults[_targetChainId].vault, callData: depositCallData, value: 0 });
+        calls[0] = Call({target: siblingVaults[_targetChainId].underlyingErc20, callData: approveCallData, value: 0});
+        calls[1] = Call({target: siblingVaults[_targetChainId].vault, callData: depositCallData, value: 0});
 
-        Instructions memory instructions = Instructions({ calls: calls, fallbackRecipient: _receiver });
+        Instructions memory instructions = Instructions({calls: calls, fallbackRecipient: _receiver});
 
         bytes memory message = abi.encode(instructions);
 
@@ -225,11 +214,7 @@ contract xYieldVault is ERC4626, Ownable2Step, ReentrancyGuard, Pausable {
         return assets;
     }
 
-    function withdraw(
-        uint256 _amount,
-        address _receiver,
-        address _owner
-    )
+    function withdraw(uint256 _amount, address _receiver, address _owner)
         public
         virtual
         override
@@ -244,11 +229,7 @@ contract xYieldVault is ERC4626, Ownable2Step, ReentrancyGuard, Pausable {
         return shares;
     }
 
-    function redeem(
-        uint256 _shares,
-        address _receiver,
-        address _owner
-    )
+    function redeem(uint256 _shares, address _receiver, address _owner)
         public
         virtual
         override
@@ -272,12 +253,7 @@ contract xYieldVault is ERC4626, Ownable2Step, ReentrancyGuard, Pausable {
         uint32 quoteTimestamp,
         uint32 fillDeadline,
         uint32 exclusivityParameter
-    )
-        external
-        nonReentrant
-        onlyGuardian
-        returns (uint256 assets)
-    {
+    ) external nonReentrant onlyGuardian returns (uint256 assets) {
         assets = previewRedeem(shares);
         _withdrawFrom(
             owner,
@@ -301,12 +277,7 @@ contract xYieldVault is ERC4626, Ownable2Step, ReentrancyGuard, Pausable {
         uint32 quoteTimestamp,
         uint32 fillDeadline,
         uint32 exclusivityParameter
-    )
-        external
-        nonReentrant
-        onlyGuardian
-        returns (uint256 shares)
-    {
+    ) external nonReentrant onlyGuardian returns (uint256 shares) {
         shares = previewWithdraw(assets);
         _withdrawFrom(
             owner,
@@ -331,9 +302,7 @@ contract xYieldVault is ERC4626, Ownable2Step, ReentrancyGuard, Pausable {
         uint32 quoteTimestamp,
         uint32 fillDeadline,
         uint32 exclusivityParameter
-    )
-        internal
-    {
+    ) internal {
         virtualTotalSupply -= shares;
         yieldProtocol.withdraw(assets, address(this), address(this));
 
@@ -399,13 +368,7 @@ contract xYieldVault is ERC4626, Ownable2Step, ReentrancyGuard, Pausable {
         emit XYieldDeposit(_caller, _receiver, _amount, _shares, uint64(block.chainid), false);
     }
 
-    function _depositFrom(
-        address _caller,
-        address _receiver,
-        uint256 _amount,
-        uint256 _shares,
-        uint64 _chainId
-    )
+    function _depositFrom(address _caller, address _receiver, uint256 _amount, uint256 _shares, uint64 _chainId)
         internal
     {
         virtualTotalSupply += _shares;
@@ -415,13 +378,7 @@ contract xYieldVault is ERC4626, Ownable2Step, ReentrancyGuard, Pausable {
         emit XYieldDeposit(_caller, _receiver, _amount, _shares, _chainId, true);
     }
 
-    function _withdraw(
-        address _caller,
-        address _receiver,
-        address _owner,
-        uint256 _amount,
-        uint256 _shares
-    )
+    function _withdraw(address _caller, address _receiver, address _owner, uint256 _amount, uint256 _shares)
         internal
         virtual
         override
@@ -458,12 +415,7 @@ contract xYieldVault is ERC4626, Ownable2Step, ReentrancyGuard, Pausable {
         _setActiveChain(_isActive);
     }
 
-    function setSiblingVault(
-        uint64 _chainId,
-        address _vault,
-        address _underlyingErc20,
-        address _multicallHandler
-    )
+    function setSiblingVault(uint64 _chainId, address _vault, address _underlyingErc20, address _multicallHandler)
         external
         onlyOwner
     {
@@ -503,10 +455,7 @@ contract xYieldVault is ERC4626, Ownable2Step, ReentrancyGuard, Pausable {
         uint256 _amountIn,
         uint256 _amountOut,
         uint32 _acrossApiQuoteTimestamp
-    )
-        external
-        onlyGuardian
-    {
+    ) external onlyGuardian {
         if (_amountIn == 0) revert ZeroAmount();
         if (!isActiveChain) revert WithdrawOnInactiveChain();
 
