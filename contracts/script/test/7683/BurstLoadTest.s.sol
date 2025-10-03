@@ -58,7 +58,7 @@ contract BurstLoadTest is Script {
         }
 
         // Print final results
-        console2.log("=== LOAD TEST COMPLETE ===");
+        console2.log("=== BURST LOAD TEST COMPLETE ===");
         console2.log("Total transactions:", maxTxs);
         console2.log("Successful:", successCount);
         console2.log("Failed:", failureCount);
