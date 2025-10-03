@@ -189,7 +189,9 @@ contract SustainedLoadTest is Script {
         uint256 alicePk,
         address alice,
         uint256 batchNumber
-    ) internal {
+    )
+        internal
+    {
         console2.log("=== Executing Batch %d ===", batchNumber);
         bytes32[] memory orderIds = new bytes32[](currentSession.transactionsPerBatch);
         uint256 batchSuccesses = 0;
@@ -199,7 +201,10 @@ contract SustainedLoadTest is Script {
             // Find a valid (unused) nonce
             uint256 maxAttempts = 1000; // Safety limit to prevent infinite loop
             uint256 attempts = 0;
-            while (l1_7683.usedNonces(alice, nonceCounter) || !l1_7683.isValidNonce(alice, nonceCounter) && attempts < maxAttempts) {
+            while (
+                l1_7683.usedNonces(alice, nonceCounter)
+                    || !l1_7683.isValidNonce(alice, nonceCounter) && attempts < maxAttempts
+            ) {
                 nonceCounter++;
                 attempts++;
             }
@@ -241,7 +246,8 @@ contract SustainedLoadTest is Script {
             });
 
             bytes memory encodedOrder = OrderEncoder.encode(orderData);
-            OnchainCrossChainOrder memory order = _prepareOnchainOrder(encodedOrder, uint32(1800), OrderEncoder.orderDataType());
+            OnchainCrossChainOrder memory order =
+                _prepareOnchainOrder(encodedOrder, uint32(1800), OrderEncoder.orderDataType());
 
             // Try submitting the order
             try l1_7683.open(order) {
@@ -274,13 +280,15 @@ contract SustainedLoadTest is Script {
         }
 
         // Record batch results
-        batchResults.push(BatchResult({
-            batchNumber: batchNumber,
-            timestamp: 0,
-            successCount: batchSuccesses,
-            failureCount: batchFailures,
-            orderIds: orderIds
-        }));
+        batchResults.push(
+            BatchResult({
+                batchNumber: batchNumber,
+                timestamp: 0,
+                successCount: batchSuccesses,
+                failureCount: batchFailures,
+                orderIds: orderIds
+            })
+        );
         console2.log("Batch %d completed: %d successes, %d failures", batchNumber, batchSuccesses, batchFailures);
         emit BatchCompleted(batchNumber, batchSuccesses, batchFailures);
     }
@@ -290,7 +298,9 @@ contract SustainedLoadTest is Script {
         uint256 alicePk,
         address alice,
         uint256 batchNumber
-    ) internal {
+    )
+        internal
+    {
         console2.log("=== Executing Batch %d ===", batchNumber);
         bytes32[] memory orderIds = new bytes32[](currentSession.transactionsPerBatch);
         uint256 batchSuccesses = 0;
@@ -300,7 +310,10 @@ contract SustainedLoadTest is Script {
             // Find a valid (unused) nonce
             uint256 maxAttempts = 1000; // Safety limit to prevent infinite loop
             uint256 attempts = 0;
-            while (l1_7683.usedNonces(alice, nonceCounter) || !l1_7683.isValidNonce(alice, nonceCounter) && attempts < maxAttempts) {
+            while (
+                l1_7683.usedNonces(alice, nonceCounter)
+                    || !l1_7683.isValidNonce(alice, nonceCounter) && attempts < maxAttempts
+            ) {
                 nonceCounter++;
                 attempts++;
             }
@@ -342,7 +355,8 @@ contract SustainedLoadTest is Script {
             });
 
             bytes memory encodedOrder = OrderEncoder.encode(orderData);
-            OnchainCrossChainOrder memory order = _prepareOnchainOrder(encodedOrder, uint32(1800), OrderEncoder.orderDataType());
+            OnchainCrossChainOrder memory order =
+                _prepareOnchainOrder(encodedOrder, uint32(1800), OrderEncoder.orderDataType());
 
             // Try submitting the order
             try l1_7683.open(order) {
@@ -375,13 +389,15 @@ contract SustainedLoadTest is Script {
         }
 
         // Record batch results
-        batchResults.push(BatchResult({
-            batchNumber: batchNumber,
-            timestamp: 0,
-            successCount: batchSuccesses,
-            failureCount: batchFailures,
-            orderIds: orderIds
-        }));
+        batchResults.push(
+            BatchResult({
+                batchNumber: batchNumber,
+                timestamp: 0,
+                successCount: batchSuccesses,
+                failureCount: batchFailures,
+                orderIds: orderIds
+            })
+        );
         console2.log("Batch %d completed: %d successes, %d failures", batchNumber, batchSuccesses, batchFailures);
         emit BatchCompleted(batchNumber, batchSuccesses, batchFailures);
     }
@@ -395,11 +411,8 @@ contract SustainedLoadTest is Script {
         pure
         returns (OnchainCrossChainOrder memory)
     {
-        return OnchainCrossChainOrder({
-            fillDeadline: fillDeadline,
-            orderDataType: orderDataType,
-            orderData: orderData
-        });
+        return
+            OnchainCrossChainOrder({ fillDeadline: fillDeadline, orderDataType: orderDataType, orderData: orderData });
     }
 
     // Utility functions for analysis

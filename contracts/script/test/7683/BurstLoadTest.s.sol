@@ -19,7 +19,7 @@ contract BurstLoadTest is Script {
     // Configuration from environment variables
     uint256 public constant MAX_TRANSACTIONS = 10; // Default, can be overridden by env var
     uint256 public constant AMOUNT_IN = 10; // 0.00001 USDT (assuming 6 decimals)
-    
+
     // Test results tracking
     struct TestResult {
         bytes32 orderId;
@@ -27,11 +27,11 @@ contract BurstLoadTest is Script {
         uint256 timestamp;
         bool success;
     }
-    
+
     TestResult[] public results;
     uint256 public successCount;
     uint256 public failureCount;
-    
+
     event TransactionSent(bytes32 indexed orderId, uint256 txHash, bool success);
     event LoadTestComplete(uint256 totalTransactions, uint256 successCount, uint256 failureCount);
 
@@ -39,15 +39,15 @@ contract BurstLoadTest is Script {
         // Get configuration from environment
         uint256 maxTxs = vm.envOr("LOAD_TEST_MAX_TRANSACTIONS", uint256(MAX_TRANSACTIONS));
         string memory testDirection = vm.envOr("LOAD_TEST_DIRECTION", string("arbitrum_to_base"));
-        
+
         console2.log("Starting load test with", maxTxs, "transactions");
         console2.log("Test direction:", testDirection);
-        
+
         // Reset counters
         delete results;
         successCount = 0;
         failureCount = 0;
-        
+
         // Execute load test based on direction
         if (keccak256(bytes(testDirection)) == keccak256(bytes("arbitrum_to_base"))) {
             _runArbitrumToBaseLoadTest(maxTxs);
@@ -56,36 +56,36 @@ contract BurstLoadTest is Script {
         } else {
             revert("Invalid test direction. Use 'arbitrum_to_base' or 'base_to_arbitrum'");
         }
-        
+
         // Print final results
         console2.log("=== LOAD TEST COMPLETE ===");
         console2.log("Total transactions:", maxTxs);
         console2.log("Successful:", successCount);
         console2.log("Failed:", failureCount);
         console2.log("Success rate:", (successCount * 100) / maxTxs, "%");
-        
+
         emit LoadTestComplete(maxTxs, successCount, failureCount);
     }
 
     function _runArbitrumToBaseLoadTest(uint256 maxTxs) internal {
         vm.createSelectFork(vm.rpcUrl("arbitrum_sepolia"));
-        
+
         T1ERC7683 l1_7683 = T1ERC7683(vm.envAddress("ARB_T1_PULL_BASED_7683_PROXY_ADDR"));
         uint256 alicePk = vm.envUint("ALICE_PRIVATE_KEY");
         address alice = vm.addr(alicePk);
-        
+
         // Approve tokens once at the beginning
         vm.startBroadcast(alicePk);
         ERC20 inputToken = ERC20(vm.envAddress("ARBITRUM_SEPOLIA_USDT_ADDR"));
         inputToken.approve(address(l1_7683), type(uint256).max);
         vm.stopBroadcast();
-        
+
         console2.log("Starting Arbitrum -> Base load test...");
-        
+
         // Send transactions sequentially
         for (uint256 i = 0; i < maxTxs; i++) {
             _sendArbitrumToBaseTransaction(l1_7683, alicePk, alice, i);
-            
+
             // Small delay to avoid overwhelming the RPC
             vm.sleep(100); // 100ms delay between transactions
         }
@@ -93,23 +93,23 @@ contract BurstLoadTest is Script {
 
     function _runBaseToArbitrumLoadTest(uint256 maxTxs) internal {
         vm.createSelectFork(vm.rpcUrl("base_sepolia"));
-        
+
         T1ERC7683 l1_7683 = T1ERC7683(vm.envAddress("BASE_T1_PULL_BASED_7683_PROXY_ADDR"));
         uint256 alicePk = vm.envUint("ALICE_PRIVATE_KEY");
         address alice = vm.addr(alicePk);
-        
+
         // Approve tokens once at the beginning
         vm.startBroadcast(alicePk);
         ERC20 inputToken = ERC20(vm.envAddress("BASE_SEPOLIA_USDT_ADDR"));
         inputToken.approve(address(l1_7683), type(uint256).max);
         vm.stopBroadcast();
-        
+
         console2.log("Starting Base -> Arbitrum load test...");
-        
+
         // Send transactions sequentially
         for (uint256 i = 0; i < maxTxs; i++) {
             _sendBaseToArbitrumTransaction(l1_7683, alicePk, alice, i);
-            
+
             // Small delay to avoid overwhelming the RPC
             vm.sleep(100); // 100ms delay between transactions
         }
@@ -120,7 +120,9 @@ contract BurstLoadTest is Script {
         uint256 alicePk,
         address alice,
         uint256 transactionIndex // Renamed for clarity
-    ) internal {
+    )
+        internal
+    {
         vm.startBroadcast(alicePk);
 
         ERC20 inputToken = ERC20(vm.envAddress("ARBITRUM_SEPOLIA_USDT_ADDR"));
@@ -150,27 +152,25 @@ contract BurstLoadTest is Script {
         });
 
         bytes memory encodedOrder = OrderEncoder.encode(orderData);
-        OnchainCrossChainOrder memory order = _prepareOnchainOrder(encodedOrder, uint32(1800), OrderEncoder.orderDataType());
+        OnchainCrossChainOrder memory order =
+            _prepareOnchainOrder(encodedOrder, uint32(1800), OrderEncoder.orderDataType());
 
         // Call open with try-catch to handle reverts
         try l1_7683.open(order) {
             bytes32 id = OrderEncoder.id(orderData);
-            results.push(TestResult({
-                orderId: id,
-                txHash: uint256(keccak256(abi.encodePacked(nextNonce, "burst_test"))),
-                timestamp: 0,
-                success: true
-            }));
+            results.push(
+                TestResult({
+                    orderId: id,
+                    txHash: uint256(keccak256(abi.encodePacked(nextNonce, "burst_test"))),
+                    timestamp: 0,
+                    success: true
+                })
+            );
             emit TransactionSent(id, results[results.length - 1].txHash, true);
             successCount++;
             console2.log("Transaction", transactionIndex + 1, "successful with nonce", nextNonce);
         } catch Error(string memory reason) {
-            results.push(TestResult({
-                orderId: OrderEncoder.id(orderData),
-                txHash: 0,
-                timestamp: 0,
-                success: false
-            }));
+            results.push(TestResult({ orderId: OrderEncoder.id(orderData), txHash: 0, timestamp: 0, success: false }));
             // console2.log("Transaction", transactionIndex + 1, "failed with nonce", nextNonce, "reason:", reason);
             failureCount++;
             emit TransactionSent(OrderEncoder.id(orderData), 0, false);
@@ -184,7 +184,9 @@ contract BurstLoadTest is Script {
         uint256 alicePk,
         address alice,
         uint256 transactionIndex
-    ) internal {
+    )
+        internal
+    {
         vm.startBroadcast(alicePk);
 
         ERC20 inputToken = ERC20(vm.envAddress("BASE_SEPOLIA_USDT_ADDR"));
@@ -214,26 +216,24 @@ contract BurstLoadTest is Script {
         });
 
         bytes memory encodedOrder = OrderEncoder.encode(orderData);
-        OnchainCrossChainOrder memory order = _prepareOnchainOrder(encodedOrder, uint32(1800), OrderEncoder.orderDataType());
+        OnchainCrossChainOrder memory order =
+            _prepareOnchainOrder(encodedOrder, uint32(1800), OrderEncoder.orderDataType());
 
         try l1_7683.open(order) {
             bytes32 id = OrderEncoder.id(orderData);
-            results.push(TestResult({
-                orderId: id,
-                txHash: uint256(keccak256(abi.encodePacked(nextNonce, "burst_test"))),
-                timestamp: 0,
-                success: true
-            }));
+            results.push(
+                TestResult({
+                    orderId: id,
+                    txHash: uint256(keccak256(abi.encodePacked(nextNonce, "burst_test"))),
+                    timestamp: 0,
+                    success: true
+                })
+            );
             emit TransactionSent(id, results[results.length - 1].txHash, true);
             successCount++;
             console2.log("Transaction", transactionIndex + 1, "successful with nonce", nextNonce);
         } catch Error(string memory reason) {
-            results.push(TestResult({
-                orderId: OrderEncoder.id(orderData),
-                txHash: 0,
-                timestamp: 0,
-                success: false
-            }));
+            results.push(TestResult({ orderId: OrderEncoder.id(orderData), txHash: 0, timestamp: 0, success: false }));
             failureCount++;
             // console2.log("Transaction", transactionIndex + 1, "failed with nonce", nextNonce, "reason:", reason);
             emit TransactionSent(OrderEncoder.id(orderData), 0, false);
