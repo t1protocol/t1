@@ -80,31 +80,6 @@ contract T1XChainReaderTest is T1XChainReaderBaseTestSetup {
         assertEq(uint8(l1T1ERC7683.orderStatus(orderId)), uint8(IT1ERC7683.Status.SETTLED), "Order should be settled");
     }
 
-    function test_ERC7683Batch() public {
-        (, bytes32 orderId, bytes32 requestId) = _openAndFillOrder(kakaroto, vegeta, amount);
-
-        // 4. Process the read request on L2 (destination chain) & Relay the result back to L1
-        {
-            // Construct the read request calldata
-            bytes memory result = abi.encode(l2T1ERC7683.getFilledOrderStatus(orderId));
-
-            // Generate merkle tree and proof for the result
-            (bytes32 root, bytes memory proof) = _generateMerkleTree(requestId, result, position);
-
-            uint256 balanceSolverBeforeSettle = inputToken.balanceOf(address(vegeta));
-            originReader.commitProofOfReadRoot(batchIndex, root);
-            l1T1ERC7683.handleReadResultWithProof(abi.encode(batchIndex, requestId, position, result, proof));
-            uint256 balanceSolverAfterSettle = inputToken.balanceOf(address(vegeta));
-
-            assertEq(
-                balanceSolverBeforeSettle + amount, balanceSolverAfterSettle, "vegeta balance increased by input amount"
-            );
-        }
-
-        // Verify the final state on L1
-        assertEq(uint8(l1T1ERC7683.orderStatus(orderId)), uint8(IT1ERC7683.Status.SETTLED), "Order should be settled");
-    }
-
     function test_ERC7683SettlementFlowWithAnotherTreePosition() public {
         position = 3;
 
@@ -132,7 +107,7 @@ contract T1XChainReaderTest is T1XChainReaderBaseTestSetup {
     }
 
     function test_shouldFillWithAmountOutHigherThanLimit() public {
-        OrderData memory orderData = _prepareOrderData();
+        OrderData memory orderData = _prepareOrderData(amount);
         OnchainCrossChainOrder memory order =
             _prepareOnchainOrder(OrderEncoder.encode(orderData), orderData.fillDeadline, OrderEncoder.orderDataType());
 
@@ -156,7 +131,7 @@ contract T1XChainReaderTest is T1XChainReaderBaseTestSetup {
     }
 
     function test_revertFillWithAmountOutLowerThanLimit() public {
-        OrderData memory orderData = _prepareOrderData();
+        OrderData memory orderData = _prepareOrderData(amount);
         OnchainCrossChainOrder memory order =
             _prepareOnchainOrder(OrderEncoder.encode(orderData), orderData.fillDeadline, OrderEncoder.orderDataType());
 

@@ -31,6 +31,7 @@ contract T1XChainReaderBaseTestSetup is BaseTest {
     address internal owner = makeAddr("owner");
     address internal sender = makeAddr("sender");
     address internal feeVault;
+    uint256 internal senderNonce = 1;
 
     function labelAccounts() internal {
         vm.label(owner, "Owner");
@@ -54,8 +55,16 @@ contract T1XChainReaderBaseTestSetup is BaseTest {
 
     receive() external payable { }
 
-    function _openAndFillOrder(address opener, address filler, uint256 amountIn) internal virtual returns (OrderData memory, bytes32 orderId, bytes32 requestId) {
-        OrderData memory orderData = _prepareOrderData();
+    function _openAndFillOrder(
+        address opener,
+        address filler,
+        uint256 amountIn
+    )
+        internal
+        virtual
+        returns (OrderData memory, bytes32 orderId, bytes32 requestId)
+    {
+        OrderData memory orderData = _prepareOrderData(amountIn);
         OnchainCrossChainOrder memory order =
             _prepareOnchainOrder(OrderEncoder.encode(orderData), orderData.fillDeadline, OrderEncoder.orderDataType());
 
@@ -83,15 +92,15 @@ contract T1XChainReaderBaseTestSetup is BaseTest {
         return (orderData, orderId_, requestId_);
     }
 
-    function _prepareOrderData() internal view virtual returns (OrderData memory) {
+    function _prepareOrderData(uint256 amountIn) internal virtual returns (OrderData memory) {
         return OrderData({
             sender: TypeCasts.addressToBytes32(kakaroto),
             recipient: TypeCasts.addressToBytes32(karpincho),
             inputToken: TypeCasts.addressToBytes32(address(inputToken)),
             outputToken: TypeCasts.addressToBytes32(address(outputToken)),
-            amountIn: amount,
-            minAmountOut: amount,
-            senderNonce: 1,
+            amountIn: amountIn,
+            minAmountOut: amountIn,
+            senderNonce: senderNonce++,
             originDomain: origin,
             destinationDomain: destination,
             destinationSettler: address(l2T1ERC7683).addressToBytes32(),
