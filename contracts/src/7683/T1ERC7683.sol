@@ -456,7 +456,7 @@ contract T1ERC7683 is IT1ERC7683, T1Permit2, AccessControlUpgradeable, EIP712 {
             areSettled[i] = isSettled;
 
             if (isSettled) {
-                _updateOrInsertUserToken(
+                uniqueUserTokenCount = _updateOrInsertUserToken(
                     userTokenKeys, amounts, uniqueUserTokenCount, settlementReceiver, inputToken, amount
                 );
             }
@@ -527,19 +527,20 @@ contract T1ERC7683 is IT1ERC7683, T1Permit2, AccessControlUpgradeable, EIP712 {
     )
         internal
         pure
+        returns (uint256)
     {
         // try to find existing (receiver,token) pair and increment amount
         for (uint256 j = 0; j < uniqueUserTokenCount; j++) {
             if (userTokenKeys[j].receiver == settlementReceiver && userTokenKeys[j].token == inputToken) {
                 amountsToBeSent[j] += amount;
-                return;
+                return uniqueUserTokenCount;
             }
         }
 
         // create a new (receiver,token) pair otherwise
         userTokenKeys[uniqueUserTokenCount] = UserTokens({ receiver: settlementReceiver, token: inputToken });
         amountsToBeSent[uniqueUserTokenCount] = amount;
-        uniqueUserTokenCount++;
+        return uniqueUserTokenCount + 1;
     }
 
     /// @dev Handles settling an individual order, should be called by the inheriting contract when receiving a setting
