@@ -50,8 +50,7 @@ contract SolverRepaymentBatchingTest is T1XChainReaderTest {
             l1T1ERC7683.handleReadResultWithProof(encodedProofs[i]);
         }
         uint256 gasAfter = gasleft();
-        uint256 gasUsed = gasBefore - gasAfter;
-        console.log("Gas used for handling proofs in test_ERC7683BatchSolverRepayment_noBatching:", gasUsed);
+        console.log("Gas used for handling proofs in test_ERC7683BatchSolverRepayment_noBatching:", gasBefore - gasAfter);
 
         uint256 balanceSolverAfterSettle = inputToken.balanceOf(address(vegeta));
 
@@ -92,8 +91,7 @@ contract SolverRepaymentBatchingTest is T1XChainReaderTest {
         uint256 gasBefore = gasleft();
         l1T1ERC7683.handleBatchOfReadResultsWithProofs(encodedProofs);
         uint256 gasAfter = gasleft();
-        uint256 gasUsed = gasBefore - gasAfter;
-        console.log("Gas used for handling proofs in test_ERC7683BatchSolverRepayment_sameSolver_withBatching:", gasUsed);
+        console.log("Gas used for handling proofs in test_ERC7683BatchSolverRepayment_sameSolver_withBatching:", gasBefore - gasAfter);
 
         uint256 balanceSolverAfterSettle = inputToken.balanceOf(address(vegeta));
 
@@ -135,8 +133,7 @@ contract SolverRepaymentBatchingTest is T1XChainReaderTest {
         uint256 gasBefore = gasleft();
         l1T1ERC7683.handleBatchOfReadResultsWithProofs(encodedProofs);
         uint256 gasAfter = gasleft();
-        uint256 gasUsed = gasBefore - gasAfter;
-        console.log("Gas used for handling proofs in test_ERC7683BatchSolverRepayment_twoSolvers_withBatching:", gasUsed);
+        console.log("Gas used for handling proofs in test_ERC7683BatchSolverRepayment_twoSolvers_withBatching:", gasBefore - gasAfter);
 
         uint256 balanceVegetaAfter = inputToken.balanceOf(address(vegeta));
         uint256 balanceKarpinchoAfter = inputToken.balanceOf(address(karpincho));
