@@ -1,0 +1,39 @@
+{
+  "metadata": {
+    "version": "v0.9.0",
+    "date": "2025-10-06",
+    "by": "Ryan",
+    "from_machine": "localhost",
+    "from_branch": "xCR/v09-deploy",
+    "from_commit": "ff51e9ad7d82878f011b9a2ddf1f104f04ce9124"
+  },
+  "addresses": {
+    "arbitrum": {
+      "signer": "0x4d9c1A0407946a2F3E975311518608859f4d1f67",
+      "t1ProxyAdmin": "0xb45A6e9e6920A3bfa7Ac5D6783A060bc157DEC5b",
+      "t1XChainRead": {
+        "implementation": "0x49da78210674D38D92d24a0F59a566baEEb2BC5c",
+        "proxy": "0xe5416f9D4ED269d490107081d68aF10601C98Fa6"
+      },
+      "t1ERC7683": {
+        "implementation": "0xA8137237088027c8CEEBaB090BcAdB813bf3F941",
+        "proxy": "0x996f3583BD967bbA19694733AA7A7623E6D780eb"
+      },
+      "auctionWitness": "0x4EeE6e5a0B9BD206dE5D38aa4EdC7ead70B9cD8D"
+    },
+    "base": {
+      "signer": "0x4d9c1A0407946a2F3E975311518608859f4d1f67",
+      "t1ProxyAdmin": "0x9BCcbCB790Ec8f7D2F5e1316E9256054D77cdeDf",
+      "t1XChainRead": {
+        "implementation": "0xCBdF20496012e3b5dCF50382B8d3d28D89176427",
+        "proxy": "0x34FBdDbE1F61b1A027352A32B8ebF35B857aa319"
+      },
+      "t1ERC7683": {
+        "implementation": "0x551b416a5D21eB05ab8Da60B1159822c2C710683",
+        "proxy": "0xdbA711a6c1b187479e9a5b33020E5217D0BD5A1f"
+      },
+      "auctionWitness": "0x5bA9d8193Ac43bE825743576b396473C6Ad73119"
+    },
+    "deployerAddress": "0x4EeE6e5a0B9BD206dE5D38aa4EdC7ead70B9cD8D"
+  }
+}
