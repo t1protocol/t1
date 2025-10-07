@@ -80,7 +80,7 @@ contract T1XChainReaderBaseTestSetup is BaseTest {
         vm.startPrank(filler);
         outputToken.approve(address(l2T1ERC7683), amountIn);
         bytes memory originData = OrderEncoder.encode(orderData);
-        bytes memory fillerData = abi.encode(amountIn, TypeCasts.addressToBytes32(vegeta));
+        bytes memory fillerData = abi.encode(amountIn, TypeCasts.addressToBytes32(filler));
         l2T1ERC7683.fill(orderId_, originData, fillerData);
         assertEq(uint8(l2T1ERC7683.orderStatus(orderId_)), uint8(IT1ERC7683.Status.FILLED));
         vm.stopPrank();
