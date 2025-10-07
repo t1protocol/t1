@@ -7,7 +7,7 @@ import { MurkyMerkleBase } from "./MurkyMerkleBase.sol";
 /// @notice Nascent, simple, kinda efficient (and improving!) Merkle proof generator and verifier
 /// @author dmfxyz
 /// @dev Note Generic Merkle Tree
-contract T1Merkle is MurkyMerkleBase {
+contract T1MurkyMerkle is MurkyMerkleBase {
     /**
      *
      * HASHING FUNCTION *

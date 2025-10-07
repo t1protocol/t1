@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.25;
 
-import { T1Merkle } from "../utils/T1Merkle.sol";
+import {T1MurkyMerkle} from "../utils/T1MurkyMerkle.sol";
 
 import { IT1ERC7683 } from "../../../src/interfaces/IT1ERC7683.sol";
 
@@ -18,7 +18,7 @@ struct MerkleLeafHelper {
 
 contract SolverRepaymentBatchingTest is T1XChainReaderTest {
 
-    T1Merkle internal tree = new T1Merkle();
+    T1MurkyMerkle internal tree = new T1MurkyMerkle();
 
     uint256 internal intentCount = 20;
 
