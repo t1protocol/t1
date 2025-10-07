@@ -18,14 +18,15 @@ contract SolverRepaymentBatchingTest is T1XChainReaderTest {
 
     T1Merkle internal tree = new T1Merkle();
 
+    uint256 internal intentCount = 100;
+
     function test_ERC7683BatchSolverRepayment_sameSolver_withBatching() public {
-        uint256 n = 100;
-        uint256[] memory amounts = _generateRandomArray(n);
+        uint256[] memory amounts = _generateRandomArray(intentCount);
         uint256 summedAmounts = 0;
 
-        bytes32[] memory treeLeaves = new bytes32[](n);
-        MerkleLeafHelper[] memory helpers = new MerkleLeafHelper[](n);
-        for (uint i = 0; i < n; i++) {
+        bytes32[] memory treeLeaves = new bytes32[](intentCount);
+        MerkleLeafHelper[] memory helpers = new MerkleLeafHelper[](intentCount);
+        for (uint i = 0; i < intentCount; i++) {
             helpers[i] = _openFillOrder_and_generateMerkleLeaf(kakaroto, vegeta, amounts[i]);
             treeLeaves[i] = helpers[i].treeLeaf;
             summedAmounts += amounts[i];
@@ -34,8 +35,8 @@ contract SolverRepaymentBatchingTest is T1XChainReaderTest {
         bytes32 root = tree.getRoot(treeLeaves);
         originReader.commitProofOfReadRoot(batchIndex, root);
 
-        bytes[] memory encodedProofs = new bytes[](n);
-        for (uint i = 0; i < n; i++) {
+        bytes[] memory encodedProofs = new bytes[](intentCount);
+        for (uint i = 0; i < intentCount; i++) {
             bytes memory flattenedProof = _flattenProof(tree.getProof(treeLeaves, i));
             encodedProofs[i] = abi.encode(batchIndex, helpers[i].requestId, i, helpers[i].result, flattenedProof);
         }
@@ -52,19 +53,18 @@ contract SolverRepaymentBatchingTest is T1XChainReaderTest {
             "vegeta balance increased by batch inputs amount"
         );
 
-        for (uint i = 0; i < n; i++) {
+        for (uint i = 0; i < intentCount; i++) {
             assertEq(uint8(l1T1ERC7683.orderStatus(helpers[i].orderId)), uint8(IT1ERC7683.Status.SETTLED), "Order should be settled");
         }
     }
 
     function test_ERC7683BatchSolverRepayment_sameSolver_noBatching() public {
-        uint256 n = 100;
-        uint256[] memory amounts = _generateRandomArray(n);
+        uint256[] memory amounts = _generateRandomArray(intentCount);
         uint256 summedAmounts = 0;
 
-        bytes32[] memory treeLeaves = new bytes32[](n);
-        MerkleLeafHelper[] memory helpers = new MerkleLeafHelper[](n);
-        for (uint i = 0; i < n; i++) {
+        bytes32[] memory treeLeaves = new bytes32[](intentCount);
+        MerkleLeafHelper[] memory helpers = new MerkleLeafHelper[](intentCount);
+        for (uint i = 0; i < intentCount; i++) {
             helpers[i] = _openFillOrder_and_generateMerkleLeaf(kakaroto, vegeta, amounts[i]);
             treeLeaves[i] = helpers[i].treeLeaf;
             summedAmounts += amounts[i];
@@ -73,15 +73,15 @@ contract SolverRepaymentBatchingTest is T1XChainReaderTest {
         bytes32 root = tree.getRoot(treeLeaves);
         originReader.commitProofOfReadRoot(batchIndex, root);
 
-        bytes[] memory encodedProofs = new bytes[](n);
-        for (uint i = 0; i < n; i++) {
+        bytes[] memory encodedProofs = new bytes[](intentCount);
+        for (uint i = 0; i < intentCount; i++) {
             bytes memory flattenedProof = _flattenProof(tree.getProof(treeLeaves, i));
             encodedProofs[i] = abi.encode(batchIndex, helpers[i].requestId, i, helpers[i].result, flattenedProof);
         }
 
         uint256 balanceSolverBeforeSettle = inputToken.balanceOf(address(vegeta));
 
-        for (uint i = 0; i < n; i++) {
+        for (uint i = 0; i < intentCount; i++) {
             l1T1ERC7683.handleReadResultWithProof(encodedProofs[i]);
         }
 
@@ -93,7 +93,7 @@ contract SolverRepaymentBatchingTest is T1XChainReaderTest {
             "vegeta balance increased by batch inputs amount"
         );
 
-        for (uint i = 0; i < n; i++) {
+        for (uint i = 0; i < intentCount; i++) {
             assertEq(uint8(l1T1ERC7683.orderStatus(helpers[i].orderId)), uint8(IT1ERC7683.Status.SETTLED), "Order should be settled");
         }
     }
