@@ -1,13 +1,13 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.4;
 
-import { MurkyBase } from "../../../murky/src/common/MurkyBase.sol";
+import { MurkyMerkleBase } from "./MurkyMerkleBase.sol";
 
 
 /// @notice Nascent, simple, kinda efficient (and improving!) Merkle proof generator and verifier
 /// @author dmfxyz
 /// @dev Note Generic Merkle Tree
-contract T1Merkle is MurkyBase {
+contract T1Merkle is MurkyMerkleBase {
     /**
      *
      * HASHING FUNCTION *

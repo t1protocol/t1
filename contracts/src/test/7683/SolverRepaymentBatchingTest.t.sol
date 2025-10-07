@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.25;
 
-import { T1Merkle } from "./T1Merkle.sol";
+import { T1Merkle } from "../utils/T1Merkle.sol";
 
 import { IT1ERC7683 } from "../../../src/interfaces/IT1ERC7683.sol";
 
