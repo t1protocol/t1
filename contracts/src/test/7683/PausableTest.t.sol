@@ -241,7 +241,7 @@ contract PausableTest is T1XChainReaderBaseTestSetup {
             senderNonce: 1,
             originDomain: origin,
             destinationDomain: destination,
-            destinationSettler: TypeCasts.addressToBytes32(counterpart),
+            destinationSettler: TypeCasts.addressToBytes32(address(l2T1ERC7683)),
             fillDeadline: deadline,
             closedAuction: false,
             data: ""
