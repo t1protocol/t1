@@ -7,7 +7,7 @@ abstract contract MurkyMerkleBase {
      * CONSTRUCTOR *
      *
      */
-    constructor() {}
+    constructor() { }
 
     /**
      *
@@ -21,7 +21,11 @@ abstract contract MurkyMerkleBase {
      * PROOF VERIFICATION *
      *
      */
-    function verifyProof(bytes32 root, bytes32[] memory proof, bytes32 valueToProve)
+    function verifyProof(
+        bytes32 root,
+        bytes32[] memory proof,
+        bytes32 valueToProve
+    )
         external
         pure
         virtual
