@@ -1,11 +1,11 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity ^0.8.30;
 
-import {MintableERC20} from "../../../src/xYield/MintableERC20.sol";
+import { MintableERC20 } from "../../../src/xYield/MintableERC20.sol";
 import { DeploymentUtils } from "../../lib/DeploymentUtils.sol";
 
 contract DeployMintableERC20 is DeploymentUtils {
-     MintableERC20 private token;
+    MintableERC20 private token;
 
     function deploy() external {
         selectMainnetOrSepoliaFork("base");
