@@ -3,7 +3,7 @@ pragma solidity ^0.8.18;
 
 import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 
-contract xYieldToken is ERC20 {
+contract MintableERC20 is ERC20 {
     address public immutable minter;
 
     constructor(address _minter, string memory name, string memory symbol) ERC20(name, symbol) {
