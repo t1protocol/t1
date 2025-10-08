@@ -61,6 +61,12 @@ interface IT1ERC7683 is IOriginSettler, IDestinationSettler {
      */
     event SettlementVerified(bytes32 indexed orderId, bool isSettled);
     /**
+     * @notice Emitted when a batch of order settlements is verified
+     * @param orderIds The IDs of all verified orders
+     * @param areSettled Whether given orders are settled
+     */
+    event SettlementBatchVerified(bytes32[] indexed orderIds, bool[] areSettled);
+    /**
      * @notice Emitted when an order is settled.
      * @param orderId The ID of the settled order.
      * @param receiver The address of the order's input token receiver.
@@ -141,6 +147,12 @@ interface IT1ERC7683 is IOriginSettler, IDestinationSettler {
     /// @param encodedProofOfRead The encoded proof of read which is formatted as following:
     /// abi.encode(uint256 batchIndex, bytes32 requestId, uint256 position, bytes result, bytes proof)
     function handleReadResultWithProof(bytes calldata encodedProofOfRead) external;
+
+    /// @notice Use result of proof of read to handle batch of orders depending on the result
+    /// Also enforce auction winner bid if the orderId has closed auction.
+    /// @param encodedProofsOfRead The encoded proofs of read which are formatted as following:
+    /// abi.encode(uint256 batchIndex, bytes32 requestId, uint256 position, bytes result, bytes proof)
+    function handleBatchOfReadResultsWithProofs(bytes[] calldata encodedProofsOfRead) external;
 
     /// @notice Refunds a batch of expired GaslessCrossChainOrders on the chain where the orders were opened.
     /// This process needs a proof of read triggered by `verifyRefund` that proves the intent has not be filled.
