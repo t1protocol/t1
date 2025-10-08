@@ -64,11 +64,6 @@ contract SustainedLoadTest is Script {
         console2.log("Interval (seconds): %d", intervalSeconds);
         console2.log("Duration (seconds): %d", durationSeconds);
         console2.log("Test direction: %s", testDirection);
-        console2.log("ARB_T1_PULL_BASED_7683_PROXY_ADDR: %s", vm.envAddress("ARB_T1_PULL_BASED_7683_PROXY_ADDR"));
-        console2.log("BASE_T1_PULL_BASED_7683_PROXY_ADDR: %s", vm.envAddress("BASE_T1_PULL_BASED_7683_PROXY_ADDR"));
-        console2.log("ARBITRUM_SEPOLIA_USDT_ADDR: %s", vm.envAddress("ARBITRUM_SEPOLIA_USDT_ADDR"));
-        console2.log("BASE_SEPOLIA_USDT_ADDR: %s", vm.envAddress("BASE_SEPOLIA_USDT_ADDR"));
-        console2.log("ALICE_ADDRESS: %s", vm.addr(vm.envUint("ALICE_PRIVATE_KEY")));
 
         // Validate configuration
         require(txsPerBatch > 0, "Transactions per batch must be > 0");
@@ -128,15 +123,6 @@ contract SustainedLoadTest is Script {
         inputToken.approve(address(l1_7683), type(uint256).max);
         vm.stopBroadcast();
 
-        // Debug nonce state before starting
-        console2.log("Checking used nonces for %s on Arbitrum", alice);
-        for (uint32 i = 0; i < 10; i++) {
-            console2.log("Nonce %d used: %s", i, l1_7683.usedNonces(alice, i));
-            console2.log("Nonce %d valid: %s", i, l1_7683.isValidNonce(alice, i));
-        }
-
-        console2.log("Starting sustained Arbitrum -> Base load test with initial nonce: %d", nonceCounter);
-
         uint256 batchNumber = 0;
         while (batchNumber < currentSession.totalBatches && currentSession.isActive) {
             batchNumber++;
@@ -161,15 +147,6 @@ contract SustainedLoadTest is Script {
         ERC20 inputToken = ERC20(vm.envAddress("BASE_SEPOLIA_USDT_ADDR"));
         inputToken.approve(address(l1_7683), type(uint256).max);
         vm.stopBroadcast();
-
-        // Debug nonce state before starting
-        console2.log("Checking used nonces for %s on Base", alice);
-        for (uint32 i = 0; i < 10; i++) {
-            console2.log("Nonce %d used: %s", i, l1_7683.usedNonces(alice, i));
-            console2.log("Nonce %d valid: %s", i, l1_7683.isValidNonce(alice, i));
-        }
-
-        console2.log("Starting sustained Base -> Arbitrum load test with initial nonce: %d", nonceCounter);
 
         uint256 batchNumber = 0;
         while (batchNumber < currentSession.totalBatches && currentSession.isActive) {
@@ -199,7 +176,7 @@ contract SustainedLoadTest is Script {
 
         for (uint256 i = 0; i < currentSession.transactionsPerBatch; i++) {
             // Find a valid (unused) nonce
-            uint256 maxAttempts = 1000; // Safety limit to prevent infinite loop
+            uint256 maxAttempts = 100000; // Safety limit to prevent infinite loop
             uint256 attempts = 0;
             while (
                 l1_7683.usedNonces(alice, nonceCounter)
@@ -308,7 +285,7 @@ contract SustainedLoadTest is Script {
 
         for (uint256 i = 0; i < currentSession.transactionsPerBatch; i++) {
             // Find a valid (unused) nonce
-            uint256 maxAttempts = 1000; // Safety limit to prevent infinite loop
+            uint256 maxAttempts = 100000; // Safety limit to prevent infinite loop
             uint256 attempts = 0;
             while (
                 l1_7683.usedNonces(alice, nonceCounter)

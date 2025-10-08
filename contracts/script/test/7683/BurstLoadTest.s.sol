@@ -168,10 +168,8 @@ contract BurstLoadTest is Script {
             );
             emit TransactionSent(id, results[results.length - 1].txHash, true);
             successCount++;
-            console2.log("Transaction", transactionIndex + 1, "successful with nonce", nextNonce);
         } catch Error(string memory reason) {
             results.push(TestResult({ orderId: OrderEncoder.id(orderData), txHash: 0, timestamp: 0, success: false }));
-            // console2.log("Transaction", transactionIndex + 1, "failed with nonce", nextNonce, "reason:", reason);
             failureCount++;
             emit TransactionSent(OrderEncoder.id(orderData), 0, false);
         }
@@ -231,11 +229,9 @@ contract BurstLoadTest is Script {
             );
             emit TransactionSent(id, results[results.length - 1].txHash, true);
             successCount++;
-            console2.log("Transaction", transactionIndex + 1, "successful with nonce", nextNonce);
         } catch Error(string memory reason) {
             results.push(TestResult({ orderId: OrderEncoder.id(orderData), txHash: 0, timestamp: 0, success: false }));
             failureCount++;
-            // console2.log("Transaction", transactionIndex + 1, "failed with nonce", nextNonce, "reason:", reason);
             emit TransactionSent(OrderEncoder.id(orderData), 0, false);
         }
 

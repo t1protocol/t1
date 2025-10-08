@@ -232,10 +232,6 @@ cd "$(dirname "$0")/../../.."
 forge script ./script/test/7683/${SCRIPT_NAME}.s.sol:${SCRIPT_NAME} \
     --rpc-url $RPC_URL \
     --broadcast \
-    --verify \
-    --verifier etherscan \
-    --verifier-url $VERIFIER_URL \
-    --etherscan-api-key $API_KEY \
     -vvv
 
 echo "=========================================="
