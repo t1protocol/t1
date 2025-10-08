@@ -32,8 +32,8 @@
         "implementation": "0x551b416a5D21eB05ab8Da60B1159822c2C710683",
         "proxy": "0xdbA711a6c1b187479e9a5b33020E5217D0BD5A1f"
       },
-      "auctionWitness": "0x5bA9d8193Ac43bE825743576b396473C6Ad73119"
+      "auctionWitness": "0x4EeE6e5a0B9BD206dE5D38aa4EdC7ead70B9cD8D"
     },
-    "deployerAddress": "0x4EeE6e5a0B9BD206dE5D38aa4EdC7ead70B9cD8D"
+    "deployerAddress": "0xEB5B6d2aF900151A7Fc4C57c1087F1ED9916D788"
   }
 }
