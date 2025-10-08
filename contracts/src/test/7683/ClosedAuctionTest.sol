@@ -189,7 +189,7 @@ contract ClosedAuctionTest is T1XChainReaderBaseTestSetup {
     }
 
     function _openOrder(bool closedAuction) internal returns (OrderData memory orderData, bytes32 orderId) {
-        orderData = _prepareOrderData();
+        orderData = _prepareOrderData(amount);
         orderData.closedAuction = closedAuction;
         OnchainCrossChainOrder memory order =
             _prepareOnchainOrder(OrderEncoder.encode(orderData), orderData.fillDeadline, OrderEncoder.orderDataType());

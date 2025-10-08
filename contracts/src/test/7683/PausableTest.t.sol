@@ -116,7 +116,7 @@ contract PausableTest is T1XChainReaderBaseTestSetup {
     }
 
     function test_canOpenWhenNotPaused() public {
-        OrderData memory orderData = _prepareOrderData();
+        OrderData memory orderData = _prepareOrderData(amount);
         OnchainCrossChainOrder memory order =
             _prepareOnchainOrder(OrderEncoder.encode(orderData), orderData.fillDeadline, OrderEncoder.orderDataType());
 
@@ -135,7 +135,7 @@ contract PausableTest is T1XChainReaderBaseTestSetup {
         inputToken.approve(permit2, type(uint256).max);
 
         uint32 openDeadline = uint32(block.timestamp + 100);
-        OrderData memory orderData = _prepareOrderData();
+        OrderData memory orderData = _prepareOrderData(amount);
         GaslessCrossChainOrder memory order = _prepareGaslessOrder(
             address(l1T1ERC7683),
             kakaroto,
@@ -167,7 +167,7 @@ contract PausableTest is T1XChainReaderBaseTestSetup {
     }
 
     function test_canSettleWhenNotPaused() public {
-        (, bytes32 orderId, bytes32 requestId) = _openAndFillOrder();
+        (, bytes32 orderId, bytes32 requestId) = _openAndFillOrder(kakaroto, vegeta, amount);
         bytes memory result = abi.encode(l2T1ERC7683.getFilledOrderStatus(orderId));
         (bytes32 root, bytes memory proof) = _generateMerkleTree(requestId, result, position);
         originReader.commitProofOfReadRoot(batchIndex, root);
@@ -183,7 +183,7 @@ contract PausableTest is T1XChainReaderBaseTestSetup {
     function test_cannotOpenWhenPaused() public {
         l1T1ERC7683.pauseOpen();
 
-        OrderData memory orderData = _prepareOrderData();
+        OrderData memory orderData = _prepareOrderData(amount);
         OnchainCrossChainOrder memory order =
             _prepareOnchainOrder(OrderEncoder.encode(orderData), orderData.fillDeadline, OrderEncoder.orderDataType());
 
@@ -197,7 +197,7 @@ contract PausableTest is T1XChainReaderBaseTestSetup {
     function test_cannotOpenForWhenPaused() public {
         l1T1ERC7683.pauseOpen();
 
-        OrderData memory orderData = _prepareOrderData();
+        OrderData memory orderData = _prepareOrderData(amount);
         GaslessCrossChainOrder memory order = _prepareGaslessOrder(
             address(l1T1ERC7683),
             kakaroto,
@@ -217,7 +217,7 @@ contract PausableTest is T1XChainReaderBaseTestSetup {
     }
 
     function test_cannotSettleWhenPaused() public {
-        (, bytes32 orderId, bytes32 requestId) = _openAndFillOrder();
+        (, bytes32 orderId, bytes32 requestId) = _openAndFillOrder(kakaroto, vegeta, amount);
         bytes memory result = abi.encode(l2T1ERC7683.getFilledOrderStatus(orderId));
         (bytes32 root, bytes memory proof) = _generateMerkleTree(requestId, result, position);
         originReader.commitProofOfReadRoot(batchIndex, root);
@@ -288,7 +288,7 @@ contract PausableTest is T1XChainReaderBaseTestSetup {
     function test_cannotRefundForWhenPaused() public {
         vm.warp(2000); // Set block.timestamp to 2000
         uint32 deadline = 1000; // Past deadline for testing refund
-        OrderData memory defaultOrderData = _prepareOrderData();
+        OrderData memory defaultOrderData = _prepareOrderData(amount);
         defaultOrderData.fillDeadline = deadline;
         bytes memory orderData = OrderEncoder.encode(defaultOrderData);
 

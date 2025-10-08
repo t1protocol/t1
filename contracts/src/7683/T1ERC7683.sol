@@ -22,6 +22,11 @@ import {
 import { T1Permit2 } from "./T1Permit2.sol";
 import { IT1XChainReader } from "../libraries/xChain/IT1XChainReader.sol";
 
+struct UserTokens {
+    address receiver;
+    address token;
+}
+
 /// @title T1ERC7683
 /// @author t1 Labs
 contract T1ERC7683 is IT1ERC7683, T1Permit2, AccessControlUpgradeable, EIP712 {
@@ -437,7 +442,61 @@ contract T1ERC7683 is IT1ERC7683, T1Permit2, AccessControlUpgradeable, EIP712 {
     function handleReadResultWithProof(bytes calldata encodedProofOfRead) external whenSettleNotPaused {
         (bytes32 requestId, bytes memory result) = xChainRead.verifyProofOfRead(encodedProofOfRead);
 
-        bytes32 orderId = settlementReadRequestToOrderId[requestId];
+        (bytes32 orderId, bool isSettled, address inputToken, address settlementReceiver, uint256 amount) =
+            _decodeOrdersToSettle(requestId, result);
+
+        if (isSettled) {
+            _transferTokenOut(inputToken, settlementReceiver, amount);
+        }
+
+        emit SettlementVerified(orderId, isSettled);
+    }
+
+    /// @notice Use result of proof of read to handle batch of orders depending on the result
+    /// Also enforce auction winner bid if the orderId has closed auction.
+    /// @param encodedProofsOfRead The encoded proofs of read which are formatted as following:
+    /// abi.encode(uint256 batchIndex, bytes32 requestId, uint256 position, bytes result, bytes proof)
+    function handleBatchOfReadResultsWithProofs(bytes[] calldata encodedProofsOfRead) external whenSettleNotPaused {
+        (bytes32[] memory requestIds, bytes[] memory results) = xChainRead.verifyProofsOfRead(encodedProofsOfRead);
+
+        bytes32[] memory orderIds = new bytes32[](encodedProofsOfRead.length);
+        bool[] memory areSettled = new bool[](encodedProofsOfRead.length);
+
+        UserTokens[] memory userTokenKeys = new UserTokens[](encodedProofsOfRead.length);
+        uint256[] memory amounts = new uint256[](encodedProofsOfRead.length);
+        uint256 uniqueUserTokenCount = 0;
+
+        for (uint256 i = 0; i < encodedProofsOfRead.length; i++) {
+            (bytes32 orderId, bool isSettled, address inputToken, address settlementReceiver, uint256 amount) =
+                _decodeOrdersToSettle(requestIds[i], results[i]);
+
+            orderIds[i] = orderId;
+            areSettled[i] = isSettled;
+
+            if (isSettled) {
+                uniqueUserTokenCount = _updateOrInsertUserToken(
+                    userTokenKeys, amounts, uniqueUserTokenCount, settlementReceiver, inputToken, amount
+                );
+            }
+        }
+
+        for (uint256 i = 0; i < userTokenKeys.length; i++) {
+            if (userTokenKeys[i].receiver != address(0)) {
+                _transferTokenOut(userTokenKeys[i].token, userTokenKeys[i].receiver, amounts[i]);
+            }
+        }
+
+        emit SettlementBatchVerified(orderIds, areSettled);
+    }
+
+    function _decodeOrdersToSettle(
+        bytes32 requestId,
+        bytes memory result
+    )
+        internal
+        returns (bytes32 orderId, bool isSettled, address inputToken, address settlementReceiver, uint256 amount)
+    {
+        orderId = settlementReadRequestToOrderId[requestId];
 
         // Ensure we have a valid order
         if (orderId == bytes32(0)) revert InvalidOrder();
@@ -445,7 +504,7 @@ contract T1ERC7683 is IT1ERC7683, T1Permit2, AccessControlUpgradeable, EIP712 {
         delete settlementReadRequestToOrderId[requestId];
 
         // Check if the order is FILLED based on result length
-        bool isSettled = (result.length != 0);
+        isSettled = (result.length != 0);
 
         // process the settlement if verified
         Status status = orderStatus[orderId];
@@ -461,15 +520,47 @@ contract T1ERC7683 is IT1ERC7683, T1Permit2, AccessControlUpgradeable, EIP712 {
 
             for (uint256 i = 0; i < _orderIds.length; i++) {
                 if (_settled) {
-                    (, address settlementReceiver) = abi.decode(_ordersFillerData[i], (uint256, address));
-                    _handleSettleOrder(
+                    (, settlementReceiver) = abi.decode(_ordersFillerData[i], (uint256, address));
+                    (inputToken, amount) = _handleSettleOrder(
                         orderData.destinationDomain, orderData.destinationSettler, _orderIds[i], settlementReceiver
                     );
                 }
             }
         }
+    }
 
-        emit SettlementVerified(orderId, isSettled);
+    /// @dev Tries to increment amount to be sent if given (settlementReceiver,token) pair exists. Creates a new pair
+    /// otherwise
+    /// @param userTokenKeys Existing (settlementReceiver,token) pairs
+    /// @param amountsToBeSent Existing amounts to be sent for these (settlementReceiver,token) pairs
+    /// @param uniqueUserTokenCount Number of existing (settlementReceiver,token) pairs so far
+    /// @param settlementReceiver The currently processed receiver address
+    /// @param inputToken The currently processed token address (could be 0, which is native token)
+    /// @param amount The currently processed token amount
+    function _updateOrInsertUserToken(
+        UserTokens[] memory userTokenKeys,
+        uint256[] memory amountsToBeSent,
+        uint256 uniqueUserTokenCount,
+        address settlementReceiver,
+        address inputToken,
+        uint256 amount
+    )
+        internal
+        pure
+        returns (uint256)
+    {
+        // try to find existing (receiver,token) pair and increment amount
+        for (uint256 j = 0; j < uniqueUserTokenCount; j++) {
+            if (userTokenKeys[j].receiver == settlementReceiver && userTokenKeys[j].token == inputToken) {
+                amountsToBeSent[j] += amount;
+                return uniqueUserTokenCount;
+            }
+        }
+
+        // create a new (receiver,token) pair otherwise
+        userTokenKeys[uniqueUserTokenCount] = UserTokens({ receiver: settlementReceiver, token: inputToken });
+        amountsToBeSent[uniqueUserTokenCount] = amount;
+        return uniqueUserTokenCount + 1;
     }
 
     /// @dev Handles settling an individual order, should be called by the inheriting contract when receiving a setting
@@ -486,6 +577,7 @@ contract T1ERC7683 is IT1ERC7683, T1Permit2, AccessControlUpgradeable, EIP712 {
     )
         internal
         virtual
+        returns (address inputToken, uint256 amount)
     {
         (bool isEligible, OrderData memory orderData) = _checkOrderEligibility(_messageOrigin, _messageSender, _orderId);
 
@@ -493,9 +585,8 @@ contract T1ERC7683 is IT1ERC7683, T1Permit2, AccessControlUpgradeable, EIP712 {
 
         orderStatus[_orderId] = Status.SETTLED;
 
-        address inputToken = TypeCasts.bytes32ToAddress(orderData.inputToken);
-
-        _transferTokenOut(inputToken, settlementReceiver, orderData.amountIn);
+        inputToken = TypeCasts.bytes32ToAddress(orderData.inputToken);
+        amount = orderData.amountIn;
 
         emit Settled(_orderId, settlementReceiver);
     }

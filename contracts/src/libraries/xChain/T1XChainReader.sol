@@ -214,6 +214,33 @@ contract T1XChainReader is IT1XChainReader, OwnableUpgradeable, ReentrancyGuardU
         return requestId;
     }
 
+    /**
+     * @notice Verifies a batch of many proofs of read and returns the raw function results for all of them
+     * @param encodedProofsOfRead Array of encoded proofs of read
+     * @return requestIds The IDs of all read requests, in the same order
+     * @return results The raw ABI-encoded return values from the target function for all read requests, in the same
+     * order
+     */
+    function verifyProofsOfRead(bytes[] calldata encodedProofsOfRead)
+        external
+        view
+        override
+        returns (bytes32[] memory requestIds, bytes[] memory results)
+    {
+        requestIds = new bytes32[](encodedProofsOfRead.length);
+        results = new bytes[](encodedProofsOfRead.length);
+
+        for (uint256 i = 0; i < encodedProofsOfRead.length; i++) {
+            (uint256 batchIndex, bytes32 requestId, uint256 position, bytes memory result, bytes memory proof) =
+                abi.decode(encodedProofsOfRead[i], (uint256, bytes32, uint256, bytes, bytes));
+
+            _verifyProofOfRead(batchIndex, requestId, position, result, proof);
+
+            requestIds[i] = requestId;
+            results[i] = result;
+        }
+    }
+
     function _verifyProofOfRead(
         uint256 batchIndex,
         bytes32 requestId,
