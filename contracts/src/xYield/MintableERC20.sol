@@ -3,7 +3,7 @@ pragma solidity ^0.8.30;
 
 import { ERC20 } from "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 
-contract XyieldToken is ERC20 {
+contract MintableERC20 is ERC20 {
     address public minter;
 
     /// @notice Emitted when the address authorized to mint is updated.
@@ -21,6 +21,12 @@ contract XyieldToken is ERC20 {
     constructor(address _minter, string memory name, string memory symbol) ERC20(name, symbol) {
         if (_minter == address(0)) revert ZeroAddress();
         minter = _minter;
+    }
+
+    /// @notice Returns the number of decimals used to get its user representation
+    /// @return The number of decimals
+    function decimals() public pure override returns (uint8) {
+        return 6;
     }
 
     modifier onlyMinter() {
