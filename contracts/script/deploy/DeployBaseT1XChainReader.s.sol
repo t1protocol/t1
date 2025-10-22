@@ -24,11 +24,11 @@ contract DeployBaseT1XChainReader is DeploymentUtils {
         T1XChainReader impl = new T1XChainReader(PROVER);
         logAddress("BASE_T1_X_CHAIN_READ_IMPLEMENTATION_ADDR", address(impl));
 
-        impl.initialize(MANAGER_MULTISIG);
-
         TransparentUpgradeableProxy proxy =
             new TransparentUpgradeableProxy(address(impl), address(proxyAdmin), new bytes(0));
         logAddress("BASE_T1_X_CHAIN_READ_PROXY_ADDR", address(proxy));
+
+        T1XChainReader(address(proxy)).initialize(MANAGER_MULTISIG);
 
         vm.stopBroadcast();
 

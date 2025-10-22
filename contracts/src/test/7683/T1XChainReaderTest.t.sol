@@ -56,7 +56,7 @@ contract T1XChainReaderTest is T1XChainReaderBaseTestSetup {
     // writes the new merkle root for the target batch
     // 5. Solver calls handleReadResultWithProof on 7683 contract with merkle proof, settles intent and releases funds
     function test_ERC7683SettlementFlow() public {
-        (, bytes32 orderId, bytes32 requestId) = _openAndFillOrder();
+        (, bytes32 orderId, bytes32 requestId) = _openAndFillOrder(kakaroto, vegeta, amount);
 
         // 4. Process the read request on L2 (destination chain) & Relay the result back to L1
         {
@@ -83,7 +83,7 @@ contract T1XChainReaderTest is T1XChainReaderBaseTestSetup {
     function test_ERC7683SettlementFlowWithAnotherTreePosition() public {
         position = 3;
 
-        (, bytes32 orderId, bytes32 requestId) = _openAndFillOrder();
+        (, bytes32 orderId, bytes32 requestId) = _openAndFillOrder(kakaroto, vegeta, amount);
 
         // 4. Process the read request on L2 (destination chain) & Relay the result back to L1
         {
@@ -107,7 +107,7 @@ contract T1XChainReaderTest is T1XChainReaderBaseTestSetup {
     }
 
     function test_shouldFillWithAmountOutHigherThanLimit() public {
-        OrderData memory orderData = _prepareOrderData();
+        OrderData memory orderData = _prepareOrderData(amount);
         OnchainCrossChainOrder memory order =
             _prepareOnchainOrder(OrderEncoder.encode(orderData), orderData.fillDeadline, OrderEncoder.orderDataType());
 
@@ -131,7 +131,7 @@ contract T1XChainReaderTest is T1XChainReaderBaseTestSetup {
     }
 
     function test_revertFillWithAmountOutLowerThanLimit() public {
-        OrderData memory orderData = _prepareOrderData();
+        OrderData memory orderData = _prepareOrderData(amount);
         OnchainCrossChainOrder memory order =
             _prepareOnchainOrder(OrderEncoder.encode(orderData), orderData.fillDeadline, OrderEncoder.orderDataType());
 
@@ -174,7 +174,7 @@ contract T1XChainReaderTest is T1XChainReaderBaseTestSetup {
     }
 
     function test_revertWithInvalidProofData() public {
-        (, bytes32 orderId, bytes32 requestId) = _openAndFillOrder();
+        (, bytes32 orderId, bytes32 requestId) = _openAndFillOrder(kakaroto, vegeta, amount);
 
         bytes memory result = abi.encode(l2T1ERC7683.getFilledOrderStatus(orderId));
         (bytes32 root,) = _generateMerkleTree(requestId, result, position);
@@ -187,7 +187,7 @@ contract T1XChainReaderTest is T1XChainReaderBaseTestSetup {
     }
 
     function test_revertWithInvalidProof() public {
-        (, bytes32 orderId, bytes32 requestId) = _openAndFillOrder();
+        (, bytes32 orderId, bytes32 requestId) = _openAndFillOrder(kakaroto, vegeta, amount);
 
         bytes memory result = abi.encode(l2T1ERC7683.getFilledOrderStatus(orderId));
         (bytes32 root,) = _generateMerkleTree(requestId, result, position);
@@ -204,7 +204,7 @@ contract T1XChainReaderTest is T1XChainReaderBaseTestSetup {
     }
 
     function test_revertWithInvalidResultData() public {
-        (,, bytes32 requestId) = _openAndFillOrder();
+        (,, bytes32 requestId) = _openAndFillOrder(kakaroto, vegeta, amount);
 
         // 4. First, set up the proof root by calling handle on the reader
 
@@ -222,7 +222,7 @@ contract T1XChainReaderTest is T1XChainReaderBaseTestSetup {
     }
 
     function test_sameProofShouldNotSettleTwice() public {
-        (, bytes32 orderId, bytes32 requestId) = _openAndFillOrder();
+        (, bytes32 orderId, bytes32 requestId) = _openAndFillOrder(kakaroto, vegeta, amount);
 
         bytes memory result = abi.encode(l2T1ERC7683.getFilledOrderStatus(orderId));
         (bytes32 root, bytes memory proof) = _generateMerkleTree(requestId, result, position);
@@ -238,7 +238,7 @@ contract T1XChainReaderTest is T1XChainReaderBaseTestSetup {
     }
 
     function test_settlementIfStatusIsRefundRequested() public {
-        (, bytes32 orderId, bytes32 requestId) = _openAndFillOrder();
+        (, bytes32 orderId, bytes32 requestId) = _openAndFillOrder(kakaroto, vegeta, amount);
 
         bytes memory result = abi.encode(l2T1ERC7683.getFilledOrderStatus(orderId));
         (bytes32 root, bytes memory proof) = _generateMerkleTree(requestId, result, position);
@@ -266,7 +266,7 @@ contract T1XChainReaderTest is T1XChainReaderBaseTestSetup {
     }
 
     function test_settlementIfReadRequestedTwice() public {
-        (, bytes32 orderId, bytes32 requestId) = _openAndFillOrder();
+        (, bytes32 orderId, bytes32 requestId) = _openAndFillOrder(kakaroto, vegeta, amount);
 
         bytes memory result = abi.encode(l2T1ERC7683.getFilledOrderStatus(orderId));
         (bytes32 root, bytes memory proof) = _generateMerkleTree(requestId, result, position);
@@ -291,7 +291,7 @@ contract T1XChainReaderTest is T1XChainReaderBaseTestSetup {
     }
 
     function test_settlementWithEmptyResultData() public {
-        (, bytes32 orderId, bytes32 requestId) = _openAndFillOrder();
+        (, bytes32 orderId, bytes32 requestId) = _openAndFillOrder(kakaroto, vegeta, amount);
 
         // 4. First, set up the proof root by calling handle on the reader
 
@@ -562,7 +562,7 @@ contract T1XChainReaderTest is T1XChainReaderBaseTestSetup {
     }
 
     function test_verifyProofOfReadWithResult() public {
-        (, bytes32 orderId, bytes32 requestId) = _openAndFillOrder();
+        (, bytes32 orderId, bytes32 requestId) = _openAndFillOrder(kakaroto, vegeta, amount);
         bytes memory result = abi.encode(l2T1ERC7683.getFilledOrderStatus(orderId));
         (bytes32 root, bytes memory proof) = _generateMerkleTree(requestId, result, position);
 
@@ -576,7 +576,7 @@ contract T1XChainReaderTest is T1XChainReaderBaseTestSetup {
     }
 
     function test_verifyProofOfReadWithResult_InvalidProof() public {
-        (, bytes32 orderId, bytes32 requestId) = _openAndFillOrder();
+        (, bytes32 orderId, bytes32 requestId) = _openAndFillOrder(kakaroto, vegeta, amount);
         bytes memory result = abi.encode(l2T1ERC7683.getFilledOrderStatus(orderId));
         (bytes32 root,) = _generateMerkleTree(requestId, result, position);
 

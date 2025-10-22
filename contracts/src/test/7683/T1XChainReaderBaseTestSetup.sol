@@ -31,6 +31,7 @@ contract T1XChainReaderBaseTestSetup is BaseTest {
     address internal owner = makeAddr("owner");
     address internal sender = makeAddr("sender");
     address internal feeVault;
+    uint256 internal senderNonce = 1;
 
     function labelAccounts() internal {
         vm.label(owner, "Owner");
@@ -54,13 +55,21 @@ contract T1XChainReaderBaseTestSetup is BaseTest {
 
     receive() external payable { }
 
-    function _openAndFillOrder() internal virtual returns (OrderData memory, bytes32 orderId, bytes32 requestId) {
-        OrderData memory orderData = _prepareOrderData();
+    function _openAndFillOrder(
+        address opener,
+        address filler,
+        uint256 amountIn
+    )
+        internal
+        virtual
+        returns (OrderData memory, bytes32 orderId, bytes32 requestId)
+    {
+        OrderData memory orderData = _prepareOrderData(amountIn);
         OnchainCrossChainOrder memory order =
             _prepareOnchainOrder(OrderEncoder.encode(orderData), orderData.fillDeadline, OrderEncoder.orderDataType());
 
-        vm.startPrank(kakaroto);
-        inputToken.approve(address(l1T1ERC7683), amount);
+        vm.startPrank(opener);
+        inputToken.approve(address(l1T1ERC7683), amountIn);
         vm.recordLogs();
         l1T1ERC7683.open(order);
         vm.stopPrank();
@@ -68,30 +77,30 @@ contract T1XChainReaderBaseTestSetup is BaseTest {
         (bytes32 orderId_,) = _getOrderIDFromLogs();
         assertEq(uint8(l1T1ERC7683.orderStatus(orderId_)), uint8(IT1ERC7683.Status.OPENED));
 
-        vm.startPrank(vegeta);
-        outputToken.approve(address(l2T1ERC7683), amount);
+        vm.startPrank(filler);
+        outputToken.approve(address(l2T1ERC7683), amountIn);
         bytes memory originData = OrderEncoder.encode(orderData);
-        bytes memory fillerData = abi.encode(amount, TypeCasts.addressToBytes32(vegeta));
+        bytes memory fillerData = abi.encode(amountIn, TypeCasts.addressToBytes32(filler));
         l2T1ERC7683.fill(orderId_, originData, fillerData);
         assertEq(uint8(l2T1ERC7683.orderStatus(orderId_)), uint8(IT1ERC7683.Status.FILLED));
         vm.stopPrank();
 
-        vm.startPrank(vegeta);
+        vm.startPrank(filler);
         bytes32 requestId_ = l1T1ERC7683.verifySettlement(destination, orderId_);
         vm.stopPrank();
 
         return (orderData, orderId_, requestId_);
     }
 
-    function _prepareOrderData() internal view virtual returns (OrderData memory) {
+    function _prepareOrderData(uint256 amountIn) internal virtual returns (OrderData memory) {
         return OrderData({
             sender: TypeCasts.addressToBytes32(kakaroto),
             recipient: TypeCasts.addressToBytes32(karpincho),
             inputToken: TypeCasts.addressToBytes32(address(inputToken)),
             outputToken: TypeCasts.addressToBytes32(address(outputToken)),
-            amountIn: amount,
-            minAmountOut: amount,
-            senderNonce: 1,
+            amountIn: amountIn,
+            minAmountOut: amountIn,
+            senderNonce: senderNonce++,
             originDomain: origin,
             destinationDomain: destination,
             destinationSettler: address(l2T1ERC7683).addressToBytes32(),
