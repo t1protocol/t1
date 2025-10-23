@@ -286,7 +286,7 @@ contract SustainedLoadTest is Script {
 
         for (uint256 i = 0; i < currentSession.transactionsPerBatch; i++) {
             // Find a valid (unused) nonce
-            uint256 maxAttempts = uint256.max;; // Safety limit to prevent infinite loop
+            uint256 maxAttempts = uint256.max; // Safety limit to prevent infinite loop
             uint256 attempts = 0;
             while (
                 l1_7683.usedNonces(alice, nonceCounter)
