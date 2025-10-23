@@ -9,6 +9,7 @@ import { OrderData, OrderEncoder } from "../../../src/libraries/7683/OrderEncode
 import { OnchainCrossChainOrder } from "../../../src/interfaces/IERC7683.sol";
 import { T1ERC7683 } from "../../../src/7683/T1ERC7683.sol";
 import { T1Constants } from "../../../src/libraries/constants/T1Constants.sol";
+import { DeploymentUtils } from "../../lib/DeploymentUtils.sol";
 
 /**
  * @title BurstLoadTest
@@ -68,7 +69,7 @@ contract BurstLoadTest is Script {
     }
 
     function _runArbitrumToBaseLoadTest(uint256 maxTxs) internal {
-        vm.createSelectFork(vm.rpcUrl("arbitrum_sepolia"));
+        selectMainnetOrSepoliaFork("arbitrum");
 
         T1ERC7683 l1_7683 = T1ERC7683(vm.envAddress("ARB_T1_PULL_BASED_7683_PROXY_ADDR"));
         uint256 alicePk = vm.envUint("ALICE_PRIVATE_KEY");
@@ -92,7 +93,7 @@ contract BurstLoadTest is Script {
     }
 
     function _runBaseToArbitrumLoadTest(uint256 maxTxs) internal {
-        vm.createSelectFork(vm.rpcUrl("base_sepolia"));
+        selectMainnetOrSepoliaFork("base");
 
         T1ERC7683 l1_7683 = T1ERC7683(vm.envAddress("BASE_T1_PULL_BASED_7683_PROXY_ADDR"));
         uint256 alicePk = vm.envUint("ALICE_PRIVATE_KEY");

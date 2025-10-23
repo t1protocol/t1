@@ -232,7 +232,9 @@ cd "$(dirname "$0")/../../.."
 forge script ./script/test/7683/${SCRIPT_NAME}.s.sol:${SCRIPT_NAME} \
     --rpc-url $RPC_URL \
     --broadcast \
-    -vvv
+    --ffi \
+    --slow \
+    --verbose
 
 echo "=========================================="
 echo "Load test completed at: $(date)"
