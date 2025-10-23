@@ -16,7 +16,7 @@ import { DeploymentUtils } from "../../../lib/DeploymentUtils.sol";
  * @dev Sustained load testing script for 7683 contracts that sends n transactions
  * every t seconds for a configurable duration. Supports both Arbitrum->Base and Base->Arbitrum flows.
  */
-contract SustainedLoadTest is Script {
+contract SustainedLoadTest is Script, DeploymentUtils {
     // Configuration from environment variables
     uint256 public constant DEFAULT_TRANSACTIONS_PER_BATCH = 5;
     uint256 public constant DEFAULT_INTERVAL_SECONDS = 60; // 1 minute
@@ -113,7 +113,7 @@ contract SustainedLoadTest is Script {
     }
 
     function _runSustainedArbitrumToBaseTest() internal {
-        selectMainnetOrSepoliaFork("arbitrum");
+        DeploymentUtils.selectMainnetOrSepoliaFork("arbitrum");
         T1ERC7683 l1_7683 = T1ERC7683(vm.envAddress("ARB_T1_PULL_BASED_7683_PROXY_ADDR"));
         uint256 alicePk = vm.envUint("ALICE_PRIVATE_KEY");
         address alice = vm.addr(alicePk);
@@ -138,7 +138,7 @@ contract SustainedLoadTest is Script {
     }
 
     function _runSustainedBaseToArbitrumTest() internal {
-        selectMainnetOrSepoliaFork("base");
+        DeploymentUtils.selectMainnetOrSepoliaFork("base");
         T1ERC7683 l1_7683 = T1ERC7683(vm.envAddress("BASE_T1_PULL_BASED_7683_PROXY_ADDR"));
         uint256 alicePk = vm.envUint("ALICE_PRIVATE_KEY");
         address alice = vm.addr(alicePk);
@@ -177,7 +177,7 @@ contract SustainedLoadTest is Script {
 
         for (uint256 i = 0; i < currentSession.transactionsPerBatch; i++) {
             // Find a valid (unused) nonce
-            uint256 maxAttempts = uint256.max; // Safety limit to prevent infinite loop
+            uint256 maxAttempts = type(uint256).max; // Safety limit to prevent infinite loop
             uint256 attempts = 0;
             while (
                 l1_7683.usedNonces(alice, nonceCounter)
@@ -286,7 +286,7 @@ contract SustainedLoadTest is Script {
 
         for (uint256 i = 0; i < currentSession.transactionsPerBatch; i++) {
             // Find a valid (unused) nonce
-            uint256 maxAttempts = uint256.max; // Safety limit to prevent infinite loop
+            uint256 maxAttempts = type(uint256).max; // Safety limit to prevent infinite loop
             uint256 attempts = 0;
             while (
                 l1_7683.usedNonces(alice, nonceCounter)

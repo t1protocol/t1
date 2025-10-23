@@ -16,7 +16,7 @@ import { DeploymentUtils } from "../../../lib/DeploymentUtils.sol";
  * @dev Load testing script for 7683 contracts that sends a configurable number of transactions
  *      sequentially to avoid RPC rate limiting. Supports both Arbitrum->Base and Base->Arbitrum flows.
  */
-contract BurstLoadTest is Script {
+contract BurstLoadTest is Script, DeploymentUtils {
     // Configuration from environment variables
     uint256 public constant MAX_TRANSACTIONS = 10; // Default, can be overridden by env var
     uint256 public constant AMOUNT_IN = 10; // 0.00001 USDT (assuming 6 decimals)
@@ -69,7 +69,7 @@ contract BurstLoadTest is Script {
     }
 
     function _runArbitrumToBaseLoadTest(uint256 maxTxs) internal {
-        selectMainnetOrSepoliaFork("arbitrum");
+        DeploymentUtils.selectMainnetOrSepoliaFork("arbitrum");
 
         T1ERC7683 l1_7683 = T1ERC7683(vm.envAddress("ARB_T1_PULL_BASED_7683_PROXY_ADDR"));
         uint256 alicePk = vm.envUint("ALICE_PRIVATE_KEY");
@@ -93,7 +93,7 @@ contract BurstLoadTest is Script {
     }
 
     function _runBaseToArbitrumLoadTest(uint256 maxTxs) internal {
-        selectMainnetOrSepoliaFork("base");
+        DeploymentUtils.selectMainnetOrSepoliaFork("base");
 
         T1ERC7683 l1_7683 = T1ERC7683(vm.envAddress("BASE_T1_PULL_BASED_7683_PROXY_ADDR"));
         uint256 alicePk = vm.envUint("ALICE_PRIVATE_KEY");
