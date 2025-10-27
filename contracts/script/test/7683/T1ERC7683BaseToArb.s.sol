@@ -10,8 +10,8 @@ import { OnchainCrossChainOrder } from "../../../src/interfaces/IERC7683.sol";
 import { T1ERC7683 } from "../../../src/7683/T1ERC7683.sol";
 import { T1Constants } from "../../../src/libraries/constants/T1Constants.sol";
 
-uint32 constant ORIGIN_CHAIN = uint32(T1Constants.BASE_SEPOLIA_CHAIN_ID);
-uint32 constant DESTINATION_CHAIN = uint32(T1Constants.ARBITRUM_SEPOLIA_CHAIN_ID);
+uint32 constant ORIGIN_CHAIN = uint32(T1Constants.BASE_MAINNET_CHAIN_ID);
+uint32 constant DESTINATION_CHAIN = uint32(T1Constants.ARBITRUM_MAINNET_CHAIN_ID);
 uint32 constant AMOUNT_IN = 100;
 
 // Step 1: Setup Alice's account, sign and relay intent
@@ -19,7 +19,7 @@ contract AliceSetupScript is Script {
     T1ERC7683 public l1_7683;
 
     function run() external {
-        vm.createSelectFork(vm.rpcUrl("base_sepolia"));
+        vm.createSelectFork(vm.rpcUrl("base"));
         l1_7683 = T1ERC7683(vm.envAddress("BASE_T1_PULL_BASED_7683_PROXY_ADDR"));
         // Load Alice's private key from env
         uint256 alicePk = vm.envUint("ALICE_PRIVATE_KEY");
@@ -29,8 +29,8 @@ contract AliceSetupScript is Script {
         vm.startBroadcast(alicePk);
 
         // Approve tokens
-        ERC20 inputToken = ERC20(vm.envAddress("BASE_SEPOLIA_USDT_ADDR"));
-        ERC20 outputToken = ERC20(vm.envAddress("ARBITRUM_SEPOLIA_USDT_ADDR"));
+        ERC20 inputToken = ERC20(vm.envAddress("USDC_BASE"));
+        ERC20 outputToken = ERC20(vm.envAddress("USDC_ARB"));
         inputToken.approve(address(l1_7683), type(uint256).max);
 
         // Prepare order data
