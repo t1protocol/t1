@@ -14,7 +14,7 @@ contract MintableERC20 is ERC20 {
     /// @notice Emitted when an address burns tokens.
     /// @param account The address that burnt their tokens
     /// @param amount The amount that was burnt
-    event Burn(address indexed account, uint8 indexed amount);
+    event Burn(address indexed account, uint256 indexed amount);
 
     /// @dev Thrown if the minter would be set to the zero address
     error ZeroAddress();
@@ -36,11 +36,6 @@ contract MintableERC20 is ERC20 {
 
     modifier onlyMinter() {
         if (msg.sender != minter) revert NotAuthorized();
-        _;
-    }
-
-    modifier onlyOwner() {
-        if (msg.sender != _owner) revert NotAuthorized();
         _;
     }
 
@@ -67,7 +62,7 @@ contract MintableERC20 is ERC20 {
     /// @notice Burns tokens
     /// @param account The address to burn tokens from
     /// @param amount The amount of tokens to burn
-    function burn(address account, uint256 amount) external onlyOwner {
+    function burn(address account, uint256 amount) external {
         _burn(account, amount);
         emit Burn(account, amount);
     }
