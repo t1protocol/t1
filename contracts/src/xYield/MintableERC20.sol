@@ -34,6 +34,11 @@ contract MintableERC20 is ERC20 {
         _;
     }
 
+    modifier onlyOwner() {
+        if (msg.sender != _owner) revert NotAuthorized();
+        _;
+    }
+
     /// @notice Updates the minter address
     /// @param newMinter The new minter address
     function updateMinter(address newMinter) external onlyMinter {
@@ -57,7 +62,7 @@ contract MintableERC20 is ERC20 {
     /// @notice Burns tokens
     /// @param account The address to burn tokens from
     /// @param amount The amount of tokens to burn
-    function burn(address account, uint256 amount) external onlyMinter {
+    function burn(address account, uint256 amount) external onlyOwner {
         _burn(account, amount);
     }
 }
