@@ -13,12 +13,12 @@ import { T1Constants } from "../../../../src/libraries/constants/T1Constants.sol
 contract LoadTest is Script {
     T1ERC7683 public l1_7683;
 
-    function run(string memory direction) external {
+    function run(string memory direction, string memory tokenPair) external {
         // Define chain IDs
         uint32 arbitrumChainId = uint32(T1Constants.ARBITRUM_MAINNET_CHAIN_ID);
         uint32 baseChainId = uint32(T1Constants.BASE_MAINNET_CHAIN_ID);
 
-        // Declare variables to be set based on direction
+        // Declare variables to be set based on direction and token pair
         uint32 originChain;
         uint32 destinationChain;
         string memory forkUrl;
@@ -27,25 +27,38 @@ contract LoadTest is Script {
         address outputTokenAddr;
         address destinationSettlerAddr;
 
-        // Set chain, token, and proxy addresses based on direction
+        // Set chain and proxy addresses based on direction
         if (keccak256(abi.encodePacked(direction)) == keccak256(abi.encodePacked("arb-to-base"))) {
             originChain = arbitrumChainId;
             destinationChain = baseChainId;
             forkUrl = "arbitrum";
             t1ProxyAddr = vm.envAddress("ARB_T1_PULL_BASED_7683_PROXY_ADDR");
-            inputTokenAddr = vm.envAddress("USDC_ARB");
-            outputTokenAddr = vm.envAddress("USDC_BASE");
             destinationSettlerAddr = vm.envAddress("BASE_T1_PULL_BASED_7683_PROXY_ADDR");
         } else if (keccak256(abi.encodePacked(direction)) == keccak256(abi.encodePacked("base-to-arb"))) {
             originChain = baseChainId;
             destinationChain = arbitrumChainId;
             forkUrl = "base";
             t1ProxyAddr = vm.envAddress("BASE_T1_PULL_BASED_7683_PROXY_ADDR");
-            inputTokenAddr = vm.envAddress("USDC_BASE");
-            outputTokenAddr = vm.envAddress("USDC_ARB");
             destinationSettlerAddr = vm.envAddress("ARB_T1_PULL_BASED_7683_PROXY_ADDR");
         } else {
             revert("Invalid direction: use 'arb-to-base' or 'base-to-arb'");
+        }
+
+        // Set token addresses based on token pair
+        if (keccak256(abi.encodePacked(tokenPair)) == keccak256(abi.encodePacked("usdc-usdc"))) {
+            inputTokenAddr = originChain == arbitrumChainId ? vm.envAddress("USDC_ARB") : vm.envAddress("USDC_BASE");
+            outputTokenAddr = destinationChain == arbitrumChainId ? vm.envAddress("USDC_ARB") : vm.envAddress("USDC_BASE");
+        } else if (keccak256(abi.encodePacked(tokenPair)) == keccak256(abi.encodePacked("weth-weth"))) {
+            inputTokenAddr = originChain == arbitrumChainId ? vm.envAddress("WETH_ARB") : vm.envAddress("WETH_BASE");
+            outputTokenAddr = destinationChain == arbitrumChainId ? vm.envAddress("WETH_ARB") : vm.envAddress("WETH_BASE");
+        } else if (keccak256(abi.encodePacked(tokenPair)) == keccak256(abi.encodePacked("usdc-weth"))) {
+            inputTokenAddr = originChain == arbitrumChainId ? vm.envAddress("USDC_ARB") : vm.envAddress("USDC_BASE");
+            outputTokenAddr = destinationChain == arbitrumChainId ? vm.envAddress("WETH_ARB") : vm.envAddress("WETH_BASE");
+        } else if (keccak256(abi.encodePacked(tokenPair)) == keccak256(abi.encodePacked("weth-usdc"))) {
+            inputTokenAddr = originChain == arbitrumChainId ? vm.envAddress("WETH_ARB") : vm.envAddress("WETH_BASE");
+            outputTokenAddr = destinationChain == arbitrumChainId ? vm.envAddress("USDC_ARB") : vm.envAddress("USDC_BASE");
+        } else {
+            revert("Invalid token pair: use 'usdc-usdc', 'weth-weth', 'usdc-weth', or 'weth-usdc'");
         }
 
         // Select the appropriate fork
