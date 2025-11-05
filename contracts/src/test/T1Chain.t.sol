@@ -479,7 +479,7 @@ contract T1ChainTest is Test {
         //  013590dc3544d56629ba81bb14d4d31248f825001653aa575eb8e3a719046757
         //  66b68a5092940d88a8c6f203d2071303557c024275d8ceaa2e12662bc61c8d8f
         // solhint-disable-next-line max-line-length
-        // 
+        //
         // aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa28000000000000000000000000000000000000000000000000000000000000002a
         // => hash for batch header
         //  b9dff5d21381176a73b20a9294eb2703c803113f9559e358708c659fa1cf62eb
@@ -1371,7 +1371,7 @@ contract T1ChainTest is Test {
         bytes32 blobVersionedHash = 0x013590dc3544d56629ba81bb14d4d31248f825001653aa575eb8e3a719046757;
         // bytes memory blobDataProof =
         // solhint-disable-next-line max-line-length
-        // 
+        //
         // hex"2c9d777660f14ad49803a6442935c0d24a0d83551de5995890bf70a17d24e68753ab0fe6807c7081f0885fe7da741554d658a03730b1fa006f8319f8b993bcb0a5a0c9e8a145c5ef6e415c245690effa2914ec9393f58a7251d30c0657da1453d9ad906eae8b97dd60c9a216f81b4df7af34d01e214e1ec5865f0133ecc16d7459e49dab66087340677751e82097fbdd20551d66076f425775d1758a9dfd186b";
         T1ChainMockBlob(address(rollup)).setBlobVersionedHash(blobVersionedHash);
 
