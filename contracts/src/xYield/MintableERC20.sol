@@ -62,8 +62,8 @@ contract MintableERC20 is ERC20 {
     /// @notice Burns tokens
     /// @param account The address to burn tokens from
     /// @param amount The amount of tokens to burn
-    function burn(address account, uint256 amount) external {
-        _burn(account, amount);
-        emit Burn(account, amount);
+    function burn(uint256 amount) external {
+        _burn(_msgSender(), amount);
+        emit Burn(_msgSender(), amount);
     }
 }
