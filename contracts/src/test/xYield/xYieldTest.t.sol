@@ -64,8 +64,7 @@ contract MockSpokePool {
         bytes calldata
     )
         external
-        payable
-    { }
+        payable { }
 
     function counterpart() external pure returns (address) {
         return address(0x1234);
@@ -385,9 +384,7 @@ contract xYieldTest is Test {
         }
 
         return OnchainCrossChainOrder({
-            fillDeadline: fillDeadline,
-            orderDataType: OrderEncoder.orderDataType(),
-            orderData: abi.encode(orderData)
+            fillDeadline: fillDeadline, orderDataType: OrderEncoder.orderDataType(), orderData: abi.encode(orderData)
         });
     }
 }

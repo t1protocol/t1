@@ -12,7 +12,6 @@ abstract contract L2ERC20Gateway is T1GatewayBase, IL2ERC20Gateway {
      * Variables *
      *
      */
-
     /// @dev The storage slots for future usage.
     uint256[50] private __gap;
 

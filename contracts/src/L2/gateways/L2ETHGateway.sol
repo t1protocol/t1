@@ -20,7 +20,6 @@ contract L2ETHGateway is T1GatewayBase, IL2ETHGateway {
      * Constructor *
      *
      */
-
     /// @notice Constructor for `L2ETHGateway` implementation contract.
     ///
     /// @param _counterpart The address of `L1ETHGateway` contract in L1.

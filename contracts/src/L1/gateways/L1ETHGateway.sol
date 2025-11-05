@@ -23,7 +23,6 @@ contract L1ETHGateway is T1GatewayBase, IL1ETHGateway, IMessageDropCallback {
      * Constructor *
      *
      */
-
     /// @notice Constructor for `L1ETHGateway` implementation contract.
     ///
     /// @param _counterpart The address of `L2ETHGateway` contract in L2.

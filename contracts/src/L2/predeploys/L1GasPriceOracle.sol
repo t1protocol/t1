@@ -13,7 +13,6 @@ contract L1GasPriceOracle is OwnableBase, IL1GasPriceOracle {
      * Events *
      *
      */
-
     /// @notice Emitted when owner updates whitelist contract.
     /// @param _oldWhitelist The address of old whitelist contract.
     /// @param _newWhitelist The address of new whitelist contract.

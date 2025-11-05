@@ -10,7 +10,6 @@ interface IT1Chain {
      * Events *
      *
      */
-
     /// @notice Emitted when a new batch is committed.
     /// @param batchIndex The index of the batch.
     /// @param batchHash The hash of the batch.

@@ -8,7 +8,6 @@ interface IL1MessageQueue {
      * Events *
      *
      */
-
     /// @notice Emitted when a new L1 => L2 transaction is appended to the queue.
     /// @param sender The address of account who initiates the transaction.
     /// @param target The address of account who will receive the transaction.

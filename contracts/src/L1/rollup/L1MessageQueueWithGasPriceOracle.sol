@@ -15,7 +15,6 @@ contract L1MessageQueueWithGasPriceOracle is L1MessageQueue, IL1MessageQueueWith
      * Constants *
      *
      */
-
     /// @notice The intrinsic gas for transaction.
     uint256 private constant INTRINSIC_GAS_TX = 21_000;
 

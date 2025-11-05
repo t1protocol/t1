@@ -12,7 +12,6 @@ contract ZkEvmVerifierV1 is IZkEvmVerifierV1 {
      * Errors *
      *
      */
-
     /// @dev Thrown when aggregate zk proof verification is failed.
     error VerificationFailed();
 

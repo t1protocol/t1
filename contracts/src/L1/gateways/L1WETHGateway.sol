@@ -24,7 +24,6 @@ contract L1WETHGateway is L1ERC20Gateway {
      * Constants *
      *
      */
-
     /// @notice The address of L2 WETH address.
     address public immutable l2WETH;
 

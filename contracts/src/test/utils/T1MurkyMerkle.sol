@@ -12,7 +12,6 @@ contract T1MurkyMerkle is MurkyMerkleBase {
      * HASHING FUNCTION *
      *
      */
-
     /// ascending sort and concat prior to hashing
     function hashLeafPairs(bytes32 left, bytes32 right) public pure override returns (bytes32 _hash) {
         assembly {

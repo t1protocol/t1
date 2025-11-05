@@ -10,7 +10,6 @@ interface IL2T1Messenger is IT1Messenger {
      * Events *
      *
      */
-
     /// @notice Emitted when the maximum number of times each message can fail in L2 is updated.
     /// @param oldMaxFailedExecutionTimes The old maximum number of times each message can fail in L2.
     /// @param newMaxFailedExecutionTimes The new maximum number of times each message can fail in L2.

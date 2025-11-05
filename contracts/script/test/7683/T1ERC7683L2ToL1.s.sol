@@ -97,10 +97,11 @@ contract SolverFillScript is Script {
         bytes memory originData = hex"";
 
         // Approve output tokens
-        ERC20(vm.envAddress("L1_USDT_ADDR")).approve(
-            address(l1_7683),
-            HUNDRED_USDT // match amount from order
-        );
+        ERC20(vm.envAddress("L1_USDT_ADDR"))
+            .approve(
+                address(l1_7683),
+                HUNDRED_USDT // match amount from order
+            );
 
         // Fill the order
         bytes memory fillerData = abi.encode(TypeCasts.addressToBytes32(solver));
