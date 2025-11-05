@@ -43,10 +43,7 @@ contract SwapERC20 is Script, PermitSignature {
         });
 
         IL1GatewayRouter.Witness memory witness = IL1GatewayRouter.Witness({
-            direction: 0,
-            priceAfterSlippage: 0,
-            outputTokenAddress: L1_USDT_ADDR,
-            outputTokenAmount: outputTokenAmount
+            direction: 0, priceAfterSlippage: 0, outputTokenAddress: L1_USDT_ADDR, outputTokenAmount: outputTokenAmount
         });
 
         bytes32 witnessEncoded = keccak256(abi.encode(T1Constants.WITNESS_TYPEHASH, witness));
@@ -74,9 +71,8 @@ contract SwapERC20 is Script, PermitSignature {
         // Check if the ERC20 gateway has approved the permit2 to transfer USDT
         if (T1StandardERC20(L1_USDT_ADDR).allowance(L1_STANDARD_ERC20_GATEWAY_PROXY_ADDR, permit2) < outputTokenAmount)
         {
-            IL1ERC20Gateway(L1_STANDARD_ERC20_GATEWAY_PROXY_ADDR).allowRouterToTransfer(
-                L1_USDT_ADDR, type(uint160).max, uint48(block.timestamp + 10_000_000)
-            );
+            IL1ERC20Gateway(L1_STANDARD_ERC20_GATEWAY_PROXY_ADDR)
+                .allowRouterToTransfer(L1_USDT_ADDR, type(uint160).max, uint48(block.timestamp + 10_000_000));
         }
 
         // Check if the ERC20 gateway has enough USDT to swap

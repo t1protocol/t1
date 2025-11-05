@@ -338,7 +338,7 @@ contract L1T1MessengerTest is L1GatewayTestBase {
         bytes32 batchHash0 = rollup.committedBatches(0);
         bytes memory blobDataProof =
         // solhint-disable-next-line max-line-length
-            hex"2c9d777660f14ad49803a6442935c0d24a0d83551de5995890bf70a17d24e68753ab0fe6807c7081f0885fe7da741554d658a03730b1fa006f8319f8b993bcb0a5a0c9e8a145c5ef6e415c245690effa2914ec9393f58a7251d30c0657da1453d9ad906eae8b97dd60c9a216f81b4df7af34d01e214e1ec5865f0133ecc16d7459e49dab66087340677751e82097fbdd20551d66076f425775d1758a9dfd186b";
+        hex"2c9d777660f14ad49803a6442935c0d24a0d83551de5995890bf70a17d24e68753ab0fe6807c7081f0885fe7da741554d658a03730b1fa006f8319f8b993bcb0a5a0c9e8a145c5ef6e415c245690effa2914ec9393f58a7251d30c0657da1453d9ad906eae8b97dd60c9a216f81b4df7af34d01e214e1ec5865f0133ecc16d7459e49dab66087340677751e82097fbdd20551d66076f425775d1758a9dfd186b";
         assembly {
             mstore8(add(batchHeader1, 0x20), 3) // version
             mstore(add(batchHeader1, add(0x20, 1)), shl(192, 1)) // batchIndex
@@ -366,7 +366,7 @@ contract L1T1MessengerTest is L1GatewayTestBase {
         // generated with off-chain merkle proof generator
         bytes memory proof =
         // solhint-disable-next-line max-line-length
-            hex"00000000000000000000000000000000000000000000000000000000000000005bc8d719dee759f579606f5e9326010c9b4f1c89d2579636761a6bd37e348f4e";
+        hex"00000000000000000000000000000000000000000000000000000000000000005bc8d719dee759f579606f5e9326010c9b4f1c89d2579636761a6bd37e348f4e";
         IL1T1Messenger.L2MessageProof memory messageProof =
             IL1T1Messenger.L2MessageProof({ batchIndex: 1, merkleProof: proof });
         uint256 nonce = 2;
@@ -393,7 +393,7 @@ contract L1T1MessengerTest is L1GatewayTestBase {
 
         bytes memory proof =
         // solhint-disable-next-line max-line-length
-         hex"";
+        hex"";
         IL1T1Messenger.L2MessageProof memory messageProof =
             IL1T1Messenger.L2MessageProof({ batchIndex: 1, merkleProof: proof });
         // hash f527187db10d953f02ec890a9d325af97abfcf3ee8fc4d3e388c3a38c8905065
@@ -401,7 +401,7 @@ contract L1T1MessengerTest is L1GatewayTestBase {
         uint256 msgValue = 1_000_000_000_000_000;
         bytes memory message =
         // solhint-disable-next-line max-line-length
-            hex"8eaac8a30000000000000000000000008943545177806ed17b9f23f0a21ee5948ecaa7760000000000000000000000008943545177806ed17b9f23f0a21ee5948ecaa77600000000000000000000000000000000000000000000000000038d7ea4c6800000000000000000000000000000000000000000000000000000000000000000800000000000000000000000000000000000000000000000000000000000000000";
+        hex"8eaac8a30000000000000000000000008943545177806ed17b9f23f0a21ee5948ecaa7760000000000000000000000008943545177806ed17b9f23f0a21ee5948ecaa77600000000000000000000000000000000000000000000000000038d7ea4c6800000000000000000000000000000000000000000000000000000000000000000800000000000000000000000000000000000000000000000000000000000000000";
         address from = address(0x454A310f46C8d9403ba6F6c514aD3fDE1ad97a5E);
         address to = address(0x8260eca2072D01c561ea8Cc7e9ba504e10A00ddC);
         // does not revert
@@ -423,7 +423,7 @@ contract L1T1MessengerTest is L1GatewayTestBase {
         // generated with off-chain merkle proof generator
         bytes memory proof =
         // solhint-disable-next-line max-line-length
-         hex"f527187db10d953f02ec890a9d325af97abfcf3ee8fc4d3e388c3a38c8905065";
+        hex"f527187db10d953f02ec890a9d325af97abfcf3ee8fc4d3e388c3a38c8905065";
         IL1T1Messenger.L2MessageProof memory messageProof =
             IL1T1Messenger.L2MessageProof({ batchIndex: 1, merkleProof: proof });
         // hash 0x8572b59cc4b45153d52602d23eef03110237f38e16d762df7bc65210d9552530
@@ -431,7 +431,7 @@ contract L1T1MessengerTest is L1GatewayTestBase {
         uint256 msgValue = 1_000_000_000_000_000;
         bytes memory message =
         // solhint-disable-next-line max-line-length
-            hex"8eaac8a30000000000000000000000008943545177806ed17b9f23f0a21ee5948ecaa7760000000000000000000000008943545177806ed17b9f23f0a21ee5948ecaa77600000000000000000000000000000000000000000000000000038d7ea4c6800000000000000000000000000000000000000000000000000000000000000000800000000000000000000000000000000000000000000000000000000000000000";
+        hex"8eaac8a30000000000000000000000008943545177806ed17b9f23f0a21ee5948ecaa7760000000000000000000000008943545177806ed17b9f23f0a21ee5948ecaa77600000000000000000000000000000000000000000000000000038d7ea4c6800000000000000000000000000000000000000000000000000000000000000000800000000000000000000000000000000000000000000000000000000000000000";
         address from = address(0x454A310f46C8d9403ba6F6c514aD3fDE1ad97a5E);
         address to = address(0x8260eca2072D01c561ea8Cc7e9ba504e10A00ddC);
         // does not revert
@@ -462,7 +462,7 @@ contract L1T1MessengerTest is L1GatewayTestBase {
         uint256 msgValue = 1_000_000_000_000_000;
         bytes memory message =
         // solhint-disable-next-line max-line-length
-            hex"8eaac8a30000000000000000000000008943545177806ed17b9f23f0a21ee5948ecaa7760000000000000000000000008943545177806ed17b9f23f0a21ee5948ecaa77600000000000000000000000000000000000000000000000000038d7ea4c6800000000000000000000000000000000000000000000000000000000000000000800000000000000000000000000000000000000000000000000000000000000000";
+        hex"8eaac8a30000000000000000000000008943545177806ed17b9f23f0a21ee5948ecaa7760000000000000000000000008943545177806ed17b9f23f0a21ee5948ecaa77600000000000000000000000000000000000000000000000000038d7ea4c6800000000000000000000000000000000000000000000000000000000000000000800000000000000000000000000000000000000000000000000000000000000000";
         address from = address(0x454A310f46C8d9403ba6F6c514aD3fDE1ad97a5E);
         address to = address(0x8260eca2072D01c561ea8Cc7e9ba504e10A00ddC);
         // does not revert
@@ -485,7 +485,7 @@ contract L1T1MessengerTest is L1GatewayTestBase {
 
         bytes memory proof =
         // solhint-disable-next-line max-line-length
-         hex"";
+        hex"";
         IL1T1Messenger.L2MessageProof memory messageProof =
             IL1T1Messenger.L2MessageProof({ batchIndex: 1, merkleProof: proof });
         // hash f527187db10d953f02ec890a9d325af97abfcf3ee8fc4d3e388c3a38c8905065
@@ -493,7 +493,7 @@ contract L1T1MessengerTest is L1GatewayTestBase {
         uint256 msgValue = 100_000_000_000_000;
         bytes memory message =
         // solhint-disable-next-line max-line-length
-         hex"";
+        hex"";
         address from = address(0x82a5B34bEa21E55C2e6adA0d4f811EBf3A547640);
         address to = address(0x82a5B34bEa21E55C2e6adA0d4f811EBf3A547640);
         // does not revert
@@ -516,7 +516,7 @@ contract L1T1MessengerTest is L1GatewayTestBase {
 
         bytes memory proof =
         // solhint-disable-next-line max-line-length
-         hex"130cef0bc21be7263033e5b153601dcb98684296fc29cfe5e41173b6b18ee6bf";
+        hex"130cef0bc21be7263033e5b153601dcb98684296fc29cfe5e41173b6b18ee6bf";
         IL1T1Messenger.L2MessageProof memory messageProof =
             IL1T1Messenger.L2MessageProof({ batchIndex: 1, merkleProof: proof });
         // hash
@@ -524,7 +524,7 @@ contract L1T1MessengerTest is L1GatewayTestBase {
         uint256 msgValue = 100_000_000_000_000;
         bytes memory message =
         // solhint-disable-next-line max-line-length
-         hex"";
+        hex"";
         address from = address(0x82a5B34bEa21E55C2e6adA0d4f811EBf3A547640);
         address to = address(0x82a5B34bEa21E55C2e6adA0d4f811EBf3A547640);
         // does not revert

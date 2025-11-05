@@ -19,7 +19,6 @@ contract L2GatewayRouter is OwnableUpgradeable, IL2GatewayRouter {
      * Variables *
      *
      */
-
     /// @notice The address of L2ETHGateway.
     address public ethGateway;
 

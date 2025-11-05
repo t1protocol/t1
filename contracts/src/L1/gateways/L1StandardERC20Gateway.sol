@@ -3,8 +3,9 @@
 pragma solidity ^0.8.25;
 
 import { ClonesUpgradeable } from "@openzeppelin/contracts-upgradeable/proxy/ClonesUpgradeable.sol";
-import { IERC20MetadataUpgradeable } from
-    "@openzeppelin/contracts-upgradeable/token/ERC20/extensions/IERC20MetadataUpgradeable.sol";
+import {
+    IERC20MetadataUpgradeable
+} from "@openzeppelin/contracts-upgradeable/token/ERC20/extensions/IERC20MetadataUpgradeable.sol";
 
 import { IL2ERC20Gateway } from "../../L2/gateways/IL2ERC20Gateway.sol";
 import { IL1T1Messenger } from "../IL1T1Messenger.sol";
@@ -27,7 +28,6 @@ contract L1StandardERC20Gateway is L1ERC20Gateway {
      * Constants *
      *
      */
-
     /// @notice The address of T1StandardERC20 implementation in L2.
     address public immutable l2TokenImplementation;
 

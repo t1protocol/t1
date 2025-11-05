@@ -15,7 +15,6 @@ contract MultipleVersionRollupVerifier is IRollupVerifier, Ownable {
      * Events *
      *
      */
-
     /// @notice Emitted when the address of verifier is updated.
     /// @param version The version of the verifier.
     /// @param startBatchIndex The start batch index when the verifier will be used.

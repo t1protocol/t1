@@ -8,7 +8,6 @@ interface IL1GasPriceOracle {
      * Events *
      *
      */
-
     /// @notice Emitted when current fee overhead is updated.
     /// @param overhead The current fee overhead updated.
     event OverheadUpdated(uint256 overhead);
