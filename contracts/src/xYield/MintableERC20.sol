@@ -59,8 +59,7 @@ contract MintableERC20 is ERC20 {
     /// @dev The standard burn function is already public and allows any address to burn their own tokens,
     /// emitting a Transfer event to address(0) as the burn signal. Thus, no custom burn event is defined.
 
-    /// @notice Burns tokens
-    /// @param account The address to burn tokens from
+    /// @notice Burns own tokens
     /// @param amount The amount of tokens to burn
     function burn(uint256 amount) external {
         _burn(_msgSender(), amount);
