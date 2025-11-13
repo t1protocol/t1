@@ -8,7 +8,6 @@ interface IL2ERC20Gateway {
      * Events *
      *
      */
-
     /// @notice Emitted when ERC20 token is deposited from L1 to L2 and transfer to recipient.
     /// @param l1Token The address of the token in L1.
     /// @param l2Token The address of the token in L2.

@@ -13,7 +13,6 @@ interface IL1GatewayRouter is IL1ETHGateway, IL1ERC20Gateway {
      * Events *
      *
      */
-
     /// @notice Emitted when the address of ETH Gateway is updated.
     /// @param oldETHGateway The address of the old ETH Gateway.
     /// @param newEthGateway The address of the new ETH Gateway.

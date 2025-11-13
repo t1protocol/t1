@@ -8,10 +8,10 @@ contract DeployMintableERC20 is DeploymentUtils {
     MintableERC20 private token;
 
     function deploy() external {
-        selectMainnetOrSepoliaFork("base");
+        selectMainnetOrSepoliaFork("arbitrum");
         startBroadcastWithDeployerKeyIfItExists();
 
-        token = new MintableERC20(address(0x6c8E1d54297aAe7C34f1F5cF73559e621a394eFb), "xyUSDC", "xyUSDC");
+        token = new MintableERC20(address(0x8764BD4c58cc71bEe12C36deA228fd22a1B2723C), "xyUSDC", "xyUSDC");
 
         vm.stopBroadcast();
     }

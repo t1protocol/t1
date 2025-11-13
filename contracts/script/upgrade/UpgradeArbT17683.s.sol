@@ -2,7 +2,9 @@
 pragma solidity ^0.8.25;
 
 import { ProxyAdmin } from "@openzeppelin/contracts/proxy/transparent/ProxyAdmin.sol";
-import { ITransparentUpgradeableProxy } from "@openzeppelin/contracts/proxy/transparent/TransparentUpgradeableProxy.sol";
+import {
+    ITransparentUpgradeableProxy
+} from "@openzeppelin/contracts/proxy/transparent/TransparentUpgradeableProxy.sol";
 import { DeploymentUtils } from "../lib/DeploymentUtils.sol";
 import { T1ERC7683 } from "../../src/7683/T1ERC7683.sol";
 import { T1Constants } from "../../src/libraries/constants/T1Constants.sol";

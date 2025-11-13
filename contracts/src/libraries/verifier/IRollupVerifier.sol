@@ -9,13 +9,7 @@ interface IRollupVerifier {
     /// @param batchIndex The batch index to verify.
     /// @param aggrProof The aggregated proof.
     /// @param publicInputHash The public input hash.
-    function verifyAggregateProof(
-        uint256 batchIndex,
-        bytes calldata aggrProof,
-        bytes32 publicInputHash
-    )
-        external
-        view;
+    function verifyAggregateProof(uint256 batchIndex, bytes calldata aggrProof, bytes32 publicInputHash) external view;
 
     /// @notice Verify aggregate zk proof.
     /// @param version The version of verifier to use.

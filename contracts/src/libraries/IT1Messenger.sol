@@ -8,7 +8,6 @@ interface IT1Messenger {
      * Events *
      *
      */
-
     /// @notice Emitted when a cross domain message is relayed successfully.
     /// @param messageHash The hash of the message.
     event RelayedMessage(bytes32 indexed messageHash);

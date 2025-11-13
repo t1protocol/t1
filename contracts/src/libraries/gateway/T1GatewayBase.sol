@@ -3,7 +3,9 @@
 pragma solidity ^0.8.25;
 
 import { OwnableUpgradeable } from "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
-import { ReentrancyGuardUpgradeable } from "@openzeppelin/contracts-upgradeable/security/ReentrancyGuardUpgradeable.sol";
+import {
+    ReentrancyGuardUpgradeable
+} from "@openzeppelin/contracts-upgradeable/security/ReentrancyGuardUpgradeable.sol";
 
 import { IT1Gateway } from "./IT1Gateway.sol";
 import { IT1Messenger } from "../IT1Messenger.sol";
@@ -18,7 +20,6 @@ abstract contract T1GatewayBase is ReentrancyGuardUpgradeable, OwnableUpgradeabl
      * Constants *
      *
      */
-
     /// @inheritdoc IT1Gateway
     address public immutable override counterpart;
 

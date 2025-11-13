@@ -10,7 +10,6 @@ interface IL1T1Messenger is IT1Messenger {
      * Events *
      *
      */
-
     /// @notice Emitted when the maximum number of times each message can be replayed is updated.
     /// @param oldMaxReplayTimes The old maximum number of times each message can be replayed.
     /// @param newMaxReplayTimes The new maximum number of times each message can be replayed.
@@ -77,12 +76,5 @@ interface IL1T1Messenger is IT1Messenger {
     /// @param value The msg.value passed to the message call.
     /// @param messageNonce The nonce for the message to drop.
     /// @param message The content of the message.
-    function dropMessage(
-        address from,
-        address to,
-        uint256 value,
-        uint256 messageNonce,
-        bytes memory message
-    )
-        external;
+    function dropMessage(address from, address to, uint256 value, uint256 messageNonce, bytes memory message) external;
 }

@@ -8,7 +8,6 @@ abstract contract OwnableBase {
      * Events *
      *
      */
-
     /// @notice Emitted when owner is changed by current owner.
     /// @param _oldOwner The address of previous owner.
     /// @param _newOwner The address of new owner.

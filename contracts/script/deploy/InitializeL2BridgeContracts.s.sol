@@ -5,7 +5,9 @@ pragma solidity ^0.8.25;
 import { Script } from "forge-std/Script.sol";
 
 import { ProxyAdmin } from "@openzeppelin/contracts/proxy/transparent/ProxyAdmin.sol";
-import { ITransparentUpgradeableProxy } from "@openzeppelin/contracts/proxy/transparent/TransparentUpgradeableProxy.sol";
+import {
+    ITransparentUpgradeableProxy
+} from "@openzeppelin/contracts/proxy/transparent/TransparentUpgradeableProxy.sol";
 
 import { L2T1Messenger } from "../../src/L2/L2T1Messenger.sol";
 import { L2ETHGateway } from "../../src/L2/gateways/L2ETHGateway.sol";
@@ -68,9 +70,8 @@ contract InitializeL2BridgeContracts is Script {
         L2T1Messenger(payable(L2_T1_MESSENGER_PROXY_ADDR)).initialize(L1_T1_MESSENGER_PROXY_ADDR, network);
 
         // initialize L2GatewayRouter
-        L2GatewayRouter(L2_GATEWAY_ROUTER_PROXY_ADDR).initialize(
-            L2_ETH_GATEWAY_PROXY_ADDR, L2_STANDARD_ERC20_GATEWAY_PROXY_ADDR
-        );
+        L2GatewayRouter(L2_GATEWAY_ROUTER_PROXY_ADDR)
+            .initialize(L2_ETH_GATEWAY_PROXY_ADDR, L2_STANDARD_ERC20_GATEWAY_PROXY_ADDR);
 
         // initialize L2ETHGateway
         proxyAdmin.upgrade(ITransparentUpgradeableProxy(L2_ETH_GATEWAY_PROXY_ADDR), L2_ETH_GATEWAY_IMPLEMENTATION_ADDR);
@@ -102,9 +103,8 @@ contract InitializeL2BridgeContracts is Script {
         }
 
         // initialize T1StandardERC20Factory
-        T1StandardERC20Factory(L2_T1_STANDARD_ERC20_FACTORY_ADDR).transferOwnership(
-            L2_STANDARD_ERC20_GATEWAY_PROXY_ADDR
-        );
+        T1StandardERC20Factory(L2_T1_STANDARD_ERC20_FACTORY_ADDR)
+            .transferOwnership(L2_STANDARD_ERC20_GATEWAY_PROXY_ADDR);
 
         vm.stopBroadcast();
     }

@@ -3,8 +3,9 @@
 pragma solidity ^0.8.25;
 
 import { ERC20Upgradeable } from "@openzeppelin/contracts-upgradeable/token/ERC20/ERC20Upgradeable.sol";
-import { ERC20PermitUpgradeable } from
-    "@openzeppelin/contracts-upgradeable/token/ERC20/extensions/draft-ERC20PermitUpgradeable.sol";
+import {
+    ERC20PermitUpgradeable
+} from "@openzeppelin/contracts-upgradeable/token/ERC20/extensions/draft-ERC20PermitUpgradeable.sol";
 import { IT1ERC20Upgradeable } from "./IT1ERC20Upgradeable.sol";
 import { IERC677Receiver } from "../callbacks/IERC677Receiver.sol";
 
