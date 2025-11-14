@@ -5,7 +5,9 @@ pragma solidity ^0.8.25;
 import { WETH } from "solmate/tokens/WETH.sol";
 import { MockERC20 } from "solmate/test/utils/mocks/MockERC20.sol";
 
-import { ITransparentUpgradeableProxy } from "@openzeppelin/contracts/proxy/transparent/TransparentUpgradeableProxy.sol";
+import {
+    ITransparentUpgradeableProxy
+} from "@openzeppelin/contracts/proxy/transparent/TransparentUpgradeableProxy.sol";
 
 import { DeployPermit2 } from "@uniswap/permit2/test/utils/DeployPermit2.sol";
 import { ISignatureTransfer } from "@uniswap/permit2/src/interfaces/ISignatureTransfer.sol";
@@ -511,10 +513,7 @@ contract L1GatewayRouterTest is L1GatewayTestBase, DeployPermit2, PermitSignatur
         });
 
         IL1GatewayRouter.Witness memory witness = IL1GatewayRouter.Witness({
-            direction: 0,
-            priceAfterSlippage: 0,
-            outputTokenAddress: address(aave),
-            outputTokenAmount: 1e21
+            direction: 0, priceAfterSlippage: 0, outputTokenAddress: address(aave), outputTokenAmount: 1e21
         });
 
         return IL1GatewayRouter.SwapParams({ permit: permit, owner: address(1), witness: witness, sig: bytes("") });

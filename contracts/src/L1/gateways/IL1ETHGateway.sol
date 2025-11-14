@@ -8,7 +8,6 @@ interface IL1ETHGateway {
      * Events *
      *
      */
-
     /// @notice Emitted when ETH is withdrawn from L2 to L1 and transfer to recipient.
     /// @param from The address of sender in L2.
     /// @param to The address of recipient in L1.

@@ -16,7 +16,6 @@ contract L2GasPriceOracle is OwnableUpgradeable, IL2GasPriceOracle {
      * Events *
      *
      */
-
     /// @notice Emitted when owner updates whitelist contract.
     /// @param _oldWhitelist The address of old whitelist contract.
     /// @param _newWhitelist The address of new whitelist contract.
@@ -189,10 +188,7 @@ contract L2GasPriceOracle is OwnableUpgradeable, IL2GasPriceOracle {
         require(_txGasContractCreation > _txGas, "txGasContractCreation is less than txGas");
 
         intrinsicParams = IntrinsicParams({
-            txGas: _txGas,
-            txGasContractCreation: _txGasContractCreation,
-            zeroGas: _zeroGas,
-            nonZeroGas: _nonZeroGas
+            txGas: _txGas, txGasContractCreation: _txGasContractCreation, zeroGas: _zeroGas, nonZeroGas: _nonZeroGas
         });
 
         emit IntrinsicParamsUpdated(_txGas, _txGasContractCreation, _zeroGas, _nonZeroGas);

@@ -10,7 +10,6 @@ interface IL1MessageQueueWithGasPriceOracle is IL1MessageQueue {
      * Events *
      *
      */
-
     /// @notice Emitted when owner updates whitelist checker contract.
     /// @param _oldWhitelistChecker The address of old whitelist checker contract.
     /// @param _newWhitelistChecker The address of new whitelist checker contract.

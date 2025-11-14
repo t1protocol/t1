@@ -421,9 +421,8 @@ contract T1Chain is OwnableUpgradeable, PausableUpgradeable, IT1Chain {
         // `getL1MessagePopped` codes are the same in V0, V1, V2, V3
         uint256 l1MessagePoppedFirstBatch = BatchHeaderV0Codec.getL1MessagePopped(firstBatchPtr);
         unchecked {
-            IL1MessageQueue(messageQueue).resetPoppedCrossDomainMessage(
-                _totalL1MessagesPoppedOverallFirstBatch - l1MessagePoppedFirstBatch
-            );
+            IL1MessageQueue(messageQueue)
+                .resetPoppedCrossDomainMessage(_totalL1MessagesPoppedOverallFirstBatch - l1MessagePoppedFirstBatch);
         }
     }
 

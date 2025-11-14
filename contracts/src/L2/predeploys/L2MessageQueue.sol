@@ -20,7 +20,6 @@ contract L2MessageQueue is AppendOnlyMerkleTree, OwnableBase {
      * Events *
      *
      */
-
     /// @notice Emitted when a new message is added to the merkle tree.
     /// @param index The index of the corresponding message.
     /// @param messageHash The hash of the corresponding message.
