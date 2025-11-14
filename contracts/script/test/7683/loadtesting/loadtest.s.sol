@@ -1,14 +1,14 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.25;
 
-import { Script } from "forge-std/Script.sol";
-import { console2 } from "forge-std/console2.sol";
-import { ERC20 } from "@openzeppelin/contracts/token/ERC20/ERC20.sol";
-import { TypeCasts } from "@hyperlane-xyz/libs/TypeCasts.sol";
-import { OrderData, OrderEncoder } from "../../../../src/libraries/7683/OrderEncoder.sol";
-import { OnchainCrossChainOrder } from "../../../../src/interfaces/IERC7683.sol";
-import { T1ERC7683 } from "../../../../src/7683/T1ERC7683.sol";
-import { T1Constants } from "../../../../src/libraries/constants/T1Constants.sol";
+import {Script} from "forge-std/Script.sol";
+import {console2} from "forge-std/console2.sol";
+import {ERC20} from "@openzeppelin/contracts/token/ERC20/ERC20.sol";
+import {TypeCasts} from "@hyperlane-xyz/libs/TypeCasts.sol";
+import {OrderData, OrderEncoder} from "../../../../src/libraries/7683/OrderEncoder.sol";
+import {OnchainCrossChainOrder} from "../../../../src/interfaces/IERC7683.sol";
+import {T1ERC7683} from "../../../../src/7683/T1ERC7683.sol";
+import {T1Constants} from "../../../../src/libraries/constants/T1Constants.sol";
 
 contract LoadTest is Script {
     T1ERC7683 public l1_7683;
@@ -47,16 +47,20 @@ contract LoadTest is Script {
         // Set token addresses based on token pair
         if (keccak256(abi.encodePacked(tokenPair)) == keccak256(abi.encodePacked("usdc-usdc"))) {
             inputTokenAddr = originChain == arbitrumChainId ? vm.envAddress("USDC_ARB") : vm.envAddress("USDC_BASE");
-            outputTokenAddr = destinationChain == arbitrumChainId ? vm.envAddress("USDC_ARB") : vm.envAddress("USDC_BASE");
+            outputTokenAddr =
+                destinationChain == arbitrumChainId ? vm.envAddress("USDC_ARB") : vm.envAddress("USDC_BASE");
         } else if (keccak256(abi.encodePacked(tokenPair)) == keccak256(abi.encodePacked("weth-weth"))) {
             inputTokenAddr = originChain == arbitrumChainId ? vm.envAddress("WETH_ARB") : vm.envAddress("WETH_BASE");
-            outputTokenAddr = destinationChain == arbitrumChainId ? vm.envAddress("WETH_ARB") : vm.envAddress("WETH_BASE");
+            outputTokenAddr =
+                destinationChain == arbitrumChainId ? vm.envAddress("WETH_ARB") : vm.envAddress("WETH_BASE");
         } else if (keccak256(abi.encodePacked(tokenPair)) == keccak256(abi.encodePacked("usdc-weth"))) {
             inputTokenAddr = originChain == arbitrumChainId ? vm.envAddress("USDC_ARB") : vm.envAddress("USDC_BASE");
-            outputTokenAddr = destinationChain == arbitrumChainId ? vm.envAddress("WETH_ARB") : vm.envAddress("WETH_BASE");
+            outputTokenAddr =
+                destinationChain == arbitrumChainId ? vm.envAddress("WETH_ARB") : vm.envAddress("WETH_BASE");
         } else if (keccak256(abi.encodePacked(tokenPair)) == keccak256(abi.encodePacked("weth-usdc"))) {
             inputTokenAddr = originChain == arbitrumChainId ? vm.envAddress("WETH_ARB") : vm.envAddress("WETH_BASE");
-            outputTokenAddr = destinationChain == arbitrumChainId ? vm.envAddress("USDC_ARB") : vm.envAddress("USDC_BASE");
+            outputTokenAddr =
+                destinationChain == arbitrumChainId ? vm.envAddress("USDC_ARB") : vm.envAddress("USDC_BASE");
         } else {
             revert("Invalid token pair: use 'usdc-usdc', 'weth-weth', 'usdc-weth', or 'weth-usdc'");
         }
@@ -112,15 +116,11 @@ contract LoadTest is Script {
         vm.stopBroadcast();
     }
 
-    function _prepareOnchainOrder(
-        bytes memory orderData,
-        uint32 fillDeadline,
-        bytes32 orderDataType
-    ) internal pure returns (OnchainCrossChainOrder memory) {
-        return OnchainCrossChainOrder({
-            fillDeadline: fillDeadline,
-            orderDataType: orderDataType,
-            orderData: orderData
-        });
+    function _prepareOnchainOrder(bytes memory orderData, uint32 fillDeadline, bytes32 orderDataType)
+        internal
+        pure
+        returns (OnchainCrossChainOrder memory)
+    {
+        return OnchainCrossChainOrder({fillDeadline: fillDeadline, orderDataType: orderDataType, orderData: orderData});
     }
 }
