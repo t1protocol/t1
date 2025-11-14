@@ -40,9 +40,11 @@ contract L2T1MessengerTest is Test {
         l1GasOracle = new L1GasPriceOracle(address(this));
         l2GasOracle = L2GasPriceOracle(payable(new ERC1967Proxy(address(new L2GasPriceOracle()), new bytes(0))));
         l2Messenger = L2T1Messenger(
-            payable(new ERC1967Proxy(
+            payable(
+                new ERC1967Proxy(
                     address(new L2T1Messenger(address(l1Messenger), address(l2MessageQueue))), new bytes(0)
-                ))
+                )
+            )
         );
 
         mockCallbackRecipient = new MockCallbackRecipient();

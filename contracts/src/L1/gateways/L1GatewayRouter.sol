@@ -4,9 +4,8 @@ pragma solidity ^0.8.25;
 
 import { OwnableUpgradeable } from "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
 import { IERC20Upgradeable } from "@openzeppelin/contracts-upgradeable/token/ERC20/IERC20Upgradeable.sol";
-import {
-    IERC20MetadataUpgradeable
-} from "@openzeppelin/contracts-upgradeable/token/ERC20/extensions/IERC20MetadataUpgradeable.sol";
+import { IERC20MetadataUpgradeable } from
+    "@openzeppelin/contracts-upgradeable/token/ERC20/extensions/IERC20MetadataUpgradeable.sol";
 import { SafeERC20Upgradeable } from "@openzeppelin/contracts-upgradeable/token/ERC20/utils/SafeERC20Upgradeable.sol";
 import { IAllowanceTransfer } from "@uniswap/permit2/src/interfaces/IAllowanceTransfer.sol";
 import { ISignatureTransfer } from "@uniswap/permit2/src/interfaces/ISignatureTransfer.sol";
@@ -164,26 +163,22 @@ contract L1GatewayRouter is OwnableUpgradeable, IL1GatewayRouter {
         bytes32 witness = keccak256(abi.encode(T1Constants.WITNESS_TYPEHASH, params.witness));
 
         // Use Permit2 to validate and transfer input tokens from `owner` to the input gateway
-        ISignatureTransfer(permit2)
-            .permitWitnessTransferFrom(
-                params.permit,
-                ISignatureTransfer.SignatureTransferDetails({
-                    to: getERC20Gateway(params.permit.permitted.token), requestedAmount: params.permit.permitted.amount
-                }),
-                params.owner,
-                witness,
-                T1Constants.WITNESS_TYPE_STRING,
-                params.sig
-            );
+        ISignatureTransfer(permit2).permitWitnessTransferFrom(
+            params.permit,
+            ISignatureTransfer.SignatureTransferDetails({
+                to: getERC20Gateway(params.permit.permitted.token),
+                requestedAmount: params.permit.permitted.amount
+            }),
+            params.owner,
+            witness,
+            T1Constants.WITNESS_TYPE_STRING,
+            params.sig
+        );
 
         // Use AllowanceTransfer to transfer the output tokens from the output gateway to the `owner` address
-        IAllowanceTransfer(permit2)
-            .transferFrom(
-                outputGateway,
-                params.owner,
-                uint160(params.witness.outputTokenAmount),
-                params.witness.outputTokenAddress
-            );
+        IAllowanceTransfer(permit2).transferFrom(
+            outputGateway, params.owner, uint160(params.witness.outputTokenAmount), params.witness.outputTokenAddress
+        );
 
         emit Swap(
             params.owner,

@@ -4,16 +4,19 @@ pragma solidity ^0.8.25;
 
 import { OwnableUpgradeable } from "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
 import { PausableUpgradeable } from "@openzeppelin/contracts-upgradeable/security/PausableUpgradeable.sol";
-import {
-    ReentrancyGuardUpgradeable
-} from "@openzeppelin/contracts-upgradeable/security/ReentrancyGuardUpgradeable.sol";
+import { ReentrancyGuardUpgradeable } from "@openzeppelin/contracts-upgradeable/security/ReentrancyGuardUpgradeable.sol";
 
 import { T1Constants } from "./constants/T1Constants.sol";
 import { IT1Messenger } from "./IT1Messenger.sol";
 
 // solhint-disable var-name-mixedcase
 
-abstract contract T1MessengerBase is OwnableUpgradeable, PausableUpgradeable, ReentrancyGuardUpgradeable, IT1Messenger {
+abstract contract T1MessengerBase is
+    OwnableUpgradeable,
+    PausableUpgradeable,
+    ReentrancyGuardUpgradeable,
+    IT1Messenger
+{
     /**
      *
      * Events *

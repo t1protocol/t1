@@ -190,9 +190,7 @@ library BatchHeaderV0Codec {
     function storeSkippedBitmap(uint256 batchPtr, bytes calldata _skippedL1MessageBitmap) internal pure {
         assembly {
             calldatacopy(
-                add(batchPtr, BATCH_HEADER_FIXED_LENGTH),
-                _skippedL1MessageBitmap.offset,
-                _skippedL1MessageBitmap.length
+                add(batchPtr, BATCH_HEADER_FIXED_LENGTH), _skippedL1MessageBitmap.offset, _skippedL1MessageBitmap.length
             )
         }
     }

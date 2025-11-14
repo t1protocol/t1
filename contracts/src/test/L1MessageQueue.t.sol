@@ -2,9 +2,7 @@
 
 pragma solidity ^0.8.25;
 
-import {
-    ITransparentUpgradeableProxy
-} from "@openzeppelin/contracts/proxy/transparent/TransparentUpgradeableProxy.sol";
+import { ITransparentUpgradeableProxy } from "@openzeppelin/contracts/proxy/transparent/TransparentUpgradeableProxy.sol";
 
 import { L1MessageQueue } from "../L1/rollup/L1MessageQueue.sol";
 import { L2GasPriceOracle } from "../L1/rollup/L2GasPriceOracle.sol";

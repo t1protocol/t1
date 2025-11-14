@@ -8,9 +8,7 @@ import { console } from "forge-std/console.sol";
 import { DeploymentUtils } from "../lib/DeploymentUtils.sol";
 
 import { ProxyAdmin } from "@openzeppelin/contracts/proxy/transparent/ProxyAdmin.sol";
-import {
-    ITransparentUpgradeableProxy
-} from "@openzeppelin/contracts/proxy/transparent/TransparentUpgradeableProxy.sol";
+import { ITransparentUpgradeableProxy } from "@openzeppelin/contracts/proxy/transparent/TransparentUpgradeableProxy.sol";
 
 import { T1Chain } from "../../src/L1/rollup/T1Chain.sol";
 import { T1Owner } from "../../src/misc/T1Owner.sol";
@@ -44,8 +42,7 @@ contract UpgradeT1Chain is Script, DeploymentUtils {
     address private L1_T1_OWNER_ADDR = vm.envAddress("L1_T1_OWNER_ADDR");
     address private L1_T1_CHAIN_PROXY_ADDR = vm.envAddress("L1_T1_CHAIN_PROXY_ADDR");
     address private L1_MESSAGE_QUEUE_PROXY_ADDR = vm.envAddress("L1_MESSAGE_QUEUE_PROXY_ADDR");
-    address private L1_MULTIPLE_VERSION_ROLLUP_VERIFIER_ADDR =
-        vm.envAddress("L1_MULTIPLE_VERSION_ROLLUP_VERIFIER_ADDR");
+    address private L1_MULTIPLE_VERSION_ROLLUP_VERIFIER_ADDR = vm.envAddress("L1_MULTIPLE_VERSION_ROLLUP_VERIFIER_ADDR");
 
     // Chain configuration
     uint64 private CHAIN_ID_L2 = uint64(vm.envUint("CHAIN_ID_L2"));
@@ -74,17 +71,16 @@ contract UpgradeT1Chain is Script, DeploymentUtils {
             vm.toString(address(t1ChainImplementation))
         );
 
-        try T1Owner(payable(L1_T1_OWNER_ADDR))
-            .execute(
-                L1_PROXY_ADMIN_ADDR,
-                0,
-                abi.encodeWithSelector(
-                    proxyAdmin.upgrade.selector,
-                    ITransparentUpgradeableProxy(L1_T1_CHAIN_PROXY_ADDR),
-                    address(t1ChainImplementation)
-                ),
-                SECURITY_COUNCIL_NO_DELAY_ROLE
-            ) {
+        try T1Owner(payable(L1_T1_OWNER_ADDR)).execute(
+            L1_PROXY_ADMIN_ADDR,
+            0,
+            abi.encodeWithSelector(
+                proxyAdmin.upgrade.selector,
+                ITransparentUpgradeableProxy(L1_T1_CHAIN_PROXY_ADDR),
+                address(t1ChainImplementation)
+            ),
+            SECURITY_COUNCIL_NO_DELAY_ROLE
+        ) {
             console.log("T1Chain upgrade successful");
 
             // Verify the upgrade was successful

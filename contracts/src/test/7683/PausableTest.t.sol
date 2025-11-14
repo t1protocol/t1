@@ -2,9 +2,7 @@
 pragma solidity ^0.8.25;
 
 import { TypeCasts } from "@hyperlane-xyz/libs/TypeCasts.sol";
-import {
-    ITransparentUpgradeableProxy
-} from "@openzeppelin/contracts/proxy/transparent/TransparentUpgradeableProxy.sol";
+import { ITransparentUpgradeableProxy } from "@openzeppelin/contracts/proxy/transparent/TransparentUpgradeableProxy.sol";
 import { ISignatureTransfer } from "@uniswap/permit2/src/interfaces/IPermit2.sol";
 
 import { IT1ERC7683 } from "../../../src/interfaces/IT1ERC7683.sol";

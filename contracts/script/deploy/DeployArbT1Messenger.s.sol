@@ -12,9 +12,7 @@ import { Script } from "forge-std/Script.sol";
 import { Ownable } from "@openzeppelin/contracts/access/Ownable.sol";
 import { ProxyAdmin } from "@openzeppelin/contracts/proxy/transparent/ProxyAdmin.sol";
 import { TransparentUpgradeableProxy } from "@openzeppelin/contracts/proxy/transparent/TransparentUpgradeableProxy.sol";
-import {
-    ITransparentUpgradeableProxy
-} from "@openzeppelin/contracts/proxy/transparent/TransparentUpgradeableProxy.sol";
+import { ITransparentUpgradeableProxy } from "@openzeppelin/contracts/proxy/transparent/TransparentUpgradeableProxy.sol";
 
 contract DeployArbT1MessengerProxy is Script, DeploymentUtils {
     uint256 private deployerPrivateKey = vm.envUint("DEPLOYER_PRIVATE_KEY");

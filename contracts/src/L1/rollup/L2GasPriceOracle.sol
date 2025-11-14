@@ -188,7 +188,10 @@ contract L2GasPriceOracle is OwnableUpgradeable, IL2GasPriceOracle {
         require(_txGasContractCreation > _txGas, "txGasContractCreation is less than txGas");
 
         intrinsicParams = IntrinsicParams({
-            txGas: _txGas, txGasContractCreation: _txGasContractCreation, zeroGas: _zeroGas, nonZeroGas: _nonZeroGas
+            txGas: _txGas,
+            txGasContractCreation: _txGasContractCreation,
+            zeroGas: _zeroGas,
+            nonZeroGas: _nonZeroGas
         });
 
         emit IntrinsicParamsUpdated(_txGas, _txGasContractCreation, _zeroGas, _nonZeroGas);

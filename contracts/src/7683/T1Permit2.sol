@@ -110,12 +110,15 @@ abstract contract T1Permit2 {
                 amount: _resolvedOrder.minReceived[i].amount
             });
             transferDetails[i] = ISignatureTransfer.SignatureTransferDetails({
-                to: _receiver, requestedAmount: _resolvedOrder.minReceived[i].amount
+                to: _receiver,
+                requestedAmount: _resolvedOrder.minReceived[i].amount
             });
         }
 
         ISignatureTransfer.PermitBatchTransferFrom memory permit = ISignatureTransfer.PermitBatchTransferFrom({
-            permitted: permitted, nonce: _nonce, deadline: _resolvedOrder.openDeadline
+            permitted: permitted,
+            nonce: _nonce,
+            deadline: _resolvedOrder.openDeadline
         });
 
         PERMIT2.permitWitnessTransferFrom(

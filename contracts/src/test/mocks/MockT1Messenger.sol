@@ -41,7 +41,8 @@ contract MockT1Messenger is IT1Messenger {
         uint64 destChainId
     )
         external
-        payable { }
+        payable
+    { }
 
     function sendMessage(
         address target,
@@ -52,5 +53,6 @@ contract MockT1Messenger is IT1Messenger {
         address callbackAddress
     )
         external
-        payable { }
+        payable
+    { }
 }

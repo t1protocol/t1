@@ -36,15 +36,17 @@ contract AllowRouterToTransfer is Script {
                 T1StandardERC20(ERC20s[i]).allowance(L1_STANDARD_ERC20_GATEWAY_PROXY_ADDR, permit2)
                     < type(uint160).max / 2
             ) {
-                IL1ERC20Gateway(L1_STANDARD_ERC20_GATEWAY_PROXY_ADDR)
-                    .allowRouterToTransfer(ERC20s[i], type(uint160).max, uint48(block.timestamp + 10_000_000));
+                IL1ERC20Gateway(L1_STANDARD_ERC20_GATEWAY_PROXY_ADDR).allowRouterToTransfer(
+                    ERC20s[i], type(uint160).max, uint48(block.timestamp + 10_000_000)
+                );
             }
         }
 
         // Check allowance for WETH
         if (T1StandardERC20(wethAddress).allowance(L1_WETH_GATEWAY_PROXY_ADDR, permit2) < type(uint160).max / 2) {
-            IL1ERC20Gateway(L1_WETH_GATEWAY_PROXY_ADDR)
-                .allowRouterToTransfer(wethAddress, type(uint160).max, uint48(block.timestamp + 10_000_000));
+            IL1ERC20Gateway(L1_WETH_GATEWAY_PROXY_ADDR).allowRouterToTransfer(
+                wethAddress, type(uint160).max, uint48(block.timestamp + 10_000_000)
+            );
         }
 
         vm.stopBroadcast();

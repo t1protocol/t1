@@ -4,9 +4,7 @@ pragma solidity ^0.8.25;
 
 import { MockERC20 } from "solmate/test/utils/mocks/MockERC20.sol";
 
-import {
-    ITransparentUpgradeableProxy
-} from "@openzeppelin/contracts/proxy/transparent/TransparentUpgradeableProxy.sol";
+import { ITransparentUpgradeableProxy } from "@openzeppelin/contracts/proxy/transparent/TransparentUpgradeableProxy.sol";
 
 import { L1ETHGateway } from "../L1/gateways/L1ETHGateway.sol";
 import { L1StandardERC20Gateway } from "../L1/gateways/L1StandardERC20Gateway.sol";

@@ -392,7 +392,9 @@ contract xYieldForkTest is Test {
         balanceUpdates[0] =
             xYieldVault.BalanceUpdate({ recipient: bob, amount: bobSharesRemote, txType: xYieldVault.TxType.Deposit });
         balanceUpdates[1] = xYieldVault.BalanceUpdate({
-            recipient: charlie, amount: charlieSharesRemote, txType: xYieldVault.TxType.Deposit
+            recipient: charlie,
+            amount: charlieSharesRemote,
+            txType: xYieldVault.TxType.Deposit
         });
 
         vm.startPrank(guardian);
@@ -481,10 +483,14 @@ contract xYieldForkTest is Test {
         // Update totals to reflect both operations
         xYieldVault.BalanceUpdate[] memory withdrawUpdates = new xYieldVault.BalanceUpdate[](2);
         withdrawUpdates[0] = xYieldVault.BalanceUpdate({
-            recipient: bob, amount: sharesBurnedByWithdraw, txType: xYieldVault.TxType.Withdraw
+            recipient: bob,
+            amount: sharesBurnedByWithdraw,
+            txType: xYieldVault.TxType.Withdraw
         });
         withdrawUpdates[1] = xYieldVault.BalanceUpdate({
-            recipient: charlie, amount: sharesToRedeem, txType: xYieldVault.TxType.Withdraw
+            recipient: charlie,
+            amount: sharesToRedeem,
+            txType: xYieldVault.TxType.Withdraw
         });
 
         uint256 newTotalSharesGlobal = totalSharesGlobal - sharesBurnedByWithdraw - sharesToRedeem;

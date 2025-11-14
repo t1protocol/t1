@@ -216,10 +216,9 @@ contract T1ERC7683 is IT1ERC7683, T1Permit2, AccessControlUpgradeable, EIP712 {
         view
         returns (ResolvedCrossChainOrder memory, bytes32, uint256)
     {
-        return
-            _resolvedOrder(
-                _order.orderDataType, _order.user, _order.openDeadline, _order.fillDeadline, _order.orderData
-            );
+        return _resolvedOrder(
+            _order.orderDataType, _order.user, _order.openDeadline, _order.fillDeadline, _order.orderData
+        );
     }
 
     /// @notice Resolves a OnchainCrossChainOrder.

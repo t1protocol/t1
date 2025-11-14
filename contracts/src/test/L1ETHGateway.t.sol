@@ -2,9 +2,7 @@
 
 pragma solidity ^0.8.25;
 
-import {
-    ITransparentUpgradeableProxy
-} from "@openzeppelin/contracts/proxy/transparent/TransparentUpgradeableProxy.sol";
+import { ITransparentUpgradeableProxy } from "@openzeppelin/contracts/proxy/transparent/TransparentUpgradeableProxy.sol";
 
 import { L1GatewayRouter } from "../L1/gateways/L1GatewayRouter.sol";
 import { IL1ETHGateway, L1ETHGateway } from "../L1/gateways/L1ETHGateway.sol";

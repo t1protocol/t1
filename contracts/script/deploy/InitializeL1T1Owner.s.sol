@@ -49,8 +49,7 @@ contract InitializeL1T1Owner is Script {
     address private L1_ETH_GATEWAY_PROXY_ADDR = vm.envAddress("L1_ETH_GATEWAY_PROXY_ADDR");
     address private L1_STANDARD_ERC20_GATEWAY_PROXY_ADDR = vm.envAddress("L1_STANDARD_ERC20_GATEWAY_PROXY_ADDR");
     address private L1_WETH_GATEWAY_PROXY_ADDR = vm.envAddress("L1_WETH_GATEWAY_PROXY_ADDR");
-    address private L1_MULTIPLE_VERSION_ROLLUP_VERIFIER_ADDR =
-        vm.envAddress("L1_MULTIPLE_VERSION_ROLLUP_VERIFIER_ADDR");
+    address private L1_MULTIPLE_VERSION_ROLLUP_VERIFIER_ADDR = vm.envAddress("L1_MULTIPLE_VERSION_ROLLUP_VERIFIER_ADDR");
     address private L1_WHITELIST_ADDR = vm.envAddress("L1_WHITELIST_ADDR");
 
     T1Owner private owner;

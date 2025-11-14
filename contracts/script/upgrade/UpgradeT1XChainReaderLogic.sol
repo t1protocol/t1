@@ -8,9 +8,7 @@ import { console } from "forge-std/console.sol";
 import { DeploymentUtils } from "../lib/DeploymentUtils.sol";
 
 import { ProxyAdmin } from "@openzeppelin/contracts/proxy/transparent/ProxyAdmin.sol";
-import {
-    ITransparentUpgradeableProxy
-} from "@openzeppelin/contracts/proxy/transparent/TransparentUpgradeableProxy.sol";
+import { ITransparentUpgradeableProxy } from "@openzeppelin/contracts/proxy/transparent/TransparentUpgradeableProxy.sol";
 
 import { T1XChainReader } from "../../src/libraries/xChain/T1XChainReader.sol";
 import { T1Owner } from "../../src/misc/T1Owner.sol";
@@ -65,15 +63,14 @@ abstract contract UpgradeT1XChainReaderLogic is Script, DeploymentUtils {
             vm.toString(newImplementation)
         );
 
-        try T1Owner(payable(t1OwnerAddr))
-            .execute(
-                proxyAdminAddr,
-                0,
-                abi.encodeWithSelector(
-                    proxyAdmin.upgrade.selector, ITransparentUpgradeableProxy(xChainReaderProxyAddr), newImplementation
-                ),
-                SECURITY_COUNCIL_NO_DELAY_ROLE
-            ) {
+        try T1Owner(payable(t1OwnerAddr)).execute(
+            proxyAdminAddr,
+            0,
+            abi.encodeWithSelector(
+                proxyAdmin.upgrade.selector, ITransparentUpgradeableProxy(xChainReaderProxyAddr), newImplementation
+            ),
+            SECURITY_COUNCIL_NO_DELAY_ROLE
+        ) {
             console.log("T1XChainReader upgrade successful");
             _verifyUpgrade(proxyAdminAddr, xChainReaderProxyAddr, newImplementation);
         } catch Error(string memory reason) {

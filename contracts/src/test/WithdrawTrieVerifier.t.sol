@@ -37,7 +37,6 @@ contract WithdrawTrieVerifierTest is Test {
         nonces[2] = 2;
         proofs[2] =
         // solhint-disable-next-line max-line-length
-
             hex"0000000000000000000000000000000000000000000000000000000000000000e90b7bceb6e7df5418fb78d8ee546e97c83a08bbccc01a0644d599ccd2a7c2e0";
 
         roots[3] = hex"a9bb8c3f1f12e9aa903a50c47f314b57610a3ab32f2d463293f58836def38d36";
@@ -45,7 +44,6 @@ contract WithdrawTrieVerifierTest is Test {
         nonces[3] = 3;
         proofs[3] =
         // solhint-disable-next-line max-line-length
-
             hex"0000000000000000000000000000000000000000000000000000000000000003e90b7bceb6e7df5418fb78d8ee546e97c83a08bbccc01a0644d599ccd2a7c2e0";
 
         for (uint256 i = 0; i < 4; i++) {

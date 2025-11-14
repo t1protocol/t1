@@ -22,7 +22,11 @@ contract T1ChainMockBlob is T1Chain {
     /// @param _chainId The chain id of L2.
     /// @param _messageQueue The address of `L1MessageQueue` contract.
     /// @param _verifier The address of zkevm verifier contract.
-    constructor(uint64 _chainId, address _messageQueue, address _verifier)
+    constructor(
+        uint64 _chainId,
+        address _messageQueue,
+        address _verifier
+    )
         T1Chain(_chainId, _messageQueue, _verifier)
     { }
 

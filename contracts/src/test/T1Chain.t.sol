@@ -185,8 +185,9 @@ contract T1ChainTest is Test {
         T1ChainMockBlob impl = new T1ChainMockBlob(rollup.layer2ChainId(), rollup.messageQueue(), rollup.verifier());
         admin.upgrade(ITransparentUpgradeableProxy(address(rollup)), address(impl));
         // this is keccak("");
-        T1ChainMockBlob(address(rollup))
-            .setBlobVersionedHash(0xc5d2460186f7233c927e7db2dcc703c0e500b653ca82273b7bfad8045d85a470);
+        T1ChainMockBlob(address(rollup)).setBlobVersionedHash(
+            0xc5d2460186f7233c927e7db2dcc703c0e500b653ca82273b7bfad8045d85a470
+        );
 
         bytes32 batchHash0 = rollup.committedBatches(0);
         bytes memory batchHeader1 = new bytes(121);
@@ -251,7 +252,7 @@ contract T1ChainTest is Test {
         bytes32 blobVersionedHash = 0x013590dc3544d56629ba81bb14d4d31248f825001653aa575eb8e3a719046757;
         bytes memory blobDataProof =
         // solhint-disable-next-line max-line-length
-        hex"2c9d777660f14ad49803a6442935c0d24a0d83551de5995890bf70a17d24e68753ab0fe6807c7081f0885fe7da741554d658a03730b1fa006f8319f8b993bcb0a5a0c9e8a145c5ef6e415c245690effa2914ec9393f58a7251d30c0657da1453d9ad906eae8b97dd60c9a216f81b4df7af34d01e214e1ec5865f0133ecc16d7459e49dab66087340677751e82097fbdd20551d66076f425775d1758a9dfd186b";
+            hex"2c9d777660f14ad49803a6442935c0d24a0d83551de5995890bf70a17d24e68753ab0fe6807c7081f0885fe7da741554d658a03730b1fa006f8319f8b993bcb0a5a0c9e8a145c5ef6e415c245690effa2914ec9393f58a7251d30c0657da1453d9ad906eae8b97dd60c9a216f81b4df7af34d01e214e1ec5865f0133ecc16d7459e49dab66087340677751e82097fbdd20551d66076f425775d1758a9dfd186b";
         T1ChainMockBlob(address(rollup)).setBlobVersionedHash(blobVersionedHash);
 
         bytes32 batchHash0 = rollup.committedBatches(0);
@@ -358,7 +359,7 @@ contract T1ChainTest is Test {
         bytes32 blobVersionedHash = 0x013590dc3544d56629ba81bb14d4d31248f825001653aa575eb8e3a719046757;
         bytes memory blobDataProof =
         // solhint-disable-next-line max-line-length
-        hex"2c9d777660f14ad49803a6442935c0d24a0d83551de5995890bf70a17d24e68753ab0fe6807c7081f0885fe7da741554d658a03730b1fa006f8319f8b993bcb0a5a0c9e8a145c5ef6e415c245690effa2914ec9393f58a7251d30c0657da1453d9ad906eae8b97dd60c9a216f81b4df7af34d01e214e1ec5865f0133ecc16d7459e49dab66087340677751e82097fbdd20551d66076f425775d1758a9dfd186b";
+            hex"2c9d777660f14ad49803a6442935c0d24a0d83551de5995890bf70a17d24e68753ab0fe6807c7081f0885fe7da741554d658a03730b1fa006f8319f8b993bcb0a5a0c9e8a145c5ef6e415c245690effa2914ec9393f58a7251d30c0657da1453d9ad906eae8b97dd60c9a216f81b4df7af34d01e214e1ec5865f0133ecc16d7459e49dab66087340677751e82097fbdd20551d66076f425775d1758a9dfd186b";
         T1ChainMockBlob(address(rollup)).setBlobVersionedHash(blobVersionedHash);
 
         bytes memory bitmap;
@@ -521,8 +522,7 @@ contract T1ChainTest is Test {
         bitmap = new bytes(64);
         assembly {
             mstore(
-                add(bitmap, add(0x20, 0)),
-                77194726158210796949047323339125271902179989777093709359638389338608753093160
+                add(bitmap, add(0x20, 0)), 77194726158210796949047323339125271902179989777093709359638389338608753093160
             ) // bitmap0
             mstore(add(bitmap, add(0x20, 32)), 42) // bitmap1
         }
@@ -703,7 +703,7 @@ contract T1ChainTest is Test {
         bytes32 blobVersionedHash = 0x013590dc3544d56629ba81bb14d4d31248f825001653aa575eb8e3a719046757;
         bytes memory blobDataProof =
         // solhint-disable-next-line max-line-length
-        hex"2c9d777660f14ad49803a6442935c0d24a0d83551de5995890bf70a17d24e68753ab0fe6807c7081f0885fe7da741554d658a03730b1fa006f8319f8b993bcb0a5a0c9e8a145c5ef6e415c245690effa2914ec9393f58a7251d30c0657da1453d9ad906eae8b97dd60c9a216f81b4df7af34d01e214e1ec5865f0133ecc16d7459e49dab66087340677751e82097fbdd20551d66076f425775d1758a9dfd186b";
+            hex"2c9d777660f14ad49803a6442935c0d24a0d83551de5995890bf70a17d24e68753ab0fe6807c7081f0885fe7da741554d658a03730b1fa006f8319f8b993bcb0a5a0c9e8a145c5ef6e415c245690effa2914ec9393f58a7251d30c0657da1453d9ad906eae8b97dd60c9a216f81b4df7af34d01e214e1ec5865f0133ecc16d7459e49dab66087340677751e82097fbdd20551d66076f425775d1758a9dfd186b";
         T1ChainMockBlob(address(rollup)).setBlobVersionedHash(blobVersionedHash);
 
         chunk0 = new bytes(1 + 60);
@@ -767,7 +767,7 @@ contract T1ChainTest is Test {
         bytes32 blobVersionedHash = 0x013590dc3544d56629ba81bb14d4d31248f825001653aa575eb8e3a719046757;
         bytes memory blobDataProof =
         // solhint-disable-next-line max-line-length
-        hex"2c9d777660f14ad49803a6442935c0d24a0d83551de5995890bf70a17d24e68753ab0fe6807c7081f0885fe7da741554d658a03730b1fa006f8319f8b993bcb0a5a0c9e8a145c5ef6e415c245690effa2914ec9393f58a7251d30c0657da1453d9ad906eae8b97dd60c9a216f81b4df7af34d01e214e1ec5865f0133ecc16d7459e49dab66087340677751e82097fbdd20551d66076f425775d1758a9dfd186b";
+            hex"2c9d777660f14ad49803a6442935c0d24a0d83551de5995890bf70a17d24e68753ab0fe6807c7081f0885fe7da741554d658a03730b1fa006f8319f8b993bcb0a5a0c9e8a145c5ef6e415c245690effa2914ec9393f58a7251d30c0657da1453d9ad906eae8b97dd60c9a216f81b4df7af34d01e214e1ec5865f0133ecc16d7459e49dab66087340677751e82097fbdd20551d66076f425775d1758a9dfd186b";
         T1ChainMockBlob(address(rollup)).setBlobVersionedHash(blobVersionedHash);
 
         bytes[] memory chunks = new bytes[](1);
@@ -859,7 +859,7 @@ contract T1ChainTest is Test {
         bytes32 blobVersionedHash = 0x013590dc3544d56629ba81bb14d4d31248f825001653aa575eb8e3a719046757;
         bytes memory blobDataProof =
         // solhint-disable-next-line max-line-length
-        hex"2c9d777660f14ad49803a6442935c0d24a0d83551de5995890bf70a17d24e68753ab0fe6807c7081f0885fe7da741554d658a03730b1fa006f8319f8b993bcb0a5a0c9e8a145c5ef6e415c245690effa2914ec9393f58a7251d30c0657da1453d9ad906eae8b97dd60c9a216f81b4df7af34d01e214e1ec5865f0133ecc16d7459e49dab66087340677751e82097fbdd20551d66076f425775d1758a9dfd186b";
+            hex"2c9d777660f14ad49803a6442935c0d24a0d83551de5995890bf70a17d24e68753ab0fe6807c7081f0885fe7da741554d658a03730b1fa006f8319f8b993bcb0a5a0c9e8a145c5ef6e415c245690effa2914ec9393f58a7251d30c0657da1453d9ad906eae8b97dd60c9a216f81b4df7af34d01e214e1ec5865f0133ecc16d7459e49dab66087340677751e82097fbdd20551d66076f425775d1758a9dfd186b";
         T1ChainMockBlob(address(rollup)).setBlobVersionedHash(blobVersionedHash);
 
         bytes memory bitmap;
@@ -1014,8 +1014,7 @@ contract T1ChainTest is Test {
         bitmap = new bytes(64);
         assembly {
             mstore(
-                add(bitmap, add(0x20, 0)),
-                77194726158210796949047323339125271902179989777093709359638389338608753093160
+                add(bitmap, add(0x20, 0)), 77194726158210796949047323339125271902179989777093709359638389338608753093160
             ) // bitmap0
             mstore(add(bitmap, add(0x20, 32)), 42) // bitmap1
         }
@@ -1160,7 +1159,7 @@ contract T1ChainTest is Test {
         bytes32 blobVersionedHash = 0x013590dc3544d56629ba81bb14d4d31248f825001653aa575eb8e3a719046757;
         bytes memory blobDataProof =
         // solhint-disable-next-line max-line-length
-        hex"2c9d777660f14ad49803a6442935c0d24a0d83551de5995890bf70a17d24e68753ab0fe6807c7081f0885fe7da741554d658a03730b1fa006f8319f8b993bcb0a5a0c9e8a145c5ef6e415c245690effa2914ec9393f58a7251d30c0657da1453d9ad906eae8b97dd60c9a216f81b4df7af34d01e214e1ec5865f0133ecc16d7459e49dab66087340677751e82097fbdd20551d66076f425775d1758a9dfd186b";
+            hex"2c9d777660f14ad49803a6442935c0d24a0d83551de5995890bf70a17d24e68753ab0fe6807c7081f0885fe7da741554d658a03730b1fa006f8319f8b993bcb0a5a0c9e8a145c5ef6e415c245690effa2914ec9393f58a7251d30c0657da1453d9ad906eae8b97dd60c9a216f81b4df7af34d01e214e1ec5865f0133ecc16d7459e49dab66087340677751e82097fbdd20551d66076f425775d1758a9dfd186b";
         T1ChainMockBlob(address(rollup)).setBlobVersionedHash(blobVersionedHash);
 
         bytes memory bitmap;
@@ -1308,8 +1307,7 @@ contract T1ChainTest is Test {
         bitmap = new bytes(64);
         assembly {
             mstore(
-                add(bitmap, add(0x20, 0)),
-                77194726158210796949047323339125271902179989777093709359638389338608753093160
+                add(bitmap, add(0x20, 0)), 77194726158210796949047323339125271902179989777093709359638389338608753093160
             ) // bitmap0
             mstore(add(bitmap, add(0x20, 32)), 42) // bitmap1
         }

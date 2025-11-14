@@ -5,9 +5,7 @@ pragma solidity ^0.8.25;
 import { Script } from "forge-std/Script.sol";
 
 import { ProxyAdmin } from "@openzeppelin/contracts/proxy/transparent/ProxyAdmin.sol";
-import {
-    ITransparentUpgradeableProxy
-} from "@openzeppelin/contracts/proxy/transparent/TransparentUpgradeableProxy.sol";
+import { ITransparentUpgradeableProxy } from "@openzeppelin/contracts/proxy/transparent/TransparentUpgradeableProxy.sol";
 
 import { L1ETHGateway } from "../../src/L1/gateways/L1ETHGateway.sol";
 import { L1GatewayRouter } from "../../src/L1/gateways/L1GatewayRouter.sol";
@@ -51,8 +49,7 @@ contract InitializeL1BridgeContracts is Script {
         vm.envAddress("L1_STANDARD_ERC20_GATEWAY_IMPLEMENTATION_ADDR");
     address private L1_WETH_GATEWAY_PROXY_ADDR = vm.envAddress("L1_WETH_GATEWAY_PROXY_ADDR");
     address private L1_WETH_GATEWAY_IMPLEMENTATION_ADDR = vm.envAddress("L1_WETH_GATEWAY_IMPLEMENTATION_ADDR");
-    address private L1_MULTIPLE_VERSION_ROLLUP_VERIFIER_ADDR =
-        vm.envAddress("L1_MULTIPLE_VERSION_ROLLUP_VERIFIER_ADDR");
+    address private L1_MULTIPLE_VERSION_ROLLUP_VERIFIER_ADDR = vm.envAddress("L1_MULTIPLE_VERSION_ROLLUP_VERIFIER_ADDR");
 
     address private L2_T1_MESSENGER_PROXY_ADDR = vm.envAddress("L2_T1_MESSENGER_PROXY_ADDR");
     address private L2_ETH_GATEWAY_PROXY_ADDR = vm.envAddress("L2_ETH_GATEWAY_PROXY_ADDR");
@@ -81,13 +78,12 @@ contract InitializeL1BridgeContracts is Script {
         T1Chain(L1_T1_CHAIN_PROXY_ADDR).addProver(L1_POSTMAN_SIGNER_ADDRESS);
 
         // initialize L2GasPriceOracle
-        L2GasPriceOracle(L2_GAS_PRICE_ORACLE_PROXY_ADDR)
-            .initialize(
-                21_000, // _txGas
-                53_000, // _txGasContractCreation
-                4, // _zeroGas
-                16 // _nonZeroGas
-            );
+        L2GasPriceOracle(L2_GAS_PRICE_ORACLE_PROXY_ADDR).initialize(
+            21_000, // _txGas
+            53_000, // _txGasContractCreation
+            4, // _zeroGas
+            16 // _nonZeroGas
+        );
         L2GasPriceOracle(L2_GAS_PRICE_ORACLE_PROXY_ADDR).updateWhitelist(L1_WHITELIST_ADDR);
 
         // initialize L1MessageQueueWithGasPriceOracle
@@ -95,8 +91,9 @@ contract InitializeL1BridgeContracts is Script {
             ITransparentUpgradeableProxy(L1_MESSAGE_QUEUE_PROXY_ADDR), L1_MESSAGE_QUEUE_IMPLEMENTATION_ADDR
         );
 
-        L1MessageQueueWithGasPriceOracle(L1_MESSAGE_QUEUE_PROXY_ADDR)
-            .initialize(L2_GAS_PRICE_ORACLE_PROXY_ADDR, MAX_L1_MESSAGE_GAS_LIMIT);
+        L1MessageQueueWithGasPriceOracle(L1_MESSAGE_QUEUE_PROXY_ADDR).initialize(
+            L2_GAS_PRICE_ORACLE_PROXY_ADDR, MAX_L1_MESSAGE_GAS_LIMIT
+        );
 
         L1MessageQueueWithGasPriceOracle(L1_MESSAGE_QUEUE_PROXY_ADDR).initializeV2();
 
@@ -108,8 +105,9 @@ contract InitializeL1BridgeContracts is Script {
         L1T1Messenger(payable(L1_T1_MESSENGER_PROXY_ADDR)).initialize(L1_FEE_VAULT_ADDR);
 
         // initialize L1GatewayRouter
-        L1GatewayRouter(L1_GATEWAY_ROUTER_PROXY_ADDR)
-            .initialize(L1_ETH_GATEWAY_PROXY_ADDR, L1_STANDARD_ERC20_GATEWAY_PROXY_ADDR, L1_PERMIT2);
+        L1GatewayRouter(L1_GATEWAY_ROUTER_PROXY_ADDR).initialize(
+            L1_ETH_GATEWAY_PROXY_ADDR, L1_STANDARD_ERC20_GATEWAY_PROXY_ADDR, L1_PERMIT2
+        );
 
         // initialize L1ETHGateway
         proxyAdmin.upgrade(ITransparentUpgradeableProxy(L1_ETH_GATEWAY_PROXY_ADDR), L1_ETH_GATEWAY_IMPLEMENTATION_ADDR);

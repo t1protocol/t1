@@ -101,11 +101,10 @@ contract SolverFillScript is Script {
         bytes memory originData = hex"";
 
         // Approve output tokens
-        ERC20(vm.envAddress("ARBITRUM_SEPOLIA_USDT_ADDR"))
-            .approve(
-                address(l2_7683),
-                AMOUNT_IN // match amount from order
-            );
+        ERC20(vm.envAddress("ARBITRUM_SEPOLIA_USDT_ADDR")).approve(
+            address(l2_7683),
+            AMOUNT_IN // match amount from order
+        );
 
         // NOTE - Use values from a won Sealed Bid Auction
         uint256 bidAmountOut = 0;

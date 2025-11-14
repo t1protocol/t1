@@ -24,15 +24,12 @@ contract SetMM is Script {
 
         // Check if the market maker is set to this address
         if (IL1GatewayRouter(L1_GATEWAY_ROUTER_PROXY_ADDR).marketMaker() != newMarketMaker) {
-            T1Owner(payable(L1_T1_OWNER_ADDR))
-                .execute(
-                    L1_GATEWAY_ROUTER_PROXY_ADDR,
-                    0,
-                    abi.encodeWithSelector(
-                        IL1GatewayRouter(L1_GATEWAY_ROUTER_PROXY_ADDR).setMM.selector, newMarketMaker
-                    ),
-                    SECURITY_COUNCIL_NO_DELAY_ROLE
-                );
+            T1Owner(payable(L1_T1_OWNER_ADDR)).execute(
+                L1_GATEWAY_ROUTER_PROXY_ADDR,
+                0,
+                abi.encodeWithSelector(IL1GatewayRouter(L1_GATEWAY_ROUTER_PROXY_ADDR).setMM.selector, newMarketMaker),
+                SECURITY_COUNCIL_NO_DELAY_ROLE
+            );
         }
 
         console.log("[%s] is the new market maker", IL1GatewayRouter(L1_GATEWAY_ROUTER_PROXY_ADDR).marketMaker());
