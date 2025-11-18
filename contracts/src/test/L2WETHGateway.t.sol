@@ -4,7 +4,9 @@ pragma solidity ^0.8.25;
 
 import { WETH } from "solmate/tokens/WETH.sol";
 
-import { ITransparentUpgradeableProxy } from "@openzeppelin/contracts/proxy/transparent/TransparentUpgradeableProxy.sol";
+import {
+    ITransparentUpgradeableProxy
+} from "@openzeppelin/contracts/proxy/transparent/TransparentUpgradeableProxy.sol";
 
 import { IL1ERC20Gateway, L1WETHGateway } from "../L1/gateways/L1WETHGateway.sol";
 import { L2GatewayRouter } from "../L2/gateways/L2GatewayRouter.sol";

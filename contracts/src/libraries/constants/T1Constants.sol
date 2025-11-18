@@ -31,7 +31,7 @@ library T1Constants {
     /// @notice The EIP-712 type string for the remaining after the witness.
     string internal constant WITNESS_TYPE_STRING =
     // solhint-disable-next-line max-line-length
-        "Witness witness)TokenPermissions(address token,uint256 amount)Witness(uint8 direction,uint256 priceAfterSlippage,address outputTokenAddress,uint256 outputTokenAmount)";
+    "Witness witness)TokenPermissions(address token,uint256 amount)Witness(uint8 direction,uint256 priceAfterSlippage,address outputTokenAddress,uint256 outputTokenAmount)";
 
     /// @notice The full EIP-712 type definition for the PermitWitnessTransferFrom typehash.
     bytes32 internal constant FULL_PERMITWITNESSTRANSFERFROM_TYPEHASH = keccak256(
