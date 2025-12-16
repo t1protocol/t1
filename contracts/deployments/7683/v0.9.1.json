@@ -11,7 +11,7 @@
     "arbitrum": {
       "t1ProxyAdmin": "0xb45A6e9e6920A3bfa7Ac5D6783A060bc157DEC5b",
       "t1ERC7683": {
-        "implementation": "0x8c5CD39DbFB5f265a8370f1D5943611F427217d8"
+        "implementation": "0x50645311C65Ee364aD37b54219d69FCBf7FF0759"
       }
     },
     "base": {
