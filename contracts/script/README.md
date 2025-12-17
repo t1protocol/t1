@@ -126,9 +126,9 @@ Scripts to upgrade contract implementations:
   forge script ./script/upgrade/UpgradeT1XChainReaderLocal.s.sol:UpgradeT1XChainReaderLocal --rpc-url localhost --broadcast
   ```
 
-## Deploying 7683 to Arbitrum Sepolia and Base Sepolia
+## Deploying 7683 to Arbitrum Sepolia, Base Sepolia, and HyperEVM
 
-This section walks you through deploying the 7683 system to both Arbitrum Sepolia and Base Sepolia testnets. Since reads
+This section walks you through deploying the 7683 system to Arbitrum Sepolia, Base Sepolia, and HyperEVM testnets. Since reads
 use event logs only, no dedicated messenger contracts are required. You will deploy just the xChainReader and the
 ERC-7683 pull modules. Each Forge script broadcasts the tx, verifies it on the relevant explorer API, and uses your API
 key to confirm source code.
@@ -148,6 +148,12 @@ forge script ./deploy/DeployArbT1ProxyAdmin.s.sol:DeployArbT1ProxyAdmin --broadc
 
 ```bash
 forge script ./deploy/DeployBaseT1ProxyAdmin.s.sol:DeployBaseT1ProxyAdmin --broadcast --verify --verifier etherscan --verifier-url https://api-sepolia.basescan.org/api --etherscan-api-key $BASESCAN_API_KEY
+```
+
+#### HyperEVM Proxy Admin
+
+```bash
+forge script ./deploy/DeployHyperT1ProxyAdmin.s.sol:DeployHyperT1ProxyAdmin --broadcast --verify --verifier etherscan --verifier-url https://api-sepolia.etherscan.io/api --etherscan-api-key $ETHERSCAN_API_KEY
 ```
 
 ### Deploying xChainRead
@@ -193,6 +199,18 @@ forge script ./deploy/7683/DeployArbT1ERC7683.s.sol:DeployArbT1ERC7683 --sig "in
 
 ```bash
 forge script ./deploy/7683/DeployBaseT1ERC7683.s.sol:DeployBaseT1ERC7683 --sig "init()" --broadcast
+```
+
+#### HyperEVM 7683 Module Deployment
+
+```bash
+forge script ./deploy/7683/DeployHyperT1ERC7683.s.sol:DeployHyperT1ERC7683 --sig "deploy()" --broadcast --verify --verifier etherscan --verifier-url https://api-sepolia.etherscan.io/api --etherscan-api-key $ETHERSCAN_API_KEY
+```
+
+#### HyperEVM 7683 Module Init
+
+```bash
+forge script ./deploy/7683/DeployHyperT1ERC7683.s.sol:DeployHyperT1ERC7683 --sig "init()" --broadcast
 ```
 
 ### Funding & Approvals (devnet & testnet)
