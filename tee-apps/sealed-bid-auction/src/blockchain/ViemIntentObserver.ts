@@ -2,6 +2,7 @@ import {
   decodeAbiParameters,
   parseEventLogs,
   trim,
+  type Log,
   type WatchEventOnLogsParameter,
 } from "viem";
 
@@ -16,9 +17,11 @@ import { serialize, WinstonLogger } from "../utils/WinstonLogger.ts";
 import type { BlockchainClient } from "./BlockchainClient.ts";
 import type { AuctionResult } from "../api/types.ts";
 
+const HISTORICAL_BLOCK_CHUNK_SIZE = 100n;
+
 export class ViemIntentObserver {
   private logger: WinstonLogger;
-
+  
   constructor(
     private readonly sourceChainClient: BlockchainClient,
     private readonly sourceChainT1Erc7683ContractAddress: `0x${string}`,
@@ -26,14 +29,23 @@ export class ViemIntentObserver {
     private readonly apiServer: AuctionApiServer,
     private readonly destinationChainId: number,
     private readonly destinationChainT1Erc7683ContractAddress: `0x${string}`,
-    private readonly auctionPollingInterval: number = 500
+    private readonly auctionPollingInterval: number = 500,
+    private readonly fromBlock: bigint | null
   ) {
     this.logger = new WinstonLogger(
       `${ViemIntentObserver.name}[${this.sourceChainClient.publicClient.chain.name}]`
     );
   }
 
-  public start() {
+  public async start() {
+    if (this.fromBlock !== null) {
+      await this.fetchHistoricalLogs();
+    }
+
+    this.startWatching();
+  }
+
+  private startWatching() {
     this.sourceChainClient.publicClient.watchEvent({
       address: this.sourceChainT1Erc7683ContractAddress,
       event: OPEN_INTENT_ABI_EVENT,
@@ -44,6 +56,41 @@ export class ViemIntentObserver {
     this.logger.info(
       `Watching for Open Intent events on chain [${this.sourceChainClient.publicClient.chain.name}] and contract [${this.sourceChainT1Erc7683ContractAddress}]`
     );
+  }
+
+  private async fetchHistoricalLogs() {
+    if (this.fromBlock === null) return;
+
+    const currentBlock = await this.sourceChainClient.publicClient.getBlockNumber();
+    this.logger.info(
+      `Fetching historical logs from block ${this.fromBlock} to ${currentBlock}`
+    );
+
+    let fromBlock = this.fromBlock;
+
+    while (fromBlock <= currentBlock) {
+      const toBlock = fromBlock + HISTORICAL_BLOCK_CHUNK_SIZE - 1n > currentBlock
+        ? currentBlock
+        : fromBlock + HISTORICAL_BLOCK_CHUNK_SIZE - 1n;
+
+      this.logger.info(`Fetching logs from block ${fromBlock} to ${toBlock}`);
+
+      const logs = await this.sourceChainClient.publicClient.getLogs({
+        address: this.sourceChainT1Erc7683ContractAddress,
+        event: OPEN_INTENT_ABI_EVENT,
+        fromBlock,
+        toBlock,
+      });
+
+      if (logs.length > 0) {
+        this.logger.info(`Found ${logs.length} historical logs in blocks ${fromBlock}-${toBlock}`);
+        await this.processIntentLogs(logs as unknown as WatchEventOnLogsParameter);
+      }
+
+      fromBlock = toBlock + 1n;
+    }
+
+    this.logger.info(`Finished fetching historical logs, caught up to block ${currentBlock}`);
   }
 
   private async processIntentLogs(logs: WatchEventOnLogsParameter) {
