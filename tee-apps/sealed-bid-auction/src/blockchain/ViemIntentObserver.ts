@@ -205,6 +205,7 @@ export class ViemIntentObserver {
         setTimeout(resolve, this.auctionPollingInterval)
       );
     }
+    this.logger.info(`Auction for order ${orderId} timed out`);
   }
 
   private async signAuctionResult(
