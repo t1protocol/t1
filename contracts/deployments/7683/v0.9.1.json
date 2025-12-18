@@ -11,13 +11,15 @@
     "arbitrum": {
       "t1ProxyAdmin": "0xb45A6e9e6920A3bfa7Ac5D6783A060bc157DEC5b",
       "t1ERC7683": {
-        "implementation": "0x50645311C65Ee364aD37b54219d69FCBf7FF0759"
+        "implementation": "0x50645311C65Ee364aD37b54219d69FCBf7FF0759",
+        "proxy": "0x996f3583BD967bbA19694733AA7A7623E6D780eb"
       }
     },
     "base": {
       "t1ProxyAdmin": "0x1a209EA791e41Bd93a8f2f772CfA04949ECD1962",
       "t1ERC7683": {
-        "implementation": "0x8c5CD39DbFB5f265a8370f1D5943611F427217d8"
+        "implementation": "0x8c5CD39DbFB5f265a8370f1D5943611F427217d8",
+        "proxy": "0xdbA711a6c1b187479e9a5b33020E5217D0BD5A1f"
       }
     },
     "deployerAddress": "0xfA004a3f114641FAeE326800f0266d719e9Fc9c3"
