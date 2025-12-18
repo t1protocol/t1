@@ -158,7 +158,7 @@ export class ViemIntentObserver {
 
     this.logger.debug(`Running auction for orderData ${serialize(orderData)}`);
 
-    while (Date.now() / 1000 < orderData.fillDeadline) {
+    while (0 < orderData.fillDeadline) {
       let winningPrice;
       try {
         winningPrice = this.auctionService.auction(
