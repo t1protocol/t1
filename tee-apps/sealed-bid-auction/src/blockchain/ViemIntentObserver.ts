@@ -159,11 +159,17 @@ export class ViemIntentObserver {
     this.logger.debug(`Running auction for orderData ${serialize(orderData)}`);
 
     while (Date.now() / 1000 < orderData.fillDeadline) {
-      const winningPrice = this.auctionService.auction(
-        orderData.inputToken,
-        orderData.outputToken,
-        orderData.amountIn
-      );
+      let winningPrice;
+      try {
+        winningPrice = this.auctionService.auction(
+          orderData.inputToken,
+          orderData.outputToken,
+          orderData.amountIn
+        );
+      } catch (e) {
+        this.logger.error(`Auction error: ${e}`);
+        break;
+      }
 
       this.logger.debug(`Auction winner: ${serialize(winningPrice)}`);
 
