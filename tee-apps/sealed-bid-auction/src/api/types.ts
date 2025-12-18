@@ -31,12 +31,25 @@ export interface AuctionQuote {
     timestamp: number;
 }
 
+export interface OpenEventLog {
+    address: string;
+    topics: string[];
+    data: string;
+    blockNumber: string;
+    transactionHash: string;
+    transactionIndex: string;
+    blockHash: string;
+    logIndex: string;
+    removed: boolean;
+}
+
 export interface AuctionResult {
     type: string;
     orderId: string;
     settlementReceiverAddress: string;
     amountOut: bigint;
     signature: string;
+    openEvent: OpenEventLog;
 }
 
 export interface AuthAttempt {

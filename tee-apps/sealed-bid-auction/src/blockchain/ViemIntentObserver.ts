@@ -14,7 +14,7 @@ import {
 import type { AuctionApiServer } from "../api/AuctionApiServer.ts";
 import { serialize, WinstonLogger } from "../utils/WinstonLogger.ts";
 import type { BlockchainClient } from "./BlockchainClient.ts";
-import type { AuctionResult } from "../api/types.ts";
+import type { AuctionResult, OpenEventLog } from "../api/types.ts";
 
 export class ViemIntentObserver {
   private logger: WinstonLogger;
@@ -54,7 +54,23 @@ export class ViemIntentObserver {
       logs,
     });
 
-    for (const order of parsedLogs) {
+    for (let i = 0; i < parsedLogs.length; i++) {
+      const order = parsedLogs[i];
+      const rawLog = logs[i];
+
+      // Convert raw log to eth_getLogs hex format for tokka-filler
+      const openEvent: OpenEventLog = {
+        address: rawLog.address,
+        topics: rawLog.topics as string[],
+        data: rawLog.data,
+        blockNumber: `0x${rawLog.blockNumber.toString(16)}`,
+        transactionHash: rawLog.transactionHash,
+        transactionIndex: `0x${rawLog.transactionIndex.toString(16)}`,
+        blockHash: rawLog.blockHash,
+        logIndex: `0x${rawLog.logIndex.toString(16)}`,
+        removed: rawLog.removed,
+      };
+
       for (const fillInstruction of order.args.resolvedOrder.fillInstructions) {
         const [decodedOrder] = decodeAbiParameters(
           ORDER_DATA_ABI_PARAMETERS_WRAPPED_IN_TUPLE,
@@ -79,7 +95,8 @@ export class ViemIntentObserver {
             closedAuction: orderData.closedAuction,
             data: orderData.data,
           },
-          order.args.orderId
+          order.args.orderId,
+          openEvent
         );
       }
     }
@@ -87,7 +104,8 @@ export class ViemIntentObserver {
 
   private async runAuctionAndNotifySolver(
     orderData: OrderData,
-    orderId: `0x${string}`
+    orderId: `0x${string}`,
+    openEvent: OpenEventLog
   ) {
     this.logger.info(`Running auction for order ${orderId}`);
 
@@ -116,6 +134,7 @@ export class ViemIntentObserver {
             winningPrice.settlementReceiverAddress as `0x${string}`,
             winningPrice.amountOut
           ),
+          openEvent,
         };
 
         await this.apiServer.notifySolvers(
