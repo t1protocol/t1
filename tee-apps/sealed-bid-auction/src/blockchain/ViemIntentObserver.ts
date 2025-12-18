@@ -158,7 +158,7 @@ export class ViemIntentObserver {
 
     this.logger.debug(`Running auction for orderData ${serialize(orderData)}`);
 
-    while (0 < orderData.fillDeadline) {
+    while (Date.now() / 1000 < orderData.fillDeadline) {
       let winningPrice;
       try {
         winningPrice = this.auctionService.auction(
@@ -205,7 +205,6 @@ export class ViemIntentObserver {
         setTimeout(resolve, this.auctionPollingInterval)
       );
     }
-    this.logger.info(`Auction for order ${orderId} timed out`);
   }
 
   private async signAuctionResult(
