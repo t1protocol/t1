@@ -11,8 +11,9 @@ bun install
 To configure:
 
 ```bash
-cp .env.example .env
+cp .env.template .env
 ```
+
 ... and fill in the values in `.env`.
 
 To run:
