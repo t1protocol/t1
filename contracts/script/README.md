@@ -152,8 +152,14 @@ forge script ./deploy/DeployBaseT1ProxyAdmin.s.sol:DeployBaseT1ProxyAdmin --broa
 
 #### HyperEVM Proxy Admin
 
+For mainnet:
 ```bash
-forge script ./deploy/DeployHyperT1ProxyAdmin.s.sol:DeployHyperT1ProxyAdmin --broadcast --verify --verifier etherscan --verifier-url https://api-sepolia.etherscan.io/api --etherscan-api-key $ETHERSCAN_API_KEY
+source .env && IS_MAINNET=true forge script ./script/deploy/DeployHyperT1ProxyAdmin.s.sol:DeployHyperT1ProxyAdmin --rpc-url $HYPER_RPC --ledger --broadcast --verify --verifier etherscan --verifier-url https://api.etherscan.io/v2/api --etherscan-api-key $ETHERSCAN_API_KEY
+```
+
+For Sepolia:
+```bash
+forge script ./script/deploy/DeployHyperT1ProxyAdmin.s.sol:DeployHyperT1ProxyAdmin --broadcast --verify --verifier etherscan --verifier-url https://api-sepolia.etherscan.io/api --etherscan-api-key $ETHERSCAN_API_KEY
 ```
 
 ### Deploying xChainRead
@@ -171,6 +177,18 @@ forge script ./deploy/DeployArbT1XChainReader.s.sol:DeployArbT1XChainReader --br
 
 ```bash
 forge script ./deploy/DeployBaseT1XChainReader.s.sol:DeployBaseT1XChainReader --broadcast --verify --verifier etherscan --verifier-url https://api-sepolia.basescan.org/api --etherscan-api-key $BASESCAN_API_KEY
+```
+
+#### HyperEVM XChain Reader
+
+For mainnet:
+```bash
+source .env && IS_MAINNET=true forge script ./script/deploy/DeployHyperT1XChainReader.s.sol:DeployHyperT1XChainReader --rpc-url $HYPER_RPC --ledger --broadcast --verify --verifier etherscan --verifier-url https://api.etherscan.io/v2/api --etherscan-api-key $ETHERSCAN_API_KEY
+```
+
+For Sepolia:
+```bash
+forge script ./script/deploy/DeployHyperT1XChainReader.s.sol:DeployHyperT1XChainReader --broadcast --verify --verifier etherscan --verifier-url https://api-sepolia.etherscan.io/api --etherscan-api-key $ETHERSCAN_API_KEY
 ```
 
 ### Deploying 7683

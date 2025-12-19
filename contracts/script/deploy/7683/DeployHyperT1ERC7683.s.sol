@@ -23,6 +23,44 @@ contract DeployHyperT1ERC7683 is DeploymentUtils {
         uint32(IS_MAINNET ? T1Constants.BASE_MAINNET_CHAIN_ID : T1Constants.BASE_SEPOLIA_CHAIN_ID);
     ProxyAdmin private proxyAdmin;
 
+    function deployImpl() external {
+        logStart("DeployT1ERC7683 Implementation to HyperEVM");
+        selectMainnetOrSepoliaFork("hyperevm");
+
+        startBroadcastWithDeployerKeyIfItExists();
+
+        T1ERC7683 impl = new T1ERC7683(
+            address(0), // No Permit2 for now
+            HYPER_T1_X_CHAIN_READ_PROXY_ADDR,
+            HYPER
+        );
+
+        vm.stopBroadcast();
+
+        logAddress("HYPER_T1_PULL_BASED_7683_IMPLEMENTATION_ADDR", address(impl));
+
+        logEnd("DeployT1ERC7683 Implementation to HyperEVM");
+    }
+
+    function deployProxy() external {
+        logStart("DeployT1ERC7683 Proxy to HyperEVM");
+        selectMainnetOrSepoliaFork("hyperevm");
+
+        startBroadcastWithDeployerKeyIfItExists();
+
+        proxyAdmin = ProxyAdmin(HYPER_T1_PROXY_ADMIN_ADDR);
+        address impl = vm.envAddress("HYPER_T1_PULL_BASED_7683_IMPLEMENTATION_ADDR");
+
+        TransparentUpgradeableProxy proxy =
+            new TransparentUpgradeableProxy(address(impl), address(proxyAdmin), new bytes(0));
+
+        vm.stopBroadcast();
+
+        logAddress("HYPER_T1_PULL_BASED_7683_PROXY_ADDR", address(proxy));
+
+        logEnd("DeployT1ERC7683 Proxy to HyperEVM");
+    }
+
     function deploy() external {
         logStart("DeployT1ERC7683 to HyperEVM");
         selectMainnetOrSepoliaFork("hyperevm");

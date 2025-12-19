@@ -60,6 +60,8 @@
   t1 = "${T1_L2_RPC}"
   arbitrum_sepolia = "${ARBITRUM_SEPOLIA_RPC}"
   base_sepolia = "${BASE_SEPOLIA_RPC}"
+  hyperevm = "${HYPER_RPC}"
+  hyperevm_sepolia = "${HYPER_SEPOLIA_RPC}"
 
 [etherscan]
 sepolia = { key = "${ETHERSCAN_API_KEY}" }
