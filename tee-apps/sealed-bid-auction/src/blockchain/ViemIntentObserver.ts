@@ -324,17 +324,16 @@ export class ViemIntentObserver {
     this.logger.info(`Intent was Open-ed! (${newLogs.length} new event(s), total processed: ${this.eventsProcessed})`);
 
     for (const { order, rawLog } of newLogs) {
-
       // Convert raw log to eth_getLogs hex format for tokka-filler
       const openEvent: OpenEventLog = {
         address: rawLog.address,
         topics: rawLog.topics as string[],
         data: rawLog.data,
-        blockNumber: `0x${rawLog.blockNumber.toString(16)}`,
-        transactionHash: rawLog.transactionHash,
-        transactionIndex: `0x${rawLog.transactionIndex.toString(16)}`,
-        blockHash: rawLog.blockHash,
-        logIndex: `0x${rawLog.logIndex.toString(16)}`,
+        blockNumber: `0x${rawLog.blockNumber!.toString(16)}`,
+        transactionHash: rawLog.transactionHash!,
+        transactionIndex: `0x${rawLog.transactionIndex!.toString(16)}`,
+        blockHash: rawLog.blockHash!,
+        logIndex: `0x${rawLog.logIndex!.toString(16)}`,
         removed: rawLog.removed,
       };
 
@@ -362,7 +361,7 @@ export class ViemIntentObserver {
             closedAuction: orderData.closedAuction,
             data: orderData.data,
           },
-          order.args?.orderId as `0x${string}`,
+          order.args.orderId as `0x${string}`,
           openEvent
         );
       }
