@@ -295,7 +295,10 @@ export class ViemIntentObserver {
     // Filter out already-processed events (dedup between WebSocket and polling)
     const newLogs: { order: typeof parsedLogs[number]; rawLog: Log }[] = [];
     for (let i = 0; i < parsedLogs.length; i++) {
-      const rawLog = logs[i] as Log;
+      const rawLog = logs[i];
+      const order = parsedLogs[i];
+      if (!rawLog || !order) continue;
+
       const eventId = `${rawLog.transactionHash}-${rawLog.logIndex}`;
 
       if (this.processedEventIds.has(eventId)) {
@@ -304,7 +307,7 @@ export class ViemIntentObserver {
       }
 
       this.processedEventIds.add(eventId);
-      newLogs.push({ order: parsedLogs[i], rawLog });
+      newLogs.push({ order, rawLog: rawLog as Log });
 
       // Limit memory usage: keep only last 10k event IDs
       if (this.processedEventIds.size > 10000) {
