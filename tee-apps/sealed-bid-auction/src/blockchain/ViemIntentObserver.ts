@@ -22,6 +22,7 @@ const HISTORICAL_BLOCK_CHUNK_SIZE = 100n;
 const RECONNECT_DELAY_MS = 5000;
 const HEALTHCHECK_INTERVAL_MS = 60_000; // Log health every minute
 const POLLING_BACKUP_INTERVAL_MS = 30_000; // Poll every 30 seconds as backup
+const PAGERDUTY_EVENTS_URL = "https://events.pagerduty.com/v2/enqueue";
 
 export class ViemIntentObserver {
   private logger: WinstonLogger;
@@ -42,7 +43,8 @@ export class ViemIntentObserver {
     private readonly destinationChainId: number,
     private readonly destinationChainT1Erc7683ContractAddress: `0x${string}`,
     private readonly auctionPollingInterval: number = 500,
-    private readonly fromBlock: bigint | null
+    private readonly fromBlock: bigint | null,
+    private readonly pagerDutyIntegrationKey: string | null = null
   ) {
     this.logger = new WinstonLogger(
       `${ViemIntentObserver.name}[${this.sourceChainClient.publicClient.chain.name}]`
@@ -189,6 +191,13 @@ export class ViemIntentObserver {
       `🚨 WEBSOCKET DROPPED on ${chainName}! Error: ${error.message}. Last processed block: ${this.lastProcessedBlock}`
     );
 
+    // Fire PagerDuty alert
+    await this.sendPagerDutyAlert(
+      `WebSocket dropped on ${chainName}`,
+      `Error: ${error.message}. Last processed block: ${this.lastProcessedBlock}`,
+      `ws-drop-${chainName}`
+    );
+
     if (this.isRecovering) {
       this.logger.warn(`Already recovering, skipping duplicate recovery attempt`);
       return;
@@ -222,6 +231,14 @@ export class ViemIntentObserver {
       this.logger.error(
         `🚨 RECOVERY FAILED on ${chainName}: ${recoveryError}. Will retry in ${RECONNECT_DELAY_MS}ms`
       );
+
+      // Fire PagerDuty alert for recovery failure
+      await this.sendPagerDutyAlert(
+        `WebSocket recovery FAILED on ${chainName}`,
+        `Recovery error: ${recoveryError}. Will retry in ${RECONNECT_DELAY_MS}ms`,
+        `ws-recovery-fail-${chainName}`
+      );
+
       // Schedule another recovery attempt
       setTimeout(() => {
         this.isRecovering = false;
@@ -455,5 +472,42 @@ export class ViemIntentObserver {
     };
 
     return await this.sourceChainClient.signTypedData(domain, types, message);
+  }
+
+  private async sendPagerDutyAlert(
+    summary: string,
+    details: string,
+    dedupKey: string
+  ): Promise<void> {
+    if (!this.pagerDutyIntegrationKey) {
+      this.logger.debug("PagerDuty integration key not configured, skipping alert");
+      return;
+    }
+
+    try {
+      const response = await fetch(PAGERDUTY_EVENTS_URL, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          routing_key: this.pagerDutyIntegrationKey,
+          event_action: "trigger",
+          dedup_key: `sealed-bid-auction-${dedupKey}`,
+          payload: {
+            summary,
+            source: "sealed-bid-auction",
+            severity: "critical",
+            custom_details: { details },
+          },
+        }),
+      });
+
+      if (!response.ok) {
+        this.logger.error(`PagerDuty alert failed: ${response.status} ${response.statusText}`);
+      } else {
+        this.logger.info(`PagerDuty alert sent: ${summary}`);
+      }
+    } catch (e) {
+      this.logger.error(`Failed to send PagerDuty alert: ${e}`);
+    }
   }
 }
