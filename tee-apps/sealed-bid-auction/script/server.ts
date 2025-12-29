@@ -39,6 +39,7 @@ const fromBlockArbitrum = fromBlockEnvArbitrum ? BigInt(fromBlockEnvArbitrum) : 
 const fromBlockEnvBase = process.env.INTENT_OBSERVER_FROM_BLOCK_BASE;
 const fromBlockBase = fromBlockEnvBase ? BigInt(fromBlockEnvBase) : null;
 const auctionPollingInterval = 500;
+const pagerDutyIntegrationKey = process.env.PD_INTEGRATION_KEY || null;
 
 const arbitrumSepoliaIntentObserver = new ViemIntentObserver(
     arbitrumClient,
@@ -48,7 +49,8 @@ const arbitrumSepoliaIntentObserver = new ViemIntentObserver(
     baseClient.publicClient.chain.id,
     BASE_T1_ERC_7683_CONTRACT_ADDRESS,
     auctionPollingInterval,
-    fromBlockArbitrum
+    fromBlockArbitrum,
+    pagerDutyIntegrationKey
 );
 const baseSepoliaIntentObserver = new ViemIntentObserver(
     baseClient,
@@ -58,7 +60,8 @@ const baseSepoliaIntentObserver = new ViemIntentObserver(
     arbitrumClient.publicClient.chain.id,
     ARBITRUM_T1_ERC_7683_CONTRACT_ADDRESS,
     auctionPollingInterval,
-    fromBlockBase
+    fromBlockBase,
+    pagerDutyIntegrationKey
 );
 
 async function main() {
