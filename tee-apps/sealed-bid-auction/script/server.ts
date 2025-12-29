@@ -33,13 +33,22 @@ const baseClient = new BlockchainClient(
     IS_MAINNET ? base : baseSepolia,
     process.env.BASE_SIGNER_PRIVATE_KEY as `0x${string}`
 );
+
+const fromBlockEnvArbitrum = process.env.INTENT_OBSERVER_FROM_BLOCK_ARBITRUM;
+const fromBlockArbitrum = fromBlockEnvArbitrum ? BigInt(fromBlockEnvArbitrum) : null;
+const fromBlockEnvBase = process.env.INTENT_OBSERVER_FROM_BLOCK_BASE;
+const fromBlockBase = fromBlockEnvBase ? BigInt(fromBlockEnvBase) : null;
+const auctionPollingInterval = 500;
+
 const arbitrumSepoliaIntentObserver = new ViemIntentObserver(
     arbitrumClient,
     ARBITRUM_T1_ERC_7683_CONTRACT_ADDRESS,
     auctionService,
     httpServer,
     baseClient.publicClient.chain.id,
-    BASE_T1_ERC_7683_CONTRACT_ADDRESS
+    BASE_T1_ERC_7683_CONTRACT_ADDRESS,
+    auctionPollingInterval,
+    fromBlockArbitrum
 );
 const baseSepoliaIntentObserver = new ViemIntentObserver(
     baseClient,
@@ -47,7 +56,9 @@ const baseSepoliaIntentObserver = new ViemIntentObserver(
     auctionService,
     httpServer,
     arbitrumClient.publicClient.chain.id,
-    ARBITRUM_T1_ERC_7683_CONTRACT_ADDRESS
+    ARBITRUM_T1_ERC_7683_CONTRACT_ADDRESS,
+    auctionPollingInterval,
+    fromBlockBase
 );
 
 async function main() {

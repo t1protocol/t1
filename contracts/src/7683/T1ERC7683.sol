@@ -698,6 +698,10 @@ contract T1ERC7683 is IT1ERC7683, T1Permit2, AccessControlUpgradeable, EIP712 {
 
         // Remove the first 32 bytes prefix of the message
         bytes memory _innerMessage = abi.decode(result, (bytes));
+
+        // If inner message is empty, the order was never filled - valid for refund
+        if (_innerMessage.length == 0) return;
+
         (bool filled,,) = abi.decode(_innerMessage, (bool, bytes32[], bytes[]));
 
         // Revert if the order is already settled
