@@ -125,8 +125,7 @@ contract LoadTest is Script {
         pure
         returns (OnchainCrossChainOrder memory)
     {
-        return OnchainCrossChainOrder({
-            fillDeadline: fillDeadline, orderDataType: orderDataType, orderData: orderData
-        });
+        return
+            OnchainCrossChainOrder({ fillDeadline: fillDeadline, orderDataType: orderDataType, orderData: orderData });
     }
 }
