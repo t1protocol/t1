@@ -53,7 +53,7 @@ export class ViemIntentObserver {
       event: OPEN_INTENT_ABI_EVENT,
       onLogs: async (logs) => {
         if (this.websocketError && this.lastProcessedBlock) {
-          await this.fetchHistoricalLogs(this.lastProcessedBlock);
+          await this.fetchHistoricalLogs(this.lastProcessedBlock + 1);
           this.websocketError = false;
         }
         await this.processIntentLogs(logs);
