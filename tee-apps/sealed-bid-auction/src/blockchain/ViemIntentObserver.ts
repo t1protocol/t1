@@ -2,7 +2,6 @@ import {
   decodeAbiParameters,
   parseEventLogs,
   trim,
-  type Log,
   type WatchEventOnLogsParameter,
 } from "viem";
 
@@ -30,7 +29,7 @@ export class ViemIntentObserver {
     private readonly destinationChainId: number,
     private readonly destinationChainT1Erc7683ContractAddress: `0x${string}`,
     private readonly auctionPollingInterval: number = 500,
-    private readonly fromBlock: bigint | null
+    private readonly initialFromBlock: bigint | null
   ) {
     this.logger = new WinstonLogger(
       `${ViemIntentObserver.name}[${this.sourceChainClient.publicClient.chain.name}]`
@@ -38,8 +37,8 @@ export class ViemIntentObserver {
   }
 
   public async start() {
-    if (this.fromBlock !== null) {
-      await this.fetchHistoricalLogs();
+    if (this.initialFromBlock !== null) {
+      await this.fetchHistoricalLogs(this.initialFromBlock);
     }
 
     this.startWatching();
@@ -58,15 +57,11 @@ export class ViemIntentObserver {
     );
   }
 
-  private async fetchHistoricalLogs() {
-    if (this.fromBlock === null) return;
-
+  private async fetchHistoricalLogs(fromBlock: bigint) {
     const currentBlock = await this.sourceChainClient.publicClient.getBlockNumber();
     this.logger.info(
-      `Fetching historical logs from block ${this.fromBlock} to ${currentBlock}`
+      `Fetching historical logs from block ${fromBlock} to ${currentBlock}`
     );
-
-    let fromBlock = this.fromBlock;
 
     while (fromBlock <= currentBlock) {
       const toBlock = fromBlock + HISTORICAL_BLOCK_CHUNK_SIZE - 1n > currentBlock
