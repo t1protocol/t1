@@ -5,7 +5,6 @@ import {serialize, WinstonLogger} from "../utils/WinstonLogger.ts";
 import {SolverPriceBook} from "../core/SolverPriceBook.ts";
 import {AuctionService} from "../core/AuctionService.ts";
 import type {AuctionResult} from "./types.ts";
-import type {OrderData} from "../blockchain/types.ts";
 import type {PriceListItem} from "../core/types.ts";
 import {AuthController} from "./AuthController.ts";
 import {AuthService} from "../core/AuthService.ts";
@@ -120,11 +119,11 @@ export class AuctionApiServer {
                         ws.send(`Error when updating price: ${e.message || e}`);
                     }
                 },
-                close: (ws, _code, _reason) => {
+                close: (ws, code, reason) => {
                     const addr = ws.data.solverAddress;
                     const user = ws.data.username;
                     ws.unsubscribe('intent-auction');
-                    websocketLogger.info(`🔒 Solver disconnected: ${user} (${addr})`);
+                    websocketLogger.info(`🔒 Solver disconnected: ${user} (${addr}) . Code: ${code} Reason: ${reason || '<no reason>'}.`);
                     authService.logout(addr);
                 },
             },
