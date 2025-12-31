@@ -20,6 +20,9 @@ const HISTORICAL_BLOCK_CHUNK_SIZE = 100n;
 
 export class ViemIntentObserver {
   private logger: WinstonLogger;
+
+  private websocketError: boolean = false;
+  private lastProcessedBlock: bigint | null = null;
   
   constructor(
     private readonly sourceChainClient: BlockchainClient,
@@ -48,8 +51,17 @@ export class ViemIntentObserver {
     this.sourceChainClient.publicClient.watchEvent({
       address: this.sourceChainT1Erc7683ContractAddress,
       event: OPEN_INTENT_ABI_EVENT,
-      onLogs: (logs) => this.processIntentLogs(logs),
-      onError: (error) => this.logger.error(`Error from publicClient.watchEvent: ${error}`),
+      onLogs: async (logs) => {
+        if (this.websocketError && this.lastProcessedBlock) {
+          await this.fetchHistoricalLogs(this.lastProcessedBlock);
+          this.websocketError = false;
+        }
+        await this.processIntentLogs(logs);
+      },
+      onError: (error) => {
+        this.websocketError = true;
+        this.logger.error(`Error from publicClient.watchEvent: ${error}`);
+      },
     });
 
     this.logger.info(
@@ -98,7 +110,7 @@ export class ViemIntentObserver {
 
     for (let i = 0; i < parsedLogs.length; i++) {
       const order = parsedLogs[i];
-      const rawLog = logs[i];
+      const rawLog = logs[i]!;
 
       // Convert raw log to eth_getLogs hex format for tokka-filler
       const openEvent: OpenEventLog = {
@@ -140,6 +152,7 @@ export class ViemIntentObserver {
           order.args.orderId,
           openEvent
         );
+        this.lastProcessedBlock = BigInt(rawLog.blockNumber);
       }
     }
   }
