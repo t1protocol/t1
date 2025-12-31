@@ -12,9 +12,13 @@ export class BlockchainClient {
         this._publicClient = createPublicClient({
             chain: chain,
             transport: webSocket(wsUrl, {
-                reconnect: true,
-                keepAlive: true,
-                retryDelay: 1000,
+                reconnect: {
+                  attempts: Infinity,
+                  delay: 1000,
+                },
+                keepAlive: {
+                  interval: 15000,
+                },
             }),
         });
     }

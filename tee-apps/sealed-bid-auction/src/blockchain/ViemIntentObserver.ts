@@ -2,7 +2,6 @@ import {
   decodeAbiParameters,
   parseEventLogs,
   trim,
-  type Log,
   type WatchEventOnLogsParameter,
 } from "viem";
 
@@ -21,6 +20,9 @@ const HISTORICAL_BLOCK_CHUNK_SIZE = 100n;
 
 export class ViemIntentObserver {
   private logger: WinstonLogger;
+
+  private websocketError: boolean = false;
+  private lastProcessedBlock: bigint | null = null;
   
   constructor(
     private readonly sourceChainClient: BlockchainClient,
@@ -30,7 +32,7 @@ export class ViemIntentObserver {
     private readonly destinationChainId: number,
     private readonly destinationChainT1Erc7683ContractAddress: `0x${string}`,
     private readonly auctionPollingInterval: number = 500,
-    private readonly fromBlock: bigint | null
+    private readonly initialFromBlock: bigint | null
   ) {
     this.logger = new WinstonLogger(
       `${ViemIntentObserver.name}[${this.sourceChainClient.publicClient.chain.name}]`
@@ -38,8 +40,8 @@ export class ViemIntentObserver {
   }
 
   public async start() {
-    if (this.fromBlock !== null) {
-      await this.fetchHistoricalLogs();
+    if (this.initialFromBlock !== null) {
+      await this.fetchHistoricalLogs(this.initialFromBlock);
     }
 
     this.startWatching();
@@ -49,8 +51,18 @@ export class ViemIntentObserver {
     this.sourceChainClient.publicClient.watchEvent({
       address: this.sourceChainT1Erc7683ContractAddress,
       event: OPEN_INTENT_ABI_EVENT,
-      onLogs: (logs) => this.processIntentLogs(logs),
-      onError: (error) => this.logger.error(`Error from publicClient.watchEvent: ${error}`),
+      onLogs: async (logs) => {
+        if (this.websocketError && this.lastProcessedBlock) {
+          this.logger.info(`I recovered from websocket error! Fetching historical logs from block ${this.lastProcessedBlock + 1n}`);
+          await this.fetchHistoricalLogs(this.lastProcessedBlock + 1n);
+          this.websocketError = false;
+        }
+        await this.processIntentLogs(logs);
+      },
+      onError: (error) => {
+        this.websocketError = true;
+        this.logger.error(`Error from publicClient.watchEvent: ${error}`);
+      },
     });
 
     this.logger.info(
@@ -58,15 +70,11 @@ export class ViemIntentObserver {
     );
   }
 
-  private async fetchHistoricalLogs() {
-    if (this.fromBlock === null) return;
-
+  private async fetchHistoricalLogs(fromBlock: bigint) {
     const currentBlock = await this.sourceChainClient.publicClient.getBlockNumber();
     this.logger.info(
-      `Fetching historical logs from block ${this.fromBlock} to ${currentBlock}`
+      `Fetching historical logs from block ${fromBlock} to ${currentBlock}`
     );
-
-    let fromBlock = this.fromBlock;
 
     while (fromBlock <= currentBlock) {
       const toBlock = fromBlock + HISTORICAL_BLOCK_CHUNK_SIZE - 1n > currentBlock
@@ -103,7 +111,7 @@ export class ViemIntentObserver {
 
     for (let i = 0; i < parsedLogs.length; i++) {
       const order = parsedLogs[i];
-      const rawLog = logs[i];
+      const rawLog = logs[i]!;
 
       // Convert raw log to eth_getLogs hex format for tokka-filler
       const openEvent: OpenEventLog = {
@@ -126,7 +134,7 @@ export class ViemIntentObserver {
 
         const orderData = decodedOrder as OrderData;
 
-        await this.runAuctionAndNotifySolver(
+        this.runAuctionAndNotifySolver(
           {
             sender: trim(orderData.sender),
             recipient: trim(orderData.recipient),
@@ -144,7 +152,7 @@ export class ViemIntentObserver {
           },
           order.args.orderId,
           openEvent
-        );
+        ).then(() => this.lastProcessedBlock = BigInt(rawLog.blockNumber));
       }
     }
   }
