@@ -133,7 +133,7 @@ export class ViemIntentObserver {
 
         const orderData = decodedOrder as OrderData;
 
-        await this.runAuctionAndNotifySolver(
+        this.runAuctionAndNotifySolver(
           {
             sender: trim(orderData.sender),
             recipient: trim(orderData.recipient),
@@ -151,8 +151,7 @@ export class ViemIntentObserver {
           },
           order.args.orderId,
           openEvent
-        );
-        this.lastProcessedBlock = BigInt(rawLog.blockNumber);
+        ).then(() => this.lastProcessedBlock = BigInt(rawLog.blockNumber));
       }
     }
   }
