@@ -21,7 +21,8 @@ const HISTORICAL_BLOCK_CHUNK_SIZE = 100n;
 export class ViemIntentObserver {
   private logger: WinstonLogger;
 
-  private websocketError: boolean = false;
+  private catchupTimer: Timer | null = null;
+  private catchupRunning = false;
   private lastProcessedBlock: bigint | null = null;
   
   constructor(
@@ -52,15 +53,16 @@ export class ViemIntentObserver {
       address: this.sourceChainT1Erc7683ContractAddress,
       event: OPEN_INTENT_ABI_EVENT,
       onLogs: async (logs) => {
-        if (this.websocketError && this.lastProcessedBlock) {
-          this.logger.info(`I recovered from websocket error! Fetching historical logs from block ${this.lastProcessedBlock + 1n}`);
-          await this.fetchHistoricalLogs(this.lastProcessedBlock + 1n);
-          this.websocketError = false;
-        }
         await this.processIntentLogs(logs);
       },
       onError: (error) => {
-        this.websocketError = true;
+        if (!this.catchupTimer) {
+          this.catchupTimer = setInterval(
+            () => this.tryRecoverWebsocket(),
+            5_000,
+          );
+        }
+
         this.logger.error(`Error from publicClient.watchEvent: ${error}`);
       },
     });
@@ -244,5 +246,31 @@ export class ViemIntentObserver {
     };
 
     return await this.sourceChainClient.signTypedData(domain, types, message);
+  }
+
+  private async tryRecoverWebsocket() {
+    if (this.catchupRunning) return;
+    this.catchupRunning = true;
+
+    try {
+      // This will throw while the endpoint is still unavailable.
+      await this.sourceChainClient.publicClient.getBlockNumber();
+
+      const nextBlock = this.lastProcessedBlock ? this.lastProcessedBlock + 1n : this.initialFromBlock ?? 0n;
+
+      this.logger.info(
+        `WS recovered (RPC reachable). Catching up from block ${nextBlock.toString()}`,
+      );
+      await this.fetchHistoricalLogs(nextBlock);
+
+      if (this.catchupTimer) {
+        clearInterval(this.catchupTimer);
+        this.catchupTimer = null;
+      }
+    } catch (e) {
+      this.logger.debug(`Catchup poll failed (WS still down): ${e}`);
+    } finally {
+      this.catchupRunning = false;
+    }
   }
 }
