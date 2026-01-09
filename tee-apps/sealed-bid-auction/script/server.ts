@@ -5,6 +5,7 @@ import {SolverPriceBook} from "../src/core/SolverPriceBook.ts";
 import {AuctionService} from "../src/core/AuctionService.ts";
 import {arbitrum, arbitrumSepolia, base, baseSepolia} from "viem/chains";
 import {BlockchainClient} from "../src/blockchain/BlockchainClient.ts";
+import { AuthService } from "../src/core/AuthService.ts";
 
 dotenv.config();
 
@@ -19,10 +20,11 @@ const ARBITRUM_T1_ERC_7683_CONTRACT_ADDRESS = process.env.ARBITRUM_T1_ERC7683_CO
 const ARBITRUM_WS = (process.env.ARBITRUM_WS) as string;
 const BASE_WS = (process.env.BASE_WS) as string;
 
-const solverPriceBook = new SolverPriceBook(SOLVER_PRICE_TTL_SECONDS ? Number(SOLVER_PRICE_TTL_SECONDS as string) : TEN_MINUTES_IN_SECONDS);
+const authService = new AuthService();
+const solverPriceBook = new SolverPriceBook(authService, SOLVER_PRICE_TTL_SECONDS ? Number(SOLVER_PRICE_TTL_SECONDS as string) : TEN_MINUTES_IN_SECONDS);
 const auctionService = new AuctionService(solverPriceBook);
 
-const httpServer = new AuctionApiServer(solverPriceBook, auctionService);
+const httpServer = new AuctionApiServer(solverPriceBook, authService, auctionService);
 const arbitrumClient = new BlockchainClient(
     ARBITRUM_WS,
     IS_MAINNET ? arbitrum : arbitrumSepolia,

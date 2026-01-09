@@ -1,24 +1,24 @@
 import { List as ImmutableList } from 'immutable';
 
 import {type Interval, type PriceListItem} from "./types.ts";
+import type { AuthService } from "./AuthService.ts";
 
 type PriceBookEntry = {
     timestamp: number;
     priceList: PriceListItem[];
 }
 
-const TEN_MINUTES_IN_MS = 600_000;
-
 export class SolverPriceBook {
     private prices: Map<string, PriceBookEntry> = new Map<string, PriceBookEntry>();
 
-    constructor(private readonly priceListTTLseconds: number) {}
+    constructor(private readonly authService: AuthService, private readonly priceListTTLseconds: number) {}
 
     public getCurrentPrices(): ImmutableList<PriceListItem[]> {
         return ImmutableList(
-            this.prices.entries().toArray()
-                .filter(([_key, value]) => value.timestamp + (this.priceListTTLseconds * 1000) > Date.now())
-                .map(([_key, value]) => value.priceList)
+            this.prices.values().toArray()
+                .filter((priceBookEntry) => priceBookEntry.timestamp + (this.priceListTTLseconds * 1000) > Date.now())
+                .filter((priceBookEntry) => this.authService.isLoggedIn(priceBookEntry.priceList[0]!.settlementReceiverAddress))
+                .map((priceBookEntry) => priceBookEntry.priceList)
         );
     }
 
