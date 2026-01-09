@@ -15,9 +15,10 @@ export class SolverPriceBook {
 
     public getCurrentPrices(): ImmutableList<PriceListItem[]> {
         return ImmutableList(
-            this.prices.entries().toArray()
-                .filter(([_key, value]) => value.timestamp + (this.priceListTTLseconds * 1000) > Date.now())
-                .map(([_key, value]) => value.priceList)
+            this.prices.values().toArray()
+                .filter((priceBookEntry) => priceBookEntry.timestamp + (this.priceListTTLseconds * 1000) > Date.now())
+                .filter((priceBookEntry) => this.authService.isLoggedIn(priceBookEntry.priceList[0]!.settlementReceiverAddress))
+                .map((priceBookEntry) => priceBookEntry.priceList)
         );
     }
 
