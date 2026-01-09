@@ -188,7 +188,7 @@ export const analyzeERC7683Logs = async (params: AnalyzeBlockParams) => {
 
 // 5.a) Collect SettlementVerificationRequested (start) on Source Chain
 
-  console.log(`Searching in ${params.destinationChainName} blocks from [${params.destinationChainFromBlock}] to [${params.destinationChainLatest}] ...`);
+  console.log(`Searching in ${params.sourceChainName} blocks from [${params.sourceChainFromBlock}] to [${params.sourceChainLatest}] ...`);
 
   for (let start = params.sourceChainFromBlock; start <= params.sourceChainLatest; start += step + 1) {
     const end = Math.min(params.sourceChainLatest, start + step);
@@ -221,7 +221,7 @@ export const analyzeERC7683Logs = async (params: AnalyzeBlockParams) => {
 
 // 5.b) Collect Settled (end) on Source Chain
 
-  console.log(`Searching in ${params.destinationChainName} blocks from [${params.destinationChainFromBlock}] to [${params.destinationChainLatest}] ...`);
+  console.log(`Searching in ${params.sourceChainName} blocks from [${params.sourceChainFromBlock}] to [${params.sourceChainLatest}] ...`);
 
   for (let start = params.sourceChainFromBlock; start <= params.sourceChainLatest; start += step + 1) {
     const end = Math.min(params.sourceChainLatest, start + step);
