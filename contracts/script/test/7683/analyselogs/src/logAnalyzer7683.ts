@@ -62,6 +62,9 @@ export const analyzeERC7683Logs = async (params: AnalyzeBlockParams) => {
   // -------------------- 1) Collect Opens on Source Chain --------------------
   const openedByOrderId = new Map<string, OpenEntry>(); // orderId -> OpenEntry
 
+
+  console.log(`Searching in ${params.sourceChainName} blocks from [${params.sourceChainFromBlock}] to [${params.sourceChainLatest}] ...`);
+
   for (let start = params.sourceChainFromBlock; start <= params.sourceChainLatest; start += step + 1) {
     const end = Math.min(params.sourceChainLatest, start + step);
 
@@ -91,11 +94,13 @@ export const analyzeERC7683Logs = async (params: AnalyzeBlockParams) => {
     }
   }
 
-  console.log(`Searched in ${params.sourceChainName} blocks from ${params.sourceChainFromBlock} to ${params.sourceChainLatest} and found...`);
-  console.log("Opened unique orderIds on ${params.sourceChainName}:", openedByOrderId.size);
+  console.log(`... found [${openedByOrderId.size}] Opened unique orderIds on ${params.sourceChainName}`, );
 
 // -------------------- 2) Collect Fills on Destination Chain --------------------
   const filledByOrderId = new Map<string, FilledEntry>(); // orderId -> FilledEntry
+
+
+  console.log(`Searching in ${params.destinationChainName} blocks from [${params.destinationChainFromBlock}] to [${params.destinationChainLatest}] ...`);
 
   for (let start = params.destinationChainFromBlock; start <= params.destinationChainLatest; start += step + 1) {
     const end = Math.min(params.destinationChainLatest, start + step);
@@ -126,8 +131,7 @@ export const analyzeERC7683Logs = async (params: AnalyzeBlockParams) => {
     }
   }
 
-  console.log(`Searched in ${params.destinationChainName} blocks from ${params.destinationChainFromBlock} to ${params.destinationChainLatest} and found...`);
-  console.log(`Filled unique orderIds on ${params.destinationChainName}: ${filledByOrderId.size}`);
+  console.log(`... found [${filledByOrderId.size}] Filled unique orderIds on ${params.destinationChainName}`);
 
 // -------------------- 3) Diff: Opened on Arb but NOT Filled on Destination Chain --------------------
   const unfilledOpenEvents: OpenEntry[] = [];
@@ -170,7 +174,7 @@ export const analyzeERC7683Logs = async (params: AnalyzeBlockParams) => {
     }
     const avg = sum / fillDurationsSec.length;
 
-    console.log("Matched open->fill pairs:", matchedCount);
+    console.log("Matched Open->Filled pairs:", matchedCount);
     console.log("Fastest fill time (s):", fastest);
     console.log("Slowest fill time (s):", slowest);
     console.log("Average fill time (s):", avg);
@@ -183,6 +187,9 @@ export const analyzeERC7683Logs = async (params: AnalyzeBlockParams) => {
   const repayEndByOrderId = new Map<string, RepaymentEndEntry>();
 
 // 5.a) Collect SettlementVerificationRequested (start) on Source Chain
+
+  console.log(`Searching in ${params.destinationChainName} blocks from [${params.destinationChainFromBlock}] to [${params.destinationChainLatest}] ...`);
+
   for (let start = params.sourceChainFromBlock; start <= params.sourceChainLatest; start += step + 1) {
     const end = Math.min(params.sourceChainLatest, start + step);
 
@@ -210,9 +217,12 @@ export const analyzeERC7683Logs = async (params: AnalyzeBlockParams) => {
     }
   }
 
-  console.log(`SettlementVerificationRequested unique orderIds on ${params.sourceChainName}: ${repayStartByOrderId.size}`);
+  console.log(`... found [${repayStartByOrderId.size}] SettlementVerificationRequested unique orderIds on ${params.sourceChainName}`);
 
 // 5.b) Collect Settled (end) on Source Chain
+
+  console.log(`Searching in ${params.destinationChainName} blocks from [${params.destinationChainFromBlock}] to [${params.destinationChainLatest}] ...`);
+
   for (let start = params.sourceChainFromBlock; start <= params.sourceChainLatest; start += step + 1) {
     const end = Math.min(params.sourceChainLatest, start + step);
 
@@ -240,7 +250,7 @@ export const analyzeERC7683Logs = async (params: AnalyzeBlockParams) => {
     }
   }
 
-  console.log(`Settled unique orderIds on ${params.sourceChainName}: ${repayEndByOrderId.size}`);
+  console.log(`... found [${repayEndByOrderId.size}] Settled unique orderIds on ${params.sourceChainName}`);
 
 // 5.c) Repayment time stats (start->end) per orderId
   const repaymentDurationsSec: number[] = [];

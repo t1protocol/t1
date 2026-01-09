@@ -8,11 +8,11 @@ const baseProvider = new ethers.JsonRpcProvider("https://base-rpc.publicnode.com
 const baseErc7683Address = "0xdbA711a6c1b187479e9a5b33020E5217D0BD5A1f";
 
 const arbitrumFromBlock = 417132015;
-const arbitrumToBlock = 418842847;
+const arbitrumToBlock = 419554979;
 // const sourceChainLatest = await sourceChainProvider.getBlockNumber();
 
-const baseFromBlock = 40423900;
-const baseToBlock = 40499026;
+const baseFromBlock = 40285370;
+const baseToBlock = 40587883;
 // const destinationChainLatest    = await destinationChainProvider.getBlockNumber();
 
 await analyzeERC7683Logs({
