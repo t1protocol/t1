@@ -278,3 +278,14 @@ if (repayMatchedCount === 0) {
   console.log("Slowest solver repayment time (s):", slowest);
   console.log("Average solver repayment time (s):", avg);
 }
+
+// -------------------- 5.d) Unsettled SettlementVerificationRequested (no Settled) --------------------
+const unsettledRepayStarts: { orderId: string; txHash: string }[] = [];
+for (const [orderId, startEntry] of repayStartByOrderId.entries()) {
+  if (!repayEndByOrderId.has(orderId)) {
+    unsettledRepayStarts.push({ orderId, txHash: startEntry.txHash });
+  }
+}
+
+console.log("Unsettled SettlementVerificationRequested count:", unsettledRepayStarts.length);
+console.log("Unsettled SettlementVerificationRequested:", JSON.stringify(unsettledRepayStarts, null, 2));
