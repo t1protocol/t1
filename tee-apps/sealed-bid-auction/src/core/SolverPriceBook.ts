@@ -1,18 +1,17 @@
 import { List as ImmutableList } from 'immutable';
 
 import {type Interval, type PriceListItem} from "./types.ts";
+import type { AuthService } from "./AuthService.ts";
 
 type PriceBookEntry = {
     timestamp: number;
     priceList: PriceListItem[];
 }
 
-const TEN_MINUTES_IN_MS = 600_000;
-
 export class SolverPriceBook {
     private prices: Map<string, PriceBookEntry> = new Map<string, PriceBookEntry>();
 
-    constructor(private readonly priceListTTLseconds: number) {}
+    constructor(private readonly authService: AuthService, private readonly priceListTTLseconds: number) {}
 
     public getCurrentPrices(): ImmutableList<PriceListItem[]> {
         return ImmutableList(

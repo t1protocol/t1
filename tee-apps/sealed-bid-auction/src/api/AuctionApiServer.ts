@@ -20,17 +20,15 @@ export class AuctionApiServer {
     private readonly auctionController;
     private readonly authController;
 
-    private readonly authService;
-
     private server: Server | null = null;
 
     public constructor(
         private readonly solverPriceBook: SolverPriceBook,
-        auctionService: AuctionService
+        private readonly authService: AuthService,
+        auctionService: AuctionService,
     ) {
         this.auctionController = new AuctionController(auctionService);
-        this.authService = new AuthService();
-        this.authController = new AuthController(this.authService);
+        this.authController = new AuthController(authService);
     }
 
     public async start(port: number, tls: boolean) {

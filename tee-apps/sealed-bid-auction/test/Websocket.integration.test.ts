@@ -5,10 +5,12 @@ import {PRICE_LIST_WITH_GAP_IN_RANGES, USERNAME, PRICE_LIST_WITH_TWO_ITEMS, PRIV
 import {SolverPriceBook} from "../src/core/SolverPriceBook.ts";
 import {AuctionService} from "../src/core/AuctionService.ts";
 import {signMessage} from "viem/accounts";
+import { AuthService } from "../src/core/AuthService.ts";
 
 const wsPort = 3080;
-const solverPriceBook  = new SolverPriceBook();
-const httpServer = new AuctionApiServer(solverPriceBook, new AuctionService(solverPriceBook));
+const authService = new AuthService();
+const solverPriceBook  = new SolverPriceBook(authService, 600);
+const httpServer = new AuctionApiServer(solverPriceBook, authService, new AuctionService(solverPriceBook));
 let socketClosed = true;
 let socket: WebSocket;
 let socketMessage: string | null;
