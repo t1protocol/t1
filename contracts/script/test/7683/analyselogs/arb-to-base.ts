@@ -7,12 +7,16 @@ const arbitrumErc7683Address = "0x996f3583bd967bba19694733aa7a7623e6d780eb";
 const baseProvider = new ethers.JsonRpcProvider("https://base-rpc.publicnode.com");
 const baseErc7683Address = "0xdbA711a6c1b187479e9a5b33020E5217D0BD5A1f";
 
-const arbitrumFromBlock = 417132015;
-const arbitrumToBlock = 419554979;
+const ONE_DAY_IN_SECONDS = 60 * 60 * 24;
+const ONE_DAY_IN_ARBITRUM_BLOCKS = ONE_DAY_IN_SECONDS * 4;
+const ONE_DAY_IN_BASE_BLOCKS = ONE_DAY_IN_SECONDS / 2;
+
+const arbitrumToBlock = 420188164;
+const arbitrumFromBlock = arbitrumToBlock - 7 * ONE_DAY_IN_ARBITRUM_BLOCKS ;
 // const sourceChainLatest = await sourceChainProvider.getBlockNumber();
 
-const baseFromBlock = 40285370;
-const baseToBlock = 40587883;
+const baseToBlock = 40667169;
+const baseFromBlock = baseToBlock - 7 * ONE_DAY_IN_BASE_BLOCKS;
 // const destinationChainLatest    = await destinationChainProvider.getBlockNumber();
 
 await analyzeERC7683Logs({
