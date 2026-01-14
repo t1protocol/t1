@@ -1,15 +1,12 @@
 import { ethers } from "ethers";
 import { analyzeERC7683Logs } from "./src/logAnalyzer7683.ts";
+import { ONE_DAY_IN_ARBITRUM_BLOCKS, ONE_DAY_IN_BASE_BLOCKS } from "./src/common.ts";
 
 const arbitrumProvider = new ethers.JsonRpcProvider("https://arb1.arbitrum.io/rpc");
 const arbitrumErc7683Address = "0x996f3583bd967bba19694733aa7a7623e6d780eb";
 
 const baseProvider = new ethers.JsonRpcProvider("https://base-rpc.publicnode.com");
 const baseErc7683Address = "0xdbA711a6c1b187479e9a5b33020E5217D0BD5A1f";
-
-const ONE_DAY_IN_SECONDS = 60 * 60 * 24;
-const ONE_DAY_IN_ARBITRUM_BLOCKS = ONE_DAY_IN_SECONDS * 4;
-const ONE_DAY_IN_BASE_BLOCKS = ONE_DAY_IN_SECONDS / 2;
 
 const arbitrumToBlock = 420188164;
 const arbitrumFromBlock = arbitrumToBlock - 7 * ONE_DAY_IN_ARBITRUM_BLOCKS ;
