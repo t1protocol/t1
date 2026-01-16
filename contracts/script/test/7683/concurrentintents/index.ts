@@ -280,9 +280,7 @@ async function runChain(cfg: ChainCfg) {
       const hash = await publicClient.sendRawTransaction({ serializedTransaction: raw });
       hashes[idx] = hash;
 
-      if ((idx + 1) % 10 === 0 || idx === signedTxs.length - 1) {
-        console.log(`[${cfg.name}] worker=${workerId} open() ${idx + 1}/${TX_COUNT} hash=${hash}`);
-      }
+      console.log(`[${cfg.name}] worker=${workerId} open() ${idx + 1}/${TX_COUNT} hash=${hash}`);
     }
   }
 
